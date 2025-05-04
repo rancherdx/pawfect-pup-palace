@@ -1,13 +1,14 @@
 
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PawPrint, Plus, Dog, Receipt, Settings, CreditCard } from "lucide-react";
+import { PawPrint, Plus, Dog, Receipt, Settings, CreditCard, Layers } from "lucide-react";
 import Section from "@/components/Section";
 import PuppyManagement from "@/components/admin/PuppyManagement";
 import LitterManagement from "@/components/admin/LitterManagement";
 import TransactionHistory from "@/components/admin/TransactionHistory";
 import SquareIntegration from "@/components/admin/SquareIntegration";
 import SettingsPanel from "@/components/admin/SettingsPanel";
+import BreedTemplateManager from "@/components/admin/BreedTemplateManager";
 
 const AdminDashboard = () => {
   const [isAdmin, setIsAdmin] = useState(true);  // For demo purposes, in production use actual auth
@@ -51,7 +52,7 @@ const AdminDashboard = () => {
           
           <Tabs defaultValue="puppies" className="w-full">
             <div className="bg-white dark:bg-black/30 p-4 rounded-t-xl shadow-sm border-b">
-              <TabsList className="grid grid-cols-5 w-full h-auto gap-2">
+              <TabsList className="grid grid-cols-6 w-full h-auto gap-2">
                 <TabsTrigger value="puppies" className="py-4 text-lg data-[state=active]:bg-brand-red data-[state=active]:text-white">
                   <Dog className="h-5 w-5 mr-2" />
                   <span>Puppies</span>
@@ -59,6 +60,10 @@ const AdminDashboard = () => {
                 <TabsTrigger value="litters" className="py-4 text-lg data-[state=active]:bg-brand-red data-[state=active]:text-white">
                   <PawPrint className="h-5 w-5 mr-2" />
                   <span>Litters</span>
+                </TabsTrigger>
+                <TabsTrigger value="breeds" className="py-4 text-lg data-[state=active]:bg-brand-red data-[state=active]:text-white">
+                  <Layers className="h-5 w-5 mr-2" />
+                  <span>Breed Templates</span>
                 </TabsTrigger>
                 <TabsTrigger value="transactions" className="py-4 text-lg data-[state=active]:bg-brand-red data-[state=active]:text-white">
                   <Receipt className="h-5 w-5 mr-2" />
@@ -82,6 +87,10 @@ const AdminDashboard = () => {
               
               <TabsContent value="litters" className="mt-0 animate-fade-in">
                 <LitterManagement />
+              </TabsContent>
+              
+              <TabsContent value="breeds" className="mt-0 animate-fade-in">
+                <BreedTemplateManager />
               </TabsContent>
               
               <TabsContent value="transactions" className="mt-0 animate-fade-in">
