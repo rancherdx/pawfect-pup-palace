@@ -17,6 +17,7 @@ import Health from "@/pages/Health";
 import Contact from "@/pages/Contact";
 import Dashboard from "@/pages/Dashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
+import Checkout from "@/pages/Checkout";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const App = () => (
               <Route path="/puppies" element={<Puppies />} />
               <Route path="/puppies/:id" element={<PuppyDetails />} />
               <Route path="/adopt" element={<Adopt />} />
+              <Route path="/checkout" element={<Checkout />} />
               <Route path="/reviews" element={<Reviews />} />
               <Route path="/health" element={<Health />} />
               <Route path="/contact" element={<Contact />} />

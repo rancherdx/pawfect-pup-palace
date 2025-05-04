@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { PawPrint } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -75,6 +74,7 @@ const Adopt = () => {
   const [searchParams] = useSearchParams();
   const puppyId = searchParams.get("puppy");
   const selectedPuppy = puppiesData.find(p => p.id === puppyId);
+  const navigate = useNavigate();
   
   const { toast } = useToast();
   const [formData, setFormData] = useState({
@@ -118,6 +118,13 @@ const Adopt = () => {
       title: "Application Submitted!",
       description: "We've received your adoption application and will be in touch soon.",
     });
+
+    // When using the new checkout flow, redirect to checkout instead
+    if (selectedPuppy) {
+      navigate(`/checkout?puppy=${selectedPuppy.id}`);
+    } else {
+      navigate('/checkout');
+    }
   };
 
   return (
@@ -364,7 +371,7 @@ const Adopt = () => {
           <div className="flex justify-center">
             <Button type="submit" size="lg" className="bg-brand-red hover:bg-red-700">
               <PawPrint className="mr-2 h-5 w-5" />
-              Submit Application
+              Continue to Checkout
             </Button>
           </div>
         </form>
