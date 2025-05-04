@@ -15,6 +15,7 @@ import Adopt from "@/pages/Adopt";
 import Reviews from "@/pages/Reviews";
 import Health from "@/pages/Health";
 import Contact from "@/pages/Contact";
+import Dashboard from "@/pages/Dashboard";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
               <Route path="/reviews" element={<Reviews />} />
               <Route path="/health" element={<Health />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Layout>
