@@ -7,6 +7,7 @@ import Section from "@/components/Section";
 import { PawPrint, User, Receipt, MessageCircle, ChartBar } from "lucide-react";
 import UserProfile from "@/components/dashboard/UserProfile";
 import CreatureProfiles from "@/components/dashboard/CreatureProfiles";
+import PuppyProfile from "@/components/dashboard/PuppyProfile";
 import Receipts from "@/components/dashboard/Receipts";
 import ChatHistory from "@/components/dashboard/ChatHistory";
 
@@ -48,7 +49,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30">
-      <Section className="py-8">
+      <Section className="py-8" variant="dashboard">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-3xl font-bold flex items-center">
@@ -66,11 +67,16 @@ const Dashboard = () => {
             </Button>
           </div>
           
-          <Tabs defaultValue="creatures" className="w-full">
+          <Tabs defaultValue="puppies" className="w-full">
             <div className="bg-white dark:bg-black/20 p-4 rounded-t-xl shadow-sm border-b">
-              <TabsList className="grid grid-cols-4 w-full h-auto gap-2">
-                <TabsTrigger value="creatures" className="py-3 data-[state=active]:bg-brand-red data-[state=active]:text-white">
+              <TabsList className="grid grid-cols-5 w-full h-auto gap-2">
+                <TabsTrigger value="puppies" className="py-3 data-[state=active]:bg-brand-red data-[state=active]:text-white">
                   <PawPrint className="h-5 w-5 mr-2" />
+                  <span className="hidden sm:inline">Your Puppies</span>
+                  <span className="sm:hidden">Puppies</span>
+                </TabsTrigger>
+                <TabsTrigger value="creatures" className="py-3 data-[state=active]:bg-brand-red data-[state=active]:text-white">
+                  <Dog className="h-5 w-5 mr-2" />
                   <span className="hidden sm:inline">Creature Profiles</span>
                   <span className="sm:hidden">Creatures</span>
                 </TabsTrigger>
@@ -93,6 +99,10 @@ const Dashboard = () => {
             </div>
             
             <div className="bg-white dark:bg-black/20 p-6 rounded-b-xl shadow-md min-h-[500px]">
+              <TabsContent value="puppies" className="mt-0">
+                <PuppyProfile />
+              </TabsContent>
+              
               <TabsContent value="creatures" className="mt-0">
                 <CreatureProfiles />
               </TabsContent>

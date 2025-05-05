@@ -9,6 +9,7 @@ interface SectionProps {
   withPawPrintBg?: boolean;
   curved?: boolean;
   fullWidth?: boolean;
+  variant?: 'default' | 'dashboard' | 'litter';
 }
 
 const Section = ({ 
@@ -18,11 +19,18 @@ const Section = ({
   children, 
   withPawPrintBg = false,
   curved = false,
-  fullWidth = false
+  fullWidth = false,
+  variant = 'default'
 }: SectionProps) => {
+  const variantClasses = {
+    default: '',
+    dashboard: 'bg-gradient-to-b from-background to-secondary/30',
+    litter: 'bg-gradient-to-b from-red-50/50 to-orange-50/50 dark:from-red-950/10 dark:to-orange-950/10'
+  };
+
   return (
     <section 
-      className={`py-16 md:py-24 relative ${withPawPrintBg ? 'paw-print-bg' : ''} ${className} ${curved ? 'curved-section' : ''}`}
+      className={`py-16 md:py-24 relative ${withPawPrintBg ? 'paw-print-bg' : ''} ${className} ${curved ? 'curved-section' : ''} ${variantClasses[variant]}`}
     >
       <div className={`${!fullWidth ? 'container mx-auto px-4' : 'w-full'} relative z-10`}>
         {(title || subtitle) && (

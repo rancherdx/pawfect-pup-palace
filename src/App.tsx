@@ -11,6 +11,7 @@ import Home from "@/pages/Home";
 import About from "@/pages/About";
 import Puppies from "@/pages/Puppies";
 import PuppyDetails from "@/pages/PuppyDetails";
+import Litters from "@/pages/Litters";
 import Adopt from "@/pages/Adopt";
 import Reviews from "@/pages/Reviews";
 import Health from "@/pages/Health";
@@ -35,6 +36,7 @@ const App = () => (
               <Route path="/about" element={<About />} />
               <Route path="/puppies" element={<Puppies />} />
               <Route path="/puppies/:id" element={<PuppyDetails />} />
+              <Route path="/litters" element={<Litters />} />
               <Route path="/adopt" element={<Adopt />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/reviews" element={<Reviews />} />
