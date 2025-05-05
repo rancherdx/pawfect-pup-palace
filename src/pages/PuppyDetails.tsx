@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { Heart, Share2, Calendar, PawPrint, Info, Clipboard, Dog, Award, Medicine } from "lucide-react";
+import { Heart, Share2, Calendar, PawPrint, Info, Clipboard, Dog, Award, Pill } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Section from "@/components/Section";
 import {
@@ -384,7 +383,7 @@ const PuppyDetails = () => {
                   Details
                 </TabsTrigger>
                 <TabsTrigger value="health" className="data-[state=active]:text-brand-red data-[state=active]:border-b-2 data-[state=active]:border-brand-red">
-                  <Medicine className="h-4 w-4 mr-2" />
+                  <Pill className="h-4 w-4 mr-2" />
                   Health
                 </TabsTrigger>
                 <TabsTrigger value="parents" className="data-[state=active]:text-brand-red data-[state=active]:border-b-2 data-[state=active]:border-brand-red">
@@ -439,7 +438,7 @@ const PuppyDetails = () => {
                 <Card className="shadow-md">
                   <CardContent className="p-6">
                     <h2 className="text-xl font-semibold mb-4 flex items-center">
-                      <Medicine className="h-5 w-5 mr-2 text-brand-red" />
+                      <Pill className="h-5 w-5 mr-2 text-brand-red" />
                       Health Dashboard
                     </h2>
                     
