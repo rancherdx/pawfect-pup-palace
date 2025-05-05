@@ -18,6 +18,31 @@ interface SuccessAnimationProps {
   viewProfile: () => void;
 }
 
+const boneShape = {
+  draw: (ctx: any) => {
+    ctx.beginPath();
+    // Draw bone shape
+    ctx.arc(0, -6, 6, 0, Math.PI * 2);
+    ctx.arc(0, 6, 6, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.fill();
+  }
+};
+
+const pawShape = {
+  draw: (ctx: any) => {
+    ctx.beginPath();
+    // Draw paw shape - main pad
+    ctx.arc(0, 0, 5, 0, Math.PI * 2);
+    // Draw toe pads
+    ctx.arc(-5, -7, 3, 0, Math.PI * 2);
+    ctx.arc(0, -9, 3, 0, Math.PI * 2); 
+    ctx.arc(5, -7, 3, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.fill();
+  }
+};
+
 const SuccessAnimation = ({ puppy, returnHome, viewProfile }: SuccessAnimationProps) => {
   const [showConfetti, setShowConfetti] = useState(false);
   
@@ -26,19 +51,21 @@ const SuccessAnimation = ({ puppy, returnHome, viewProfile }: SuccessAnimationPr
     const timer = setTimeout(() => {
       setShowConfetti(true);
       
-      // Launch bone-shaped confetti
-      const duration = 3 * 1000;
+      // Launch bone and paw-shaped confetti
+      const duration = 4 * 1000;
       const end = Date.now() + duration;
       
-      const colors = ['#ff6b6b', '#ffffff', '#343a40'];
+      const colors = ['#ff6b6b', '#ffffff', '#343a40', '#E53E3E'];
       
       (function frame() {
+        // Standard confetti
         confetti({
           particleCount: 2,
           angle: 60,
           spread: 55,
           origin: { x: 0 },
-          colors: colors
+          colors: colors,
+          shapes: [boneShape, 'circle']
         });
         
         confetti({
@@ -46,7 +73,8 @@ const SuccessAnimation = ({ puppy, returnHome, viewProfile }: SuccessAnimationPr
           angle: 120,
           spread: 55,
           origin: { x: 1 },
-          colors: colors
+          colors: colors,
+          shapes: [pawShape, 'circle']
         });
         
         if (Date.now() < end) {
@@ -67,7 +95,7 @@ const SuccessAnimation = ({ puppy, returnHome, viewProfile }: SuccessAnimationPr
       >
         <div className="mb-8 flex justify-center">
           <motion.div 
-            className="rounded-full bg-green-100 p-3 shadow-puppy"
+            className="rounded-full bg-green-100 p-5 shadow-xl"
             animate={{ rotate: [0, 10, -10, 10, 0] }}
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           >
@@ -75,7 +103,7 @@ const SuccessAnimation = ({ puppy, returnHome, viewProfile }: SuccessAnimationPr
           </motion.div>
         </div>
         
-        <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-brand-red to-red-600 bg-clip-text text-transparent">
+        <h1 className="text-4xl md:text-5xl font-bold mb-3 bg-gradient-to-r from-brand-red to-red-600 bg-clip-text text-transparent">
           Congratulations!
         </h1>
         <p className="text-xl text-muted-foreground mb-8">
@@ -89,7 +117,7 @@ const SuccessAnimation = ({ puppy, returnHome, viewProfile }: SuccessAnimationPr
             transition={{ delay: 0.3, duration: 0.5 }}
             className="mb-8"
           >
-            <Card className="overflow-hidden max-w-md mx-auto shadow-puppy rounded-[calc(var(--radius)*0.75)]">
+            <Card className="overflow-hidden max-w-md mx-auto shadow-lg rounded-[calc(var(--radius)*1.5)]">
               <CardContent className="p-0">
                 <div className="aspect-video w-full overflow-hidden">
                   <motion.img 
@@ -101,8 +129,14 @@ const SuccessAnimation = ({ puppy, returnHome, viewProfile }: SuccessAnimationPr
                   />
                 </div>
                 <div className="p-6">
-                  <h3 className="text-2xl font-bold">{puppy.name}</h3>
-                  <p className="text-muted-foreground">{puppy.breed}</p>
+                  <motion.div
+                    initial={{ scale: 0.9 }}
+                    animate={{ scale: [0.9, 1.05, 1] }}
+                    transition={{ duration: 1.5, delay: 1 }}
+                  >
+                    <h3 className="text-2xl font-bold">{puppy.name}</h3>
+                    <p className="text-muted-foreground">{puppy.breed}</p>
+                  </motion.div>
                   
                   <div className="mt-4 flex items-center justify-center space-x-3">
                     <motion.div 

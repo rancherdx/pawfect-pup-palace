@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { PawPrint, Check, Gift, ArrowRight, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import AddonsSelection from "@/components/checkout/AddonsSelection";
 import PaymentMethods from "@/components/checkout/PaymentMethods";
 import PuppyConfirmation from "@/components/checkout/PuppyConfirmation";
 import SuccessAnimation from "@/components/checkout/SuccessAnimation";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Mock puppy data (would come from API in production)
 const puppiesData = [
@@ -36,6 +37,7 @@ const Checkout = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [slideDirection, setSlideDirection] = useState<"left" | "right">("right");
   
   const [adoptionData, setAdoptionData] = useState({
     puppy: selectedPuppy,
@@ -54,19 +56,23 @@ const Checkout = () => {
   const steps = [
     {
       title: "Confirm Puppy",
-      description: "Confirm your puppy selection",
+      description: "Verify your puppy selection",
+      icon: <PawPrint className="h-4 w-4" />,
     },
     {
       title: "Adoption Questions",
       description: "Tell us about your home",
+      icon: <Check className="h-4 w-4" />,
     },
     {
       title: "Add-ons",
       description: "Optional starter items",
+      icon: <Gift className="h-4 w-4" />,
     },
     {
       title: "Payment",
       description: "Secure checkout",
+      icon: <ArrowRight className="h-4 w-4" />,
     },
   ];
 
@@ -79,6 +85,7 @@ const Checkout = () => {
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
+      setSlideDirection("right");
       window.scrollTo(0, 0);
       setCurrentStep(current => current + 1);
     }
@@ -86,6 +93,7 @@ const Checkout = () => {
 
   const handlePrevious = () => {
     if (currentStep > 0) {
+      setSlideDirection("left");
       window.scrollTo(0, 0);
       setCurrentStep(current => current - 1);
     }
@@ -122,49 +130,77 @@ const Checkout = () => {
     }
   };
 
+  // Animation variants for page transitions
+  const pageVariants = {
+    initial: (direction: "left" | "right") => ({
+      x: direction === "right" ? 100 : -100,
+      opacity: 0
+    }),
+    in: {
+      x: 0,
+      opacity: 1
+    },
+    out: (direction: "left" | "right") => ({
+      x: direction === "right" ? -100 : 100,
+      opacity: 0
+    })
+  };
+
+  const pageTransition = {
+    type: "tween",
+    ease: "easeInOut",
+    duration: 0.3
+  };
+
   const renderStepContent = () => {
-    switch (currentStep) {
-      case 0:
-        return (
-          <PuppyConfirmation 
-            puppy={adoptionData.puppy}
-            onNext={handleNext}
-          />
-        );
-      case 1:
-        return (
-          <AdoptionQuestions
-            onDataChange={(value) => handleAdoptionDataChange('adoptionResponses', value)}
-            data={adoptionData.adoptionResponses}
-            onNext={handleNext}
-            onPrevious={handlePrevious}
-          />
-        );
-      case 2:
-        return (
-          <AddonsSelection
-            onDataChange={(value) => handleAdoptionDataChange('addons', value)}
-            onPriceChange={(value) => handleAdoptionDataChange('totalAmount', value)}
-            basePrice={selectedPuppy ? selectedPuppy.price : 0}
-            selectedAddons={adoptionData.addons}
-            onNext={handleNext}
-            onPrevious={handlePrevious}
-          />
-        );
-      case 3:
-        return (
-          <PaymentMethods
-            onDataChange={(value) => handleAdoptionDataChange('paymentMethod', value)}
-            totalAmount={adoptionData.totalAmount}
-            selectedMethod={adoptionData.paymentMethod}
-            isProcessing={isProcessing}
-            onComplete={handleCompleteCheckout}
-            onPrevious={handlePrevious}
-          />
-        );
-      default:
-        return null;
-    }
+    return (
+      <AnimatePresence mode="wait" initial={false} custom={slideDirection}>
+        <motion.div
+          key={currentStep}
+          custom={slideDirection}
+          initial="initial"
+          animate="in"
+          exit="out"
+          variants={pageVariants}
+          transition={pageTransition}
+        >
+          {currentStep === 0 && (
+            <PuppyConfirmation 
+              puppy={adoptionData.puppy}
+              onNext={handleNext}
+            />
+          )}
+          {currentStep === 1 && (
+            <AdoptionQuestions
+              onDataChange={(value) => handleAdoptionDataChange('adoptionResponses', value)}
+              data={adoptionData.adoptionResponses}
+              onNext={handleNext}
+              onPrevious={handlePrevious}
+            />
+          )}
+          {currentStep === 2 && (
+            <AddonsSelection
+              onDataChange={(value) => handleAdoptionDataChange('addons', value)}
+              onPriceChange={(value) => handleAdoptionDataChange('totalAmount', value)}
+              basePrice={selectedPuppy ? selectedPuppy.price : 0}
+              selectedAddons={adoptionData.addons}
+              onNext={handleNext}
+              onPrevious={handlePrevious}
+            />
+          )}
+          {currentStep === 3 && (
+            <PaymentMethods
+              onDataChange={(value) => handleAdoptionDataChange('paymentMethod', value)}
+              totalAmount={adoptionData.totalAmount}
+              selectedMethod={adoptionData.paymentMethod}
+              isProcessing={isProcessing}
+              onComplete={handleCompleteCheckout}
+              onPrevious={handlePrevious}
+            />
+          )}
+        </motion.div>
+      </AnimatePresence>
+    );
   };
 
   if (isComplete) {
@@ -180,54 +216,100 @@ const Checkout = () => {
   }
 
   return (
-    <div>
+    <div className="bg-gradient-to-b from-white to-gray-50">
       <Section className="py-8">
         <div className="max-w-5xl mx-auto">
-          <div className="mb-8">
+          <motion.div 
+            className="mb-8"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
             <h1 className="text-3xl font-bold mb-2 flex items-center">
               <PawPrint className="mr-2 h-6 w-6 text-brand-red" />
-              Puppy Adoption Checkout
+              <span className="bg-gradient-to-r from-brand-red to-red-700 bg-clip-text text-transparent">
+                Puppy Adoption Process
+              </span>
             </h1>
             <p className="text-muted-foreground">
-              Complete the steps below to bring your new family member home.
+              Complete these steps to bring your new family member home.
             </p>
-          </div>
+          </motion.div>
+          
+          <CheckoutSteps 
+            steps={steps} 
+            currentStep={currentStep}
+            onClick={(index) => {
+              if (index < currentStep) {
+                setSlideDirection("left");
+                setCurrentStep(index);
+                window.scrollTo(0, 0);
+              }
+            }}
+          />
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div className="lg:col-span-4 order-2 lg:order-1">
               <div className="sticky top-8">
-                <CheckoutSteps 
-                  steps={steps} 
-                  currentStep={currentStep}
-                  onClick={(index) => {
-                    if (index < currentStep) {
-                      setCurrentStep(index);
-                      window.scrollTo(0, 0);
-                    }
-                  }}
-                />
-
                 {selectedPuppy && currentStep > 0 && (
-                  <Card className="mt-6 overflow-hidden border-brand-red/20">
-                    <CardContent className="p-0">
-                      <div className="aspect-video w-full overflow-hidden">
-                        <img 
-                          src={selectedPuppy.image} 
-                          alt={selectedPuppy.name}
-                          className="w-full h-full object-cover" 
-                        />
-                      </div>
-                      <div className="p-4">
-                        <h3 className="font-semibold text-lg">{selectedPuppy.name}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {selectedPuppy.breed} • {selectedPuppy.age} • {selectedPuppy.gender}
-                        </p>
-                        <div className="mt-2 text-brand-red font-semibold">
-                          ${selectedPuppy.price}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3, duration: 0.5 }}
+                  >
+                    <Card className="overflow-hidden border-brand-red/20 shadow-md rounded-lg">
+                      <CardContent className="p-0">
+                        <div className="aspect-video w-full overflow-hidden">
+                          <img 
+                            src={selectedPuppy.image} 
+                            alt={selectedPuppy.name}
+                            className="w-full h-full object-cover" 
+                          />
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                        <div className="p-4">
+                          <h3 className="font-semibold text-lg">{selectedPuppy.name}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {selectedPuppy.breed} • {selectedPuppy.age} • {selectedPuppy.gender}
+                          </p>
+                          <div className="mt-2 flex justify-between items-center">
+                            <span className="text-brand-red font-semibold">
+                              ${selectedPuppy.price}
+                            </span>
+                            <span className="text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded-full">
+                              Available Now
+                            </span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <div className="mt-6 bg-brand-red/10 rounded-lg p-4 border border-brand-red/20">
+                      <h4 className="font-medium text-brand-red flex items-center">
+                        <Check className="h-4 w-4 mr-2" />
+                        Why Adopt From Us
+                      </h4>
+                      <ul className="mt-2 space-y-2 text-sm">
+                        <li className="flex items-start">
+                          <span className="bg-brand-red/20 rounded-full p-0.5 mr-2 mt-0.5">
+                            <Check className="h-3 w-3 text-brand-red" />
+                          </span>
+                          Health guarantee & vaccinations
+                        </li>
+                        <li className="flex items-start">
+                          <span className="bg-brand-red/20 rounded-full p-0.5 mr-2 mt-0.5">
+                            <Check className="h-3 w-3 text-brand-red" />
+                          </span>
+                          Professional training included
+                        </li>
+                        <li className="flex items-start">
+                          <span className="bg-brand-red/20 rounded-full p-0.5 mr-2 mt-0.5">
+                            <Check className="h-3 w-3 text-brand-red" />
+                          </span>
+                          Ongoing support after adoption
+                        </li>
+                      </ul>
+                    </div>
+                  </motion.div>
                 )}
               </div>
             </div>

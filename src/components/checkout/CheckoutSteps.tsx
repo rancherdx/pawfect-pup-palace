@@ -1,9 +1,11 @@
 
 import { Check } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface Step {
   title: string;
   description: string;
+  icon?: React.ReactNode;
 }
 
 interface CheckoutStepsProps {
@@ -14,49 +16,78 @@ interface CheckoutStepsProps {
 
 const CheckoutSteps = ({ steps, currentStep, onClick }: CheckoutStepsProps) => {
   return (
-    <ol className="relative space-y-4">
-      {steps.map((step, index) => {
-        const isActive = index === currentStep;
-        const isComplete = index < currentStep;
-        const isClickable = index < currentStep;
-        
-        return (
-          <li 
-            key={index} 
-            className={`flex items-start ${isClickable ? 'cursor-pointer' : ''}`}
-            onClick={() => isClickable && onClick && onClick(index)}
-          >
-            <div 
+    <div className="relative mb-8">
+      {/* Progress bar */}
+      <div className="hidden md:block absolute top-4 left-0 w-full h-1 bg-gray-200 rounded-full">
+        <motion.div 
+          className="h-full bg-brand-red rounded-full"
+          initial={{ width: "0%" }}
+          animate={{ width: `${(currentStep / (steps.length - 1)) * 100}%` }}
+          transition={{ duration: 0.5, ease: "easeInOut" }}
+        />
+      </div>
+
+      <ol className="relative flex flex-col md:flex-row justify-between">
+        {steps.map((step, index) => {
+          const isActive = index === currentStep;
+          const isComplete = index < currentStep;
+          const isClickable = index < currentStep;
+          
+          return (
+            <li 
+              key={index} 
               className={`
-                flex items-center justify-center w-8 h-8 rounded-full mt-0.5
-                ${isActive 
-                  ? 'bg-brand-red text-white' 
-                  : isComplete 
-                    ? 'bg-green-500 text-white' 
-                    : 'bg-gray-200 text-gray-500'
-                }
+                flex flex-row md:flex-col items-center md:items-start mb-4 md:mb-0 
+                ${isClickable ? 'cursor-pointer' : ''}
+                ${index < steps.length - 1 ? 'md:w-full' : ''}
               `}
+              onClick={() => isClickable && onClick && onClick(index)}
             >
-              {isComplete ? (
-                <Check className="w-5 h-5" />
-              ) : (
-                <span>{index + 1}</span>
-              )}
-            </div>
-            <div className="ml-3">
-              <h3 
-                className={`text-lg font-medium ${isActive ? 'text-brand-red' : ''}`}
-              >
-                {step.title}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {step.description}
-              </p>
-            </div>
-          </li>
-        );
-      })}
-    </ol>
+              <div className="flex items-start md:items-center mb-0 md:mb-2">
+                <motion.div 
+                  className={`
+                    flex items-center justify-center w-10 h-10 rounded-full mt-0.5
+                    transition-colors duration-300
+                    ${isActive 
+                      ? 'bg-brand-red text-white shadow-md' 
+                      : isComplete 
+                        ? 'bg-green-500 text-white' 
+                        : 'bg-gray-200 text-gray-500'
+                    }
+                  `}
+                  initial={{ scale: 1 }}
+                  animate={{ 
+                    scale: isActive ? [1, 1.1, 1] : 1,
+                    rotate: isComplete ? [0, 10, 0] : 0
+                  }}
+                  transition={{ 
+                    duration: 0.5, 
+                    ease: "easeInOut",
+                    times: [0, 0.5, 1]
+                  }}
+                >
+                  {isComplete ? (
+                    <Check className="w-5 h-5" />
+                  ) : (
+                    <span>{index + 1}</span>
+                  )}
+                </motion.div>
+                <div className="ml-3 md:ml-0 md:mt-0">
+                  <h3 
+                    className={`text-base md:text-lg font-medium ${isActive ? 'text-brand-red' : ''}`}
+                  >
+                    {step.title}
+                  </h3>
+                  <p className="text-xs md:text-sm text-muted-foreground hidden md:block">
+                    {step.description}
+                  </p>
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
   );
 };
 

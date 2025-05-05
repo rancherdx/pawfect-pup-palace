@@ -8,6 +8,7 @@ interface SectionProps {
   children: ReactNode;
   withPawPrintBg?: boolean;
   curved?: boolean;
+  fullWidth?: boolean;
 }
 
 const Section = ({ 
@@ -16,13 +17,14 @@ const Section = ({
   className = "", 
   children, 
   withPawPrintBg = false,
-  curved = false
+  curved = false,
+  fullWidth = false
 }: SectionProps) => {
   return (
     <section 
       className={`py-16 md:py-24 relative ${withPawPrintBg ? 'paw-print-bg' : ''} ${className} ${curved ? 'curved-section' : ''}`}
     >
-      <div className="container mx-auto px-4 relative z-10">
+      <div className={`${!fullWidth ? 'container mx-auto px-4' : 'w-full'} relative z-10`}>
         {(title || subtitle) && (
           <div className="text-center mb-12">
             {title && (

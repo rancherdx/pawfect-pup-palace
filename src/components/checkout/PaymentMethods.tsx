@@ -1,11 +1,12 @@
 
 import { useState, useEffect } from "react";
-import { ArrowLeft, CreditCard, Mail, CircleCheck } from "lucide-react";
+import { ArrowLeft, CreditCard, Mail, CircleCheck, Check, Smartphone, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { motion } from "framer-motion";
 
 interface PaymentMethodsProps {
   onDataChange: (method: string) => void;
@@ -16,6 +17,24 @@ interface PaymentMethodsProps {
   onPrevious: () => void;
 }
 
+const containerVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { 
+      duration: 0.5,
+      when: "beforeChildren",
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: { opacity: 1, y: 0 }
+};
+
 const PaymentMethods = ({ 
   onDataChange, 
   selectedMethod,
@@ -24,7 +43,7 @@ const PaymentMethods = ({
   onComplete,
   onPrevious 
 }: PaymentMethodsProps) => {
-  const [paymentMethod, setPaymentMethod] = useState(selectedMethod || "card");
+  const [paymentMethod, setPaymentMethod] = useState(selectedMethod || "wallet");
   const [email, setEmail] = useState("");
   const [cardFormComplete, setCardFormComplete] = useState(false);
   
@@ -43,167 +62,291 @@ const PaymentMethods = ({
       return () => clearTimeout(timer);
     }
   }, [paymentMethod]);
+  
+  const getPaymentIcon = (method: string) => {
+    switch (method) {
+      case "wallet": return <Smartphone className="h-5 w-5 text-brand-red" />;
+      case "card": return <CreditCard className="h-5 w-5 text-brand-red" />;
+      case "invoice": return <Mail className="h-5 w-5 text-brand-red" />;
+      case "afterpay": return <Clock className="h-5 w-5 text-brand-red" />;
+      default: return null;
+    }
+  };
 
   return (
-    <Card>
-      <CardContent className="p-6">
-        <h2 className="text-2xl font-bold mb-6">Payment</h2>
-        
-        <div className="space-y-6">
-          <RadioGroup 
-            value={paymentMethod} 
-            onValueChange={setPaymentMethod}
-            className="space-y-4"
-          >
-            <div 
-              className={`
-                border rounded-lg p-4 cursor-pointer transition-all
-                ${paymentMethod === 'wallet' ? 'border-brand-red bg-brand-red/5' : 'border-gray-200'}
-              `}
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <Card className="shadow-md border-brand-red/10">
+        <CardContent className="p-6">
+          <h2 className="text-2xl font-bold mb-6 flex items-center">
+            <CreditCard className="mr-2 h-6 w-6 text-brand-red" />
+            Payment
+          </h2>
+          
+          <div className="space-y-6">
+            <RadioGroup 
+              value={paymentMethod} 
+              onValueChange={setPaymentMethod}
+              className="space-y-4"
             >
-              <div className="flex items-start">
-                <RadioGroupItem value="wallet" id="wallet" />
-                <div className="ml-3">
-                  <Label htmlFor="wallet" className="font-medium cursor-pointer">Digital Wallet</Label>
-                  <p className="text-sm text-muted-foreground">Apple Pay, Google Pay</p>
-                  
-                  {paymentMethod === 'wallet' && (
-                    <div className="mt-4 p-4 border rounded bg-gray-50">
-                      <div className="grid grid-cols-4 gap-2">
-                        {['Apple Pay', 'Google Pay', 'Afterpay', 'Cash App'].map((wallet) => (
-                          <div 
-                            key={wallet}
-                            className="border rounded-lg p-2 text-center text-sm bg-white cursor-pointer hover:border-brand-red"
-                          >
-                            {wallet}
-                          </div>
-                        ))}
-                      </div>
-                      <p className="mt-2 text-xs text-muted-foreground text-center">
-                        * In the actual implementation, Square's own wallet buttons would display here
-                      </p>
-                    </div>
-                  )}
+              <motion.div 
+                variants={itemVariants}
+                className={`
+                  border rounded-lg p-4 cursor-pointer transition-all hover:border-brand-red/30
+                  ${paymentMethod === 'wallet' ? 'border-brand-red bg-brand-red/5' : 'border-gray-200'}
+                `}
+              >
+                <div className="flex items-start">
+                  <RadioGroupItem value="wallet" id="wallet" />
+                  <div className="ml-3">
+                    <Label htmlFor="wallet" className="font-medium cursor-pointer flex items-center">
+                      {getPaymentIcon("wallet")}
+                      <span className="ml-2">Digital Wallet</span>
+                    </Label>
+                    <p className="text-sm text-muted-foreground">Apple Pay, Google Pay</p>
+                    
+                    {paymentMethod === 'wallet' && (
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="mt-4 p-4 border rounded bg-gray-50"
+                      >
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          {['Apple Pay', 'Google Pay', 'Cash App', 'Venmo'].map((wallet) => (
+                            <div 
+                              key={wallet}
+                              className="border rounded-lg p-3 text-center text-sm bg-white cursor-pointer hover:border-brand-red hover:bg-brand-red/5 transition-colors flex flex-col items-center justify-center"
+                            >
+                              <div className="w-8 h-8 mb-1 bg-gray-100 rounded-full flex items-center justify-center">
+                                {wallet === 'Apple Pay' && 'A'}
+                                {wallet === 'Google Pay' && 'G'}
+                                {wallet === 'Cash App' && '$'}
+                                {wallet === 'Venmo' && 'V'}
+                              </div>
+                              {wallet}
+                            </div>
+                          ))}
+                        </div>
+                        <p className="mt-3 text-xs text-muted-foreground text-center">
+                          * Click any wallet to pay with Square's secure checkout 
+                        </p>
+                      </motion.div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </div>
-            
-            <div 
-              className={`
-                border rounded-lg p-4 cursor-pointer transition-all
-                ${paymentMethod === 'card' ? 'border-brand-red bg-brand-red/5' : 'border-gray-200'}
-              `}
-            >
-              <div className="flex items-start">
-                <RadioGroupItem value="card" id="card" />
-                <div className="ml-3 w-full">
-                  <Label htmlFor="card" className="font-medium cursor-pointer">Credit or Debit Card</Label>
-                  <p className="text-sm text-muted-foreground">Pay with your card</p>
-                  
-                  {paymentMethod === 'card' && (
-                    <div className="mt-4 p-4 border rounded bg-gray-50">
-                      {/* This would be where the Square payment form is injected */}
-                      <div className="space-y-2">
-                        <Label htmlFor="card-number">Card Number</Label>
-                        <Input id="card-number" placeholder="1234 5678 9012 3456" />
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4 mt-2">
+              </motion.div>
+              
+              <motion.div 
+                variants={itemVariants}
+                className={`
+                  border rounded-lg p-4 cursor-pointer transition-all hover:border-brand-red/30
+                  ${paymentMethod === 'afterpay' ? 'border-brand-red bg-brand-red/5' : 'border-gray-200'}
+                `}
+              >
+                <div className="flex items-start">
+                  <RadioGroupItem value="afterpay" id="afterpay" />
+                  <div className="ml-3">
+                    <Label htmlFor="afterpay" className="font-medium cursor-pointer flex items-center">
+                      {getPaymentIcon("afterpay")}
+                      <span className="ml-2">Buy Now, Pay Later</span>
+                    </Label>
+                    <p className="text-sm text-muted-foreground">Afterpay, Klarna, Affirm</p>
+                    
+                    {paymentMethod === 'afterpay' && (
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="mt-4 p-4 border rounded bg-gray-50"
+                      >
+                        <p className="mb-2 text-sm">Split your payment into 4 interest-free installments</p>
+                        <div className="flex justify-between text-xs bg-white p-2 rounded border mb-2">
+                          <div>Today:</div>
+                          <div className="font-semibold">${(totalAmount / 4).toFixed(2)}</div>
+                        </div>
+                        <div className="flex justify-between text-xs bg-white p-2 rounded border">
+                          <div>3 future payments:</div>
+                          <div className="font-semibold">${(totalAmount / 4).toFixed(2)} every 2 weeks</div>
+                        </div>
+                        <p className="mt-3 text-xs text-muted-foreground text-center">
+                          * Subject to approval. Integrated with Square at checkout
+                        </p>
+                      </motion.div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+              
+              <motion.div 
+                variants={itemVariants}
+                className={`
+                  border rounded-lg p-4 cursor-pointer transition-all hover:border-brand-red/30
+                  ${paymentMethod === 'card' ? 'border-brand-red bg-brand-red/5' : 'border-gray-200'}
+                `}
+              >
+                <div className="flex items-start">
+                  <RadioGroupItem value="card" id="card" />
+                  <div className="ml-3 w-full">
+                    <Label htmlFor="card" className="font-medium cursor-pointer flex items-center">
+                      {getPaymentIcon("card")}
+                      <span className="ml-2">Credit or Debit Card</span>
+                    </Label>
+                    <p className="text-sm text-muted-foreground">Pay with your card</p>
+                    
+                    {paymentMethod === 'card' && (
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="mt-4 p-4 border rounded bg-gray-50"
+                      >
                         <div className="space-y-2">
-                          <Label htmlFor="card-expiry">Expiration Date</Label>
-                          <Input id="card-expiry" placeholder="MM/YY" />
+                          <Label htmlFor="card-number">Card Number</Label>
+                          <div className="relative">
+                            <Input id="card-number" placeholder="1234 5678 9012 3456" className="pl-10" />
+                            <CreditCard className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                          </div>
                         </div>
                         
-                        <div className="space-y-2">
-                          <Label htmlFor="card-cvc">CVC</Label>
-                          <Input id="card-cvc" placeholder="123" />
-                        </div>
-                      </div>
-                      
-                      <div className="mt-3 flex items-center">
-                        {cardFormComplete && (
-                          <div className="flex items-center text-green-600 text-sm">
-                            <CircleCheck className="h-4 w-4 mr-1" />
-                            <span>Card information complete</span>
+                        <div className="grid grid-cols-2 gap-4 mt-2">
+                          <div className="space-y-2">
+                            <Label htmlFor="card-expiry">Expiration Date</Label>
+                            <Input id="card-expiry" placeholder="MM/YY" />
                           </div>
-                        )}
-                      </div>
-                      
-                      <p className="mt-2 text-xs text-muted-foreground">
-                        * In the actual implementation, Square's secure card form would display here
-                      </p>
-                    </div>
-                  )}
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="card-cvc">CVC</Label>
+                            <Input id="card-cvc" placeholder="123" />
+                          </div>
+                        </div>
+                        
+                        <div className="mt-3 flex items-center">
+                          {cardFormComplete && (
+                            <motion.div 
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              className="flex items-center text-green-600 text-sm"
+                            >
+                              <CircleCheck className="h-4 w-4 mr-1" />
+                              <span>Card information complete</span>
+                            </motion.div>
+                          )}
+                        </div>
+                        
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          * Secured by Square's payment processing
+                        </p>
+                      </motion.div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </div>
-            
-            <div 
-              className={`
-                border rounded-lg p-4 cursor-pointer transition-all
-                ${paymentMethod === 'invoice' ? 'border-brand-red bg-brand-red/5' : 'border-gray-200'}
-              `}
-            >
-              <div className="flex items-start">
-                <RadioGroupItem value="invoice" id="invoice" />
-                <div className="ml-3">
-                  <Label htmlFor="invoice" className="font-medium cursor-pointer">Email Invoice</Label>
-                  <p className="text-sm text-muted-foreground">Get an invoice by email to pay later</p>
-                  
-                  {paymentMethod === 'invoice' && (
-                    <div className="mt-4 p-4 border rounded bg-gray-50">
-                      <div className="space-y-2">
-                        <Label htmlFor="invoice-email">Email Address</Label>
-                        <Input 
-                          id="invoice-email" 
-                          type="email" 
-                          placeholder="your@email.com"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                        />
-                      </div>
-                      <p className="mt-2 text-xs text-muted-foreground">
-                        We'll send you an invoice that you can pay online
-                      </p>
-                    </div>
-                  )}
+              </motion.div>
+              
+              <motion.div 
+                variants={itemVariants}
+                className={`
+                  border rounded-lg p-4 cursor-pointer transition-all hover:border-brand-red/30
+                  ${paymentMethod === 'invoice' ? 'border-brand-red bg-brand-red/5' : 'border-gray-200'}
+                `}
+              >
+                <div className="flex items-start">
+                  <RadioGroupItem value="invoice" id="invoice" />
+                  <div className="ml-3">
+                    <Label htmlFor="invoice" className="font-medium cursor-pointer flex items-center">
+                      {getPaymentIcon("invoice")}
+                      <span className="ml-2">Email Invoice</span>
+                    </Label>
+                    <p className="text-sm text-muted-foreground">Get an invoice by email to pay later</p>
+                    
+                    {paymentMethod === 'invoice' && (
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="mt-4 p-4 border rounded bg-gray-50"
+                      >
+                        <div className="space-y-2">
+                          <Label htmlFor="invoice-email">Email Address</Label>
+                          <div className="relative">
+                            <Input 
+                              id="invoice-email" 
+                              type="email" 
+                              placeholder="your@email.com"
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              className="pl-10"
+                            />
+                            <Mail className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                          </div>
+                        </div>
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          We'll send you an invoice that you can pay online within 48 hours
+                        </p>
+                      </motion.div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </div>
-          </RadioGroup>
-          
-          <div className="bg-secondary p-4 rounded-lg">
-            <div className="flex justify-between font-bold text-lg">
-              <span>Total:</span>
-              <span className="text-brand-red">${totalAmount}</span>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              By proceeding with payment, you agree to our terms and conditions
-            </p>
-          </div>
-          
-          <div className="flex justify-between pt-4">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={onPrevious}
-              disabled={isProcessing}
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" /> Back
-            </Button>
+              </motion.div>
+            </RadioGroup>
             
-            <Button 
-              type="button" 
-              className="bg-brand-red hover:bg-red-700 text-white min-w-[150px]"
-              onClick={onComplete}
-              disabled={isProcessing || (paymentMethod === 'invoice' && !email)}
+            <motion.div 
+              variants={itemVariants}
+              className="bg-secondary/50 p-4 rounded-lg border border-gray-200"
             >
-              {isProcessing ? 'Processing...' : 'Complete Adoption'}
-            </Button>
+              <div className="flex justify-between font-bold text-lg">
+                <span>Total:</span>
+                <span className="text-brand-red">${totalAmount}</span>
+              </div>
+              <div className="text-sm text-muted-foreground mt-1 flex items-center">
+                <Check className="h-4 w-4 text-green-500 mr-1" />
+                <span>Secure checkout with Square</span>
+              </div>
+            </motion.div>
+            
+            <motion.div 
+              variants={itemVariants}
+              className="flex justify-between pt-4"
+            >
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={onPrevious}
+                disabled={isProcessing}
+                className="border-brand-red/20 hover:bg-brand-red/5"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back
+              </Button>
+              
+              <Button 
+                type="button" 
+                className="bg-brand-red hover:bg-red-700 text-white min-w-[150px]"
+                onClick={onComplete}
+                disabled={isProcessing || (paymentMethod === 'invoice' && !email)}
+              >
+                {isProcessing ? 
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Processing...
+                  </span> : 
+                  'Complete Adoption'
+                }
+              </Button>
+            </motion.div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 };
 
