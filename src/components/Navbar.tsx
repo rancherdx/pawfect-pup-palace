@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Sun, Moon, PawPrint } from "lucide-react";
+import { Menu, X, Sun, Moon, PawPrint, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -28,7 +28,9 @@ const Navbar = () => {
     { name: "Home", path: "/" },
     { name: "About", path: "/about" },
     { name: "Available Puppies", path: "/puppies" },
+    { name: "Litters", path: "/litters" },
     { name: "Adopt", path: "/adopt" },
+    { name: "Financing", path: "/financing" },
     { name: "Reviews", path: "/reviews" },
     { name: "Health Guarantee", path: "/health" },
     { name: "Contact", path: "/contact" },

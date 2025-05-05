@@ -1,128 +1,51 @@
-
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
+import { UserCircle, Receipt, MessageSquare, Dog, PawPrint } from "lucide-react";
 import Section from "@/components/Section";
-import { PawPrint, User, Receipt, MessageCircle, ChartBar } from "lucide-react";
 import UserProfile from "@/components/dashboard/UserProfile";
-import CreatureProfiles from "@/components/dashboard/CreatureProfiles";
 import PuppyProfile from "@/components/dashboard/PuppyProfile";
 import Receipts from "@/components/dashboard/Receipts";
 import ChatHistory from "@/components/dashboard/ChatHistory";
+import CreatureProfiles from "@/components/dashboard/CreatureProfiles";
 
 const Dashboard = () => {
-  const navigate = useNavigate();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  // For demo purposes, we're using a fake authentication state
-  // In production, this would be connected to your auth system
-  if (!isAuthenticated) {
-    return (
-      <Section>
-        <div className="max-w-md mx-auto text-center space-y-6 py-12">
-          <div className="bg-accent/30 p-8 rounded-xl">
-            <PawPrint className="h-16 w-16 mx-auto mb-4 text-brand-red" />
-            <h1 className="text-2xl font-bold mb-4">Welcome to Your Pup Portal</h1>
-            <p className="mb-6">Sign in to access your dashboard, view your fur-family members, and more!</p>
-            
-            <div className="space-y-3">
-              <Button 
-                onClick={() => setIsAuthenticated(true)}
-                className="w-full bg-brand-red hover:bg-red-700"
-              >
-                Sign In
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={() => navigate("/adopt")}
-                className="w-full"
-              >
-                Adopt a Puppy First
-              </Button>
-            </div>
-          </div>
-        </div>
-      </Section>
-    );
-  }
+  const [activeTab, setActiveTab] = useState("profile");
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30">
-      <Section className="py-8" variant="dashboard">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-bold flex items-center">
-              <span className="bg-brand-red text-white p-2 rounded-full mr-3">
-                <PawPrint className="h-6 w-6" />
-              </span>
-              Your Pup Portal
-            </h1>
-            <Button 
-              variant="ghost" 
-              onClick={() => setIsAuthenticated(false)}
-              className="text-muted-foreground"
-            >
-              Sign Out
-            </Button>
-          </div>
-          
-          <Tabs defaultValue="puppies" className="w-full">
-            <div className="bg-white dark:bg-black/20 p-4 rounded-t-xl shadow-sm border-b">
-              <TabsList className="grid grid-cols-5 w-full h-auto gap-2">
-                <TabsTrigger value="puppies" className="py-3 data-[state=active]:bg-brand-red data-[state=active]:text-white">
-                  <PawPrint className="h-5 w-5 mr-2" />
-                  <span className="hidden sm:inline">Your Puppies</span>
-                  <span className="sm:hidden">Puppies</span>
-                </TabsTrigger>
-                <TabsTrigger value="creatures" className="py-3 data-[state=active]:bg-brand-red data-[state=active]:text-white">
-                  <Dog className="h-5 w-5 mr-2" />
-                  <span className="hidden sm:inline">Creature Profiles</span>
-                  <span className="sm:hidden">Creatures</span>
-                </TabsTrigger>
-                <TabsTrigger value="profile" className="py-3 data-[state=active]:bg-brand-red data-[state=active]:text-white">
-                  <User className="h-5 w-5 mr-2" />
-                  <span className="hidden sm:inline">Your Profile</span>
-                  <span className="sm:hidden">Profile</span>
-                </TabsTrigger>
-                <TabsTrigger value="receipts" className="py-3 data-[state=active]:bg-brand-red data-[state=active]:text-white">
-                  <Receipt className="h-5 w-5 mr-2" />
-                  <span className="hidden sm:inline">Adoption Records</span>
-                  <span className="sm:hidden">Records</span>
-                </TabsTrigger>
-                <TabsTrigger value="chat" className="py-3 data-[state=active]:bg-brand-red data-[state=active]:text-white">
-                  <MessageCircle className="h-5 w-5 mr-2" />
-                  <span className="hidden sm:inline">Chat History</span>
-                  <span className="sm:hidden">Chat</span>
-                </TabsTrigger>
-              </TabsList>
-            </div>
-            
-            <div className="bg-white dark:bg-black/20 p-6 rounded-b-xl shadow-md min-h-[500px]">
-              <TabsContent value="puppies" className="mt-0">
-                <PuppyProfile />
-              </TabsContent>
-              
-              <TabsContent value="creatures" className="mt-0">
-                <CreatureProfiles />
-              </TabsContent>
-              
-              <TabsContent value="profile" className="mt-0">
-                <UserProfile />
-              </TabsContent>
-              
-              <TabsContent value="receipts" className="mt-0">
-                <Receipts />
-              </TabsContent>
-              
-              <TabsContent value="chat" className="mt-0">
-                <ChatHistory />
-              </TabsContent>
-            </div>
-          </Tabs>
-        </div>
-      </Section>
-    </div>
+    <Section title="Dashboard" subtitle="Manage your profile, puppies, and more.">
+      <Tabs defaultValue={activeTab} className="w-full">
+        <TabsList className="bg-secondary/50 p-2 rounded-lg shadow-sm">
+          <TabsTrigger value="profile" onClick={() => setActiveTab("profile")}>
+            <UserCircle className="h-4 w-4 mr-2" />
+            Profile
+          </TabsTrigger>
+          <TabsTrigger value="puppy-profiles" onClick={() => setActiveTab("puppy-profiles")}>
+            <Dog className="h-4 w-4 mr-2" />
+            Puppy Profiles
+          </TabsTrigger>
+          <TabsTrigger value="receipts" onClick={() => setActiveTab("receipts")}>
+            <Receipt className="h-4 w-4 mr-2" />
+            Receipts
+          </TabsTrigger>
+          <TabsTrigger value="messages" onClick={() => setActiveTab("messages")}>
+            <MessageSquare className="h-4 w-4 mr-2" />
+            Messages
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="profile" className="mt-6">
+          <UserProfile />
+        </TabsContent>
+        <TabsContent value="puppy-profiles" className="mt-6">
+            <CreatureProfiles />
+        </TabsContent>
+        <TabsContent value="receipts" className="mt-6">
+          <Receipts />
+        </TabsContent>
+        <TabsContent value="messages" className="mt-6">
+          <ChatHistory />
+        </TabsContent>
+      </Tabs>
+    </Section>
   );
 };
 
