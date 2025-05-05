@@ -1,10 +1,10 @@
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import { HeartHandshake, PawPrint, Dog, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import confetti from "canvas-confetti";
+import { motion } from "framer-motion";
 
 interface PuppyData {
   name?: string;
