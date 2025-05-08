@@ -1,3 +1,4 @@
+
 import { Router } from 'itty-router';
 import { verifyAuth } from './auth';
 import * as puppiesController from './controllers/puppies';
@@ -15,6 +16,7 @@ interface Env {
   ENV: string;
 }
 
+// Define the context interface
 interface ExecutionContext {
   waitUntil(promise: Promise<any>): void;
   passThroughOnException(): void;
@@ -114,7 +116,8 @@ export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     try {
       // Handle the request with the router
-      const response = await router.handle(request, env, ctx);
+      // The router.handle function expects only request and env, not ctx
+      const response = await router.handle(request, env);
       return response;
     } catch (error) {
       return handleApiError(error);
