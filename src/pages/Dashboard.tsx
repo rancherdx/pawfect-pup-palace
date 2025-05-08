@@ -1,6 +1,7 @@
+
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserCircle, Receipt, MessageSquare, Dog, PawPrint } from "lucide-react";
+import { UserCircle, Receipt, MessageSquare, Dog, PawPrint, Cat } from "lucide-react";
 import Section from "@/components/Section";
 import UserProfile from "@/components/dashboard/UserProfile";
 import PuppyProfile from "@/components/dashboard/PuppyProfile";
@@ -23,6 +24,10 @@ const Dashboard = () => {
             <Dog className="h-4 w-4 mr-2" />
             Puppy Profiles
           </TabsTrigger>
+          <TabsTrigger value="kitten-profiles" onClick={() => setActiveTab("kitten-profiles")}>
+            <Cat className="h-4 w-4 mr-2" />
+            Kitten Profiles
+          </TabsTrigger>
           <TabsTrigger value="receipts" onClick={() => setActiveTab("receipts")}>
             <Receipt className="h-4 w-4 mr-2" />
             Receipts
@@ -36,7 +41,10 @@ const Dashboard = () => {
           <UserProfile />
         </TabsContent>
         <TabsContent value="puppy-profiles" className="mt-6">
-            <CreatureProfiles />
+          <PuppyProfile />
+        </TabsContent>
+        <TabsContent value="kitten-profiles" className="mt-6">
+          <CreatureProfiles />
         </TabsContent>
         <TabsContent value="receipts" className="mt-6">
           <Receipts />
