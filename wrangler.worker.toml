@@ -1,0 +1,30 @@
+name = "puppy_breeder_app"
+compatibility_date = "2024-01-01"
+main = "src/worker/index.ts"
+
+[vars]
+ENV = "production"
+
+[[kv_namespaces]]
+binding = "AUTH_STORE"
+id = "6906c989494a4a4dab7dfad468d87885"
+preview_id = "9b8543e32afb439880a096899d6b5005"
+
+[[d1_databases]]
+binding = "PUPPIES_DB"
+database_name = "puppy_breeder_db"
+database_id = "28c5ca0d-7d32-4724-9c20-aaf36410452d"
+
+[[r2_buckets]]
+binding = "PUPPY_IMAGES"
+bucket_name = "puppy-breeder-images"
+preview_bucket_name = "puppy-breeder-images-dev"
+
+[durable_objects]
+bindings = [
+  { name = "SESSIONS", class_name = "SessionDO" }
+]
+
+[[migrations]]
+tag = "v1"
+new_classes = ["SessionDO"]

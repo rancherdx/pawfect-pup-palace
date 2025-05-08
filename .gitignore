@@ -7,18 +7,40 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Runtime & build
 node_modules
 dist
 dist-ssr
-*.local
+.build
+.cache
+.bun
 
-# Editor directories and files
+# Bun lockfile (optional, keep if you want consistency)
+bun.lockb
+
+# Local environment & test
+.env
+.env.*.local
+*.local
+*.test.*
+coverage
+
+# Cloudflare Wrangler
+wrangler.toml   # dynamically swapped file
+wrangler.d     # wrangler internal cache
+
+# Editor settings
 .vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store
+
+# Misc
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# Mac junk
+*.DS_Store
