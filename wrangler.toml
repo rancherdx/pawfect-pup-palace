@@ -1,0 +1,32 @@
+
+name = "puppy_breeder_app"
+compatibility_date = "2024-01-01"
+main = "src/worker/index.ts"
+
+[vars]
+ENV = "production"
+
+[[kv_namespaces]]
+binding = "AUTH_STORE"
+id = "$AUTH_STORE_ID" # Replace in production
+preview_id = "$AUTH_STORE_PREVIEW_ID" # Replace in production
+
+[[d1_databases]]
+binding = "PUPPIES_DB"
+database_name = "puppy_breeder_db"
+database_id = "$DATABASE_ID" # Replace in production
+
+[[r2_buckets]]
+binding = "PUPPY_IMAGES"
+bucket_name = "puppy_breeder_images"
+preview_bucket_name = "puppy_breeder_images_dev"
+
+[durable_objects]
+bindings = [
+  { name = "SESSIONS", class_name = "SessionDO" }
+]
+
+[[migrations]]
+tag = "v1"
+new_classes = ["SessionDO"]
+

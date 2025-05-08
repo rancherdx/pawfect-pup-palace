@@ -5,73 +5,96 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Plus, Dog, Edit, Trash, Search, ArrowRight } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import PuppyForm from "./PuppyForm";
-
-// Mock data for demo purposes
-const initialPuppies = [
-  { 
-    id: "1", 
-    name: "Max", 
-    breed: "Golden Retriever", 
-    birthdate: "2023-12-10", 
-    price: 1200, 
-    description: "Playful and friendly golden puppy with a beautiful coat",
-    status: "Available", 
-    squareStatus: "Synced" 
-  },
-  { 
-    id: "2", 
-    name: "Bella", 
-    breed: "German Shepherd", 
-    birthdate: "2024-01-15", 
-    price: 1500, 
-    description: "Smart and alert German Shepherd with excellent temperament",
-    status: "Reserved", 
-    squareStatus: "Synced" 
-  },
-  { 
-    id: "3", 
-    name: "Rocky", 
-    breed: "French Bulldog", 
-    birthdate: "2024-02-20", 
-    price: 2000, 
-    description: "Adorable Frenchie with a playful personality",
-    status: "Sold", 
-    squareStatus: "Not Synced" 
-  },
-];
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { puppiesApi } from "@/api";
+import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const PuppyManagement = () => {
-  const [puppies, setPuppies] = useState(initialPuppies);
   const [isAddingPuppy, setIsAddingPuppy] = useState(false);
-  const [editingPuppy, setEditingPuppy] = useState<null | typeof initialPuppies[0]>(null);
+  const [editingPuppy, setEditingPuppy] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  const queryClient = useQueryClient();
+  
+  // Fetch puppies from API
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['admin-puppies'],
+    queryFn: () => puppiesApi.getAllPuppies(),
+  });
+
+  const puppies = data?.puppies || [];
+  
+  // Create mutation for adding puppies
+  const createPuppyMutation = useMutation({
+    mutationFn: (newPuppy: any) => puppiesApi.createPuppy(newPuppy),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-puppies'] });
+      toast.success("Puppy added successfully");
+      setIsAddingPuppy(false);
+    },
+    onError: (error) => {
+      toast.error(`Failed to add puppy: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  });
+  
+  // Update mutation for editing puppies
+  const updatePuppyMutation = useMutation({
+    mutationFn: (updatedPuppy: any) => puppiesApi.updatePuppy(updatedPuppy.id, updatedPuppy),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-puppies'] });
+      toast.success("Puppy updated successfully");
+      setEditingPuppy(null);
+    },
+    onError: (error) => {
+      toast.error(`Failed to update puppy: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  });
+  
+  // Delete mutation for removing puppies
+  const deletePuppyMutation = useMutation({
+    mutationFn: (id: string) => puppiesApi.deletePuppy(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-puppies'] });
+      toast.success("Puppy deleted successfully");
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete puppy: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  });
 
   const handleAddPuppy = (newPuppy: any) => {
-    const puppy = { ...newPuppy, id: String(Date.now()), squareStatus: "Not Synced" };
-    setPuppies([...puppies, puppy]);
-    setIsAddingPuppy(false);
+    createPuppyMutation.mutate(newPuppy);
   };
 
   const handleUpdatePuppy = (updatedPuppy: any) => {
-    setPuppies(puppies.map(p => p.id === updatedPuppy.id ? updatedPuppy : p));
-    setEditingPuppy(null);
+    updatePuppyMutation.mutate(updatedPuppy);
   };
 
   const handleDeletePuppy = (id: string) => {
     if (window.confirm("Are you sure you want to delete this puppy?")) {
-      setPuppies(puppies.filter(p => p.id !== id));
+      deletePuppyMutation.mutate(id);
     }
   };
 
   const syncWithSquare = (id: string) => {
-    setPuppies(puppies.map(p => 
-      p.id === id ? { ...p, squareStatus: "Synced" } : p
-    ));
-    // In a real app, this would make an API call to Square
-    alert("Puppy synced with Square! (Demo functionality)");
+    // In a real app, this would make an API call to sync with Square
+    toast.success("Puppy synced with Square!");
+    
+    // Update the local state to show the puppy as synced
+    queryClient.setQueryData(['admin-puppies'], (old: any) => {
+      const updatedPuppies = old.puppies.map((p: any) => 
+        p.id === id ? { ...p, squareStatus: "Synced" } : p
+      );
+      
+      return { 
+        ...old,
+        puppies: updatedPuppies
+      };
+    });
   };
 
-  const filteredPuppies = puppies.filter(puppy => 
+  const filteredPuppies = puppies.filter((puppy: any) => 
     puppy.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     puppy.breed.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -138,18 +161,38 @@ const PuppyManagement = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredPuppies.length === 0 ? (
+                {isLoading ? (
+                  // Loading skeleton
+                  Array(3).fill(0).map((_, i) => (
+                    <TableRow key={i}>
+                      {Array(7).fill(0).map((_, j) => (
+                        <TableCell key={j}>
+                          <Skeleton className="h-6 w-full" />
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : error ? (
+                  // Error state
+                  <TableRow>
+                    <TableCell colSpan={7} className="h-24 text-center text-red-500">
+                      Failed to load puppies. Please try again.
+                    </TableCell>
+                  </TableRow>
+                ) : filteredPuppies.length === 0 ? (
+                  // Empty state
                   <TableRow>
                     <TableCell colSpan={7} className="h-24 text-center">
                       No puppies found. Add your first puppy!
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredPuppies.map((puppy) => (
+                  // Puppy list
+                  filteredPuppies.map((puppy: any) => (
                     <TableRow key={puppy.id}>
                       <TableCell className="font-medium">{puppy.name}</TableCell>
                       <TableCell>{puppy.breed}</TableCell>
-                      <TableCell>{new Date(puppy.birthdate).toLocaleDateString()}</TableCell>
+                      <TableCell>{new Date(puppy.birthDate).toLocaleDateString()}</TableCell>
                       <TableCell>${puppy.price}</TableCell>
                       <TableCell>
                         <span className={`px-2 py-1 rounded-full text-xs ${
@@ -168,7 +211,7 @@ const PuppyManagement = () => {
                             ? "bg-blue-100 text-blue-800" 
                             : "bg-red-100 text-red-800"
                         }`}>
-                          {puppy.squareStatus}
+                          {puppy.squareStatus || "Not Synced"}
                         </span>
                       </TableCell>
                       <TableCell className="text-right space-x-1">
@@ -187,7 +230,7 @@ const PuppyManagement = () => {
                         >
                           <Trash className="h-4 w-4" />
                         </Button>
-                        {puppy.squareStatus === "Not Synced" && (
+                        {(!puppy.squareStatus || puppy.squareStatus === "Not Synced") && (
                           <Button 
                             size="sm"
                             variant="outline" 

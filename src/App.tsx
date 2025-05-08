@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 import Layout from "@/components/Layout";
 import Home from "@/pages/Home";
@@ -22,34 +23,44 @@ import Checkout from "@/pages/Checkout";
 import Financing from "@/pages/Financing";
 import NotFound from "@/pages/NotFound";
 
-const queryClient = new QueryClient();
+// Create a client for React Query
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="light">
       <TooltipProvider>
-        <Toaster />
-        <SonnerToaster />
-        <BrowserRouter>
-          <Layout>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/puppies" element={<Puppies />} />
-              <Route path="/puppies/:id" element={<PuppyDetails />} />
-              <Route path="/litters" element={<Litters />} />
-              <Route path="/adopt" element={<Adopt />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/reviews" element={<Reviews />} />
-              <Route path="/health" element={<Health />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/financing" element={<Financing />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Layout>
-        </BrowserRouter>
+        <AuthProvider>
+          <Toaster />
+          <SonnerToaster />
+          <BrowserRouter>
+            <Layout>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/puppies" element={<Puppies />} />
+                <Route path="/puppies/:id" element={<PuppyDetails />} />
+                <Route path="/litters" element={<Litters />} />
+                <Route path="/adopt" element={<Adopt />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/reviews" element={<Reviews />} />
+                <Route path="/health" element={<Health />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/financing" element={<Financing />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Layout>
+          </BrowserRouter>
+        </AuthProvider>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>

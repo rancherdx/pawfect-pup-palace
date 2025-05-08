@@ -1,5 +1,4 @@
 
-import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Section from "@/components/Section";
@@ -7,100 +6,47 @@ import PuppyImageCarousel from "@/components/puppy-details/PuppyImageCarousel";
 import PuppyInfoSection from "@/components/puppy-details/PuppyInfoSection";
 import TemperamentTraitsCard from "@/components/puppy-details/TemperamentTraitsCard";
 import DetailsTabs from "@/components/puppy-details/DetailsTabs";
-
-// Mock data for puppy details
-const puppiesData = [
-  {
-    id: "1",
-    name: "Bella",
-    breed: "Golden Retriever",
-    age: "8 weeks",
-    gender: "Female",
-    images: [
-      "https://images.unsplash.com/photo-1615233500064-caa995e2f9dd?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80",
-      "https://images.unsplash.com/photo-1633722715463-d30f4f325e24?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=736&q=80",
-      "https://images.unsplash.com/photo-1652531661755-f234b7fda163?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80"
-    ],
-    price: 1200,
-    available: true,
-    status: "Available",
-    description: "Bella is a beautiful Golden Retriever puppy with a playful personality. She loves to cuddle and play fetch. She's well-socialized with children and other pets.",
-    parents: {
-      dad: {
-        name: "Max",
-        age: "3 years",
-        weight: "70 lbs",
-        image: "https://images.unsplash.com/photo-1565708097881-9300cc0f2997?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80"
-      },
-      mom: {
-        name: "Lucy",
-        age: "2 years",
-        weight: "65 lbs",
-        image: "https://images.unsplash.com/photo-1611250282006-4484dd3fba6f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80"
-      }
-    },
-    birthDate: "March 15, 2023",
-    weight: "7 lbs",
-    color: "Golden",
-    vaccinations: "First round completed",
-    microchipped: true,
-    temperament: ["Friendly", "Playful", "Gentle"],
-    trainability: 80,
-    activityLevel: 70,
-    sizeMaturity: "Large",
-    feedingNotes: "3 meals daily of high-quality puppy food",
-    careTips: [
-      "Regular grooming required",
-      "Daily exercise needed",
-      "Socialization important at this age"
-    ],
-    lastCheckup: "April 10, 2023",
-    growthProgress: 15
-  },
-  // Add more puppies as needed...
-];
-
-// Calculate age in a fun way 
-const calculateAge = (birthdayStr: string) => {
-  const birthday = new Date(birthdayStr);
-  const today = new Date();
-  
-  // Calculate the time difference in milliseconds
-  const diffTime = Math.abs(today.getTime() - birthday.getTime());
-  
-  // Calculate years, months, weeks
-  const diffYears = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 365));
-  const diffMonths = Math.floor((diffTime % (1000 * 60 * 60 * 24 * 365)) / (1000 * 60 * 60 * 24 * 30));
-  const diffWeeks = Math.floor((diffTime % (1000 * 60 * 60 * 24 * 30)) / (1000 * 60 * 60 * 24 * 7));
-  
-  let ageDisplay = "";
-  
-  if (diffYears > 0) {
-    ageDisplay += `${diffYears} year${diffYears > 1 ? 's' : ''}`;
-    if (diffMonths > 0) {
-      ageDisplay += ` ${diffMonths} month${diffMonths > 1 ? 's' : ''}`;
-    }
-  } else if (diffMonths > 0) {
-    ageDisplay += `${diffMonths} month${diffMonths > 1 ? 's' : ''}`;
-    if (diffWeeks > 0) {
-      ageDisplay += ` ${diffWeeks} week${diffWeeks > 1 ? 's' : ''}`;
-    }
-  } else {
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    ageDisplay = `${diffDays} day${diffDays > 1 ? 's' : ''}`;
-  }
-  
-  return ageDisplay;
-};
+import usePuppyDetails from "@/hooks/usePuppyDetails";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const PuppyDetails = () => {
   const { id } = useParams();
+  const { puppy, puppyAge, isLoading, error } = usePuppyDetails(id);
   
-  // Find the puppy based on the ID from the URL
-  const puppy = puppiesData.find(p => p.id === id);
+  // If loading, show skeleton
+  if (isLoading) {
+    return (
+      <Section>
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="h-[400px] bg-muted rounded-xl animate-pulse"></div>
+            <div className="space-y-4">
+              <Skeleton className="h-10 w-3/4" />
+              <Skeleton className="h-6 w-1/2" />
+              <Skeleton className="h-6 w-1/3" />
+              <Skeleton className="h-24 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <div className="grid grid-cols-3 gap-4">
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Skeleton className="h-12 w-full" />
+                <div className="grid grid-cols-2 gap-2">
+                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-12 w-full" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Section>
+    );
+  }
 
-  // If puppy is not found, show a message
-  if (!puppy) {
+  // If error, show error message
+  if (error || !puppy) {
     return (
       <Section>
         <div className="text-center py-12">
@@ -113,9 +59,6 @@ const PuppyDetails = () => {
       </Section>
     );
   }
-
-  // Calculate the puppy's actual age
-  const puppyAge = calculateAge(puppy.birthDate);
 
   return (
     <div className="bg-background/50 relative">
@@ -135,9 +78,9 @@ const PuppyDetails = () => {
           {/* Temperament & Traits Card */}
           <div className="mt-8 mb-12">
             <TemperamentTraitsCard 
-              temperament={puppy.temperament}
-              trainability={puppy.trainability}
-              activityLevel={puppy.activityLevel}
+              temperament={puppy.temperament || []}
+              trainability={puppy.trainability || 50}
+              activityLevel={puppy.activityLevel || 50}
             />
           </div>
 
