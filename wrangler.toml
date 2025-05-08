@@ -1,4 +1,3 @@
-
 name = "puppy_breeder_app"
 compatibility_date = "2024-01-01"
 main = "src/worker/index.ts"
@@ -8,18 +7,18 @@ ENV = "production"
 
 [[kv_namespaces]]
 binding = "AUTH_STORE"
-id = "$AUTH_STORE_ID" # Replace in production
-preview_id = "$AUTH_STORE_PREVIEW_ID" # Replace in production
+id = "6906c989494a4a4dab7dfad468d87885"
+preview_id = "9b8543e32afb439880a096899d6b5005"
 
 [[d1_databases]]
 binding = "PUPPIES_DB"
 database_name = "puppy_breeder_db"
-database_id = "$DATABASE_ID" # Replace in production
+database_id = "28c5ca0d-7d32-4724-9c20-aaf36410452d"
 
 [[r2_buckets]]
 binding = "PUPPY_IMAGES"
-bucket_name = "puppy_breeder_images"
-preview_bucket_name = "puppy_breeder_images_dev"
+bucket_name = "puppy-breeder-images"
+preview_bucket_name = "puppy-breeder-images-dev"
 
 [durable_objects]
 bindings = [
@@ -29,4 +28,3 @@ bindings = [
 [[migrations]]
 tag = "v1"
 new_classes = ["SessionDO"]
-
