@@ -88,10 +88,16 @@ router.post('/api/logout', async (request, env) => {
 // Static asset fallback
 router.get('*', async (request) => fetch(request));
 
+// Define ExecutionContext type
+interface ExecutionContext {
+  waitUntil(promise: Promise<any>): void;
+  passThroughOnException(): void;
+}
+
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     try {
-      // Fixed: removed the third argument (ctx) from router.handle
+      // Fix: removed the third argument (ctx) from router.handle
       const response = await router.handle(request, env);
       return response;
     } catch (error) {
