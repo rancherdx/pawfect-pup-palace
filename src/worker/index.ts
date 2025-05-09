@@ -1,3 +1,4 @@
+
 import { Router } from 'itty-router';
 import { verifyAuth } from './auth';
 import * as puppiesController from './controllers/puppies';
@@ -6,12 +7,6 @@ import * as littersController from './controllers/litters';
 import { corsHeaders } from './utils/cors';
 import { handleApiError } from './utils/errors';
 import type { Env } from './env';
-
-// Define the context interface
-interface ExecutionContext {
-  waitUntil(promise: Promise<any>): void;
-  passThroughOnException(): void;
-}
 
 // Create a new router
 const router = Router();
@@ -96,6 +91,7 @@ router.get('*', async (request) => fetch(request));
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     try {
+      // Fixed: removed the third argument (ctx) from router.handle
       const response = await router.handle(request, env);
       return response;
     } catch (error) {
