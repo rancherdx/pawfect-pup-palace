@@ -1,4 +1,3 @@
-
 import { Router } from 'itty-router';
 import { verifyAuth } from './auth';
 import * as puppiesController from './controllers/puppies';
@@ -156,7 +155,7 @@ router.get('*', async (req) => {
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     try {
-      // Only pass request and env to router.handle - remove ctx parameter
+      // Fix: only pass request and env to router.handle - remove ctx parameter
       return await router.handle(request, env);
     } catch (err) {
       return handleApiError(err);

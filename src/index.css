@@ -6,13 +6,6 @@ body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
-/* Responsive font sizing - adapts to user's system preferences */
-@media screen and (prefers-reduced-motion: no-preference) {
-  html {
-    font-size: 100%; /* Base size - will adapt to user's system settings */
-  }
-}
-
 /* Additional accessibility styles for older clients */
 .larger-text {
   font-size: 1.2rem;
