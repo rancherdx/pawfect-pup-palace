@@ -5,6 +5,7 @@ const API_URL = import.meta.env.VITE_API_URL || "/api";
 
 // Store the authentication token
 let authToken: string | null = localStorage.getItem('authToken');
+let jwtToken: string | null = localStorage.getItem('jwtToken');
 
 // Helper for making API requests
 async function fetchAPI<T>(
@@ -35,7 +36,9 @@ async function fetchAPI<T>(
       // Handle authentication errors
       if (response.status === 401) {
         localStorage.removeItem('authToken');
+        localStorage.removeItem('jwtToken');
         authToken = null;
+        jwtToken = null;
         toast.error("Your session has expired. Please log in again.");
         window.location.href = '/login';
       }
@@ -58,27 +61,31 @@ async function fetchAPI<T>(
 
 // Authentication API
 export const login = async (email: string, password: string) => {
-  const response = await fetchAPI<{ token: string, user: any }>('/login', {
+  const response = await fetchAPI<{ token: string, jwt: string, user: any }>('/login', {
     method: 'POST',
     body: JSON.stringify({ email, password }),
   });
   
-  // Store the auth token
+  // Store the auth tokens
   localStorage.setItem('authToken', response.token);
+  localStorage.setItem('jwtToken', response.jwt);
   authToken = response.token;
+  jwtToken = response.jwt;
   
   return response.user;
 };
 
 export const register = async (userData: { email: string, password: string, name: string }) => {
-  const response = await fetchAPI<{ token: string, user: any }>('/register', {
+  const response = await fetchAPI<{ token: string, jwt: string, user: any }>('/register', {
     method: 'POST',
     body: JSON.stringify(userData),
   });
   
-  // Store the auth token
+  // Store the auth tokens
   localStorage.setItem('authToken', response.token);
+  localStorage.setItem('jwtToken', response.jwt);
   authToken = response.token;
+  jwtToken = response.jwt;
   
   return response.user;
 };
@@ -89,7 +96,9 @@ export const logout = async () => {
   } finally {
     // Always clear auth data even if API call fails
     localStorage.removeItem('authToken');
+    localStorage.removeItem('jwtToken');
     authToken = null;
+    jwtToken = null;
   }
 };
 
@@ -104,3 +113,20 @@ export const getCurrentUser = async () => {
 };
 
 export const isAuthenticated = () => !!authToken;
+
+export const getJwtToken = () => jwtToken;
+
+// Parse the JWT token to get user information without making an API call
+export const parseJwtToken = () => {
+  if (!jwtToken) return null;
+  
+  try {
+    // JWT token structure is header.payload.signature
+    const base64Payload = jwtToken.split('.')[1];
+    const payload = atob(base64Payload);
+    return JSON.parse(payload);
+  } catch (error) {
+    console.error("Failed to parse JWT token:", error);
+    return null;
+  }
+};

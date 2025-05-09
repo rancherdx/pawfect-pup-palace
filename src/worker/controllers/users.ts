@@ -1,6 +1,6 @@
 
 import { corsHeaders } from '../utils/cors';
-import { generateToken, hashPassword } from '../auth';
+import { hashPassword, generateToken, createJWT, verifyJWT } from '../auth';
 
 export async function login(request: Request, env: any) {
   try {
@@ -48,6 +48,13 @@ export async function login(request: Request, env: any) {
     // Generate a session token
     const token = await generateToken();
     
+    // Create JWT
+    const jwt = createJWT({
+      userId: user.id,
+      email: user.email,
+      role: user.role
+    });
+    
     // Store the session in KV
     const sessionData = {
       userId: user.id,
@@ -60,6 +67,7 @@ export async function login(request: Request, env: any) {
     
     return new Response(JSON.stringify({
       token,
+      jwt,
       user: {
         id: user.id,
         email: user.email,
@@ -129,6 +137,13 @@ export async function register(request: Request, env: any) {
     // Generate a session token
     const token = await generateToken();
     
+    // Create JWT
+    const jwt = createJWT({
+      userId,
+      email,
+      role: 'customer'
+    });
+    
     // Store the session in KV
     const sessionData = {
       userId,
@@ -141,6 +156,7 @@ export async function register(request: Request, env: any) {
     
     return new Response(JSON.stringify({
       token,
+      jwt,
       user: {
         id: userId,
         email,

@@ -1,5 +1,6 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import HeroSection from "@/components/HeroSection";
 import Section from "@/components/Section";
 import PuppyCard from "@/components/PuppyCard";
@@ -8,106 +9,64 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-
-// Mock data for available puppies
-const puppiesData = [
-  {
-    id: "1",
-    name: "Bella",
-    breed: "Golden Retriever",
-    age: "8 weeks",
-    gender: "Female",
-    imageSrc: "https://images.unsplash.com/photo-1615233500064-caa995e2f9dd?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80",
-    price: 1200,
-    available: true,
-  },
-  {
-    id: "2",
-    name: "Max",
-    breed: "German Shepherd",
-    age: "10 weeks",
-    gender: "Male",
-    imageSrc: "https://images.unsplash.com/photo-1589941013453-ec89f33b5e95?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80",
-    price: 1400,
-    available: true,
-  },
-  {
-    id: "3",
-    name: "Luna",
-    breed: "Labrador Retriever",
-    age: "9 weeks",
-    gender: "Female",
-    imageSrc: "https://images.unsplash.com/photo-1591769225440-811ad7d6eab3?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80",
-    price: 1100,
-    available: true,
-  },
-  {
-    id: "4",
-    name: "Rocky",
-    breed: "Boxer",
-    age: "12 weeks",
-    gender: "Male",
-    imageSrc: "https://images.unsplash.com/photo-1592754862816-1a21a4ea2281?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80",
-    price: 1300,
-    available: false,
-  },
-  {
-    id: "5",
-    name: "Charlie",
-    breed: "Beagle",
-    age: "10 weeks",
-    gender: "Male",
-    imageSrc: "https://images.unsplash.com/photo-1537151625747-768eb6cf92b2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=685&q=80",
-    price: 950,
-    available: true,
-  },
-  {
-    id: "6",
-    name: "Daisy",
-    breed: "Poodle",
-    age: "11 weeks",
-    gender: "Female",
-    imageSrc: "https://images.unsplash.com/photo-1591160690555-5debfba289f0?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=764&q=80",
-    price: 1250,
-    available: true,
-  },
-];
-
-const breeds = ["All Breeds", "Golden Retriever", "German Shepherd", "Labrador Retriever", "Boxer", "Beagle", "Poodle"];
+import { puppiesApi } from "@/api";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Loader2 } from "lucide-react";
 
 const Puppies = () => {
   const [selectedBreed, setSelectedBreed] = useState("All Breeds");
   const [searchTerm, setSearchTerm] = useState("");
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(false);
-  const [currentPuppies, setCurrentPuppies] = useState(puppiesData);
+  const [breeds, setBreeds] = useState<string[]>([]);
+  
+  // Fetch all puppies
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ['puppies'],
+    queryFn: () => puppiesApi.getAllPuppies(),
+  });
+
+  const [filteredPuppies, setFilteredPuppies] = useState<any[]>([]);
+
+  // Extract unique breeds when data is loaded
+  useEffect(() => {
+    if (data?.puppies) {
+      const uniqueBreeds = Array.from(new Set(data.puppies.map((puppy: any) => puppy.breed)));
+      setBreeds(["All Breeds", ...uniqueBreeds]);
+      setFilteredPuppies(data.puppies);
+    }
+  }, [data]);
 
   const handleFilter = () => {
-    let filtered = puppiesData;
+    if (!data?.puppies) return;
+    
+    let filtered = data.puppies;
     
     if (selectedBreed !== "All Breeds") {
-      filtered = filtered.filter(puppy => puppy.breed === selectedBreed);
+      filtered = filtered.filter((puppy: any) => puppy.breed === selectedBreed);
     }
     
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(puppy => 
+      filtered = filtered.filter((puppy: any) => 
         puppy.name.toLowerCase().includes(term) || 
         puppy.breed.toLowerCase().includes(term)
       );
     }
     
     if (showOnlyAvailable) {
-      filtered = filtered.filter(puppy => puppy.available);
+      filtered = filtered.filter((puppy: any) => puppy.status === 'Available');
     }
     
-    setCurrentPuppies(filtered);
+    setFilteredPuppies(filtered);
   };
 
   const resetFilters = () => {
     setSelectedBreed("All Breeds");
     setSearchTerm("");
     setShowOnlyAvailable(false);
-    setCurrentPuppies(puppiesData);
+    if (data?.puppies) {
+      setFilteredPuppies(data.puppies);
+    }
   };
 
   return (
@@ -167,35 +126,88 @@ const Puppies = () => {
           </div>
         </div>
 
-        {/* Puppies Grid */}
-        {currentPuppies.length > 0 ? (
-          <div className="puppy-card-grid">
-            {currentPuppies.map((puppy) => (
-              <PuppyCard
-                key={puppy.id}
-                id={puppy.id}
-                name={puppy.name}
-                breed={puppy.breed}
-                age={puppy.age}
-                gender={puppy.gender}
-                imageSrc={puppy.imageSrc}
-                price={puppy.price}
-                available={puppy.available}
-              />
+        {/* Loading State */}
+        {isLoading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="border rounded-lg p-4 h-96">
+                <Skeleton className="h-48 w-full rounded-md" />
+                <div className="space-y-2 mt-4">
+                  <Skeleton className="h-6 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-10 w-full mt-4" />
+                </div>
+              </div>
             ))}
           </div>
-        ) : (
+        )}
+
+        {/* Error State */}
+        {isError && (
           <div className="text-center py-12">
-            <h3 className="text-xl font-semibold mb-2">No puppies found</h3>
-            <p className="text-muted-foreground">
-              Try adjusting your filters to see more results.
+            <h3 className="text-xl font-semibold mb-2">Error loading puppies</h3>
+            <p className="text-muted-foreground mb-4">
+              We're having trouble loading the puppies. Please try again.
             </p>
-            <Button className="mt-4" onClick={resetFilters}>Reset Filters</Button>
+            <Button onClick={() => refetch()}>Retry</Button>
           </div>
+        )}
+
+        {/* Puppies Grid */}
+        {!isLoading && !isError && (
+          <>
+            {filteredPuppies.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredPuppies.map((puppy) => (
+                  <PuppyCard
+                    key={puppy.id}
+                    id={puppy.id.toString()}
+                    name={puppy.name}
+                    breed={puppy.breed}
+                    age={calculateAge(puppy.birth_date)}
+                    gender={puppy.gender}
+                    imageSrc={puppy.image_url || "https://images.unsplash.com/photo-1591160690555-5debfba289f0?ixlib=rb-4.0.3"}
+                    price={puppy.price}
+                    available={puppy.status === 'Available'}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <h3 className="text-xl font-semibold mb-2">No puppies found</h3>
+                <p className="text-muted-foreground">
+                  Try adjusting your filters to see more results.
+                </p>
+                <Button className="mt-4" onClick={resetFilters}>Reset Filters</Button>
+              </div>
+            )}
+          </>
         )}
       </Section>
     </div>
   );
 };
+
+// Helper function to calculate age from birth_date
+function calculateAge(birthDate: string | undefined): string {
+  if (!birthDate) return 'Unknown';
+  
+  const birth = new Date(birthDate);
+  const now = new Date();
+  
+  // Calculate months
+  let months = (now.getFullYear() - birth.getFullYear()) * 12;
+  months -= birth.getMonth();
+  months += now.getMonth();
+  
+  // Calculate weeks for very young puppies
+  if (months < 1) {
+    const ageInDays = Math.floor((now.getTime() - birth.getTime()) / (1000 * 60 * 60 * 24));
+    return `${Math.floor(ageInDays / 7)} weeks`;
+  }
+  
+  return `${months} months`;
+}
 
 export default Puppies;

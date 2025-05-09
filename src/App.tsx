@@ -21,7 +21,10 @@ import Dashboard from "@/pages/Dashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
 import Checkout from "@/pages/Checkout";
 import Financing from "@/pages/Financing";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
 import NotFound from "@/pages/NotFound";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -49,13 +52,34 @@ const App = () => (
                 <Route path="/puppies/:id" element={<PuppyDetails />} />
                 <Route path="/litters" element={<Litters />} />
                 <Route path="/adopt" element={<Adopt />} />
-                <Route path="/checkout" element={<Checkout />} />
                 <Route path="/reviews" element={<Reviews />} />
                 <Route path="/health" element={<Health />} />
                 <Route path="/contact" element={<Contact />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/financing" element={<Financing />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                
+                {/* Protected Routes */}
+                <Route path="/dashboard" element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/checkout" element={
+                  <ProtectedRoute>
+                    <Checkout />
+                  </ProtectedRoute>
+                } />
+                <Route path="/financing" element={
+                  <ProtectedRoute>
+                    <Financing />
+                  </ProtectedRoute>
+                } />
+                
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Layout>

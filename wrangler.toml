@@ -1,3 +1,4 @@
+
 name = "puppy_breeder_app"
 main = "src/worker/index.ts"
 compatibility_date = "2024-01-01"
@@ -33,8 +34,3 @@ bindings = [
 [[migrations]]
 tag = "v1"
 new_classes = ["SessionDO"]
-
-[[kv_namespaces]]
-binding = "__STATIC_CONTENT"
-id = "2edbc59317af4bf88d30dca7f0f208f8"
-preview_id = "ec8351b2271942bdbfec48a0af56253b"
