@@ -1,114 +1,54 @@
-import { Router } from 'itty-router';
-import { verifyAuth } from './auth';
-import * as puppiesController from './controllers/puppies';
-import * as usersController from './controllers/users';
-import * as littersController from './controllers/litters';
-import { corsHeaders } from './utils/cors';
-import { handleApiError } from './utils/errors';
-import type { Env } from './env';
 
-interface ExecutionContext {
-  waitUntil(promise: Promise<any>): void;
-  passThroughOnException(): void;
+/* Base styles */
+body {
+  font-size: 1.1rem; /* Increased base font size for better readability */
+  line-height: 1.6;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
-const router = Router();
-
-// Serve static assets
-async function serveStaticAsset(pathname: string): Promise<Response> {
-  const filePath = pathname === '/' ? '/index.html' : pathname;
-  try {
-    const asset = await fetch(`dist${filePath}`);
-    if (asset.status === 200) return asset;
-    return new Response('Not found', { status: 404 });
-  } catch {
-    return new Response('Not found', { status: 404 });
-  }
+/* Additional accessibility styles for older clients */
+.larger-text {
+  font-size: 1.2rem;
 }
 
-// Auth middleware
-const authMiddleware = async (request: Request, env: Env): Promise<Response | any> => {
-  const authResult = await verifyAuth(request, env);
-  if (!authResult.authenticated) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+.extra-large-text {
+  font-size: 1.4rem;
+}
+
+/* Button text size */
+button, 
+.button,
+[type="button"],
+[type="submit"],
+[type="reset"] {
+  font-size: 1.05rem;
+}
+
+/* Form controls */
+input,
+select,
+textarea {
+  font-size: 1.05rem;
+  padding: 0.75rem;
+}
+
+/* Navigation links */
+nav a {
+  font-size: 1.1rem;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  body {
+    font-size: 1.15rem; /* Even larger on mobile */
   }
-  return authResult;
-};
-
-// CORS preflight
-router.options('*', () => new Response(null, { headers: corsHeaders }));
-
-// Public routes
-router.get('/api/puppies', puppiesController.getAllPuppies);
-router.get('/api/puppies/:id', puppiesController.getPuppyById);
-router.get('/api/litters', littersController.getAllLitters);
-router.get('/api/litters/:id', littersController.getLitterById);
-
-// Protected Puppy Routes
-router.post('/api/puppies', async (req, env) => {
-  const auth = await authMiddleware(req, env);
-  if (auth instanceof Response) return auth;
-  return puppiesController.createPuppy(req, env, auth);
-});
-
-router.put('/api/puppies/:id', async (req, env) => {
-  const auth = await authMiddleware(req, env);
-  if (auth instanceof Response) return auth;
-  return puppiesController.updatePuppy(req, env, auth);
-});
-
-router.delete('/api/puppies/:id', async (req, env) => {
-  const auth = await authMiddleware(req, env);
-  if (auth instanceof Response) return auth;
-  return puppiesController.deletePuppy(req, env, auth);
-});
-
-// Protected Litter Routes
-router.post('/api/litters', async (req, env) => {
-  const auth = await authMiddleware(req, env);
-  if (auth instanceof Response) return auth;
-  return littersController.createLitter(req, env, auth);
-});
-
-router.put('/api/litters/:id', async (req, env) => {
-  const auth = await authMiddleware(req, env);
-  if (auth instanceof Response) return auth;
-  return littersController.updateLitter(req, env, auth);
-});
-
-router.delete('/api/litters/:id', async (req, env) => {
-  const auth = await authMiddleware(req, env);
-  if (auth instanceof Response) return auth;
-  return littersController.deleteLitter(req, env, auth);
-});
-
-// User routes
-router.post('/api/login', usersController.login);
-router.post('/api/register', usersController.register);
-
-// Logout route (corrected)
-router.post('/api/logout', async (req, env) => {
-  const auth = await authMiddleware(req, env);
-  if (auth instanceof Response) return auth;
-  return usersController.logout(req, env); // Only pass 2 args
-});
-
-// Static file catch-all
-router.get('*', async (req) => {
-  const url = new URL(req.url);
-  return serveStaticAsset(url.pathname);
-});
-
-// Main handler
-export default {
-  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    try {
-      return await router.handle(request, env, ctx);
-    } catch (err) {
-      return handleApiError(err);
-    }
-  },
-};
+  
+  button, 
+  .button,
+  [type="button"],
+  [type="submit"],
+  [type="reset"] {
+    font-size: 1.1rem;
+    padding: 0.75rem 1rem;
+  }
+}

@@ -1,4 +1,3 @@
-
 import { Router } from 'itty-router';
 import { verifyAuth } from './auth';
 import * as puppiesController from './controllers/puppies';
@@ -140,10 +139,11 @@ router.get('/api/user', async (req, env) => {
   return usersController.getCurrentUser(req, env, auth);
 });
 
+// Fix: Corrected to use only two arguments as expected by the logout function
 router.post('/api/logout', async (req, env) => {
   const auth = await authMiddleware(req, env);
   if (auth instanceof Response) return auth;
-  return usersController.logout(req, env, auth);
+  return usersController.logout(req, env);
 });
 
 // Static asset catch-all
