@@ -7,6 +7,35 @@ import * as littersController from './controllers/litters';
 import { corsHeaders } from './utils/cors';
 import { handleApiError } from './utils/errors';
 import type { Env } from './env';
+import { initializeDatabase } from './init';
+
+// Define a SessionDO class to fix the Cloudflare deployment error
+export class SessionDO {
+  constructor(private state: DurableObjectState, private env: Env) {}
+
+  async fetch(request: Request) {
+    // Basic implementation - in a real app, this would have more functionality
+    const url = new URL(request.url);
+    const path = url.pathname;
+
+    if (path === "/get") {
+      const sessionData = await this.state.storage.get("session");
+      return new Response(JSON.stringify(sessionData || {}), {
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+
+    if (path === "/set" && request.method === "POST") {
+      const data = await request.json();
+      await this.state.storage.put("session", data);
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+
+    return new Response("Not found", { status: 404 });
+  }
+}
 
 // Define ExecutionContext interface to fix the TypeScript error
 interface ExecutionContext {
@@ -41,6 +70,14 @@ const authMiddleware = async (request: Request, env: Env): Promise<Response | an
 };
 
 router.options('*', () => new Response(null, { headers: corsHeaders }));
+
+// Database initialization route
+router.get('/api/init-db', async (req, env) => {
+  const result = await initializeDatabase(env);
+  return new Response(JSON.stringify(result), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+  });
+});
 
 // Public routes
 router.get('/api/puppies', puppiesController.getAllPuppies);

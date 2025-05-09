@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { puppiesApi } from "@/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2 } from "lucide-react";
+import { calculateAge } from "@/utils/dateUtils";
 
 const Puppies = () => {
   const [selectedBreed, setSelectedBreed] = useState("All Breeds");
@@ -188,26 +189,5 @@ const Puppies = () => {
     </div>
   );
 };
-
-// Helper function to calculate age from birth_date
-function calculateAge(birthDate: string | undefined): string {
-  if (!birthDate) return 'Unknown';
-  
-  const birth = new Date(birthDate);
-  const now = new Date();
-  
-  // Calculate months
-  let months = (now.getFullYear() - birth.getFullYear()) * 12;
-  months -= birth.getMonth();
-  months += now.getMonth();
-  
-  // Calculate weeks for very young puppies
-  if (months < 1) {
-    const ageInDays = Math.floor((now.getTime() - birth.getTime()) / (1000 * 60 * 60 * 24));
-    return `${Math.floor(ageInDays / 7)} weeks`;
-  }
-  
-  return `${months} months`;
-}
 
 export default Puppies;

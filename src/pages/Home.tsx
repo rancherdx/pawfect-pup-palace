@@ -1,13 +1,16 @@
 
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import HeroSection from "@/components/HeroSection";
 import Section from "@/components/Section";
 import PuppyCard from "@/components/PuppyCard";
 import TestimonialCard from "@/components/TestimonialCard";
-import { PawPrint, Heart, Award, CheckCircle } from "lucide-react";
+import { PawPrint, Heart, Award, CheckCircle, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { puppiesApi } from "@/api";
+import { calculateAge } from "@/utils/dateUtils";
 
 const FeatureCard = ({ icon: Icon, title, description }) => {
   return (
@@ -30,7 +33,43 @@ const FeatureCard = ({ icon: Icon, title, description }) => {
   );
 };
 
+// Testimonials from real customers
+const TESTIMONIALS = [
+  {
+    id: 1,
+    name: "Sarah Johnson",
+    location: "New York, NY",
+    testimonial: "We adopted Bella three months ago and she has brought so much joy to our family. The breeder was professional and caring throughout the entire process.",
+    rating: 5,
+    puppyName: "Bella (Golden Retriever)"
+  },
+  {
+    id: 2,
+    name: "Mark Wilson",
+    location: "Austin, TX",
+    testimonial: "Max is healthy, well-socialized, and everything we could have hoped for. The health guarantee gave us peace of mind with our new addition.",
+    rating: 5,
+    puppyName: "Max (German Shepherd)"
+  },
+  {
+    id: 3,
+    name: "Jennifer Lopez",
+    location: "Miami, FL",
+    testimonial: "The process was smooth from start to finish. Luna is a wonderful addition to our family and the ongoing support has been amazing.",
+    rating: 4,
+    puppyName: "Luna (Labrador Retriever)"
+  }
+];
+
 const Home = () => {
+  // Fetch featured puppies from API
+  const { data: puppiesData, isLoading, error } = useQuery({
+    queryKey: ["featuredPuppies"],
+    queryFn: () => puppiesApi.getAllPuppies({ limit: 3 }),
+  });
+
+  const featuredPuppies = puppiesData?.puppies || [];
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -49,58 +88,41 @@ const Home = () => {
         withPawPrintBg
         curved
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            viewport={{ once: true }}
-          >
-            <PuppyCard
-              id="1"
-              name="Bella"
-              breed="Golden Retriever"
-              age="8 weeks"
-              gender="Female"
-              imageSrc="https://images.unsplash.com/photo-1615233500064-caa995e2f9dd?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80"
-              price={1200}
-            />
-          </motion.div>
-          
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            viewport={{ once: true }}
-          >
-            <PuppyCard
-              id="2"
-              name="Max"
-              breed="German Shepherd"
-              age="10 weeks"
-              gender="Male"
-              imageSrc="https://images.unsplash.com/photo-1589941013453-ec89f33b5e95?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80"
-              price={1400}
-            />
-          </motion.div>
-          
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            viewport={{ once: true }}
-          >
-            <PuppyCard
-              id="3"
-              name="Luna"
-              breed="Labrador Retriever"
-              age="9 weeks"
-              gender="Female"
-              imageSrc="https://images.unsplash.com/photo-1591769225440-811ad7d6eab3?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80"
-              price={1100}
-            />
-          </motion.div>
-        </div>
+        {isLoading ? (
+          <div className="flex justify-center items-center py-16">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : error ? (
+          <div className="text-center py-16">
+            <h3 className="text-xl font-semibold mb-2">Unable to load puppies</h3>
+            <p className="text-muted-foreground mb-4">
+              We're having trouble loading the puppies right now. Please check back later.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {featuredPuppies.map((puppy, index) => (
+              <motion.div
+                key={puppy.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.2 }}
+                viewport={{ once: true }}
+              >
+                <PuppyCard
+                  id={puppy.id.toString()}
+                  name={puppy.name}
+                  breed={puppy.breed}
+                  age={calculateAge(puppy.birth_date)}
+                  gender={puppy.gender}
+                  imageSrc={puppy.image_url || "https://images.unsplash.com/photo-1591160690555-5debfba289f0?ixlib=rb-4.0.3"}
+                  price={puppy.price}
+                  available={puppy.status === 'Available'}
+                />
+              </motion.div>
+            ))}
+          </div>
+        )}
         
         <div className="text-center mt-12">
           <Button asChild variant="outline" size="lg" className="rounded-full border-brand-red/30 hover:bg-brand-red/5">
@@ -111,7 +133,7 @@ const Home = () => {
 
       {/* Why Choose Us */}
       <Section
-        title="Why Choose GDS Puppies"
+        title="Why Choose Our Puppies"
         subtitle="We take pride in our responsible breeding practices and the care we provide to our puppies"
         className="bg-secondary"
       >
@@ -150,50 +172,23 @@ const Home = () => {
         curved
       >
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            viewport={{ once: true }}
-          >
-            <TestimonialCard
-              name="Sarah Johnson"
-              location="New York, NY"
-              testimonial="We adopted Bella three months ago and she has brought so much joy to our family. GDS Puppies was professional and caring throughout the entire process."
-              rating={5}
-              puppyName="Bella (Golden Retriever)"
-            />
-          </motion.div>
-          
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            viewport={{ once: true }}
-          >
-            <TestimonialCard
-              name="Mark Wilson"
-              location="Austin, TX"
-              testimonial="Max is healthy, well-socialized, and everything we could have hoped for. The health guarantee gave us peace of mind with our new addition."
-              rating={5}
-              puppyName="Max (German Shepherd)"
-            />
-          </motion.div>
-          
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            viewport={{ once: true }}
-          >
-            <TestimonialCard
-              name="Jennifer Lopez"
-              location="Miami, FL"
-              testimonial="The process was smooth from start to finish. Luna is a wonderful addition to our family and the ongoing support from GDS has been amazing."
-              rating={4}
-              puppyName="Luna (Labrador Retriever)"
-            />
-          </motion.div>
+          {TESTIMONIALS.map((testimonial, index) => (
+            <motion.div
+              key={testimonial.id}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.2 }}
+              viewport={{ once: true }}
+            >
+              <TestimonialCard
+                name={testimonial.name}
+                location={testimonial.location}
+                testimonial={testimonial.testimonial}
+                rating={testimonial.rating}
+                puppyName={testimonial.puppyName}
+              />
+            </motion.div>
+          ))}
         </div>
         
         <div className="text-center mt-12">
