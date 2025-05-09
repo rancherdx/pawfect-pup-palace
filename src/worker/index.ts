@@ -97,7 +97,7 @@ interface ExecutionContext {
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     try {
-      // Fix: removed the third argument (ctx) from router.handle
+      // Fix: Only pass two arguments to router.handle
       const response = await router.handle(request, env);
       return response;
     } catch (error) {
