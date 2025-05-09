@@ -9,6 +9,14 @@ import { handleApiError } from './utils/errors';
 import type { Env } from './env';
 import { initializeDatabase } from './init';
 
+// Define the DurableObjectState interface to fix the TypeScript error
+interface DurableObjectState {
+  storage: {
+    get(key: string): Promise<any>;
+    put(key: string, value: any): Promise<void>;
+  };
+}
+
 // Define a SessionDO class to fix the Cloudflare deployment error
 export class SessionDO {
   constructor(private state: DurableObjectState, private env: Env) {}
@@ -147,7 +155,7 @@ router.get('*', async (req) => {
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     try {
-      // Fix: Remove the ctx parameter - itty-router only expects request and env
+      // Fix: only pass request and env to router.handle
       return await router.handle(request, env);
     } catch (err) {
       return handleApiError(err);
