@@ -1,4 +1,3 @@
-
 import { Router } from 'itty-router';
 import { verifyAuth } from './auth';
 import * as puppiesController from './controllers/puppies';
@@ -8,14 +7,30 @@ import { corsHeaders } from './utils/cors';
 import { handleApiError } from './utils/errors';
 import type { Env } from './env';
 
-// Create a new router
+interface ExecutionContext {
+  waitUntil(promise: Promise<any>): void;
+  passThroughOnException(): void;
+}
+
 const router = Router();
 
-// Authentication middleware
+// Static asset serving helper
+async function serveStaticAsset(pathname: string): Promise<Response> {
+  const filePath = pathname === '/' ? '/index.html' : pathname;
+  try {
+    const asset = await fetch(`dist${filePath}`);
+    if (asset.status === 200) return asset;
+    return new Response('Not found', { status: 404 });
+  } catch {
+    return new Response('Not found', { status: 404 });
+  }
+}
+
+// Auth middleware
 const authMiddleware = async (request: Request, env: Env): Promise<Response | any> => {
   const authResult = await verifyAuth(request, env);
   if (!authResult.authenticated) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
@@ -23,7 +38,6 @@ const authMiddleware = async (request: Request, env: Env): Promise<Response | an
   return authResult;
 };
 
-// CORS preflight
 router.options('*', () => new Response(null, { headers: corsHeaders }));
 
 // Public routes
@@ -33,116 +47,70 @@ router.get('/api/litters', littersController.getAllLitters);
 router.get('/api/litters/:id', littersController.getLitterById);
 
 // Protected routes
-router.post('/api/puppies', async (request, env) => {
-  const authResult = await authMiddleware(request, env);
-  if (authResult instanceof Response) return authResult;
-  return puppiesController.createPuppy(request, env, authResult);
+router.post('/api/puppies', async (req, env) => {
+  const auth = await authMiddleware(req, env);
+  if (auth instanceof Response) return auth;
+  return puppiesController.createPuppy(req, env, auth);
 });
 
-router.put('/api/puppies/:id', async (request, env) => {
-  const authResult = await authMiddleware(request, env);
-  if (authResult instanceof Response) return authResult;
-  return puppiesController.updatePuppy(request, env, authResult);
+router.put('/api/puppies/:id', async (req, env) => {
+  const auth = await authMiddleware(req, env);
+  if (auth instanceof Response) return auth;
+  return puppiesController.updatePuppy(req, env, auth);
 });
 
-router.delete('/api/puppies/:id', async (request, env) => {
-  const authResult = await authMiddleware(request, env);
-  if (authResult instanceof Response) return authResult;
-  return puppiesController.deletePuppy(request, env, authResult);
+router.delete('/api/puppies/:id', async (req, env) => {
+  const auth = await authMiddleware(req, env);
+  if (auth instanceof Response) return auth;
+  return puppiesController.deletePuppy(req, env, auth);
 });
 
-router.post('/api/litters', async (request, env) => {
-  const authResult = await authMiddleware(request, env);
-  if (authResult instanceof Response) return authResult;
-  return littersController.createLitter(request, env, authResult);
+router.post('/api/litters', async (req, env) => {
+  const auth = await authMiddleware(req, env);
+  if (auth instanceof Response) return auth;
+  return littersController.createLitter(req, env, auth);
 });
 
-router.put('/api/litters/:id', async (request, env) => {
-  const authResult = await authMiddleware(request, env);
-  if (authResult instanceof Response) return authResult;
-  return littersController.updateLitter(request, env, authResult);
+router.put('/api/litters/:id', async (req, env) => {
+  const auth = await authMiddleware(req, env);
+  if (auth instanceof Response) return auth;
+  return littersController.updateLitter(req, env, auth);
 });
 
-router.delete('/api/litters/:id', async (request, env) => {
-  const authResult = await authMiddleware(request, env);
-  if (authResult instanceof Response) return authResult;
-  return littersController.deleteLitter(request, env, authResult);
+router.delete('/api/litters/:id', async (req, env) => {
+  const auth = await authMiddleware(req, env);
+  if (auth instanceof Response) return auth;
+  return littersController.deleteLitter(req, env, auth);
 });
 
 // User routes
 router.post('/api/login', usersController.login);
 router.post('/api/register', usersController.register);
 
-router.get('/api/user', async (request, env) => {
-  const authResult = await authMiddleware(request, env);
-  if (authResult instanceof Response) return authResult;
-  return usersController.getCurrentUser(request, env, authResult);
+router.get('/api/user', async (req, env) => {
+  const auth = await authMiddleware(req, env);
+  if (auth instanceof Response) return auth;
+  return usersController.getCurrentUser(req, env, auth);
 });
 
-router.post('/api/logout', async (request, env) => {
-  const authResult = await authMiddleware(request, env);
-  if (authResult instanceof Response) return authResult;
-  return usersController.logout(request, env, authResult);
+router.post('/api/logout', async (req, env) => {
+  const auth = await authMiddleware(req, env);
+  if (auth instanceof Response) return auth;
+  return usersController.logout(req, env, auth);
 });
 
-// Static asset fallback
-router.get('*', async (request) => fetch(request));
-
-// Define ExecutionContext type
-interface ExecutionContext {
-  waitUntil(promise: Promise<any>): void;
-  passThroughOnException(): void;
-}
+// Static asset catch-all
+router.get('*', async (req) => {
+  const url = new URL(req.url);
+  return serveStaticAsset(url.pathname);
+});
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     try {
-      // Fix: Only pass two arguments to router.handle
-      const response = await router.handle(request, env);
-      return response;
-    } catch (error) {
-      return handleApiError(error);
+      return await router.handle(request, env);
+    } catch (err) {
+      return handleApiError(err);
     }
   }
 };
-
-// Durable Object definition
-interface DurableObjectState {
-  storage: {
-    get(key: string): Promise<any>;
-    put(key: string, value: any): Promise<void>;
-    delete(key: string): Promise<boolean>;
-  };
-}
-
-export class SessionDO {
-  private state: DurableObjectState;
-  
-  constructor(state: DurableObjectState) {
-    this.state = state;
-  }
-
-  async fetch(request: Request) {
-    const url = new URL(request.url);
-
-    if (url.pathname === "/get") {
-      const sessionId = url.searchParams.get('sessionId');
-      if (!sessionId) return new Response("Session ID required", { status: 400 });
-      const session = await this.state.storage.get(sessionId);
-      return new Response(JSON.stringify({ session }), {
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    if (url.pathname === "/set" && request.method === "POST") {
-      const { sessionId, data } = await request.json();
-      if (!sessionId || !data) return new Response("Session ID and data required", { status: 400 });
-      await this.state.storage.put(sessionId, data);
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    return new Response("Not found", { status: 404 });
-  }
-}

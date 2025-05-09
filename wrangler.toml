@@ -1,5 +1,5 @@
-
-name = "puppy_breeder_app"
+name = "logo"
+pages_build_output_dir = "./dist"name = "puppy_breeder_app"
 compatibility_date = "2024-01-01"
 main = "src/worker/index.ts"
 
@@ -29,3 +29,15 @@ bindings = [
 [[migrations]]
 tag = "v1"
 new_classes = ["SessionDO"]
+
+# Static asset support for Worker-only site
+[build]
+command = "bun run build"
+
+[site]
+bucket = "./dist"
+
+[[kv_namespaces]]
+binding = "__STATIC_CONTENT"
+id = "2edbc59317af4bf88d30dca7f0f208f8"
+preview_id = "ec8351b2271942bdbfec48a0af56253b"
