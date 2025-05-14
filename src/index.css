@@ -1,8 +1,65 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  html {
+    /* Enable responsive font sizing based on user preferences */
+    font-size: 100%; /* Base font size */
+    
+    /* Respect user's system font size settings */
+    font-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Increase base text sizes for better readability */
+  body {
+    @apply bg-white text-black dark:bg-black dark:text-white;
+    font-size: 1.125rem; /* Slightly larger than default */
+    line-height: 1.6;
+  }
+
+  h1 {
+    @apply text-3xl md:text-4xl font-bold;
+  }
+
+  h2 {
+    @apply text-2xl md:text-3xl font-semibold;
+  }
+
+  h3 {
+    @apply text-xl md:text-2xl font-semibold;
+  }
+
+  p, li, a {
+    @apply text-base md:text-lg;
+  }
+
+  /* Make form elements more readable */
+  input, select, textarea, button {
+    @apply text-base md:text-lg;
+  }
+}
+
+/* Support for users with larger system text preference */
+@media screen and (prefers-reduced-motion: no-preference) {
+  @supports (font-size: 1rem) {
+    body {
+      /* This will automatically adjust based on user's system settings */
+      font-size: calc(1.125rem + 0.25vw);
+    }
+  }
+}
+
 /* Optional: custom styles */
-body {
-  @apply bg-white text-black dark:bg-black dark:text-white;
+.high-contrast {
+  @apply font-bold text-black dark:text-white;
+}
+
+/* For screens where users might need even larger text */
+@media screen and (max-width: 768px) {
+  body {
+    font-size: 1.2rem;
+  }
 }
