@@ -19,6 +19,9 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				'quicksand': ['Quicksand', 'sans-serif'],
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
@@ -160,8 +163,32 @@ export default {
 			},
 			boxShadow: {
 				'puppy': '0 10px 25px -5px rgba(229, 62, 62, 0.1), 0 5px 10px -5px rgba(229, 62, 62, 0.05)',
-			}
+			},
+			textShadow: {
+				'sm': '0 1px 2px rgba(0, 0, 0, 0.1)',
+				'DEFAULT': '0 2px 4px rgba(0, 0, 0, 0.1)',
+				'lg': '0 8px 16px rgba(0, 0, 0, 0.1)',
+			},
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [
+		require("tailwindcss-animate"),
+		function({ addUtilities }) {
+			const newUtilities = {
+				'.text-shadow': {
+					textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+				},
+				'.text-shadow-sm': {
+					textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
+				},
+				'.text-shadow-lg': {
+					textShadow: '0 8px 16px rgba(0, 0, 0, 0.1)',
+				},
+				'.text-shadow-none': {
+					textShadow: 'none',
+				},
+			}
+			addUtilities(newUtilities, ['responsive', 'hover'])
+		},
+	],
 } satisfies Config;

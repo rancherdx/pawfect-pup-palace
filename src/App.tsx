@@ -19,9 +19,12 @@ import Health from "@/pages/Health";
 import Contact from "@/pages/Contact";
 import Dashboard from "@/pages/Dashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
+import AdminTest from "@/pages/AdminTest";
+import SystemStatus from "@/pages/SystemStatus";
+import Blog from "@/pages/Blog";
+import StudPage from "@/pages/StudPage";
 import Checkout from "@/pages/Checkout";
 import Financing from "@/pages/Financing";
-import StudService from "@/pages/StudService";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import NotFound from "@/pages/NotFound";
@@ -58,7 +61,9 @@ const App = () => (
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
-                <Route path="/stud-service" element={<StudService />} />
+                <Route path="/stud" element={<StudPage />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/system-status" element={<SystemStatus />} />
                 
                 {/* Protected Routes */}
                 <Route path="/dashboard" element={
@@ -69,6 +74,11 @@ const App = () => (
                 <Route path="/admin" element={
                   <ProtectedRoute requiredRole="admin">
                     <AdminDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin-test" element={
+                  <ProtectedRoute requiredRole="super-admin">
+                    <AdminTest />
                   </ProtectedRoute>
                 } />
                 <Route path="/checkout" element={

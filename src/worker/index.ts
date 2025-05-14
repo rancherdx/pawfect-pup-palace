@@ -7,7 +7,7 @@ import * as littersController from './controllers/litters';
 import { corsHeaders } from './utils/cors';
 import { handleApiError } from './utils/errors';
 import type { Env } from './env';
-import { initializeDatabase } from './init';
+import { initializeDatabase } from './init-db';
 
 // Define the DurableObjectState interface to fix the TypeScript error
 interface DurableObjectState {
@@ -87,6 +87,93 @@ router.get('/api/init-db', async (req, env) => {
   });
 });
 
+// System status endpoint
+router.get('/api/status', async (req, env) => {
+  try {
+    // Check database connection
+    const dbCheck = await env.PUPPIES_DB.prepare("SELECT 1").first();
+    
+    // Check KV connection
+    const kvCheck = await env.AUTH_STORE.get("test-key");
+    
+    // Return status information
+    return new Response(JSON.stringify({
+      status: "healthy",
+      services: {
+        database: dbCheck ? "connected" : "error",
+        kv: kvCheck !== null ? "connected" : "error",
+        worker: "running"
+      },
+      timestamp: new Date().toISOString()
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({
+      status: "degraded",
+      error: error instanceof Error ? error.message : "Unknown error",
+      timestamp: new Date().toISOString()
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+});
+
+// Test endpoints for admin panel
+router.get('/api/test/database', async (req, env) => {
+  const auth = await authMiddleware(req, env);
+  if (auth instanceof Response) return auth;
+  
+  try {
+    const tables = await env.PUPPIES_DB.prepare(
+      "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+    ).all();
+    
+    return new Response(JSON.stringify({
+      success: true,
+      tables: tables.results
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error"
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+});
+
+router.get('/api/test/kv', async (req, env) => {
+  const auth = await authMiddleware(req, env);
+  if (auth instanceof Response) return auth;
+  
+  try {
+    const testValue = `test-${Date.now()}`;
+    await env.AUTH_STORE.put("test-key", testValue);
+    const retrieved = await env.AUTH_STORE.get("test-key");
+    
+    return new Response(JSON.stringify({
+      success: true,
+      match: testValue === retrieved,
+      value: retrieved
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error"
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+});
+
 // Public routes
 router.get('/api/puppies', puppiesController.getAllPuppies);
 router.get('/api/puppies/:id', puppiesController.getPuppyById);
@@ -155,7 +242,6 @@ router.get('*', async (req) => {
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     try {
-      // Fix: only pass request and env to router.handle - remove ctx parameter
       return await router.handle(request, env);
     } catch (err) {
       return handleApiError(err);
