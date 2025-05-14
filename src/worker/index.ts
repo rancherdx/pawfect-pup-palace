@@ -143,7 +143,7 @@ router.get('/api/user', async (req, env) => {
 router.post('/api/logout', async (req, env) => {
   const auth = await authMiddleware(req, env);
   if (auth instanceof Response) return auth;
-  return usersController.logout(req, env, auth);
+  return usersController.logout(req, env);
 });
 
 // Static asset catch-all
