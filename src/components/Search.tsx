@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -13,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Search as SearchIcon, Puppy, File, X, Loader2 } from "lucide-react";
+import { Search as SearchIcon, Dog, File, X, Loader2 } from "lucide-react";
 
 interface SearchResult {
   id: string;
@@ -119,9 +118,9 @@ const Search = () => {
   const getTypeIcon = (type: string) => {
     switch (type) {
       case "puppy":
-        return <Puppy className="h-4 w-4 text-brand-red" />;
+        return <Dog className="h-4 w-4 text-brand-red" />;
       case "litter":
-        return <Puppy className="h-4 w-4 text-blue-500" />;
+        return <Dog className="h-4 w-4 text-blue-500" />;
       case "blog":
       case "page":
       default:
