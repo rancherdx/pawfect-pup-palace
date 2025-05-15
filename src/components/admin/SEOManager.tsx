@@ -280,8 +280,8 @@ const SEOManager = () => {
                     <SelectGroup>
                       <SelectLabel>Page Filters</SelectLabel>
                       <SelectItem value="all">All Pages</SelectItem>
-                      <SelectItem value="poor">Poor Score (< 60)</SelectItem>
-                      <SelectItem value="good">Good Score (> 80)</SelectItem>
+                      <SelectItem value="poor">Poor Score (&lt; 60)</SelectItem>
+                      <SelectItem value="good">Good Score (&gt; 80)</SelectItem>
                       <SelectItem value="needs-improvement">Needs Improvement</SelectItem>
                     </SelectGroup>
                   </SelectContent>
