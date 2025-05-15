@@ -21,6 +21,7 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import AdminTest from "@/pages/AdminTest";
 import SystemStatus from "@/pages/SystemStatus";
 import Blog from "@/pages/Blog";
+import BlogPost from "@/pages/BlogPost";
 import StudPage from "@/pages/StudPage";
 import Checkout from "@/pages/Checkout";
 import Financing from "@/pages/Financing";
@@ -61,6 +62,7 @@ const App = () => (
                 <Route path="/register" element={<Register />} />
                 <Route path="/stud" element={<StudPage />} />
                 <Route path="/blog" element={<Blog />} />
+                <Route path="/blog/:slug" element={<BlogPost />} />
                 <Route path="/system-status" element={<SystemStatus />} />
                 <Route path="/financing" element={<Financing />} />
                 

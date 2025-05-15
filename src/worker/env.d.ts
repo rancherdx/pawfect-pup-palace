@@ -20,4 +20,8 @@ export interface Env {
   SENDGRID_API_KEY: string;
   INTERNAL_WEBHOOK_SECRET: string;
   STRIPE_SECRET_KEY: string;
+  
+  // Marketing related keys
+  AFFILIATE_TRACKING_SECRET: string;
+  SEO_API_KEY: string;
 }

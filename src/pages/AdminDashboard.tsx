@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PawPrint, Plus, Dog, Receipt, Settings, CreditCard, Layers } from "lucide-react";
+import { PawPrint, Plus, Dog, Receipt, Settings, CreditCard, Layers, FileText, Globe, Users } from "lucide-react";
 import Section from "@/components/Section";
 import PuppyManagement from "@/components/admin/PuppyManagement";
 import LitterManagement from "@/components/admin/LitterManagement";
@@ -9,6 +9,9 @@ import TransactionHistory from "@/components/admin/TransactionHistory";
 import SquareIntegration from "@/components/admin/SquareIntegration";
 import SettingsPanel from "@/components/admin/SettingsPanel";
 import BreedTemplateManager from "@/components/admin/BreedTemplateManager";
+import BlogManager from "@/components/admin/BlogManager";
+import AffiliateManager from "@/components/admin/AffiliateManager";
+import SEOManager from "@/components/admin/SEOManager";
 
 const AdminDashboard = () => {
   const [isAdmin, setIsAdmin] = useState(true);  // For demo purposes, in production use actual auth
@@ -51,29 +54,41 @@ const AdminDashboard = () => {
           </div>
           
           <Tabs defaultValue="puppies" className="w-full">
-            <div className="bg-white dark:bg-black/30 p-4 rounded-t-xl shadow-sm border-b">
-              <TabsList className="grid grid-cols-6 w-full h-auto gap-2">
-                <TabsTrigger value="puppies" className="py-4 text-lg data-[state=active]:bg-brand-red data-[state=active]:text-white">
+            <div className="bg-white dark:bg-black/30 p-4 rounded-t-xl shadow-sm border-b overflow-x-auto">
+              <TabsList className="grid grid-cols-9 w-full h-auto gap-2 min-w-[900px]">
+                <TabsTrigger value="puppies" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
                   <Dog className="h-5 w-5 mr-2" />
                   <span>Puppies</span>
                 </TabsTrigger>
-                <TabsTrigger value="litters" className="py-4 text-lg data-[state=active]:bg-brand-red data-[state=active]:text-white">
+                <TabsTrigger value="litters" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
                   <PawPrint className="h-5 w-5 mr-2" />
                   <span>Litters</span>
                 </TabsTrigger>
-                <TabsTrigger value="breeds" className="py-4 text-lg data-[state=active]:bg-brand-red data-[state=active]:text-white">
+                <TabsTrigger value="breeds" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
                   <Layers className="h-5 w-5 mr-2" />
-                  <span>Breed Templates</span>
+                  <span>Breeds</span>
                 </TabsTrigger>
-                <TabsTrigger value="transactions" className="py-4 text-lg data-[state=active]:bg-brand-red data-[state=active]:text-white">
+                <TabsTrigger value="blog" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
+                  <FileText className="h-5 w-5 mr-2" />
+                  <span>Blog</span>
+                </TabsTrigger>
+                <TabsTrigger value="seo" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
+                  <Globe className="h-5 w-5 mr-2" />
+                  <span>SEO</span>
+                </TabsTrigger>
+                <TabsTrigger value="marketing" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
+                  <Users className="h-5 w-5 mr-2" />
+                  <span>Marketing</span>
+                </TabsTrigger>
+                <TabsTrigger value="transactions" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
                   <Receipt className="h-5 w-5 mr-2" />
                   <span>Transactions</span>
                 </TabsTrigger>
-                <TabsTrigger value="square" className="py-4 text-lg data-[state=active]:bg-brand-red data-[state=active]:text-white">
+                <TabsTrigger value="square" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
                   <CreditCard className="h-5 w-5 mr-2" />
                   <span>Square</span>
                 </TabsTrigger>
-                <TabsTrigger value="settings" className="py-4 text-lg data-[state=active]:bg-brand-red data-[state=active]:text-white">
+                <TabsTrigger value="settings" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
                   <Settings className="h-5 w-5 mr-2" />
                   <span>Settings</span>
                 </TabsTrigger>
@@ -91,6 +106,18 @@ const AdminDashboard = () => {
               
               <TabsContent value="breeds" className="mt-0 animate-fade-in">
                 <BreedTemplateManager />
+              </TabsContent>
+              
+              <TabsContent value="blog" className="mt-0 animate-fade-in">
+                <BlogManager />
+              </TabsContent>
+              
+              <TabsContent value="seo" className="mt-0 animate-fade-in">
+                <SEOManager />
+              </TabsContent>
+              
+              <TabsContent value="marketing" className="mt-0 animate-fade-in">
+                <AffiliateManager />
               </TabsContent>
               
               <TabsContent value="transactions" className="mt-0 animate-fade-in">

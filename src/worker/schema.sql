@@ -1,131 +1,153 @@
 
--- Schema for Puppy Breeder Application
-
--- Users Table
-CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL,
-    name TEXT NOT NULL,
-    role TEXT NOT NULL DEFAULT 'customer',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- Base tables for puppies and litters
+CREATE TABLE IF NOT EXISTS breeds (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT,
+  temperament TEXT,
+  size TEXT,
+  lifespan TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create an initial admin user (password needs to be hashed in production)
-INSERT OR IGNORE INTO users (email, password, name, role) VALUES 
-('admin@puppybreeder.com', 'admin_password_hash', 'Admin', 'admin');
-
--- Litters Table
 CREATE TABLE IF NOT EXISTS litters (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    mother TEXT NOT NULL,
-    father TEXT NOT NULL,
-    breed TEXT NOT NULL,
-    date_of_birth TEXT NOT NULL,
-    puppy_count INTEGER NOT NULL,
-    status TEXT NOT NULL DEFAULT 'Active',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  breed_id TEXT REFERENCES breeds(id),
+  dam_name TEXT NOT NULL,
+  sire_name TEXT NOT NULL,
+  born_date DATE,
+  available_date DATE,
+  description TEXT,
+  price REAL,
+  status TEXT DEFAULT 'upcoming', -- upcoming, available, sold
+  image_urls TEXT, -- JSON array of image URLs
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Puppies Table
 CREATE TABLE IF NOT EXISTS puppies (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    breed TEXT NOT NULL,
-    gender TEXT NOT NULL,
-    birth_date TEXT NOT NULL,
-    price REAL NOT NULL,
-    description TEXT,
-    status TEXT NOT NULL DEFAULT 'Available',
-    weight TEXT,
-    color TEXT,
-    litter_id INTEGER,
-    growth_progress INTEGER DEFAULT 0,
-    trainability INTEGER DEFAULT 50,
-    activity_level INTEGER DEFAULT 50,
-    microchipped BOOLEAN DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (litter_id) REFERENCES litters(id)
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  litter_id TEXT REFERENCES litters(id),
+  gender TEXT NOT NULL,
+  color TEXT,
+  birth_date DATE,
+  weight REAL, -- in pounds
+  price REAL,
+  status TEXT DEFAULT 'available', -- available, reserved, adopted
+  microchip_id TEXT,
+  description TEXT,
+  temperament_notes TEXT,
+  health_notes TEXT,
+  image_urls TEXT, -- JSON array of image URLs
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Puppy Images Table
-CREATE TABLE IF NOT EXISTS puppy_images (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    puppy_id INTEGER NOT NULL,
-    image_url TEXT NOT NULL,
-    display_order INTEGER NOT NULL,
-    FOREIGN KEY (puppy_id) REFERENCES puppies(id)
+CREATE TABLE IF NOT EXISTS users (
+  id TEXT PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  name TEXT,
+  password TEXT NOT NULL, -- hashed password
+  roles TEXT DEFAULT '["user"]', -- JSON array of roles
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Puppy Parents Relationship Table
-CREATE TABLE IF NOT EXISTS puppy_parents (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    puppy_id INTEGER NOT NULL,
-    parent_id INTEGER NOT NULL,
-    relation_type TEXT NOT NULL, -- 'Father' or 'Mother'
-    FOREIGN KEY (puppy_id) REFERENCES puppies(id),
-    FOREIGN KEY (parent_id) REFERENCES puppies(id)
+CREATE TABLE IF NOT EXISTS adoptions (
+  id TEXT PRIMARY KEY,
+  puppy_id TEXT REFERENCES puppies(id),
+  user_id TEXT REFERENCES users(id),
+  adoption_date DATE,
+  price REAL,
+  payment_status TEXT,
+  payment_method TEXT,
+  notes TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Puppy Temperament Tags Table
-CREATE TABLE IF NOT EXISTS puppy_temperament (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    puppy_id INTEGER NOT NULL,
-    tag TEXT NOT NULL,
-    FOREIGN KEY (puppy_id) REFERENCES puppies(id)
+-- Additional tables for marketing and blog functionality
+CREATE TABLE IF NOT EXISTS blog_categories (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  description TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Customer Information Table
-CREATE TABLE IF NOT EXISTS customers (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    address TEXT,
-    phone TEXT,
-    preferences TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+CREATE TABLE IF NOT EXISTS blog_posts (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  excerpt TEXT,
+  content TEXT,
+  author TEXT,
+  category_id TEXT REFERENCES blog_categories(id),
+  status TEXT DEFAULT 'draft', -- draft, published
+  published_at TIMESTAMP,
+  featured_image TEXT,
+  seo_title TEXT,
+  seo_description TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Applications/Adoptions Table
-CREATE TABLE IF NOT EXISTS applications (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    puppy_id INTEGER NOT NULL,
-    status TEXT NOT NULL DEFAULT 'Pending', -- Pending, Approved, Rejected
-    application_data TEXT NOT NULL, -- JSON data with all the form answers
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (puppy_id) REFERENCES puppies(id)
+CREATE TABLE IF NOT EXISTS blog_related_posts (
+  post_id TEXT REFERENCES blog_posts(id),
+  related_post_id TEXT REFERENCES blog_posts(id),
+  PRIMARY KEY (post_id, related_post_id)
 );
 
--- Payments Table
-CREATE TABLE IF NOT EXISTS payments (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    application_id INTEGER,
-    amount REAL NOT NULL,
-    payment_type TEXT NOT NULL, -- Deposit, Full Payment, etc.
-    payment_method TEXT NOT NULL, -- Credit Card, PayPal, etc.
-    transaction_id TEXT,
-    status TEXT NOT NULL, -- Pending, Completed, Failed
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (application_id) REFERENCES applications(id)
+CREATE TABLE IF NOT EXISTS affiliates (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  code TEXT UNIQUE NOT NULL,
+  commission REAL DEFAULT 10.0, -- percentage
+  total_visits INTEGER DEFAULT 0,
+  total_conversions INTEGER DEFAULT 0,
+  total_sales REAL DEFAULT 0.0,
+  active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Health Records Table
-CREATE TABLE IF NOT EXISTS health_records (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    puppy_id INTEGER NOT NULL,
-    record_type TEXT NOT NULL, -- Vaccination, Checkup, etc.
-    record_date TEXT NOT NULL,
-    details TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (puppy_id) REFERENCES puppies(id)
+CREATE TABLE IF NOT EXISTS promo_codes (
+  id TEXT PRIMARY KEY,
+  code TEXT UNIQUE NOT NULL,
+  discount_type TEXT NOT NULL, -- percentage, fixed
+  discount_amount REAL NOT NULL,
+  uses INTEGER DEFAULT 0,
+  max_uses INTEGER, -- NULL for unlimited
+  start_date DATE NOT NULL,
+  end_date DATE, -- NULL for no expiration
+  active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS seo_metadata (
+  page_path TEXT PRIMARY KEY,
+  title TEXT,
+  description TEXT,
+  keywords TEXT,
+  og_image TEXT,
+  score INTEGER,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_puppies_litter_id ON puppies(litter_id);
+CREATE INDEX IF NOT EXISTS idx_puppies_status ON puppies(status);
+CREATE INDEX IF NOT EXISTS idx_litters_breed_id ON litters(breed_id);
+CREATE INDEX IF NOT EXISTS idx_litters_status ON litters(status);
+CREATE INDEX IF NOT EXISTS idx_blog_posts_category_id ON blog_posts(category_id);
+CREATE INDEX IF NOT EXISTS idx_blog_posts_status ON blog_posts(status);
+CREATE INDEX IF NOT EXISTS idx_blog_posts_slug ON blog_posts(slug);
+CREATE INDEX IF NOT EXISTS idx_affiliates_code ON affiliates(code);
+CREATE INDEX IF NOT EXISTS idx_promo_codes_code ON promo_codes(code);

@@ -1,238 +1,187 @@
 
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import HeroSection from "@/components/HeroSection";
 import Section from "@/components/Section";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { CalendarDays, User, ArrowRight } from "lucide-react";
+import { FileText, Search, Tag } from "lucide-react";
 
-// Sample blog posts data
-const BLOG_POSTS = [
+// Mock blog post data
+const blogPosts = [
   {
-    id: "1",
-    title: "Top 10 Tips for New Puppy Owners",
-    excerpt: "Essential advice for welcoming your new furry friend home and setting up a successful routine.",
-    content: "Lorem ipsum dolor sit amet...",
-    author: "Dr. Sarah Johnson",
-    date: "2023-05-15",
-    category: "puppy-care",
-    tags: ["new-puppy", "training", "essentials"],
-    imageSrc: "https://images.unsplash.com/photo-1591160690555-5debfba289f0?ixlib=rb-4.0.3",
-    readTime: "5 min"
+    id: 1,
+    title: "Essential Care for Your New Puppy: The First 30 Days",
+    excerpt: "Bringing home a new puppy is exciting! Here's everything you need to know to get started on the right paw.",
+    image: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?ixlib=rb-4.0.3",
+    publishedAt: "2025-01-15",
+    category: "care",
+    slug: "essential-puppy-care-first-30-days",
+    readTime: "6 min read"
   },
   {
-    id: "2",
+    id: 2,
     title: "Puppy Vaccination Schedule: What You Need to Know",
-    excerpt: "A comprehensive guide to your puppy's vaccination needs from 8 weeks through adulthood.",
-    content: "Lorem ipsum dolor sit amet...",
-    author: "Dr. Michael Williams",
-    date: "2023-06-22",
+    excerpt: "Keeping your puppy healthy starts with proper vaccinations. Learn about the recommended schedule and why each vaccine matters.",
+    image: "https://images.unsplash.com/photo-1611173622330-1c731c6d970e?ixlib=rb-4.0.3",
+    publishedAt: "2025-02-03",
     category: "health",
-    tags: ["vaccinations", "health", "puppy-care"],
-    imageSrc: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?ixlib=rb-4.0.3",
-    readTime: "7 min"
+    slug: "puppy-vaccination-schedule",
+    readTime: "5 min read"
   },
   {
-    id: "3",
-    title: "Crate Training Made Easy",
-    excerpt: "Learn how to make crate training a positive experience for your new puppy with these expert tips.",
-    content: "Lorem ipsum dolor sit amet...",
-    author: "Trainer Emma Davis",
-    date: "2023-07-05",
+    id: 3,
+    title: "Crate Training: Creating a Safe Space for Your Puppy",
+    excerpt: "Effective crate training helps your puppy feel secure and makes house training easier. Follow these steps for success.",
+    image: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?ixlib=rb-4.0.3",
+    publishedAt: "2025-02-17",
     category: "training",
-    tags: ["crate-training", "training", "puppy-care"],
-    imageSrc: "https://images.unsplash.com/photo-1601758125946-6ec2ef64daf8?ixlib=rb-4.0.3",
-    readTime: "6 min"
+    slug: "crate-training-safe-space",
+    readTime: "7 min read"
   },
   {
-    id: "4",
-    title: "Nutritional Needs for Growing Puppies",
-    excerpt: "Understanding the specific dietary requirements of puppies to ensure healthy growth and development.",
-    content: "Lorem ipsum dolor sit amet...",
-    author: "Nutrition Specialist Alex Thompson",
-    date: "2023-08-12",
+    id: 4,
+    title: "The Best Toys for Puppies: Safe and Engaging Options",
+    excerpt: "Choose the right toys for your puppy's development stage. Learn which toys encourage healthy play and which to avoid.",
+    image: "https://images.unsplash.com/photo-1591160690555-5debfba289f0?ixlib=rb-4.0.3",
+    publishedAt: "2025-03-05",
+    category: "lifestyle",
+    slug: "best-puppy-toys-safe-engaging",
+    readTime: "4 min read"
+  },
+  {
+    id: 5,
+    title: "Puppy Nutrition: Choosing the Right Food for Growth",
+    excerpt: "Proper nutrition is essential for healthy puppy development. Learn how to select the best food for your puppy's needs.",
+    image: "https://images.unsplash.com/photo-1616668983570-a971f89ab322?ixlib=rb-4.0.3",
+    publishedAt: "2025-03-20",
     category: "nutrition",
-    tags: ["nutrition", "diet", "growth"],
-    imageSrc: "https://images.unsplash.com/photo-1623387641168-d9803ddd3f35?ixlib=rb-4.0.3",
-    readTime: "8 min"
+    slug: "puppy-nutrition-right-food",
+    readTime: "8 min read"
   },
   {
-    id: "5",
-    title: "Socialization: The Key to a Well-Adjusted Dog",
-    excerpt: "Why socializing your puppy in their early months is crucial for developing a confident, friendly adult dog.",
-    content: "Lorem ipsum dolor sit amet...",
-    author: "Behaviorist Rachel Cooper",
-    date: "2023-09-03",
-    category: "behavior",
-    tags: ["socialization", "behavior", "puppy-development"],
-    imageSrc: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?ixlib=rb-4.0.3",
-    readTime: "5 min"
-  },
-  {
-    id: "6",
-    title: "Common Puppy Health Issues to Watch For",
-    excerpt: "Learn to recognize signs of common health problems in puppies and when to seek veterinary care.",
-    content: "Lorem ipsum dolor sit amet...",
-    author: "Dr. Sarah Johnson",
-    date: "2023-10-17",
-    category: "health",
-    tags: ["health", "vet-care", "symptoms"],
-    imageSrc: "https://images.unsplash.com/photo-1583337426008-3e0f66dfe274?ixlib=rb-4.0.3",
-    readTime: "9 min"
+    id: 6,
+    title: "Socializing Your Puppy: Building Confidence in New Situations",
+    excerpt: "Early socialization helps puppies grow into well-adjusted adult dogs. Learn effective socialization techniques.",
+    image: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?ixlib=rb-4.0.3",
+    publishedAt: "2025-04-02",
+    category: "training",
+    slug: "socializing-puppy-confidence",
+    readTime: "6 min read"
   }
 ];
 
-// Category mapping for display
-const CATEGORIES = {
-  "all": "All Posts",
-  "puppy-care": "Puppy Care",
-  "health": "Health & Wellness",
-  "training": "Training Tips",
-  "nutrition": "Nutrition",
-  "behavior": "Behavior & Psychology"
-};
+const categories = [
+  { id: "all", name: "All Posts" },
+  { id: "care", name: "Puppy Care" },
+  { id: "health", name: "Health & Wellness" },
+  { id: "training", name: "Training Tips" },
+  { id: "nutrition", name: "Nutrition" },
+  { id: "lifestyle", name: "Lifestyle" }
+];
 
 const Blog = () => {
-  const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
   
-  // Filter posts based on search and category
-  const filteredPosts = BLOG_POSTS.filter(post => {
-    const matchesSearch = !searchTerm || 
-      post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-      
+  // Filter posts by category and search term
+  const filteredPosts = blogPosts.filter(post => {
     const matchesCategory = activeCategory === "all" || post.category === activeCategory;
+    const matchesSearch = searchTerm === "" ||
+      post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      post.excerpt.toLowerCase().includes(searchTerm.toLowerCase());
     
-    return matchesSearch && matchesCategory;
+    return matchesCategory && matchesSearch;
   });
-  
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
 
   return (
     <div>
       <HeroSection
-        title="Puppy Care Blog"
-        subtitle="Expert advice and tips for raising happy, healthy puppies"
-        imageSrc="https://images.unsplash.com/photo-1560743173-567a3b5658b1?ixlib=rb-4.0.3"
-        ctaText="Subscribe to Updates"
-        ctaLink="#subscribe"
+        title="Puppy Blog"
+        subtitle="Tips, advice, and stories to help you be the best puppy parent"
+        imageSrc="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?ixlib=rb-4.0.3"
+        ctaText="Subscribe"
+        ctaLink="/contact"
       />
       
       <Section>
-        <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-8">
-          <Tabs 
-            defaultValue="all" 
-            value={activeCategory}
-            onValueChange={setActiveCategory}
-            className="w-full md:w-auto"
-          >
-            <TabsList>
-              {Object.entries(CATEGORIES).map(([key, label]) => (
-                <TabsTrigger key={key} value={key}>{label}</TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
+        <div className="flex flex-col md:flex-row justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold mb-4 md:mb-0">Latest Articles</h1>
           
-          <div className="w-full md:w-64">
+          <div className="relative w-full md:w-72">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search blog posts..."
+              type="search"
+              placeholder="Search articles..."
+              className="pl-9 pr-4"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full"
             />
           </div>
         </div>
         
+        <Tabs 
+          value={activeCategory} 
+          onValueChange={setActiveCategory} 
+          className="w-full mb-8"
+        >
+          <TabsList className="flex justify-start overflow-x-auto pb-2 mb-2 space-x-1 border-b">
+            {categories.map(category => (
+              <TabsTrigger 
+                key={category.id} 
+                value={category.id} 
+                className="rounded-full px-4 py-1.5 text-sm"
+              >
+                {category.name}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+        
         {filteredPosts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredPosts.map(post => (
-              <Card key={post.id} className="overflow-hidden flex flex-col h-full border border-brand-red/20 hover:shadow-puppy transition-shadow">
-                <div className="h-48 overflow-hidden">
-                  <img 
-                    src={post.imageSrc} 
-                    alt={post.title} 
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-                <CardHeader className="pb-2">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Badge variant="outline" className="bg-brand-red/10 text-brand-red border-brand-red/30">
-                      {CATEGORIES[post.category as keyof typeof CATEGORIES]}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">{post.readTime} read</span>
+              <Link key={post.id} to={`/blog/${post.slug}`}>
+                <Card className="h-full overflow-hidden hover:shadow-md transition-shadow">
+                  <div className="aspect-video w-full overflow-hidden">
+                    <img 
+                      src={post.image} 
+                      alt={post.title} 
+                      className="w-full h-full object-cover transition-transform hover:scale-105" 
+                    />
                   </div>
-                  <CardTitle className="hover:text-brand-red transition-colors cursor-pointer">
-                    <a href={`/blog/${post.id}`}>{post.title}</a>
-                  </CardTitle>
-                  <CardDescription className="flex items-center space-x-2 text-xs">
-                    <User className="h-3 w-3" />
-                    <span>{post.author}</span>
-                    <span>•</span>
-                    <CalendarDays className="h-3 w-3" />
-                    <span>{formatDate(post.date)}</span>
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex-grow">
-                  <p className="line-clamp-3">{post.excerpt}</p>
-                </CardContent>
-                <CardFooter>
-                  <Button variant="ghost" className="p-0 hover:bg-transparent hover:text-brand-red" asChild>
-                    <a href={`/blog/${post.id}`}>
-                      Read More <ArrowRight className="ml-2 h-4 w-4" />
-                    </a>
-                  </Button>
-                </CardFooter>
-              </Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="bg-primary/10 text-primary px-2 py-1 rounded-full text-xs font-medium capitalize">
+                        {post.category}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {post.readTime}
+                      </span>
+                    </div>
+                    <h3 className="text-xl font-bold mb-2 line-clamp-2">{post.title}</h3>
+                    <p className="text-muted-foreground line-clamp-3 mb-4">
+                      {post.excerpt}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">{post.publishedAt}</span>
+                      <span className="text-primary font-medium text-sm">Read more</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         ) : (
-          <div className="text-center py-12 bg-card rounded-lg border border-brand-red/20">
-            <h3 className="text-xl font-semibold mb-2">No blog posts found</h3>
-            <p className="text-muted-foreground mb-4">Try adjusting your search or category filter</p>
-            <Button 
-              onClick={() => {setSearchTerm(""); setActiveCategory("all");}}
-              variant="outline"
-            >
-              Clear Filters
-            </Button>
+          <div className="text-center py-12">
+            <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-xl font-bold mb-2">No articles found</h3>
+            <p className="text-muted-foreground">
+              Try adjusting your search or filter to find what you're looking for.
+            </p>
           </div>
         )}
-      </Section>
-      
-      <Section className="bg-muted/50">
-        <div id="subscribe" className="max-w-xl mx-auto text-center">
-          <h2 className="text-2xl font-bold mb-4">Subscribe to Puppy Care Updates</h2>
-          <p className="mb-6">
-            Get the latest training tips, health advice, and puppy care information delivered to your inbox.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-            <Input 
-              placeholder="Your email address" 
-              type="email" 
-              className="flex-grow"
-            />
-            <Button className="bg-brand-red hover:bg-red-700 text-white">
-              Subscribe
-            </Button>
-          </div>
-          
-          <p className="text-xs text-muted-foreground mt-4">
-            We respect your privacy and will never share your information. Unsubscribe anytime.
-          </p>
-        </div>
       </Section>
     </div>
   );

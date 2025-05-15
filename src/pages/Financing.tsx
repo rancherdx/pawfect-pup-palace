@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Info, CheckCircle, ArrowRight } from "lucide-react";
+import { Info, CheckCircle, ArrowRight, ExternalLink } from "lucide-react";
 import PaymentMethodCard from "@/components/financing/PaymentMethodCard";
 
 const Financing = () => {
@@ -32,15 +32,6 @@ const Financing = () => {
       discount: "No discount",
       recommended: true,
       buttonText: "Choose Plan"
-    },
-    {
-      id: "plan-3",
-      title: "Monthly Payments",
-      description: "Spread payments over 6 months with our financing partners.",
-      terms: "Subject to credit approval. Terms and rates may vary.",
-      discount: "No discount",
-      recommended: false,
-      buttonText: "Apply Now"
     }
   ];
 
@@ -76,14 +67,13 @@ const Financing = () => {
   ];
 
   const handleApplyForFinancing = (planId: string) => {
-    // In a real application, this would navigate to a financing application form
     navigate(`/checkout?plan=${planId}`);
   };
 
   return (
     <div>
       <HeroSection
-        title="Financing Options"
+        title="Payment Options"
         subtitle="Flexible payment plans to help you bring home your new puppy"
         imageSrc="https://images.unsplash.com/photo-1601312540037-094e66dc560d?ixlib=rb-4.0.3"
         ctaText="Contact Us"
@@ -101,13 +91,13 @@ const Financing = () => {
 
           <TabsContent value="payment-plans" className="space-y-8">
             <div className="text-center max-w-2xl mx-auto mb-8">
-              <h2 className="text-3xl font-bold mb-4">Flexible Payment Options</h2>
+              <h2 className="text-3xl font-bold mb-4">Our Payment Options</h2>
               <p className="text-muted-foreground">
-                We understand that bringing a new puppy home is a significant investment. That's why we offer flexible payment plans to make it easier for you to welcome your new family member.
+                We offer several ways to pay for your new puppy, including flexible payment plans.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {paymentPlans.map((plan) => (
                 <Card key={plan.id} className={`overflow-hidden ${plan.recommended ? 'border-primary shadow-lg' : ''}`}>
                   {plan.recommended && (
@@ -141,11 +131,30 @@ const Financing = () => {
               ))}
             </div>
 
+            <div className="bg-muted/50 rounded-lg p-6 mt-8">
+              <h3 className="text-xl font-bold mb-4">Financing Through Terrace Pets</h3>
+              <p className="mb-4">
+                Need more flexible payment options? We've partnered with Terrace Pets to offer 
+                financing solutions that make bringing home your puppy easier.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <Button asChild variant="outline">
+                  <a href="https://demo.terracepets.com" target="_blank" rel="noopener noreferrer">
+                    Learn More About Terrace Pets
+                    <ExternalLink className="ml-2 h-4 w-4" />
+                  </a>
+                </Button>
+                <Button asChild>
+                  <a href="/contact">Contact Us About Financing</a>
+                </Button>
+              </div>
+            </div>
+
             <Alert>
               <Info className="h-4 w-4" />
               <AlertTitle>Important Information</AlertTitle>
               <AlertDescription>
-                All financing options require a non-refundable deposit to reserve your puppy. Financing is subject to approval and terms may vary based on your credit history.
+                All payment options require a non-refundable deposit to reserve your puppy. Financing through Terrace Pets is subject to approval and terms may vary based on your credit history.
               </AlertDescription>
             </Alert>
           </TabsContent>
@@ -181,9 +190,9 @@ const Financing = () => {
         </Tabs>
         
         <div className="mt-12 text-center">
-          <h3 className="text-xl font-bold mb-4">Have Questions About Financing?</h3>
+          <h3 className="text-xl font-bold mb-4">Have Questions About Payments?</h3>
           <p className="mb-6 max-w-2xl mx-auto">
-            Our team is ready to help you find the perfect financing solution for your new puppy.
+            Our team is ready to help you find the perfect payment solution for your new puppy.
             Contact us for personalized assistance.
           </p>
           <Button asChild size="lg">
