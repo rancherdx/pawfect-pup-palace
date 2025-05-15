@@ -38,7 +38,9 @@ const SearchResult = ({ result, onClick }: SearchResultProps) => {
       case "page":
         return "Page";
       default:
-        return result.type.charAt(0).toUpperCase() + result.type.slice(1);
+        // Fix: Ensure we're handling a valid string type
+        const type = String(result.type || ""); // Convert to string and handle undefined
+        return type.charAt(0).toUpperCase() + type.slice(1);
     }
   };
 
