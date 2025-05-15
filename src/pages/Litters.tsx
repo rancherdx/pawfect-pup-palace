@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import PuppyCard from "@/components/PuppyCard";
 import { 
   Search, 
   PawPrint, 
@@ -234,6 +235,17 @@ const Litters = () => {
     return matchesSearch && matchesBreed && matchesPrice && matchesAvailability;
   });
   
+  // Get all puppies from all litters for the "All Puppies" tab
+  const allPuppies = filteredLitters.flatMap(litter => 
+    litter.puppies.map(puppy => ({
+      ...puppy,
+      breed: litter.breed,
+      age: `${calculateAge(litter.birthDate)} weeks`,
+      litterName: litter.name,
+      litterid: litter.id
+    }))
+  );
+  
   // Handle breed selection
   const toggleBreedFilter = (breed: string) => {
     if (selectedBreeds.includes(breed)) {
@@ -391,243 +403,175 @@ const Litters = () => {
           )}
         </div>
         
-        {/* View Toggles */}
-        <Tabs defaultValue="litters" className="mb-8">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
-            <TabsTrigger 
-              value="litters"
-              className="data-[state=active]:bg-brand-red data-[state=active]:text-white"
-            >
-              <Dog className="h-4 w-4 mr-2" />
-              By Litter
-            </TabsTrigger>
-            <TabsTrigger 
-              value="all-puppies"
-              className="data-[state=active]:bg-brand-red data-[state=active]:text-white"
-            >
-              <PawPrint className="h-4 w-4 mr-2" />
-              All Puppies
-            </TabsTrigger>
-          </TabsList>
-          
-          {/* Litters View */}
-          <TabsContent value="litters" className="mt-6">
-            {filteredLitters.length === 0 ? (
-              <div className="text-center py-12">
-                <PawPrint className="h-12 w-12 mx-auto text-muted-foreground" />
-                <h3 className="text-xl font-semibold mt-4">No Litters Found</h3>
-                <p className="text-muted-foreground mb-6">Try adjusting your filters to see more results</p>
-                <Button onClick={resetFilters}>
-                  Reset All Filters
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-12">
-                {filteredLitters.map((litter) => (
-                  <div key={litter.id} className="animate-fade-in">
-                    {/* Litter Card */}
-                    <div className="bg-gradient-to-r from-red-50/80 to-orange-50/80 dark:from-red-950/20 dark:to-orange-950/20 rounded-xl overflow-hidden shadow-md mb-6 relative">
-                      <div className="absolute -bottom-8 -right-8 opacity-5">
-                        <PawPrint className="h-48 w-48" />
-                      </div>
-                      
-                      <div className="md:flex">
-                        {/* Litter Image */}
-                        <div className="md:w-1/3 h-64 md:h-auto">
-                          <img 
-                            src={litter.coverImage} 
-                            alt={litter.name} 
-                            className="w-full h-full object-cover object-center" 
-                          />
-                        </div>
-                        
-                        {/* Litter Info */}
-                        <div className="md:w-2/3 p-6">
-                          <div className="flex justify-between items-start mb-3">
-                            <h2 className="text-2xl font-bold">{litter.name}</h2>
-                            <Badge className={`
-                              ${litter.availability === "All Reserved" 
-                                ? "bg-yellow-500" 
-                                : litter.availability === "Some Available" 
-                                  ? "bg-green-500" 
-                                  : "bg-blue-500"
-                              } text-white px-3 py-1`}
-                            >
-                              {litter.availability}
-                            </Badge>
-                          </div>
-                          
-                          <p className="text-muted-foreground mb-4">{litter.description}</p>
-                          
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
-                            <div className="flex items-center space-x-2">
-                              <Dog className="h-4 w-4 text-brand-red" />
-                              <span className="text-sm">Breed: {litter.breed}</span>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Calendar className="h-4 w-4 text-brand-red" />
-                              <span className="text-sm">
-                                Age: {calculateAge(litter.birthDate)} weeks
-                              </span>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Heart className="h-4 w-4 text-brand-red" />
-                              <span className="text-sm">
-                                Parents: {litter.damName} & {litter.sireName}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          <Button
-                            className="bg-brand-red hover:bg-red-700 text-white mt-4"
-                            asChild
-                          >
-                            <Link to={`/litters/${litter.id}`}>
-                              View Full Litter Details
-                            </Link>
-                          </Button>
-                        </div>
-                      </div>
+        {/* Litters Display */}
+        <div className="space-y-12">
+          {filteredLitters.length === 0 ? (
+            <div className="text-center py-12">
+              <PawPrint className="h-12 w-12 mx-auto text-muted-foreground" />
+              <h3 className="text-xl font-semibold mt-4">No Litters Found</h3>
+              <p className="text-muted-foreground mb-6">Try adjusting your filters to see more results</p>
+              <Button onClick={resetFilters}>
+                Reset All Filters
+              </Button>
+            </div>
+          ) : (
+            filteredLitters.map((litter) => (
+              <div key={litter.id} className="animate-fade-in">
+                {/* Litter Card */}
+                <div className="bg-gradient-to-r from-red-50/80 to-orange-50/80 dark:from-red-950/20 dark:to-orange-950/20 rounded-xl overflow-hidden shadow-md mb-6 relative">
+                  <div className="absolute -bottom-8 -right-8 opacity-5">
+                    <PawPrint className="h-48 w-48" />
+                  </div>
+                  
+                  <div className="md:flex">
+                    {/* Litter Image */}
+                    <div className="md:w-1/3 h-64 md:h-auto">
+                      <img 
+                        src={litter.coverImage} 
+                        alt={litter.name} 
+                        className="w-full h-full object-cover object-center" 
+                      />
                     </div>
                     
-                    {/* Puppies Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
-                      {litter.puppies.map((puppy) => (
-                        <Card 
-                          key={puppy.id} 
-                          className="overflow-hidden border-none shadow-puppy group hover-scale transition-all duration-300"
+                    {/* Litter Info */}
+                    <div className="md:w-2/3 p-6">
+                      <div className="flex justify-between items-start mb-3">
+                        <h2 className="text-2xl font-bold">{litter.name}</h2>
+                        <Badge className={`
+                          ${litter.availability === "All Reserved" 
+                            ? "bg-yellow-500" 
+                            : litter.availability === "Some Available" 
+                              ? "bg-green-500" 
+                              : "bg-blue-500"
+                          } text-white px-3 py-1`}
                         >
-                          <div className="relative">
-                            <img 
-                              src={puppy.image} 
-                              alt={puppy.name} 
-                              className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105" 
-                            />
-                            <Badge className={`
-                              absolute top-3 right-3 ${getStatusColor(puppy.status)} text-white px-3 py-1`}
-                            >
-                              {puppy.status}
-                            </Badge>
-                          </div>
-                          
-                          <CardContent className="p-4">
-                            <h3 className="font-bold text-lg mb-1">{puppy.name}</h3>
-                            <div className="flex justify-between mb-3">
-                              <span className="text-sm text-muted-foreground">{puppy.gender}</span>
-                              <span className="text-sm font-medium">${puppy.price}</span>
-                            </div>
-                            
-                            <div className="flex items-center text-sm text-muted-foreground mb-4">
-                              <Dog className="h-3 w-3 mr-1" />
-                              <span>{puppy.color} {litter.breed}</span>
-                            </div>
-                            
-                            {puppy.reservable ? (
-                              <Button 
-                                asChild
-                                className="w-full bg-brand-red hover:bg-red-700 text-white"
-                              >
-                                <Link to={`/puppies/${puppy.id}`}>
-                                  View Details
-                                </Link>
-                              </Button>
-                            ) : (
-                              <Button 
-                                asChild
-                                variant="outline" 
-                                className="w-full"
-                              >
-                                <Link to={`/puppies/${puppy.id}`}>
-                                  View Profile
-                                </Link>
-                              </Button>
-                            )}
-                          </CardContent>
-                        </Card>
-                      ))}
+                          {litter.availability}
+                        </Badge>
+                      </div>
+                      
+                      <p className="text-muted-foreground mb-4">{litter.description}</p>
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+                        <div className="flex items-center space-x-2">
+                          <Dog className="h-4 w-4 text-brand-red" />
+                          <span className="text-sm">Breed: {litter.breed}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Calendar className="h-4 w-4 text-brand-red" />
+                          <span className="text-sm">
+                            Age: {calculateAge(litter.birthDate)} weeks
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Heart className="h-4 w-4 text-brand-red" />
+                          <span className="text-sm">
+                            Parents: {litter.damName} & {litter.sireName}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <Button
+                        className="bg-brand-red hover:bg-red-700 text-white mt-4"
+                        asChild
+                      >
+                        <Link to={`/litters/${litter.id}`}>
+                          View Full Litter Details
+                        </Link>
+                      </Button>
                     </div>
                   </div>
-                ))}
+                </div>
+                
+                {/* Puppies Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
+                  {litter.puppies.map((puppy) => (
+                    <Card 
+                      key={puppy.id} 
+                      className="overflow-hidden border-none shadow-puppy group hover-scale transition-all duration-300"
+                    >
+                      <div className="relative">
+                        <img 
+                          src={puppy.image} 
+                          alt={puppy.name} 
+                          className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105" 
+                        />
+                        <Badge className={`
+                          absolute top-3 right-3 ${getStatusColor(puppy.status)} text-white px-3 py-1`}
+                        >
+                          {puppy.status}
+                        </Badge>
+                      </div>
+                      
+                      <CardContent className="p-4">
+                        <h3 className="font-bold text-lg mb-1">{puppy.name}</h3>
+                        <div className="flex justify-between mb-3">
+                          <span className="text-sm text-muted-foreground">{puppy.gender}</span>
+                          <span className="text-sm font-medium">${puppy.price}</span>
+                        </div>
+                        
+                        <div className="flex items-center text-sm text-muted-foreground mb-4">
+                          <Dog className="h-3 w-3 mr-1" />
+                          <span>{puppy.color} {litter.breed}</span>
+                        </div>
+                        
+                        {puppy.reservable ? (
+                          <Button 
+                            asChild
+                            className="w-full bg-brand-red hover:bg-red-700 text-white"
+                          >
+                            <Link to={`/puppies/${puppy.id}`}>
+                              View Details
+                            </Link>
+                          </Button>
+                        ) : (
+                          <Button 
+                            asChild
+                            variant="outline" 
+                            className="w-full"
+                          >
+                            <Link to={`/puppies/${puppy.id}`}>
+                              View Profile
+                            </Link>
+                          </Button>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </div>
-            )}
-          </TabsContent>
+            ))
+          )}
+        </div>
+        
+        {/* All Available Puppies Section */}
+        <Section title="All Available Puppies" subtitle="Browse all our puppies in one place" className="mt-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {allPuppies.filter(puppy => puppy.status === "Available").map((puppy) => (
+              <PuppyCard
+                key={puppy.id}
+                id={puppy.id}
+                name={puppy.name}
+                breed={puppy.breed}
+                age={puppy.age}
+                gender={puppy.gender}
+                imageSrc={puppy.image}
+                price={puppy.price}
+                available={puppy.status === "Available"}
+              />
+            ))}
+          </div>
           
-          {/* All Puppies View */}
-          <TabsContent value="all-puppies" className="mt-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {filteredLitters.flatMap(litter => 
-                litter.puppies.map(puppy => (
-                  <Card 
-                    key={puppy.id} 
-                    className="overflow-hidden border-none shadow-puppy group hover-scale transition-all duration-300"
-                  >
-                    <div className="relative">
-                      <img 
-                        src={puppy.image} 
-                        alt={puppy.name} 
-                        className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105" 
-                      />
-                      <Badge className={`
-                        absolute top-3 right-3 ${getStatusColor(puppy.status)} text-white px-3 py-1`}
-                      >
-                        {puppy.status}
-                      </Badge>
-                    </div>
-                    
-                    <CardContent className="p-4">
-                      <h3 className="font-bold text-lg mb-1">{puppy.name}</h3>
-                      <div className="flex justify-between mb-2">
-                        <span className="text-sm text-muted-foreground">{puppy.gender}</span>
-                        <span className="text-sm font-medium">${puppy.price}</span>
-                      </div>
-                      
-                      <div className="flex items-center text-sm text-muted-foreground mb-2">
-                        <Dog className="h-3 w-3 mr-1" />
-                        <span>{puppy.color} {litter.breed}</span>
-                      </div>
-                      
-                      <div className="text-xs text-muted-foreground mb-4">
-                        From: {litter.name}
-                      </div>
-                      
-                      {puppy.reservable ? (
-                        <Button 
-                          asChild
-                          className="w-full bg-brand-red hover:bg-red-700 text-white"
-                        >
-                          <Link to={`/puppies/${puppy.id}`}>
-                            View Details
-                          </Link>
-                        </Button>
-                      ) : (
-                        <Button 
-                          asChild
-                          variant="outline" 
-                          className="w-full"
-                        >
-                          <Link to={`/puppies/${puppy.id}`}>
-                            View Profile
-                          </Link>
-                        </Button>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))
-              )}
+          {allPuppies.filter(puppy => puppy.status === "Available").length === 0 && (
+            <div className="text-center py-12">
+              <PawPrint className="h-12 w-12 mx-auto text-muted-foreground" />
+              <h3 className="text-xl font-semibold mt-4">No Available Puppies</h3>
+              <p className="text-muted-foreground mb-6">Check back soon or contact us for upcoming litters</p>
+              <Button asChild>
+                <Link to="/contact">Contact Us</Link>
+              </Button>
             </div>
-            
-            {filteredLitters.flatMap(litter => litter.puppies).length === 0 && (
-              <div className="text-center py-12">
-                <PawPrint className="h-12 w-12 mx-auto text-muted-foreground" />
-                <h3 className="text-xl font-semibold mt-4">No Puppies Found</h3>
-                <p className="text-muted-foreground mb-6">Try adjusting your filters to see more results</p>
-                <Button onClick={resetFilters}>
-                  Reset All Filters
-                </Button>
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+          )}
+        </Section>
       </Section>
     </div>
   );

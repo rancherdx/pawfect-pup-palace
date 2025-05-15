@@ -10,9 +10,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import Layout from "@/components/Layout";
 import Home from "@/pages/Home";
 import About from "@/pages/About";
-import Puppies from "@/pages/Puppies";
-import PuppyDetails from "@/pages/PuppyDetails";
 import Litters from "@/pages/Litters";
+import PuppyDetails from "@/pages/PuppyDetails";
 import Adopt from "@/pages/Adopt";
 import Reviews from "@/pages/Reviews";
 import Health from "@/pages/Health";
@@ -52,9 +51,8 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/about" element={<About />} />
-                <Route path="/puppies" element={<Puppies />} />
-                <Route path="/puppies/:id" element={<PuppyDetails />} />
                 <Route path="/litters" element={<Litters />} />
+                <Route path="/puppies/:id" element={<PuppyDetails />} />
                 <Route path="/adopt" element={<Adopt />} />
                 <Route path="/reviews" element={<Reviews />} />
                 <Route path="/health" element={<Health />} />
@@ -64,6 +62,7 @@ const App = () => (
                 <Route path="/stud" element={<StudPage />} />
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/system-status" element={<SystemStatus />} />
+                <Route path="/financing" element={<Financing />} />
                 
                 {/* Protected Routes */}
                 <Route path="/dashboard" element={
@@ -84,11 +83,6 @@ const App = () => (
                 <Route path="/checkout" element={
                   <ProtectedRoute>
                     <Checkout />
-                  </ProtectedRoute>
-                } />
-                <Route path="/financing" element={
-                  <ProtectedRoute>
-                    <Financing />
                   </ProtectedRoute>
                 } />
                 

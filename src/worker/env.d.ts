@@ -1,3 +1,4 @@
+
 export interface Env {
   // KV Namespace
   AUTH_STORE: KVNamespace;
