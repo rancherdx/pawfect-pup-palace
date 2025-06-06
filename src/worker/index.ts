@@ -1,9 +1,16 @@
 
 import { Router } from 'itty-router';
-import { verifyAuth } from './auth';
+// Updated to import specific auth functions and new admin middleware
+import { verifySessionAuth, adminAuthMiddleware } from './auth';
 import * as puppiesController from './controllers/puppies';
 import * as usersController from './controllers/users';
+// Import admin user management functions
+import { listUsers, getUserByIdAdmin, updateUserAdmin, deleteUserAdmin } from './controllers/users';
 import * as littersController from './controllers/litters';
+// Import processPayment and handleSquareWebhook from payment controller
+import { processPayment, handleSquareWebhook } from './controllers/payment';
+// Import admin settings functions
+import { getSiteSettings, updateSiteSettings } from './controllers/settings';
 import { corsHeaders } from './utils/cors';
 import { handleApiError } from './utils/errors';
 import type { Env } from './env';
@@ -65,17 +72,21 @@ async function serveStaticAsset(pathname: string): Promise<Response> {
   }
 }
 
-// Auth middleware
-const authMiddleware = async (request: Request, env: Env): Promise<Response | any> => {
-  const authResult = await verifyAuth(request, env);
+// Auth middleware (using verifySessionAuth for existing protected routes)
+const authMiddleware = async (request: Request, env: Env, ): Promise<Response | any> => {
+  const authResult = await verifySessionAuth(request, env); // Using session auth for existing routes
   if (!authResult.authenticated) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+    return new Response(JSON.stringify({ error: authResult.error || 'Unauthorized' }), {
       status: 401,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }
-  return authResult;
+  // itty-router middlewares pass control if they don't return a Response.
+  // To pass data to the next handler, we can augment the request object.
+  (request as any).auth = authResult; // Make authResult available to handlers
+  // No explicit return here means itty-router will proceed to the next handler.
 };
+
 
 router.options('*', () => new Response(null, { headers: corsHeaders }));
 
@@ -221,6 +232,18 @@ router.delete('/api/litters/:id', async (req, env) => {
 router.post('/api/login', usersController.login);
 router.post('/api/register', usersController.register);
 
+// Checkout route
+// Updated to call processPayment
+async function handleCheckout(request: Request, env: Env): Promise<Response> {
+  console.log('handleCheckout called, delegating to processPayment...');
+  return processPayment(request, env);
+}
+
+router.post('/api/checkout', handleCheckout);
+
+// Square Webhook route
+router.post('/api/webhooks/square', handleSquareWebhook);
+
 router.get('/api/user', async (req, env) => {
   const auth = await authMiddleware(req, env);
   if (auth instanceof Response) return auth;
@@ -228,10 +251,49 @@ router.get('/api/user', async (req, env) => {
 });
 
 router.post('/api/logout', async (req, env) => {
-  const auth = await authMiddleware(req, env);
-  if (auth instanceof Response) return auth;
-  return usersController.logout(req, env);
+  // Logout might use session token from verifySessionAuth if that's what's being invalidated
+  const authResult = await verifySessionAuth(request, env);
+  if (!authResult.authenticated) {
+     return new Response(JSON.stringify({ error: authResult.error || 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+  return usersController.logout(req, env); // usersController.logout should handle token extraction
 });
+
+
+// Admin User Management Routes (Protected by adminAuthMiddleware - JWT based)
+router.get('/api/admin/users', adminAuthMiddleware, listUsers);
+
+router.get('/api/admin/users/:userId', adminAuthMiddleware, (request, env) => {
+  const userId = request.params?.userId;
+  if (!userId) {
+    return new Response(JSON.stringify({ error: 'User ID parameter is missing' }), { status: 400, headers: corsHeaders });
+  }
+  return getUserByIdAdmin(request, env, userId);
+});
+
+router.put('/api/admin/users/:userId', adminAuthMiddleware, (request, env) => {
+  const userId = request.params?.userId;
+   if (!userId) {
+    return new Response(JSON.stringify({ error: 'User ID parameter is missing' }), { status: 400, headers: corsHeaders });
+  }
+  return updateUserAdmin(request, env, userId);
+});
+
+router.delete('/api/admin/users/:userId', adminAuthMiddleware, (request, env) => {
+  const userId = request.params?.userId;
+   if (!userId) {
+    return new Response(JSON.stringify({ error: 'User ID parameter is missing' }), { status: 400, headers: corsHeaders });
+  }
+  return deleteUserAdmin(request, env, userId);
+});
+
+// Admin Site Settings Routes (Protected by adminAuthMiddleware - JWT based)
+router.get('/api/admin/settings', adminAuthMiddleware, getSiteSettings);
+router.post('/api/admin/settings', adminAuthMiddleware, updateSiteSettings);
+
 
 // Static asset catch-all
 router.get('*', async (req) => {

@@ -1,4 +1,3 @@
-
 -- Seed data for breeds
 INSERT OR IGNORE INTO breeds (id, name, description, temperament, size, lifespan)
 VALUES 
@@ -76,3 +75,18 @@ VALUES
   ('/', 'GDS Puppies | Premium Puppy Breeder', 'Quality puppies from responsible breeders. Find your perfect companion with health guarantees and lifetime support.', 'puppies, dog breeder, responsible breeding', 'https://example.com/og-home.jpg', 82),
   ('/litters', 'Available Litters | GDS Puppies', 'View our current and upcoming litters of premium puppies. Reserve your new family member today.', 'puppy litters, available puppies, reserve puppy', 'https://example.com/og-litters.jpg', 76),
   ('/about', 'About Our Breeding Program | GDS Puppies', 'Learn about our ethical breeding practices, facilities, and our commitment to puppy health and wellbeing.', 'ethical breeding, quality puppies, breeding program', 'https://example.com/og-about.jpg', 63);
+
+-- Seed data for email_templates
+INSERT OR IGNORE INTO email_templates (id, name, subject, html_body, is_editable_in_admin, created_at, updated_at)
+VALUES
+  ('welcome-email-tpl', 'welcome_email', 'Welcome to GDS Puppies!',
+   '<p>Hi {{name}},</p><p>Welcome to GDS Puppies! We are thrilled to have you.</p><p>Thanks,<br>The GDS Puppies Team</p>',
+   0, STRFTIME('%Y-%m-%d %H:%M:%f', 'now'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now')),
+
+  ('receipt-email-tpl', 'payment_receipt', 'Your GDS Puppies Payment Receipt - Order {{order_id}}',
+   '<p>Hi {{name}},</p><p>Thank you for your payment for order {{order_id}}.</p><p>Amount: {{amount}} {{currency}}</p><p>View your order details here: {{order_link}}</p><p>Thanks,<br>The GDS Puppies Team</p>',
+   0, STRFTIME('%Y-%m-%d %H:%M:%f', 'now'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now')),
+
+  ('password-reset-tpl', 'password_reset', 'Reset Your GDS Puppies Password',
+   '<p>Hi {{name}},</p><p>Please click the link below to reset your password:</p><p><a href="{{reset_link}}">Reset Password</a></p><p>If you did not request this, please ignore this email.</p><p>Thanks,<br>The GDS Puppies Team</p>',
+   0, STRFTIME('%Y-%m-%d %H:%M:%f', 'now'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now'));
