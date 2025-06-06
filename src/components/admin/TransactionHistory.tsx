@@ -1,79 +1,139 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Receipt, Search, Download, ArrowLeft, ArrowRight } from "lucide-react";
+import { Receipt, Search, Download, ArrowLeft, ArrowRight, Loader2 } from "lucide-react"; // Added Loader2
+import { useQuery } from '@tanstack/react-query';
+import { toast } from 'sonner'; // For error notifications
+import { Badge } from "@/components/ui/badge"; // For status display
 
-// Mock data for demo purposes
-const initialTransactions = [
-  {
-    id: "INV-2024-1001",
-    date: "2024-05-01",
-    customer: "John Smith",
-    puppy: "Max (Golden Retriever)",
-    amount: 1200,
-    paymentMethod: "Credit Card",
-    status: "Completed"
-  },
-  {
-    id: "INV-2024-1002",
-    date: "2024-05-02",
-    customer: "Sarah Johnson",
-    puppy: "Bella (German Shepherd)",
-    amount: 500,
-    paymentMethod: "Cash",
-    status: "Deposit"
-  },
-  {
-    id: "INV-2024-1003",
-    date: "2024-05-02",
-    customer: "Robert Williams",
-    puppy: "Charlie (Labrador)",
-    amount: 1500,
-    paymentMethod: "Square Invoice",
-    status: "Completed"
-  },
-  {
-    id: "INV-2024-1004",
-    date: "2024-05-03",
-    customer: "Emily Davis",
-    puppy: "Luna (Poodle)",
-    amount: 600,
-    paymentMethod: "Credit Card",
-    status: "Deposit"
-  },
-  {
-    id: "INV-2024-1005",
-    date: "2024-05-04",
-    customer: "Michael Brown",
-    puppy: "Daisy (Beagle)",
-    amount: 1000,
-    paymentMethod: "Bank Transfer",
-    status: "Completed"
+// Placeholder for a shared API client function
+// In a real app, this would be in a separate file and handle auth, base URLs, etc.
+const fetchAdminAPI = async (endpoint: string, options: RequestInit = {}) => {
+  const jwtToken = localStorage.getItem('jwt'); // Or from AuthContext
+  const defaultHeaders = {
+    'Content-Type': 'application/json',
+    ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {})
+  };
+
+  const response = await fetch(endpoint, {
+    ...options,
+    headers: {
+      ...defaultHeaders,
+      ...options.headers,
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: "Request failed with status " + response.status }));
+    throw new Error(errorData.details || errorData.error || errorData.message || "API request failed");
   }
-];
+  return response.json();
+};
+
+
+interface Transaction {
+  id: string;
+  created_at: string; // Date string from backend
+  user_id: string | null; // Assuming we might fetch user name later if needed
+  puppy_id: string | null; // Assuming we might fetch puppy name later
+  square_payment_id: string | null;
+  amount: number; // In cents from backend
+  currency: string;
+  payment_method_details: { brand?: string; last4?: string; type?: string } | null;
+  status: string;
+}
+
+interface ApiResponse {
+  transactions: Transaction[];
+  currentPage: number;
+  totalPages: number;
+  totalTransactions: number;
+  limit: number;
+}
 
 const TransactionHistory = () => {
-  const [transactions, setTransactions] = useState(initialTransactions);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState("All");
-  
-  const filterOptions = ["All", "Completed", "Deposit", "Refunded"];
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+  const [selectedFilter, setSelectedFilter] = useState("All"); // For status filter
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 10; // Or make this a state if user can change it
 
-  const filteredTransactions = transactions.filter(transaction => {
-    // Apply status filter
-    const statusMatch = selectedFilter === "All" || transaction.status === selectedFilter;
-    
-    // Apply search filter
-    const searchLower = searchQuery.toLowerCase();
-    const searchMatch = 
-      transaction.id.toLowerCase().includes(searchLower) ||
-      transaction.customer.toLowerCase().includes(searchLower) ||
-      transaction.puppy.toLowerCase().includes(searchLower);
-    
-    return statusMatch && searchMatch;
-  });
+  const filterOptions = ["All", "COMPLETED", "DEPOSIT", "REFUNDED", "CANCELED", "FAILED"]; // Match backend status values
+
+  // Debounce search query
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+      setCurrentPage(1); // Reset to first page on new search
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+  
+   // Reset page to 1 when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedFilter]);
+
+
+  const fetchTransactions = async ({ queryKey }: any): Promise<ApiResponse> => {
+    const [_key, page, limit, status, search] = queryKey;
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+    if (status && status !== "All") {
+      params.append('status', status);
+    }
+    if (search) {
+      params.append('searchQuery', search);
+    }
+    // Add date range filters here if UI is implemented for them
+    // params.append('startDate', startDate);
+    // params.append('endDate', endDate);
+    return fetchAdminAPI(`/api/admin/transactions?${params.toString()}`);
+  };
+
+  const { data, isLoading, isError, error, isPreviousData } = useQuery<ApiResponse, Error>(
+    ['transactions', currentPage, rowsPerPage, selectedFilter, debouncedSearchQuery],
+    fetchTransactions,
+    {
+      keepPreviousData: true, // Good for pagination UX
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      onError: (err) => {
+        toast.error(`Failed to fetch transactions: ${err.message}`);
+      }
+    }
+  );
+
+  const handleStatusFilterChange = (filter: string) => {
+    setSelectedFilter(filter);
+    // setCurrentPage(1); // Reset to first page handled by useEffect
+  };
+
+  const formatCurrency = (amountInCents: number, currencyCode: string = "USD") => {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: currencyCode })
+      .format(amountInCents / 100);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+  };
+
+  const getStatusBadgeVariant = (status: string): "success" | "info" | "warning" | "destructive" | "outline" => {
+    switch (status?.toUpperCase()) {
+        case 'COMPLETED': return 'success';
+        case 'DEPOSIT': return 'info'; // Or a custom "partial" variant
+        case 'PENDING': return 'outline';
+        case 'REFUNDED': return 'warning';
+        case 'CANCELED': return 'outline';
+        case 'FAILED': return 'destructive';
+        default: return 'outline';
+    }
+  };
+
 
   return (
     <div className="space-y-6">
@@ -85,29 +145,30 @@ const TransactionHistory = () => {
         
         <div className="flex flex-col md:flex-row gap-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <input 
               type="text"
-              placeholder="Search transactions..."
+              placeholder="Search by ID..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 border rounded-lg w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-brand-red"
+              className="pl-10 pr-4 py-2 border rounded-lg w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-brand-red text-sm"
             />
           </div>
           
           <div className="flex">
             {filterOptions.map(filter => (
-              <button
+              <Button
                 key={filter}
-                onClick={() => setSelectedFilter(filter)}
-                className={`px-4 py-2 ${
-                  selectedFilter === filter 
-                    ? "bg-brand-red text-white" 
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                } ${filter === "All" ? "rounded-l-lg" : ""} ${filter === "Refunded" ? "rounded-r-lg" : ""}`}
+                variant={selectedFilter === filter ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleStatusFilterChange(filter)}
+                className={`${selectedFilter === filter ? "bg-brand-red text-white hover:bg-brand-red/90" : "hover:bg-gray-100 dark:hover:bg-gray-700"}
+                           ${filter === "All" ? "rounded-l-md" : ""}
+                           ${filter === filterOptions[filterOptions.length - 1] ? "rounded-r-md" : ""}
+                           border-l-0 first:border-l`}
               >
                 {filter}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -116,14 +177,10 @@ const TransactionHistory = () => {
       <Card className="shadow-md">
         <CardHeader className="bg-gray-50 dark:bg-gray-900/20">
           <CardTitle className="text-xl flex items-center justify-between">
-            <span>Recent Transactions</span>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-sm flex items-center"
-            >
+            <span>Transactions</span>
+            <Button variant="outline" size="sm" className="text-sm flex items-center" disabled>
               <Download className="mr-2 h-4 w-4" />
-              Export CSV
+              Export CSV (Soon)
             </Button>
           </CardTitle>
         </CardHeader>
@@ -132,10 +189,10 @@ const TransactionHistory = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Invoice ID</TableHead>
+                  <TableHead>Transaction ID</TableHead>
                   <TableHead>Date</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Puppy</TableHead>
+                  <TableHead>Square ID</TableHead>
+                  {/* <TableHead>Customer</TableHead> <TableHead>Puppy</TableHead> */}
                   <TableHead>Amount</TableHead>
                   <TableHead>Payment Method</TableHead>
                   <TableHead>Status</TableHead>
@@ -143,39 +200,47 @@ const TransactionHistory = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredTransactions.length === 0 ? (
+                {isLoading ? (
+                  Array.from({ length: rowsPerPage }).map((_, index) => (
+                    <TableRow key={`skeleton-${index}`}>
+                      <TableCell colSpan={7} className="py-2"> {/* Adjusted colSpan */}
+                        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : isError ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-24 text-center">
-                      No transactions found.
+                    <TableCell colSpan={7} className="h-24 text-center text-red-500">
+                      Error fetching transactions: {error?.message || "Unknown error"}
+                    </TableCell>
+                  </TableRow>
+                ) : data?.transactions?.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="h-24 text-center">
+                      No transactions found matching your criteria.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredTransactions.map((transaction) => (
+                  data?.transactions?.map((transaction) => (
                     <TableRow key={transaction.id}>
-                      <TableCell className="font-medium">{transaction.id}</TableCell>
-                      <TableCell>{transaction.date}</TableCell>
-                      <TableCell>{transaction.customer}</TableCell>
-                      <TableCell>{transaction.puppy}</TableCell>
-                      <TableCell>${transaction.amount.toLocaleString()}</TableCell>
-                      <TableCell>{transaction.paymentMethod}</TableCell>
+                      <TableCell className="font-medium font-mono text-xs">{transaction.id}</TableCell>
+                      <TableCell className="text-xs">{formatDate(transaction.created_at)}</TableCell>
+                      <TableCell className="font-mono text-xs">{transaction.square_payment_id || 'N/A'}</TableCell>
+                      {/* Customer/Puppy name would require fetching related data or including in API response */}
+                      {/* <TableCell>{transaction.user_id || 'N/A'}</TableCell> */}
+                      {/* <TableCell>{transaction.puppy_id || 'N/A'}</TableCell> */}
+                      <TableCell>{formatCurrency(transaction.amount, transaction.currency)}</TableCell>
+                      <TableCell className="text-xs">
+                        {transaction.payment_method_details?.brand ?
+                         `${transaction.payment_method_details.brand} ****${transaction.payment_method_details.last4}` : 'N/A'}
+                      </TableCell>
                       <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          transaction.status === "Completed"
-                            ? "bg-green-100 text-green-800"
-                            : transaction.status === "Deposit"
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-red-100 text-red-800"
-                        }`}>
+                        <Badge variant={getStatusBadgeVariant(transaction.status)}>
                           {transaction.status}
-                        </span>
+                        </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                          title="View Receipt"
-                        >
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="View Details">
                           <Receipt className="h-4 w-4" />
                         </Button>
                       </TableCell>
@@ -188,42 +253,48 @@ const TransactionHistory = () => {
         </CardContent>
       </Card>
       
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-500">
-          Showing {filteredTransactions.length} of {transactions.length} transactions
-        </p>
-        
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" disabled>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Previous
-          </Button>
-          <Button variant="outline" size="sm" disabled>
-            Next
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
+      {data && data.totalTransactions > 0 && (
+        <div className="flex items-center justify-between pt-2">
+          <p className="text-sm text-muted-foreground">
+            Showing {Math.min((data.currentPage - 1) * data.limit + 1, data.totalTransactions)}
+            {' '}- {Math.min(data.currentPage * data.limit, data.totalTransactions)}
+            {' '}of {data.totalTransactions} transactions
+          </p>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={data.currentPage <= 1 || isLoading || isPreviousData}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Previous
+            </Button>
+            <span className="text-sm">
+              Page {data.currentPage} of {data.totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => prev + 1)}
+              disabled={data.currentPage >= data.totalPages || isLoading || isPreviousData}
+            >
+              Next
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
       
-      <div className="bg-gray-50 rounded-lg p-4 border border-dashed border-gray-300 mt-2">
-        <h3 className="font-medium">Transaction Types:</h3>
-        <ul className="mt-2 text-sm text-gray-600 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1">
-          <li className="flex items-center">
-            <span className="h-2 w-2 rounded-full bg-green-500 mr-2"></span>
-            <span><strong>Completed:</strong> Full payment received</span>
-          </li>
-          <li className="flex items-center">
-            <span className="h-2 w-2 rounded-full bg-blue-500 mr-2"></span>
-            <span><strong>Deposit:</strong> Partial payment received</span>
-          </li>
-          <li className="flex items-center">
-            <span className="h-2 w-2 rounded-full bg-red-500 mr-2"></span>
-            <span><strong>Refunded:</strong> Payment returned to customer</span>
-          </li>
-          <li className="flex items-center">
-            <span className="h-2 w-2 rounded-full bg-gray-500 mr-2"></span>
-            <span><strong>Synced with Square:</strong> All transactions are automatically synced</span>
-          </li>
+      <div className="bg-gray-50 dark:bg-gray-800/30 rounded-lg p-4 border border-dashed border-gray-300 dark:border-gray-700 mt-2">
+        <h3 className="font-medium text-gray-700 dark:text-gray-300">Transaction Statuses:</h3>
+        <ul className="mt-2 text-sm text-gray-600 dark:text-gray-400 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-1">
+          {filterOptions.filter(opt => opt !== "All").map(status => (
+             <li key={status} className="flex items-center">
+                <Badge variant={getStatusBadgeVariant(status)} className="mr-2 h-2 w-2 p-0 rounded-full" />
+                <span><strong>{status}:</strong> Placeholder description for {status}</span>
+            </li>
+          ))}
         </ul>
       </div>
     </div>

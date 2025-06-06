@@ -28,7 +28,13 @@ import Financing from "@/pages/Financing";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import NotFound from "@/pages/NotFound";
+import FAQPage from "@/pages/FAQPage";
+import TermsOfServicePage from "@/pages/TermsOfServicePage"; // Import TermsOfServicePage
+import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage"; // Import PrivacyPolicyPage
+import RefundPolicyPage from "@/pages/RefundPolicyPage"; // Import RefundPolicyPage
+import UserDataDeletionPage from "@/pages/UserDataDeletionPage"; // Import UserDataDeletionPage
 import ProtectedRoute from "@/components/ProtectedRoute";
+import TawkToWidget from "@/components/chat/TawkToWidget";
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -87,10 +93,15 @@ const App = () => (
                     <Checkout />
                   </ProtectedRoute>
                 } />
-                
+                <Route path="/faq" element={<FAQPage />} />
+                <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+                <Route path="/refund-policy" element={<RefundPolicyPage />} />
+                <Route path="/user-data-deletion" element={<UserDataDeletionPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Layout>
+            <TawkToWidget /> {/* Add TawkToWidget here */}
           </BrowserRouter>
         </AuthProvider>
       </TooltipProvider>

@@ -198,3 +198,26 @@ CREATE TABLE IF NOT EXISTS third_party_integrations (
 
 CREATE INDEX IF NOT EXISTS idx_third_party_integrations_service_name ON third_party_integrations(service_name);
 CREATE INDEX IF NOT EXISTS idx_third_party_integrations_is_active ON third_party_integrations(is_active);
+
+-- Stud Dogs table
+CREATE TABLE IF NOT EXISTS stud_dogs (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  breed_id TEXT,
+  age INTEGER, -- Consider using date_of_birth TEXT for more precision
+  description TEXT,
+  temperament TEXT,
+  certifications TEXT, -- JSON array of strings, e.g., ["CH", "OFA Good"]
+  stud_fee REAL NOT NULL,
+  image_urls TEXT, -- JSON array of strings
+  is_available BOOLEAN DEFAULT 1,
+  owner_user_id TEXT, -- User who listed the stud, likely an admin or breeder role
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (breed_id) REFERENCES breeds(id) ON DELETE SET NULL,
+  FOREIGN KEY (owner_user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_stud_dogs_breed_id ON stud_dogs(breed_id);
+CREATE INDEX IF NOT EXISTS idx_stud_dogs_is_available ON stud_dogs(is_available);
+CREATE INDEX IF NOT EXISTS idx_stud_dogs_owner_user_id ON stud_dogs(owner_user_id);

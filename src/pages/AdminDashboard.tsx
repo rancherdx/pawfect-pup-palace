@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PawPrint, Plus, Dog, Receipt, Settings, CreditCard, Layers, FileText, Globe, Users } from "lucide-react";
+import { PawPrint, Plus, Dog, Receipt, Settings, CreditCard, Layers, FileText, Globe, Users, PlugZap, Mail, ShieldCheck } from "lucide-react"; // Added ShieldCheck
 import Section from "@/components/Section";
 import PuppyManagement from "@/components/admin/PuppyManagement";
 import LitterManagement from "@/components/admin/LitterManagement";
@@ -12,6 +12,11 @@ import BreedTemplateManager from "@/components/admin/BreedTemplateManager";
 import BlogManager from "@/components/admin/BlogManager";
 import AffiliateManager from "@/components/admin/AffiliateManager";
 import SEOManager from "@/components/admin/SEOManager";
+import ThirdPartyIntegrationsManager from "@/components/admin/ThirdPartyIntegrationsManager";
+import EmailTemplatesManager from "@/components/admin/EmailTemplatesManager";
+import AdminUserManager from "@/components/admin/AdminUserManager";
+import AdminStudDogManager from "@/components/admin/AdminStudDogManager";
+import AdvancedSecurityFeatures from "@/components/admin/AdvancedSecurityFeatures"; // Import AdvancedSecurityFeatures
 
 const AdminDashboard = () => {
   const [isAdmin, setIsAdmin] = useState(true);  // For demo purposes, in production use actual auth
@@ -55,7 +60,8 @@ const AdminDashboard = () => {
           
           <Tabs defaultValue="puppies" className="w-full">
             <div className="bg-white dark:bg-black/30 p-4 rounded-t-xl shadow-sm border-b overflow-x-auto">
-              <TabsList className="grid grid-cols-9 w-full h-auto gap-2 min-w-[900px]">
+              {/* Adjusted grid-cols to 14 and min-w */}
+              <TabsList className="grid grid-cols-14 w-full h-auto gap-2 min-w-[1400px]">
                 <TabsTrigger value="puppies" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
                   <Dog className="h-5 w-5 mr-2" />
                   <span>Puppies</span>
@@ -91,6 +97,26 @@ const AdminDashboard = () => {
                 <TabsTrigger value="settings" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
                   <Settings className="h-5 w-5 mr-2" />
                   <span>Settings</span>
+                </TabsTrigger>
+                <TabsTrigger value="integrations" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
+                  <PlugZap className="h-5 w-5 mr-2" />
+                  <span>Integrations</span>
+                </TabsTrigger>
+                <TabsTrigger value="email_templates" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
+                  <Mail className="h-5 w-5 mr-2" />
+                  <span>Email Templates</span>
+                </TabsTrigger>
+                <TabsTrigger value="users_admin" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
+                  <Users className="h-5 w-5 mr-2" />
+                  <span>Users</span>
+                </TabsTrigger>
+                <TabsTrigger value="stud_dogs_admin" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
+                  <Dog className="h-5 w-5 mr-2" />
+                  <span>Stud Dogs</span>
+                </TabsTrigger>
+                <TabsTrigger value="adv_security" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
+                  <ShieldCheck className="h-5 w-5 mr-2" />
+                  <span>Adv. Security</span>
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -130,6 +156,21 @@ const AdminDashboard = () => {
               
               <TabsContent value="settings" className="mt-0 animate-fade-in">
                 <SettingsPanel />
+              </TabsContent>
+              <TabsContent value="integrations" className="mt-0 animate-fade-in">
+                <ThirdPartyIntegrationsManager />
+              </TabsContent>
+              <TabsContent value="email_templates" className="mt-0 animate-fade-in">
+                <EmailTemplatesManager />
+              </TabsContent>
+              <TabsContent value="users_admin" className="mt-0 animate-fade-in">
+                <AdminUserManager />
+              </TabsContent>
+              <TabsContent value="stud_dogs_admin" className="mt-0 animate-fade-in">
+                <AdminStudDogManager />
+              </TabsContent>
+              <TabsContent value="adv_security" className="mt-0 animate-fade-in">
+                <AdvancedSecurityFeatures />
               </TabsContent>
             </div>
           </Tabs>

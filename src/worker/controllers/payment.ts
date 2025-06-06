@@ -131,6 +131,10 @@ export async function processPayment(request: Request, env: Env): Promise<Respon
     if (squarePayment && squarePayment.id && squarePayment.amountMoney && squarePayment.status) {
       console.log('Payment successful with Square. Payment ID:', squarePayment.id, 'Status:', squarePayment.status);
 
+      // TODO: Future - Implement Square Transaction Risk Assessment here before finalizing order or based on webhook data.
+      // This could involve checking squarePayment.riskEvaluation or other fraud indicators if available from Square's response.
+      // Based on the risk level, we might decide to hold the order, request further verification, or proceed.
+
       // Record transaction in D1
       let dbTransactionId: string | null = null;
       try {
