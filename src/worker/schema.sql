@@ -1,4 +1,3 @@
-
 -- Base tables for puppies and litters
 CREATE TABLE IF NOT EXISTS breeds (
   id TEXT PRIMARY KEY,
@@ -151,3 +150,51 @@ CREATE INDEX IF NOT EXISTS idx_blog_posts_status ON blog_posts(status);
 CREATE INDEX IF NOT EXISTS idx_blog_posts_slug ON blog_posts(slug);
 CREATE INDEX IF NOT EXISTS idx_affiliates_code ON affiliates(code);
 CREATE INDEX IF NOT EXISTS idx_promo_codes_code ON promo_codes(code);
+
+-- Transactions table for Square payments
+CREATE TABLE IF NOT EXISTS transactions (
+  id TEXT PRIMARY KEY,
+  user_id TEXT,
+  puppy_id TEXT,
+  square_payment_id TEXT UNIQUE,
+  amount INTEGER NOT NULL,
+  currency TEXT NOT NULL,
+  payment_method_details TEXT,
+  status TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+  FOREIGN KEY (puppy_id) REFERENCES puppies(id) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_transactions_square_payment_id ON transactions(square_payment_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON transactions(user_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_puppy_id ON transactions(puppy_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_status ON transactions(status);
+
+-- Email templates table
+CREATE TABLE IF NOT EXISTS email_templates (
+  id TEXT PRIMARY KEY,
+  name TEXT UNIQUE NOT NULL,
+  subject TEXT NOT NULL,
+  html_body TEXT NOT NULL,
+  is_editable_in_admin BOOLEAN NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_email_templates_name ON email_templates(name);
+
+-- Third-party integrations table
+CREATE TABLE IF NOT EXISTS third_party_integrations (
+  id TEXT PRIMARY KEY,
+  service_name TEXT UNIQUE NOT NULL,
+  api_key TEXT, -- Will be stored encrypted by the application
+  other_config TEXT, -- JSON for additional settings
+  is_active BOOLEAN NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_third_party_integrations_service_name ON third_party_integrations(service_name);
+CREATE INDEX IF NOT EXISTS idx_third_party_integrations_is_active ON third_party_integrations(is_active);
