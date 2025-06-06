@@ -11,6 +11,30 @@ import * as littersController from './controllers/litters';
 import { processPayment, handleSquareWebhook } from './controllers/payment';
 // Import admin settings functions
 import { getSiteSettings, updateSiteSettings } from './controllers/settings';
+// Import admin integrations functions
+import {
+  listIntegrations,
+  createIntegration,
+  updateIntegration,
+  deleteIntegration
+} from './controllers/integrations';
+// Import admin email templates functions
+import {
+  listEmailTemplates,
+  getEmailTemplateById,
+  updateEmailTemplate
+} from './controllers/emailTemplates';
+// Import admin and user transactions functions
+import { listTransactions, listUserTransactions } from './controllers/transactions';
+// Import stud dogs controller functions
+import {
+  createStudDog,
+  listPublicStudDogs,
+  getStudDogDetails,
+  updateStudDog,
+  deleteStudDog,
+  listAdminStudDogs // Added listAdminStudDogs
+} from './controllers/studDogs';
 import { corsHeaders } from './utils/cors';
 import { handleApiError } from './utils/errors';
 import type { Env } from './env';
@@ -190,6 +214,15 @@ router.get('/api/puppies', puppiesController.getAllPuppies);
 router.get('/api/puppies/:id', puppiesController.getPuppyById);
 router.get('/api/litters', littersController.getAllLitters);
 router.get('/api/litters/:id', littersController.getLitterById);
+// Public Stud Dog routes
+router.get('/api/stud-dogs', listPublicStudDogs);
+router.get('/api/stud-dogs/:studDogId', (request, env) => {
+  const studDogId = request.params?.studDogId;
+  if (!studDogId) {
+    return new Response(JSON.stringify({ error: 'Stud Dog ID parameter is missing' }), { status: 400, headers: corsHeaders });
+  }
+  return getStudDogDetails(request, env, studDogId);
+});
 
 // Protected routes
 router.post('/api/puppies', async (req, env) => {
@@ -293,6 +326,71 @@ router.delete('/api/admin/users/:userId', adminAuthMiddleware, (request, env) =>
 // Admin Site Settings Routes (Protected by adminAuthMiddleware - JWT based)
 router.get('/api/admin/settings', adminAuthMiddleware, getSiteSettings);
 router.post('/api/admin/settings', adminAuthMiddleware, updateSiteSettings);
+
+// Admin Third-Party Integrations Routes (Protected by adminAuthMiddleware - JWT based)
+router.get('/api/admin/integrations', adminAuthMiddleware, listIntegrations);
+router.post('/api/admin/integrations', adminAuthMiddleware, createIntegration);
+
+router.put('/api/admin/integrations/:integrationId', adminAuthMiddleware, (request, env) => {
+  const integrationId = request.params?.integrationId;
+  if (!integrationId) {
+    return new Response(JSON.stringify({ error: 'Integration ID parameter is missing' }), { status: 400, headers: corsHeaders });
+  }
+  return updateIntegration(request, env, integrationId);
+});
+
+router.delete('/api/admin/integrations/:integrationId', adminAuthMiddleware, (request, env) => {
+  const integrationId = request.params?.integrationId;
+  if (!integrationId) {
+    return new Response(JSON.stringify({ error: 'Integration ID parameter is missing' }), { status: 400, headers: corsHeaders });
+  }
+  return deleteIntegration(request, env, integrationId);
+});
+
+// Admin Email Templates Routes (Protected by adminAuthMiddleware - JWT based)
+router.get('/api/admin/email-templates', adminAuthMiddleware, listEmailTemplates);
+
+router.get('/api/admin/email-templates/:templateId', adminAuthMiddleware, (request, env) => {
+  const templateId = request.params?.templateId;
+  if (!templateId) {
+    return new Response(JSON.stringify({ error: 'Template ID parameter is missing' }), { status: 400, headers: corsHeaders });
+  }
+  return getEmailTemplateById(request, env, templateId);
+});
+
+router.put('/api/admin/email-templates/:templateId', adminAuthMiddleware, (request, env) => {
+  const templateId = request.params?.templateId;
+  if (!templateId) {
+    return new Response(JSON.stringify({ error: 'Template ID parameter is missing' }), { status: 400, headers: corsHeaders });
+  }
+  return updateEmailTemplate(request, env, templateId);
+});
+
+// Admin Transactions Route (Protected by adminAuthMiddleware - JWT based)
+router.get('/api/admin/transactions', adminAuthMiddleware, listTransactions);
+
+// User's own transactions (Protected by standard authMiddleware - session/JWT based)
+router.get('/api/my-transactions', authMiddleware, listUserTransactions);
+
+// Admin Stud Dog Routes (Protected by adminAuthMiddleware - JWT based)
+router.get('/api/admin/stud-dogs', adminAuthMiddleware, listAdminStudDogs); // New GET route for admin
+router.post('/api/admin/stud-dogs', adminAuthMiddleware, createStudDog);
+
+router.put('/api/admin/stud-dogs/:studDogId', adminAuthMiddleware, (request, env) => {
+  const studDogId = request.params?.studDogId;
+  if (!studDogId) {
+    return new Response(JSON.stringify({ error: 'Stud Dog ID parameter is missing' }), { status: 400, headers: corsHeaders });
+  }
+  return updateStudDog(request, env, studDogId);
+});
+
+router.delete('/api/admin/stud-dogs/:studDogId', adminAuthMiddleware, (request, env) => {
+  const studDogId = request.params?.studDogId;
+   if (!studDogId) {
+    return new Response(JSON.stringify({ error: 'Stud Dog ID parameter is missing' }), { status: 400, headers: corsHeaders });
+  }
+  return deleteStudDog(request, env, studDogId);
+});
 
 
 // Static asset catch-all

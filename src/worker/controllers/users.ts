@@ -185,7 +185,7 @@ export async function logout(request: Request, env: Env) { // Changed env type t
     }
     const token = authHeader.split(' ')[1]; // This is the session token
     await env.AUTH_STORE.delete(`session:${token}`);
-    
+
     return new Response(JSON.stringify({ message: 'Logged out successfully' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
@@ -274,6 +274,9 @@ export async function updateUserAdmin(request: Request, env: Env, userIdParam: s
   }
   try {
     const body = await request.json() as { name?: string; roles?: string[] };
+
+    // TODO: Future - Consider triggering ID/Face Verification for sensitive changes (e.g., email/password change, role change to admin) or during account recovery processes.
+    // This would involve calling a verification service before proceeding with the update below.
 
     if (body.roles && (!Array.isArray(body.roles) || body.roles.some(r => typeof r !== 'string'))) {
       return createErrorResponse('Invalid input for roles', 'Roles must be an array of strings.', 400);

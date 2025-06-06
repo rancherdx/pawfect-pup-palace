@@ -59,7 +59,7 @@ const Footer = () => {
                 <Link to="/health" className="text-sm text-muted-foreground hover:text-primary transition-colors">Health Guarantee</Link>
               </li>
               <li>
-                <Link to="/faqs" className="text-sm text-muted-foreground hover:text-primary transition-colors">FAQs</Link>
+                <Link to="/faq" className="text-sm text-muted-foreground hover:text-primary transition-colors">FAQ</Link> {/* Changed from /faqs to /faq and text to FAQ */}
               </li>
               <li>
                 <Link to="/contact" className="text-sm text-muted-foreground hover:text-primary transition-colors">Contact Us</Link>
@@ -90,9 +90,11 @@ const Footer = () => {
         {/* Bottom Section with Copyright */}
         <div className="border-t border-border/50 mt-8 pt-6 text-center text-xs text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} GDS Puppies. All rights reserved.</p>
-          <div className="mt-2 space-x-4">
-            <Link to="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
-            <Link to="/terms" className="hover:text-primary transition-colors">Terms of Service</Link>
+          <div className="mt-2 space-x-3 sm:space-x-4"> {/* Adjusted spacing for more links */}
+            <Link to="/privacy-policy" className="hover:text-primary transition-colors">Privacy Policy</Link>
+            <Link to="/terms-of-service" className="hover:text-primary transition-colors">Terms of Service</Link>
+            <Link to="/refund-policy" className="hover:text-primary transition-colors">Refund Policy</Link>
+            <Link to="/user-data-deletion" className="hover:text-primary transition-colors">Data Deletion</Link>
           </div>
         </div>
       </div>
