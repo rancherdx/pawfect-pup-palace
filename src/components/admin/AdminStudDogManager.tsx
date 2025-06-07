@@ -16,22 +16,7 @@ import {
   DialogFooter,
   // DialogClose, // Not always needed if form has cancel
 } from "@/components/ui/dialog";
-
-// Placeholder for a shared API client function
-const fetchAdminAPI = async (endpoint: string, options: RequestInit = {}) => {
-  const jwtToken = localStorage.getItem('jwt');
-  const defaultHeaders = {
-    'Content-Type': 'application/json',
-    ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {})
-  };
-  const response = await fetch(endpoint, { ...options, headers: { ...defaultHeaders, ...options.headers } });
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ message: `Request failed with status ${response.status}` }));
-    throw new Error(errorData.details || errorData.error || errorData.message);
-  }
-  if (response.status === 204 || response.headers.get("content-length") === "0") return null;
-  return response.json();
-};
+import { fetchAdminAPI } from '@/api';
 
 interface AdminStudDog extends StudDogApiPayload { // API Payload fields plus IDs and names
   id: string;

@@ -19,23 +19,8 @@ import AdminStudDogManager from "@/components/admin/AdminStudDogManager";
 import AdvancedSecurityFeatures from "@/components/admin/AdvancedSecurityFeatures"; // Import AdvancedSecurityFeatures
 
 const AdminDashboard = () => {
-  const [isAdmin, setIsAdmin] = useState(true);  // For demo purposes, in production use actual auth
-
   // For demo purposes, we're using a fake authentication state
   // In production, this would be connected to your auth system
-  if (!isAdmin) {
-    return (
-      <Section>
-        <div className="max-w-md mx-auto text-center space-y-6 py-12">
-          <div className="bg-accent/30 p-8 rounded-xl shadow-lg border-2 border-brand-red/20">
-            <PawPrint className="h-16 w-16 mx-auto mb-4 text-brand-red" />
-            <h1 className="text-2xl font-bold mb-4">Admin Access Required</h1>
-            <p className="mb-6">You need administrator privileges to access this dashboard.</p>
-          </div>
-        </div>
-      </Section>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-black/95 paw-print-bg">
@@ -48,14 +33,6 @@ const AdminDashboard = () => {
               </span>
               Breeder Dashboard
             </h1>
-            <div className="space-x-2">
-              <button 
-                onClick={() => setIsAdmin(false)}
-                className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-              >
-                Exit Admin Mode
-              </button>
-            </div>
           </div>
           
           <Tabs defaultValue="puppies" className="w-full">
