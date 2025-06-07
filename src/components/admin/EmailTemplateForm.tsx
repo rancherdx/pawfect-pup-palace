@@ -4,24 +4,30 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Loader2 } from 'lucide-react'; // Added Loader2
 
 export interface EmailTemplateData {
   id: string;
   name: string; // Typically not editable if it's a key
   subject: string;
   html_body: string;
-  // is_editable_in_admin is part of the source template but not directly part of the form save data
+  is_editable?: boolean; // Received from parent
 }
 
 interface EmailTemplateFormProps {
-  template: EmailTemplateData; // The template object to edit
+  template: EmailTemplateData;
   onSave: (data: Pick<EmailTemplateData, 'id' | 'subject' | 'html_body'>) => void;
   onCancel: () => void;
+  // is_editable is now part of the template object passed in,
+  // but also explicitly passed for clarity if preferred by parent.
+  // For this task, template.is_editable will be used.
+  isSaving: boolean;    // Added this
 }
 
-const EmailTemplateForm: React.FC<EmailTemplateFormProps> = ({ template, onSave, onCancel }) => {
+const EmailTemplateForm: React.FC<EmailTemplateFormProps> = ({ template, onSave, onCancel, isSaving }) => {
   const [subject, setSubject] = useState('');
   const [htmlBody, setHtmlBody] = useState('');
+  const is_editable = template.is_editable ?? false; // Default to false if not provided
 
   useEffect(() => {
     if (template) {
@@ -72,6 +78,7 @@ const EmailTemplateForm: React.FC<EmailTemplateFormProps> = ({ template, onSave,
               onChange={(e) => setSubject(e.target.value)}
               placeholder="Enter email subject"
               required
+              disabled={!is_editable || isSaving}
             />
           </div>
 
@@ -89,6 +96,7 @@ const EmailTemplateForm: React.FC<EmailTemplateFormProps> = ({ template, onSave,
               placeholder="Enter HTML content for the email body..."
               rows={15}
               className="font-mono text-sm"
+              disabled={!is_editable || isSaving}
             />
             <p className="text-xs text-muted-foreground">
               Use HTML for formatting. Placeholders like <code>{'{{name}}'}</code> or <code>{'{{order_id}}'}</code> will be replaced with actual data.
@@ -96,12 +104,21 @@ const EmailTemplateForm: React.FC<EmailTemplateFormProps> = ({ template, onSave,
           </div>
         </CardContent>
         <CardFooter className="flex justify-end space-x-3">
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isSaving}>
             Cancel
           </Button>
-          <Button type="submit">
-            Save Changes
-          </Button>
+          {is_editable && (
+            <Button type="submit" disabled={isSaving}>
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Save Changes'
+              )}
+            </Button>
+          )}
         </CardFooter>
       </form>
     </Card>

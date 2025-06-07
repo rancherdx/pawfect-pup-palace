@@ -17,30 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-
-// Placeholder for a shared API client function
-const fetchAdminAPI = async (endpoint: string, options: RequestInit = {}) => {
-  const jwtToken = localStorage.getItem('jwt');
-  const defaultHeaders = {
-    'Content-Type': 'application/json',
-    ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {})
-  };
-
-  const response = await fetch(endpoint, {
-    ...options,
-    headers: { ...defaultHeaders, ...options.headers },
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ message: "Request failed with status " + response.status }));
-    throw new Error(errorData.details || errorData.error || errorData.message || "API request failed");
-  }
-  // For DELETE requests with 204 No Content, response.json() will fail.
-  if (response.status === 204 || response.headers.get("content-length") === "0") {
-    return null; // Or return { success: true } or similar if your API does that for DELETE
-  }
-  return response.json();
-};
+import { fetchAdminAPI } from '@/api';
 
 interface User {
   id: string;

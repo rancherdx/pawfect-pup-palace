@@ -1,132 +1,39 @@
-
-import { toast } from "sonner";
-
-const API_URL = import.meta.env.VITE_API_URL || "/api";
-
-// Store the authentication token
-let authToken: string | null = localStorage.getItem('authToken');
-let jwtToken: string | null = localStorage.getItem('jwtToken');
-
-// Helper for making API requests
-async function fetchAPI<T>(
-  endpoint: string, 
-  options: RequestInit = {}
-): Promise<T> {
-  const url = `${API_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
-  
-  const headers = {
+export const fetchAdminAPI = async (endpoint: string, options: RequestInit = {}) => {
+  const jwtToken = localStorage.getItem('jwtToken'); // Ensure this key is used
+  const defaultHeaders: HeadersInit = {
     'Content-Type': 'application/json',
-    ...options.headers,
   };
-  
-  // Add auth token if available
-  if (authToken) {
-    headers['Authorization'] = `Bearer ${authToken}`;
+  if (jwtToken) {
+    defaultHeaders['Authorization'] = `Bearer ${jwtToken}`;
   }
-  
+
+  const API_URL = import.meta.env.VITE_API_URL || "/api";
+  const url = `${API_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+
   try {
     const response = await fetch(url, {
       ...options,
-      headers,
+      headers: { ...defaultHeaders, ...options.headers },
     });
-    
+
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'An unexpected error occurred' }));
-      
-      // Handle authentication errors
-      if (response.status === 401) {
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('jwtToken');
-        authToken = null;
-        jwtToken = null;
-        toast.error("Your session has expired. Please log in again.");
-        window.location.href = '/login';
+      const errorData = await response.json().catch(() => ({ message: "Request failed with status " + response.status }));
+      // Specific handling for 401/403 from admin API if needed, e.g., redirect to login or show specific message
+      if (response.status === 401 || response.status === 403) {
+        // Potentially trigger a global state update or event for unauthorized admin access
+        console.error("Admin API request unauthorized:", errorData.details || errorData.error || errorData.message);
+        // Unlike the main fetchAPI, admin calls failing due to auth shouldn't necessarily redirect all users to /login.
+        // The ProtectedRoute should handle page access. This error indicates an issue with an already "logged-in" admin.
       }
-      
-      throw new Error(error.error || 'An unexpected error occurred');
+      throw new Error(errorData.details || errorData.error || errorData.message || "API request failed");
     }
-    
-    // For DELETE requests or other requests that may not return JSON
-    if (response.status === 204 || options.method === 'DELETE') {
-      return { success: true } as T;
+
+    if (response.status === 204 || response.headers.get("content-length") === "0") {
+      return null;
     }
-    
-    const data = await response.json();
-    return data;
+    return response.json();
   } catch (error) {
-    console.error("API request failed:", error);
+    console.error("Admin API request failed:", error);
     throw error;
-  }
-}
-
-// Authentication API
-export const login = async (email: string, password: string) => {
-  const response = await fetchAPI<{ token: string, jwt: string, user: any }>('/login', {
-    method: 'POST',
-    body: JSON.stringify({ email, password }),
-  });
-  
-  // Store the auth tokens
-  localStorage.setItem('authToken', response.token);
-  localStorage.setItem('jwtToken', response.jwt);
-  authToken = response.token;
-  jwtToken = response.jwt;
-  
-  return response.user;
-};
-
-export const register = async (userData: { email: string, password: string, name: string }) => {
-  const response = await fetchAPI<{ token: string, jwt: string, user: any }>('/register', {
-    method: 'POST',
-    body: JSON.stringify(userData),
-  });
-  
-  // Store the auth tokens
-  localStorage.setItem('authToken', response.token);
-  localStorage.setItem('jwtToken', response.jwt);
-  authToken = response.token;
-  jwtToken = response.jwt;
-  
-  return response.user;
-};
-
-export const logout = async () => {
-  try {
-    await fetchAPI('/logout', { method: 'POST' });
-  } finally {
-    // Always clear auth data even if API call fails
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('jwtToken');
-    authToken = null;
-    jwtToken = null;
-  }
-};
-
-export const getCurrentUser = async () => {
-  if (!authToken) return null;
-  try {
-    return await fetchAPI<any>('/user');
-  } catch (error) {
-    console.error("Failed to get current user:", error);
-    return null;
-  }
-};
-
-export const isAuthenticated = () => !!authToken;
-
-export const getJwtToken = () => jwtToken;
-
-// Parse the JWT token to get user information without making an API call
-export const parseJwtToken = () => {
-  if (!jwtToken) return null;
-  
-  try {
-    // JWT token structure is header.payload.signature
-    const base64Payload = jwtToken.split('.')[1];
-    const payload = atob(base64Payload);
-    return JSON.parse(payload);
-  } catch (error) {
-    console.error("Failed to parse JWT token:", error);
-    return null;
   }
 };

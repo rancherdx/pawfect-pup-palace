@@ -8,26 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Settings, Save, Loader2, AlertTriangle } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-
-// Placeholder for a shared API client function
-const fetchAdminAPI = async (endpoint: string, options: RequestInit = {}) => {
-  const jwtToken = localStorage.getItem('jwt');
-  const defaultHeaders = {
-    'Content-Type': 'application/json',
-    ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {})
-  };
-
-  const response = await fetch(endpoint, {
-    ...options,
-    headers: { ...defaultHeaders, ...options.headers },
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ message: "Request failed with status " + response.status }));
-    throw new Error(errorData.details || errorData.error || errorData.message || "API request failed");
-  }
-  return response.json();
-};
+import { fetchAdminAPI } from '@/api';
 
 // Interface for Site Settings, should match backend structure
 interface SiteSettings {

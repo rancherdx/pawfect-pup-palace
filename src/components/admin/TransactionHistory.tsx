@@ -6,31 +6,7 @@ import { Receipt, Search, Download, ArrowLeft, ArrowRight, Loader2 } from "lucid
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner'; // For error notifications
 import { Badge } from "@/components/ui/badge"; // For status display
-
-// Placeholder for a shared API client function
-// In a real app, this would be in a separate file and handle auth, base URLs, etc.
-const fetchAdminAPI = async (endpoint: string, options: RequestInit = {}) => {
-  const jwtToken = localStorage.getItem('jwt'); // Or from AuthContext
-  const defaultHeaders = {
-    'Content-Type': 'application/json',
-    ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {})
-  };
-
-  const response = await fetch(endpoint, {
-    ...options,
-    headers: {
-      ...defaultHeaders,
-      ...options.headers,
-    },
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ message: "Request failed with status " + response.status }));
-    throw new Error(errorData.details || errorData.error || errorData.message || "API request failed");
-  }
-  return response.json();
-};
-
+import { fetchAdminAPI } from '@/api';
 
 interface Transaction {
   id: string;

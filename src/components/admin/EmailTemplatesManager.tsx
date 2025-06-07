@@ -2,93 +2,108 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Edit, PlusCircle } from 'lucide-react';
-import EmailTemplateForm, { EmailTemplateData as FormEmailTemplateData } from './EmailTemplateForm'; // Import the form
+import { Edit, PlusCircle, Loader2, AlertTriangle } from 'lucide-react'; // Added Loader2, AlertTriangle
+import EmailTemplateForm, { EmailTemplateData as FormEmailTemplateData } from './EmailTemplateForm';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  // DialogFooter, // Not using footer for this form, form has its own
-  // DialogClose, // Form has its own cancel
+  // DialogHeader, // Part of form
+  // DialogTitle, // Part of form
+  // DialogDescription, // Part of form
 } from "@/components/ui/dialog";
-// Assuming a toast function might be available, e.g., from 'sonner'
-// import { toast } from 'sonner';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetchAdminAPI } from '@/api';
+import { toast } from 'sonner';
 
 interface EmailTemplate {
-  id: string;
+  id: string; // Or template_id, ensure this matches backend response key
   name: string;
   subject: string;
-  is_editable_in_admin: boolean;
-  html_body: string; // Added html_body to mock data for editing
+  is_system_template: boolean; // From backend
+  is_editable_in_admin: boolean; // Derived: !is_system_template
+  html_body: string;
+  // Add other fields like 'created_at', 'updated_at' if they come from backend
+  created_at?: string;
+  updated_at?: string;
 }
 
-const mockEmailTemplates: EmailTemplate[] = [
-  {
-    id: 'welcome-email-tpl',
-    name: 'welcome_email',
-    subject: 'Welcome to GDS Puppies!',
-    is_editable_in_admin: false,
-    html_body: '<p>Hi {{name}},</p><p>Welcome to GDS Puppies! We are thrilled to have you.</p><p>Thanks,<br>The GDS Puppies Team</p>'
-  },
-  {
-    id: 'receipt-email-tpl',
-    name: 'payment_receipt',
-    subject: 'Your GDS Puppies Payment Receipt - Order {{order_id}}',
-    is_editable_in_admin: false,
-    html_body: '<p>Hi {{name}},</p><p>Thank you for your payment for order {{order_id}}.</p><p>Amount: {{amount}} {{currency}}</p><p>View your order details here: {{order_link}}</p><p>Thanks,<br>The GDS Puppies Team</p>'
-  },
-  {
-    id: 'password-reset-tpl',
-    name: 'password_reset',
-    subject: 'Reset Your GDS Puppies Password',
-    is_editable_in_admin: false,
-    html_body: '<p>Hi {{name}},</p><p>Please click the link below to reset your password:</p><p><a href="{{reset_link}}">Reset Password</a></p><p>If you did not request this, please ignore this email.</p><p>Thanks,<br>The GDS Puppies Team</p>'
-  },
-  {
-    id: 'custom-promo-tpl-1',
-    name: 'custom_promo_valentines',
-    subject: 'A Special Valentine Treat For Your Pup!',
-    is_editable_in_admin: true,
-    html_body: '<p>Dear {{name}},</p><p>Show your furry friend some love this Valentine''s Day with our special offers!</p><p>Warm Wags,<br>The GDS Puppies Team</p>'
-  },
-];
-
 const EmailTemplatesManager: React.FC = () => {
-  const [templates, setTemplates] = useState<EmailTemplate[]>(mockEmailTemplates);
   const [showTemplateForm, setShowTemplateForm] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<EmailTemplate | null>(null);
+  const queryClient = useQueryClient();
+
+  const { data: templatesData, isLoading, isError, error } = useQuery<EmailTemplate[], Error>(
+    ['emailTemplates'],
+    async () => {
+      const response = await fetchAdminAPI('/api/admin/email-templates');
+      // Assuming the backend returns an array of templates directly
+      // or response.templates if it's nested. Based on worker code, it's direct array for list.
+      return response.templates || response;
+    },
+    {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      select: (data) => data.map(t => ({ ...t, is_editable_in_admin: !t.is_system_template })),
+      onError: (err) => {
+        toast.error(`Failed to fetch email templates: ${err.message}`);
+      }
+    }
+  );
+
+  const templates = templatesData || [];
+
+  const updateTemplateMutation = useMutation<EmailTemplate, Error, { id: string; subject: string; html_body: string }>(
+    (templateData) => fetchAdminAPI(`/api/admin/email-templates/${templateData.id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ subject: templateData.subject, html_body: templateData.html_body }),
+    }),
+    {
+      onSuccess: (updatedTemplate) => {
+        queryClient.invalidateQueries(['emailTemplates']);
+        // queryClient.setQueryData(['emailTemplates', updatedTemplate.id], updatedTemplate); // Optional: optimistic update
+        toast.success(`Template "${updatedTemplate.name}" updated successfully!`);
+        setShowTemplateForm(false);
+        setEditingTemplate(null);
+      },
+      onError: (err, variables) => {
+        // Try to find the name of the template from the query cache for a better error message
+        const currentTemplates = queryClient.getQueryData<EmailTemplate[]>(['emailTemplates']) || [];
+        const templateName = currentTemplates.find(t => t.id === variables.id)?.name || variables.id;
+        toast.error(`Failed to update template "${templateName}": ${err.message}`);
+      },
+    }
+  );
 
   const handleEditTemplate = (template: EmailTemplate) => {
     if (template.is_editable_in_admin) {
       setEditingTemplate(template);
       setShowTemplateForm(true);
     } else {
-      // Using alert for now as toast is not confirmed to be set up
-      alert(`System template "${template.name}" cannot be modified here. These are typically managed via code or direct database updates for critical system emails.`);
-      console.log('Attempted to edit non-editable template:', template.name);
+      toast.info(`System template "${template.name}" content is managed via code and cannot be modified here. You can view its current content.`);
+      setEditingTemplate(template); // Allow viewing
+      setShowTemplateForm(true);
+      // console.log('Attempted to edit non-editable template:', template.name);
     }
   };
 
   const handleAddNewTemplate = () => {
     console.log('Add new custom template clicked - Placeholder');
-    // This would typically open a blank form. For this exercise, we focus on editing.
-    // To implement add: setEditingTemplate(an_empty_template_object_with_is_editable_true); setShowTemplateForm(true);
-    alert("Adding new custom templates is not fully implemented in this mock setup.");
+    toast.info("Adding new custom templates via the UI is not currently supported. Custom templates are typically added by developers.");
   };
 
   const handleSaveTemplateForm = (data: Pick<FormEmailTemplateData, 'id' | 'subject' | 'html_body'>) => {
-    console.log('Saving email template:', data);
-    // In a real app, call API to save, then update state
-    setTemplates(prevTemplates =>
-      prevTemplates.map(t =>
-        t.id === data.id ? { ...t, subject: data.subject, html_body: data.html_body } : t
-      )
-    );
-    setShowTemplateForm(false);
-    setEditingTemplate(null);
-    // toast?.success(`Template "${editingTemplate?.name}" updated successfully!`); // Optional success message
+    if (!data.id) {
+      toast.error("Cannot save template without an ID.");
+      return;
+    }
+    // Ensure the template being saved is actually editable, though the form should ideally be disabled for non-editable.
+    const originalTemplate = templates.find(t => t.id === data.id);
+    if (originalTemplate && !originalTemplate.is_editable_in_admin) {
+        toast.error(`System template "${originalTemplate.name}" cannot be modified.`);
+        setShowTemplateForm(false);
+        setEditingTemplate(null);
+        return;
+    }
+    updateTemplateMutation.mutate({ id: data.id, subject: data.subject, html_body: data.html_body });
   };
 
   const handleCancelTemplateForm = () => {
@@ -102,26 +117,33 @@ const EmailTemplatesManager: React.FC = () => {
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-white">
           Email Templates Management
         </h2>
-        <Button onClick={handleAddNewTemplate}>
+        <Button onClick={handleAddNewTemplate} disabled>
           <PlusCircle className="h-4 w-4 mr-2" />
-          Add New Custom Template
+          Add New Custom Template (Not Implemented)
         </Button>
       </div>
 
       {/* Form Dialog */}
-      <Dialog open={showTemplateForm} onOpenChange={setShowTemplateForm}>
+      <Dialog open={showTemplateForm} onOpenChange={(isOpen) => { if (!isOpen) { setEditingTemplate(null); } setShowTemplateForm(isOpen); }}>
         <DialogContent className="sm:max-w-3xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl">
-          {/* DialogHeader and Title are part of EmailTemplateForm now */}
           {editingTemplate && (
             <EmailTemplateForm
-              template={editingTemplate}
+              template={{
+                id: editingTemplate.id,
+                name: editingTemplate.name,
+                subject: editingTemplate.subject,
+                html_body: editingTemplate.html_body,
+                // Pass the editability flag to the form if it needs to disable fields
+                is_editable: editingTemplate.is_editable_in_admin
+              }}
               onSave={handleSaveTemplateForm}
               onCancel={handleCancelTemplateForm}
+              // isLoading prop for the form's save button might be useful
+              isSaving={updateTemplateMutation.isLoading}
             />
           )}
         </DialogContent>
       </Dialog>
-
 
       <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-x-auto">
         <Table>
@@ -134,7 +156,21 @@ const EmailTemplatesManager: React.FC = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {templates.length > 0 ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center h-24">
+                  <Loader2 className="mx-auto h-8 w-8 animate-spin text-brand-red" />
+                  Loading templates...
+                </TableCell>
+              </TableRow>
+            ) : isError ? (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center text-red-500 h-24">
+                  <AlertTriangle className="mx-auto h-8 w-8 mb-2" />
+                  Error loading email templates: {error?.message || "Unknown error"}
+                </TableCell>
+              </TableRow>
+            ) : templates.length > 0 ? (
               templates.map((template) => (
                 <TableRow key={template.id}>
                   <TableCell className="font-mono text-sm">{template.name}</TableCell>
@@ -149,9 +185,10 @@ const EmailTemplatesManager: React.FC = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => handleEditTemplate(template)}
-                      title={template.is_editable_in_admin ? "Edit Template" : "View System Template (Read-only through UI)"}
+                      title={template.is_editable_in_admin ? "Edit Template" : "View System Template"}
                     >
                       <Edit className="h-4 w-4 mr-2" />
+                      {/* The form itself will handle if it's truly "Edit" or "View" based on is_editable prop */}
                       {template.is_editable_in_admin ? 'Edit' : 'View'}
                     </Button>
                   </TableCell>
@@ -159,7 +196,7 @@ const EmailTemplatesManager: React.FC = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} className="text-center">
+                <TableCell colSpan={4} className="text-center h-24">
                   No email templates found.
                 </TableCell>
               </TableRow>
