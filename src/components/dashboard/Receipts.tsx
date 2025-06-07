@@ -1,15 +1,15 @@
+
 import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Receipt, Download, Eye, Search, ArrowLeft, ArrowRight, Loader2, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { useQuery, useQueryClient } from '@tanstack/react-query'; // Added useQueryClient
+import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-// Placeholder for a shared API client function for user-authenticated endpoints
 const fetchUserAPI = async (endpoint: string, options: RequestInit = {}) => {
-  const jwtToken = localStorage.getItem('jwt'); // Or session token, depending on user auth strategy
+  const jwtToken = localStorage.getItem('jwt');
   const defaultHeaders = {
     'Content-Type': 'application/json',
     ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {})
@@ -27,23 +27,23 @@ const fetchUserAPI = async (endpoint: string, options: RequestInit = {}) => {
   return response.json();
 };
 
-interface TransactionItem { // For ReceiptDetail modal
+interface TransactionItem {
   name: string;
-  price: number; // in currency unit (e.g., dollars)
-  quantity?: number; // Optional
+  price: number;
+  quantity?: number;
 }
+
 interface Transaction {
-  id: string; // Transaction ID
+  id: string;
   square_payment_id: string | null;
-  amount: number; // In cents from backend
+  amount: number;
   currency: string;
   status: string;
   created_at: string;
   puppy_id: string | null;
   payment_method_details: { brand?: string; last4?: string; type?: string } | null;
-  // For ReceiptDetail modal - will be constructed
   items?: TransactionItem[];
-  description?: string; // For ReceiptDetail
+  description?: string;
 }
 
 interface TransactionsApiResponse {
@@ -54,42 +54,28 @@ interface TransactionsApiResponse {
   limit: number;
 }
 
-// Adapted ReceiptDetail to work with Transaction data
+const getStatusBadgeClass = (status: string) => {
+  switch (status?.toUpperCase()) {
+      case 'COMPLETED': return 'bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-300';
+      case 'DEPOSIT': return 'bg-blue-100 text-blue-800 dark:bg-blue-800/30 dark:text-blue-300';
+      case 'PENDING': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800/30 dark:text-yellow-300';
+      case 'REFUNDED': return 'bg-orange-100 text-orange-800 dark:bg-orange-800/30 dark:text-orange-300';
+      case 'CANCELED': return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+      case 'FAILED': return 'bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-300';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+  }
+};
+
 const ReceiptDetail = ({ transaction, onClose }: { transaction: Transaction, onClose: () => void }) => {
   const items = transaction.items || [
     {
       name: `Payment for ${transaction.puppy_id ? `Puppy ID: ${transaction.puppy_id}` : 'Service/Product'}`,
-      price: transaction.amount / 100, // Convert cents to dollars
+      price: transaction.amount / 100,
       quantity: 1
     }
   ];
   const description = transaction.description || `Transaction ID: ${transaction.id}`;
 
-  const getStatusBadgeClass = (status: string) => {
-    switch (status?.toUpperCase()) {
-        case 'COMPLETED': return 'bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-300';
-        case 'DEPOSIT': return 'bg-blue-100 text-blue-800 dark:bg-blue-800/30 dark:text-blue-300';
-        case 'PENDING': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800/30 dark:text-yellow-300';
-        case 'REFUNDED': return 'bg-orange-100 text-orange-800 dark:bg-orange-800/30 dark:text-orange-300';
-        case 'CANCELED': return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
-        case 'FAILED': return 'bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-300';
-        default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
-    }
-  };
-
-  // TODO: Implement PDF Generation for Receipts
-  // Potential Strategy:
-  // 1. Client-Side: Use a library like 'pdf-lib' or 'jspdf'.
-  //    - Create a new PDF document.
-  //    - Add content from the 'transaction' object (header, items, total, etc.)
-  //    - Style the content.
-  //    - Trigger a download of the generated PDF.
-  //    - Pros: No server load. Cons: Can be complex to layout, larger client bundle.
-  // 2. Server-Side: Create a new serverless function (e.g., /api/receipt/:transactionId/pdf).
-  //    - This function would fetch receipt data (ensure secure access).
-  //    - Use a headless browser (Puppeteer on a suitable environment) or a PDF library (like pdf-lib on Node.js) to generate the PDF.
-  //    - Return the PDF as a file stream or a base64 string.
-  //    - Pros: More control, consistent rendering, can use complex templates. Cons: More infrastructure, potential cost, API endpoint needed.
   const handleDownloadPdf = (currentTransaction: Transaction) => {
     console.log("Download PDF requested for receipt:", currentTransaction.id);
     toast.info(`PDF generation for receipt ${currentTransaction.square_payment_id || currentTransaction.id} is not yet implemented. This feature is coming soon!`);
@@ -168,7 +154,6 @@ const Receipts = () => {
   const [selectedReceipt, setSelectedReceipt] = useState<Transaction | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
-  const queryClient = useQueryClient(); // Added for potential use with Try Again button
 
   const fetchMyTransactions = async ({ queryKey }: any): Promise<TransactionsApiResponse> => {
     const [_key, page, limit] = queryKey;
@@ -179,17 +164,11 @@ const Receipts = () => {
     return fetchUserAPI(`/api/my-transactions?${params.toString()}`);
   };
 
-  const { data, isLoading, isError, error, isPreviousData, refetch } = useQuery<TransactionsApiResponse, Error>( // Added refetch
-    ['myTransactions', currentPage, rowsPerPage],
-    fetchMyTransactions,
-    {
-      keepPreviousData: true,
-      staleTime: 5 * 60 * 1000,
-      onError: (err) => {
-        toast.error(`Failed to fetch your transactions: ${err.message}`);
-      }
-    }
-  );
+  const { data, isLoading, isError, error, isFetching, refetch } = useQuery({
+    queryKey: ['myTransactions', currentPage, rowsPerPage],
+    queryFn: fetchMyTransactions,
+    staleTime: 5 * 60 * 1000,
+  });
 
   const filteredReceipts = useMemo(() => {
     if (!data?.transactions) return [];
@@ -214,7 +193,6 @@ const Receipts = () => {
       ];
     setSelectedReceipt({...receipt, items: displayItems, description: `Transaction ID: ${receipt.id}` });
   }
-
 
   return (
     <div>
@@ -253,7 +231,6 @@ const Receipts = () => {
           <AlertTriangle className="h-12 w-12 mx-auto text-red-500 dark:text-red-400" />
           <h3 className="text-xl font-semibold mt-4 text-red-600 dark:text-red-300">Error Fetching Records</h3>
           <p className="text-red-500 dark:text-red-400">{error?.message || "An unknown error occurred."}</p>
-          {/* Changed to use refetch from useQuery */}
           <Button variant="outline" onClick={() => refetch()} className="mt-4">Try Again</Button>
         </div>
       ) : filteredReceipts.length === 0 ? (
@@ -325,7 +302,7 @@ const Receipts = () => {
               variant="outline"
               size="sm"
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={data.currentPage <= 1 || isLoading || isPreviousData}
+              disabled={data.currentPage <= 1 || isLoading || isFetching}
             >
               <ArrowLeft className="mr-2 h-4 w-4" /> Previous
             </Button>
@@ -336,7 +313,7 @@ const Receipts = () => {
               variant="outline"
               size="sm"
               onClick={() => setCurrentPage(prev => prev + 1)}
-              disabled={data.currentPage >= data.totalPages || isLoading || isPreviousData}
+              disabled={data.currentPage >= data.totalPages || isLoading || isFetching}
             >
               Next <ArrowRight className="ml-2 h-4 w-4" />
             </Button>

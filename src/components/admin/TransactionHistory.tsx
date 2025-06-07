@@ -1,20 +1,21 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Receipt, Search, Download, ArrowLeft, ArrowRight, Loader2 } from "lucide-react"; // Added Loader2
+import { Receipt, Search, Download, ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
-import { toast } from 'sonner'; // For error notifications
-import { Badge } from "@/components/ui/badge"; // For status display
-import { fetchAdminAPI } from '@/api';
+import { toast } from 'sonner';
+import { Badge } from "@/components/ui/badge";
+import { apiRequest } from '@/api/client';
 
 interface Transaction {
   id: string;
-  created_at: string; // Date string from backend
-  user_id: string | null; // Assuming we might fetch user name later if needed
-  puppy_id: string | null; // Assuming we might fetch puppy name later
+  created_at: string;
+  user_id: string | null;
+  puppy_id: string | null;
   square_payment_id: string | null;
-  amount: number; // In cents from backend
+  amount: number;
   currency: string;
   payment_method_details: { brand?: string; last4?: string; type?: string } | null;
   status: string;
@@ -31,26 +32,23 @@ interface ApiResponse {
 const TransactionHistory = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState("All"); // For status filter
+  const [selectedFilter, setSelectedFilter] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 10; // Or make this a state if user can change it
+  const rowsPerPage = 10;
 
-  const filterOptions = ["All", "COMPLETED", "DEPOSIT", "REFUNDED", "CANCELED", "FAILED"]; // Match backend status values
+  const filterOptions = ["All", "COMPLETED", "DEPOSIT", "REFUNDED", "CANCELED", "FAILED"];
 
-  // Debounce search query
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery);
-      setCurrentPage(1); // Reset to first page on new search
+      setCurrentPage(1);
     }, 500);
     return () => clearTimeout(handler);
   }, [searchQuery]);
   
-   // Reset page to 1 when filter changes
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedFilter]);
-
 
   const fetchTransactions = async ({ queryKey }: any): Promise<ApiResponse> => {
     const [_key, page, limit, status, search] = queryKey;
@@ -64,27 +62,17 @@ const TransactionHistory = () => {
     if (search) {
       params.append('searchQuery', search);
     }
-    // Add date range filters here if UI is implemented for them
-    // params.append('startDate', startDate);
-    // params.append('endDate', endDate);
-    return fetchAdminAPI(`/api/admin/transactions?${params.toString()}`);
+    return apiRequest<ApiResponse>(`/admin/transactions?${params.toString()}`);
   };
 
-  const { data, isLoading, isError, error, isPreviousData } = useQuery<ApiResponse, Error>(
-    ['transactions', currentPage, rowsPerPage, selectedFilter, debouncedSearchQuery],
-    fetchTransactions,
-    {
-      keepPreviousData: true, // Good for pagination UX
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      onError: (err) => {
-        toast.error(`Failed to fetch transactions: ${err.message}`);
-      }
-    }
-  );
+  const { data, isLoading, isError, error, isFetching } = useQuery({
+    queryKey: ['transactions', currentPage, rowsPerPage, selectedFilter, debouncedSearchQuery],
+    queryFn: fetchTransactions,
+    staleTime: 5 * 60 * 1000,
+  });
 
   const handleStatusFilterChange = (filter: string) => {
     setSelectedFilter(filter);
-    // setCurrentPage(1); // Reset to first page handled by useEffect
   };
 
   const formatCurrency = (amountInCents: number, currencyCode: string = "USD") => {
@@ -98,18 +86,17 @@ const TransactionHistory = () => {
     });
   };
 
-  const getStatusBadgeVariant = (status: string): "success" | "info" | "warning" | "destructive" | "outline" => {
+  const getStatusBadgeVariant = (status: string): "default" | "destructive" | "outline" | "secondary" => {
     switch (status?.toUpperCase()) {
-        case 'COMPLETED': return 'success';
-        case 'DEPOSIT': return 'info'; // Or a custom "partial" variant
+        case 'COMPLETED': return 'default';
+        case 'DEPOSIT': return 'secondary';
         case 'PENDING': return 'outline';
-        case 'REFUNDED': return 'warning';
+        case 'REFUNDED': return 'secondary';
         case 'CANCELED': return 'outline';
         case 'FAILED': return 'destructive';
         default: return 'outline';
     }
   };
-
 
   return (
     <div className="space-y-6">
@@ -168,7 +155,6 @@ const TransactionHistory = () => {
                   <TableHead>Transaction ID</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Square ID</TableHead>
-                  {/* <TableHead>Customer</TableHead> <TableHead>Puppy</TableHead> */}
                   <TableHead>Amount</TableHead>
                   <TableHead>Payment Method</TableHead>
                   <TableHead>Status</TableHead>
@@ -179,7 +165,7 @@ const TransactionHistory = () => {
                 {isLoading ? (
                   Array.from({ length: rowsPerPage }).map((_, index) => (
                     <TableRow key={`skeleton-${index}`}>
-                      <TableCell colSpan={7} className="py-2"> {/* Adjusted colSpan */}
+                      <TableCell colSpan={7} className="py-2">
                         <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                       </TableCell>
                     </TableRow>
@@ -202,9 +188,6 @@ const TransactionHistory = () => {
                       <TableCell className="font-medium font-mono text-xs">{transaction.id}</TableCell>
                       <TableCell className="text-xs">{formatDate(transaction.created_at)}</TableCell>
                       <TableCell className="font-mono text-xs">{transaction.square_payment_id || 'N/A'}</TableCell>
-                      {/* Customer/Puppy name would require fetching related data or including in API response */}
-                      {/* <TableCell>{transaction.user_id || 'N/A'}</TableCell> */}
-                      {/* <TableCell>{transaction.puppy_id || 'N/A'}</TableCell> */}
                       <TableCell>{formatCurrency(transaction.amount, transaction.currency)}</TableCell>
                       <TableCell className="text-xs">
                         {transaction.payment_method_details?.brand ?
@@ -241,7 +224,7 @@ const TransactionHistory = () => {
               variant="outline"
               size="sm"
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={data.currentPage <= 1 || isLoading || isPreviousData}
+              disabled={data.currentPage <= 1 || isLoading || isFetching}
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Previous
@@ -253,7 +236,7 @@ const TransactionHistory = () => {
               variant="outline"
               size="sm"
               onClick={() => setCurrentPage(prev => prev + 1)}
-              disabled={data.currentPage >= data.totalPages || isLoading || isPreviousData}
+              disabled={data.currentPage >= data.totalPages || isLoading || isFetching}
             >
               Next
               <ArrowRight className="ml-2 h-4 w-4" />

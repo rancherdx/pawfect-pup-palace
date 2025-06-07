@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { CreditCard, CheckCircle, AlertCircle, ArrowRight, Loader2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchAdminAPI } from '@/api';
+import { apiRequest } from '@/api/client';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 
@@ -12,53 +12,46 @@ interface Integration {
   service_name: string;
   is_active: boolean;
   api_key_set: boolean;
-  other_config?: object; // Added to hold parsed other_config for the update mutation
+  other_config?: object;
 }
 
 const SquareIntegration = () => {
   const queryClient = useQueryClient();
 
-  const { data: squareIntegration, isLoading: isLoadingIntegrations, isError: isErrorIntegrations } = useQuery<Integration | undefined, Error>(
-    ['integrations'], // Re-uses the query key if it fetches all integrations
-    async () => {
-      const response = await fetchAdminAPI('/api/admin/integrations');
+  const { data: squareIntegration, isLoading: isLoadingIntegrations, isError: isErrorIntegrations } = useQuery({
+    queryKey: ['integrations'],
+    queryFn: async (): Promise<Integration | undefined> => {
+      const response = await apiRequest<any>('/admin/integrations');
       const allIntegrations = response.integrations || response;
       return allIntegrations.find((int: any) => int.service_name?.toLowerCase() === 'square');
     },
-    {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      select: (data) => data ? ({
-        id: data.id,
-        service_name: data.service_name,
-        is_active: data.is_active,
-        api_key_set: data.api_key_set,
-        other_config: typeof data.other_config === 'string' ? JSON.parse(data.other_config || '{}') : (data.other_config || {}),
-      }) : undefined,
-      onError: (err) => {
-        console.error(`Failed to fetch integrations for Square status: ${err.message}`);
-        // No toast here, as the main integrations page would likely show a more general error.
-      }
-    }
-  );
+    staleTime: 5 * 60 * 1000,
+    select: (data: any) => data ? ({
+      id: data.id,
+      service_name: data.service_name,
+      is_active: data.is_active,
+      api_key_set: data.api_key_set,
+      other_config: typeof data.other_config === 'string' ? JSON.parse(data.other_config || '{}') : (data.other_config || {}),
+    }) : undefined,
+  });
 
   const isConfigured = squareIntegration && squareIntegration.api_key_set;
   const isConnected = isConfigured && squareIntegration.is_active;
 
-  const updateIntegrationMutation = useMutation<Integration, Error, { id: string; data: { is_active: boolean; service_name: string; other_config: object; } }>(
-    ({ id, data }) => fetchAdminAPI(`/api/admin/integrations/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    }),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['integrations']);
-        toast.success('Square connection status updated!');
-      },
-      onError: (err) => {
-        toast.error(`Failed to update Square status: ${err.message}`);
-      }
+  const updateIntegrationMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { is_active: boolean; service_name: string; other_config: object; } }) => 
+      apiRequest<Integration>(`/admin/integrations/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['integrations'] });
+      toast.success('Square connection status updated!');
+    },
+    onError: (err: Error) => {
+      toast.error(`Failed to update Square status: ${err.message}`);
     }
-  );
+  });
 
   const handleToggleSquareActivation = () => {
     if (!squareIntegration) {
@@ -75,12 +68,12 @@ const SquareIntegration = () => {
       data: {
         is_active: !squareIntegration.is_active,
         service_name: squareIntegration.service_name,
-        other_config: squareIntegration.other_config || {}, // Ensure other_config is available
+        other_config: squareIntegration.other_config || {},
       },
     });
   };
   
-  const isLoading = isLoadingIntegrations || updateIntegrationMutation.isLoading;
+  const isLoading = isLoadingIntegrations || updateIntegrationMutation.isPending;
 
   if (isLoadingIntegrations) {
     return (
@@ -97,7 +90,7 @@ const SquareIntegration = () => {
         <AlertCircle className="h-12 w-12 mb-2" />
         <p className="text-lg text-center">Error loading Square integration status.</p>
         <p className="text-sm">It might be an issue with fetching third-party integrations data.</p>
-        <Button onClick={() => queryClient.refetchQueries(['integrations'])} className="mt-4">Try Again</Button>
+        <Button onClick={() => queryClient.refetchQueries({ queryKey: ['integrations'] })} className="mt-4">Try Again</Button>
       </div>
     );
   }
@@ -131,7 +124,7 @@ const SquareIntegration = () => {
                   <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Square integration needs to be set up with an API key in the integrations manager.</p>
                 </div>
                 <Button asChild className="w-full bg-amber-500 hover:bg-amber-600 text-white">
-                  <Link to="/admin?tab=integrations"> {/* Adjust link if tabs are handled differently */}
+                  <Link to="/admin?tab=integrations">
                     Configure Square <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>

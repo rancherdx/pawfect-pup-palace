@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -50,7 +51,7 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
 
   const { data: integrationsData, isLoading, isError, error } = useQuery({
     queryKey: ['integrations'],
-    queryFn: async () => {
+    queryFn: async (): Promise<Integration[]> => {
       const response = await apiRequest<any>('/admin/integrations');
       const rawIntegrations = response.integrations || response;
       return rawIntegrations.map((int: any) => ({
@@ -183,7 +184,6 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
           } : null}
           onSave={handleSaveForm}
           onCancel={handleCancelForm}
-          isSaving={addIntegrationMutation.isPending || updateIntegrationMutation.isPending}
         />
       </div>
     );
@@ -265,7 +265,7 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
                     Go to Tawk.to Dashboard <ExternalLink className="h-4 w-4 ml-1" />
                   </a>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Once you have your Property ID and Widget ID, you can add them via the "Add New Integration" form (use service name e.g., "Tawkto"). Store the Property ID in the API Key field and Widget ID in the 'Other Configuration' field as JSON (e.g., <code>{`{"widgetId": "default"}`}</code>). The application will then use these to load the chat widget. Alternatively, some platforms allow direct script embedding.
+                    Once you have your Property ID and Widget ID, you can add them via the "Add New Integration" form (use service name e.g., "Tawkto"). Store the Property ID in the API Key field and Widget ID in the 'Other Configuration' field as JSON (e.g., <code>{"{"}"widgetId": "default"{"}"}</code>). The application will then use these to load the chat widget. Alternatively, some platforms allow direct script embedding.
                   </p>
                 </div>
               </div>
