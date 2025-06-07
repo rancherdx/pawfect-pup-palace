@@ -1,145 +1,185 @@
-
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { MessageCircle, Send, PawPrint, ChevronDown, ChevronUp, Bot } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea"; // For new conversation modal
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog"; // For new conversation
+import { MessageCircle, Send, PawPrint, ChevronDown, ChevronUp, AlertCircle, Loader2, PlusCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/contexts/AuthContext";
 
-// Mock data for chat history
-const mockChatHistory = [
-  {
-    id: "chat-1",
-    date: "2023-05-10",
-    title: "Adoption Inquiry - Golden Retriever",
-    messages: [
-      {
-        sender: "user",
-        content: "Hello, I'm interested in adopting a Golden Retriever puppy. Do you have any available?",
-        timestamp: "2023-05-10T10:15:00",
-      },
-      {
-        sender: "support",
-        content: "Hi there! Yes, we currently have two Golden Retriever puppies available for adoption. They are 8 weeks old and ready for their forever homes. Would you like to schedule a visit to meet them?",
-        timestamp: "2023-05-10T10:20:00",
-      },
-      {
-        sender: "user",
-        content: "That sounds great! I would love to visit this weekend if possible.",
-        timestamp: "2023-05-10T10:25:00",
-      },
-      {
-        sender: "support",
-        content: "Wonderful! We have availability this Saturday at 10 AM or 2 PM, or Sunday at 11 AM. Which would work best for you?",
-        timestamp: "2023-05-10T10:30:00",
-      },
-      {
-        sender: "user",
-        content: "Saturday at 2 PM would be perfect!",
-        timestamp: "2023-05-10T10:35:00",
-      },
-      {
-        sender: "support",
-        content: "Great! I've scheduled your visit for Saturday at 2 PM. We're located at 123 Main St., please bring a valid ID. We look forward to meeting you!",
-        timestamp: "2023-05-10T10:40:00",
-      }
-    ],
-    unread: false
-  },
-  {
-    id: "chat-2",
-    date: "2023-09-18",
-    title: "Puppy Health Question",
-    messages: [
-      {
-        sender: "user",
-        content: "Hi, my recently adopted puppy seems to be scratching a lot. Should I be concerned?",
-        timestamp: "2023-09-18T15:05:00",
-      },
-      {
-        sender: "support",
-        content: "Hello! Occasional scratching is normal, but excessive scratching could indicate fleas, allergies, or dry skin. Has there been any change in their diet or environment recently?",
-        timestamp: "2023-09-18T15:15:00",
-      },
-      {
-        sender: "user",
-        content: "We did change their food brand a few days ago, could that be related?",
-        timestamp: "2023-09-18T15:20:00",
-      },
-      {
-        sender: "support",
-        content: "Yes, that could definitely be the cause. Food allergies are common in dogs. I recommend switching back to the previous food and seeing if the scratching subsides within a few days. If it persists or worsens, a veterinary check-up would be advisable.",
-        timestamp: "2023-09-18T15:25:00",
-      },
-      {
-        sender: "user",
-        content: "I'll try that, thank you for the advice!",
-        timestamp: "2023-09-18T15:30:00",
-      }
-    ],
-    unread: true
+// Interfaces (consistent with PuppyProfile.tsx)
+interface Conversation {
+  id: string;
+  user_id: string;
+  title: string;
+  related_entity_id?: string | null;
+  related_entity_type?: string | null;
+  last_message_preview?: string | null;
+  last_message_at?: string | null;
+  is_archived: boolean;
+  created_at: string;
+  updated_at: string;
+  // Frontend specific
+  unread?: boolean; // Can be derived or managed locally
+}
+
+interface Message {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  sender_type: 'user' | 'admin' | 'system' | 'breeder';
+  content: string;
+  attachments?: string | null;
+  sent_at: string;
+  read_at?: string | null;
+}
+
+// API Fetcher (similar to one in UserProfile)
+const makeChatApiRequest = async (url: string, method: string, token: string | null, body?: any) => {
+  if (!token) throw new Error("Authentication token is required.");
+  const response = await fetch(url, {
+    method,
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || `API request failed: ${response.statusText}`);
   }
-];
+  return response.json();
+};
+
 
 const ChatHistory = () => {
-  const [activeChat, setActiveChat] = useState<any>(mockChatHistory[0]);
-  const [messageInput, setMessageInput] = useState("");
-  const [expandedChats, setExpandedChats] = useState<string[]>([mockChatHistory[0].id]);
+  const { token, user } = useAuth();
   const { toast } = useToast();
 
-  const toggleChatExpand = (chatId: string) => {
-    if (expandedChats.includes(chatId)) {
-      setExpandedChats(expandedChats.filter(id => id !== chatId));
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [messageInput, setMessageInput] = useState("");
+
+  const [isLoadingConvos, setIsLoadingConvos] = useState(true);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false);
+  const [newChatTitle, setNewChatTitle] = useState("Support Inquiry");
+  const [newChatMessage, setNewChatMessage] = useState("");
+
+  const messagesEndRef = useRef<null | HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(scrollToBottom, [messages]);
+
+  const fetchConversations = useCallback(async () => {
+    if (!token) {
+      setError("Not authenticated."); setIsLoadingConvos(false); return;
+    }
+    setIsLoadingConvos(true); setError(null);
+    try {
+      const data = await makeChatApiRequest("/api/my-conversations", "GET", token);
+      setConversations(data.data || []);
+      // Optionally, auto-select the first or most recent conversation
+      if (data.data && data.data.length > 0) {
+        // Sort by last_message_at to get the most recent
+        const sortedConvos = [...data.data].sort((a,b) => new Date(b.last_message_at || 0).getTime() - new Date(a.last_message_at || 0).getTime());
+        setActiveConversation(sortedConvos[0]);
+      }
+    } catch (err: any) {
+      setError(err.message);
+      toast({ variant: "destructive", title: "Failed to load conversations", description: err.message });
+    } finally {
+      setIsLoadingConvos(false);
+    }
+  }, [token, toast]);
+
+  useEffect(() => {
+    fetchConversations();
+  }, [fetchConversations]);
+
+  const fetchMessages = useCallback(async (conversationId: string) => {
+    if (!token) return;
+    setIsLoadingMessages(true);
+    try {
+      const data = await makeChatApiRequest(`/api/conversations/${conversationId}/messages`, "GET", token);
+      setMessages(data.data || []);
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Failed to load messages", description: err.message });
+    } finally {
+      setIsLoadingMessages(false);
+    }
+  }, [token, toast]);
+
+  useEffect(() => {
+    if (activeConversation?.id) {
+      fetchMessages(activeConversation.id);
     } else {
-      setExpandedChats([...expandedChats, chatId]);
+      setMessages([]); // Clear messages if no active conversation
+    }
+  }, [activeConversation, fetchMessages]);
+
+  const handleSendMessage = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!messageInput.trim() || !activeConversation?.id || !token) return;
+
+    try {
+      const sentMessage = await makeChatApiRequest(`/api/conversations/${activeConversation.id}/messages`, "POST", token, { content: messageInput });
+      setMessages(prev => [...prev, sentMessage]);
+      setMessageInput("");
+      // Optimistically update conversation preview
+      const updatedConvos = conversations.map(c => c.id === activeConversation.id ? {...c, last_message_preview: sentMessage.content.substring(0,50), last_message_at: sentMessage.sent_at} : c);
+      setConversations(updatedConvos);
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Failed to send message", description: err.message });
     }
   };
 
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!messageInput.trim()) return;
-    
-    // In a real app, you would send this message to your backend
-    const newMessage = {
-      sender: "user",
-      content: messageInput,
-      timestamp: new Date().toISOString(),
-    };
-    
-    // Update the active chat with the new message
-    const updatedChat = {
-      ...activeChat,
-      messages: [...activeChat.messages, newMessage]
-    };
-    
-    // Simulate a response from support after a delay
-    setTimeout(() => {
-      const supportResponse = {
-        sender: "support",
-        content: "Thank you for your message! Our team will get back to you soon.",
-        timestamp: new Date().toISOString(),
-      };
-      
-      updatedChat.messages = [...updatedChat.messages, supportResponse];
-      setActiveChat({...updatedChat});
-      
-      // Show a toast notification
-      toast({
-        title: "New Message",
-        description: "You have received a new message from GDS Puppies."
+  const handleStartNewChat = async () => {
+    if (!newChatMessage.trim() || !newChatTitle.trim() || !token ) return;
+    try {
+      const { conversation: newConv, message: firstMessage } = await makeChatApiRequest("/api/conversations", "POST", token, {
+        title: newChatTitle,
+        first_message_content: newChatMessage,
+        // related_entity_id and type can be null for general support chats
       });
-    }, 1000);
-    
-    setActiveChat(updatedChat);
-    setMessageInput("");
+      setConversations(prev => [newConv, ...prev]); // Add to top
+      setActiveConversation(newConv);
+      setMessages([firstMessage]);
+      setIsNewChatModalOpen(false);
+      setNewChatTitle("Support Inquiry");
+      setNewChatMessage("");
+      toast({ title: "Chat Started", description: `Conversation "${newConv.title}" created.`, className: "bg-green-500 text-white" });
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Failed to start new chat", description: err.message });
+    }
   };
 
-  const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const formatTimestamp = (timestamp?: string | null) => {
+    if (!timestamp) return "";
+    return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
+
+  const formatDate = (timestamp?: string | null) => {
+    if (!timestamp) return "N/A";
+    return new Date(timestamp).toLocaleDateString();
+  }
+
+  if (isLoadingConvos && conversations.length === 0) {
+    return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-brand-red" /> <p className="ml-2">Loading chats...</p></div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-10"><AlertCircle className="h-12 w-12 mx-auto text-red-500 mb-4" /><h3 className="text-xl font-semibold text-red-600">Error Loading Chats</h3><p className="text-muted-foreground">{error}</p></div>;
+  }
 
   return (
     <div>
@@ -148,130 +188,138 @@ const ChatHistory = () => {
           <MessageCircle className="h-6 w-6 mr-2 text-brand-red" />
           Chat History
         </h2>
+        <Button onClick={() => setIsNewChatModalOpen(true)} className="bg-brand-red hover:bg-red-700 text-white">
+            <PlusCircle className="h-4 w-4 mr-2" /> Start New Chat
+        </Button>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Chat List */}
-        <div className="lg:col-span-1 space-y-4">
-          <h3 className="font-medium mb-2 text-muted-foreground">Previous Conversations</h3>
-          
-          {mockChatHistory.map((chat) => (
+        <div className="lg:col-span-1 space-y-3 h-[600px] overflow-y-auto pr-2">
+          <h3 className="font-medium text-muted-foreground sticky top-0 bg-background py-1">Conversations</h3>
+          {conversations.length === 0 && !isLoadingConvos && (
+            <p className="text-sm text-muted-foreground text-center py-4">No conversations yet.</p>
+          )}
+          {conversations.map((chat) => (
             <Card 
               key={chat.id} 
-              className={`cursor-pointer transition-all hover:shadow-md ${activeChat.id === chat.id ? 'border-brand-red shadow-sm' : ''}`}
-              onClick={() => setActiveChat(chat)}
+              className={`cursor-pointer transition-all hover:shadow-lg ${activeConversation?.id === chat.id ? 'border-brand-red ring-2 ring-brand-red' : 'border-border'}`}
+              onClick={() => setActiveConversation(chat)}
             >
-              <CardContent className="p-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <div className="flex items-center">
-                      <h4 className="font-medium">{chat.title}</h4>
-                      {chat.unread && (
-                        <Badge className="ml-2 bg-brand-red">New</Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(chat.date).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleChatExpand(chat.id);
-                    }}
-                  >
-                    {expandedChats.includes(chat.id) ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                  </Button>
-                </div>
-                
-                {expandedChats.includes(chat.id) && (
-                  <div className="mt-2 text-sm text-muted-foreground line-clamp-2">
-                    <span className="font-medium">{chat.messages[chat.messages.length - 1].sender === 'user' ? 'You: ' : 'Support: '}</span>
-                    {chat.messages[chat.messages.length - 1].content}
-                  </div>
-                )}
+              <CardContent className="p-3">
+                <h4 className="font-semibold text-sm truncate">{chat.title}</h4>
+                {chat.last_message_preview && <p className="text-xs text-muted-foreground truncate mt-1">{chat.last_message_preview}</p>}
+                <p className="text-xs text-muted-foreground mt-1">{formatDate(chat.last_message_at || chat.updated_at)}</p>
+                {/* {chat.unread && <Badge className="mt-1 text-xs" variant="destructive">New</Badge>} */}
               </CardContent>
             </Card>
           ))}
-          
-          <div className="pt-4">
-            <Button 
-              variant="outline"
-              onClick={() => {
-                toast({
-                  title: "Chat Feature",
-                  description: "Starting a new chat will be available soon!"
-                });
-              }}
-              className="w-full"
-            >
-              <MessageCircle className="h-4 w-4 mr-2" />
-              Start New Chat
-            </Button>
-          </div>
         </div>
         
         {/* Chat Messages */}
-        <div className="lg:col-span-2 border rounded-lg bg-muted/10 overflow-hidden flex flex-col h-[600px]">
-          {/* Chat Header */}
-          <div className="bg-muted/30 p-4 border-b">
-            <h3 className="font-medium">{activeChat.title}</h3>
-            <p className="text-sm text-muted-foreground">
-              {new Date(activeChat.date).toLocaleDateString()}
-            </p>
-          </div>
-          
-          {/* Messages Container */}
-          <div className="flex-grow overflow-y-auto p-4 space-y-4">
-            {activeChat.messages.map((message: any, index: number) => (
-              <div
-                key={index}
-                className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[80%] p-3 rounded-lg ${
-                    message.sender === 'user'
-                      ? 'bg-brand-red text-white ml-auto rounded-tr-none'
-                      : 'bg-muted rounded-tl-none'
-                  }`}
-                >
-                  {message.sender === 'support' && (
-                    <div className="flex items-center mb-1">
-                      <PawPrint className="h-4 w-4 mr-1" />
-                      <span className="text-xs font-semibold">GDS Puppies Support</span>
-                    </div>
-                  )}
-                  <p className="text-sm">{message.content}</p>
-                  <span className={`text-xs mt-1 block text-right ${message.sender === 'user' ? 'text-white/70' : 'text-muted-foreground'}`}>
-                    {formatTimestamp(message.timestamp)}
-                  </span>
-                </div>
+        <div className="lg:col-span-2 border rounded-lg bg-muted/10 flex flex-col h-[600px]">
+          {activeConversation ? (
+            <>
+              <div className="bg-muted/30 p-3 border-b">
+                <h3 className="font-semibold text-md">{activeConversation.title}</h3>
+                <p className="text-xs text-muted-foreground">Last activity: {formatDate(activeConversation.last_message_at || activeConversation.updated_at)}</p>
               </div>
-            ))}
-          </div>
-          
-          {/* Message Input */}
-          <form onSubmit={handleSendMessage} className="p-4 border-t bg-background">
-            <div className="flex space-x-2">
-              <Input
-                placeholder="Type your message..."
-                value={messageInput}
-                onChange={(e) => setMessageInput(e.target.value)}
-                className="flex-grow"
-              />
-              <Button type="submit" className="bg-brand-red hover:bg-red-700 text-white">
-                <Send className="h-4 w-4" />
-              </Button>
+
+              <div className="flex-grow overflow-y-auto p-4 space-y-3">
+                {isLoadingMessages && <div className="flex justify-center py-4"><Loader2 className="h-6 w-6 animate-spin" /></div>}
+                {!isLoadingMessages && messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`flex ${message.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[75%] p-2.5 rounded-lg shadow-sm ${
+                        message.sender_id === user?.id
+                          ? 'bg-brand-red text-white ml-auto rounded-tr-none'
+                          : 'bg-background border rounded-tl-none'
+                      }`}
+                    >
+                      {message.sender_id !== user?.id && (
+                        <div className="flex items-center mb-0.5">
+                           { message.sender_type === 'admin' || message.sender_type === 'breeder' ?
+                            <PawPrint className="h-3.5 w-3.5 mr-1.5 text-brand-red" /> : null }
+                          <span className="text-xs font-semibold capitalize">{message.sender_type}</span>
+                        </div>
+                      )}
+                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      <span className={`text-xs mt-1 block text-right ${message.sender_id === user?.id ? 'text-white/70' : 'text-muted-foreground/80'}`}>
+                        {formatTimestamp(message.sent_at)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                {!isLoadingMessages && messages.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-10">No messages in this conversation yet.</p>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              <form onSubmit={handleSendMessage} className="p-3 border-t bg-background flex items-center space-x-2">
+                <Input
+                  placeholder="Type your message..."
+                  value={messageInput}
+                  onChange={(e) => setMessageInput(e.target.value)}
+                  className="flex-grow"
+                  disabled={isLoadingMessages}
+                />
+                <Button type="submit" className="bg-brand-red hover:bg-red-700 text-white" disabled={isLoadingMessages || !messageInput.trim()}>
+                  <Send className="h-4 w-4" />
+                </Button>
+              </form>
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-4">
+              <MessageCircle className="h-16 w-16 mb-4" />
+              <p className="text-lg font-medium">Select a conversation</p>
+              <p className="text-sm">or start a new one to begin chatting.</p>
             </div>
-            <div className="flex items-center mt-2 text-xs text-muted-foreground">
-              <Bot className="h-3 w-3 mr-1" />
-              <span>AI assistant is analyzing your conversation to provide better support</span>
-            </div>
-          </form>
+          )}
         </div>
       </div>
+
+      {/* New Chat Modal */}
+      <Dialog open={isNewChatModalOpen} onOpenChange={setIsNewChatModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Start a New Conversation</DialogTitle>
+            <DialogDescription>
+              Ask us anything! How can we help you today?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <label htmlFor="newChatTitle" className="text-sm font-medium">Title (Optional)</label>
+              <Input
+                id="newChatTitle"
+                value={newChatTitle}
+                onChange={(e) => setNewChatTitle(e.target.value)}
+                placeholder="e.g., Question about puppy food"
+              />
+            </div>
+            <div>
+              <label htmlFor="newChatMessage" className="text-sm font-medium">Your Message</label>
+              <Textarea
+                id="newChatMessage"
+                value={newChatMessage}
+                onChange={(e) => setNewChatMessage(e.target.value)}
+                placeholder="Type your first message here..."
+                rows={4}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsNewChatModalOpen(false)}>Cancel</Button>
+            <Button onClick={handleStartNewChat} disabled={!newChatMessage.trim()}>
+              <Send className="h-4 w-4 mr-2" /> Start Chat
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

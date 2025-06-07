@@ -150,9 +150,9 @@ export async function getCurrentUser(request: Request, env: Env, authResult: any
     }
     
     const user = await env.PUPPIES_DB
-      .prepare('SELECT id, email, name, roles, created_at, updated_at FROM users WHERE id = ?')
+      .prepare('SELECT id, email, name, roles, phone, address, preferences, created_at, updated_at FROM users WHERE id = ?')
       .bind(userId)
-      .first<{ id: string; email: string; name: string; roles: string; created_at: string; updated_at: string; }>();
+      .first<{ id: string; email: string; name: string; roles: string; phone: string | null; address: string | null; preferences: string | null; created_at: string; updated_at: string; }>();
     
     if (!user) {
       return createErrorResponse('User not found', null, 404);
@@ -174,6 +174,69 @@ export async function getCurrentUser(request: Request, env: Env, authResult: any
     console.error('Error getting current user:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return createErrorResponse('Failed to get current user', errorMessage, 500);
+  }
+}
+
+export async function updateUserProfile(request: Request, env: Env, authResult: any) {
+  try {
+    const userId = authResult.userId;
+    if (!userId) {
+      return createErrorResponse('Unauthorized', 'User ID not found in authentication token.', 401);
+    }
+
+    let body;
+    try {
+      body = await request.json();
+    } catch (e) {
+      return createErrorResponse('Invalid JSON body', e.message, 400);
+    }
+
+    const { name, phone, address, preferences } = body as { name?: string, phone?: string, address?: string, preferences?: string };
+
+    const updates: Record<string, any> = {};
+    if (name !== undefined) updates.name = name;
+    if (phone !== undefined) updates.phone = phone;
+    if (address !== undefined) updates.address = address;
+    if (preferences !== undefined) updates.preferences = preferences;
+
+    if (Object.keys(updates).length === 0) {
+      return createErrorResponse('No update fields provided. Please provide name, phone, address, or preferences.', null, 400);
+    }
+
+    updates.updated_at = new Date().toISOString();
+
+    const setClauses = Object.keys(updates).map(key => `${key} = ?`).join(', ');
+    const values = [...Object.values(updates), userId];
+
+    const stmt = `UPDATE users SET ${setClauses} WHERE id = ?`;
+    await env.PUPPIES_DB.prepare(stmt).bind(...values).run();
+
+    const updatedUser = await env.PUPPIES_DB
+      .prepare('SELECT id, email, name, roles, phone, address, preferences, created_at, updated_at FROM users WHERE id = ?')
+      .bind(userId)
+      .first();
+
+    if (!updatedUser) {
+        return createErrorResponse('User not found after update', null, 404);
+    }
+
+    let parsedRoles = ['user'];
+    if (updatedUser.roles && typeof updatedUser.roles === 'string') {
+        try {
+            parsedRoles = JSON.parse(updatedUser.roles);
+        } catch (e) {
+            console.error("Failed to parse roles for updated user profile:", updatedUser.roles, e);
+        }
+    }
+
+    return new Response(JSON.stringify({ ...updatedUser, roles: parsedRoles }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return createErrorResponse('Failed to update user profile', errorMessage, 500);
   }
 }
 

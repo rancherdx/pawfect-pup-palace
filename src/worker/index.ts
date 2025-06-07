@@ -1,9 +1,10 @@
 
 import { Router } from 'itty-router';
 // Updated to import specific auth functions and new admin middleware
-import { verifySessionAuth, adminAuthMiddleware } from './auth';
+import { verifySessionAuth, adminAuthMiddleware } from './auth'; // Corrected: authMiddleware is local to index.ts
 import * as puppiesController from './controllers/puppies';
 import * as usersController from './controllers/users';
+import * as chatController from './controllers/chat'; // Import chatController
 // Import admin user management functions
 import { listUsers, getUserByIdAdmin, updateUserAdmin, deleteUserAdmin } from './controllers/users';
 import * as littersController from './controllers/litters';
@@ -109,6 +110,8 @@ const authMiddleware = async (request: Request, env: Env, ): Promise<Response | 
   // To pass data to the next handler, we can augment the request object.
   (request as any).auth = authResult; // Make authResult available to handlers
   // No explicit return here means itty-router will proceed to the next handler.
+  // This authMiddleware is primarily for session token based auth.
+  // For JWT based (like admin routes), adminAuthMiddleware is used.
 };
 
 
@@ -265,6 +268,54 @@ router.delete('/api/litters/:id', async (req, env) => {
 router.post('/api/login', usersController.login);
 router.post('/api/register', usersController.register);
 
+// User Profile Routes
+// getCurrentUser is already session-based, so authMiddleware (which calls verifySessionAuth) is appropriate.
+router.get('/api/user', authMiddleware, (req, env) => usersController.getCurrentUser(req, env, (req as any).auth));
+router.put('/api/user/profile', authMiddleware, (req, env) => usersController.updateUserProfile(req, env, (req as any).auth));
+
+
+// My Puppies and Health Records (Protected by standard authMiddleware - session/JWT based)
+router.get('/api/my-puppies', authMiddleware, (req, env) => puppiesController.getMyPuppies(req, env, (req as any).auth));
+
+// For puppy health records, authMiddleware provides user context. The controller then checks ownership/admin.
+router.get('/api/puppies/:puppyId/health-records', authMiddleware, (req, env) => {
+  const puppyId = req.params?.puppyId;
+  if (!puppyId) {
+    return new Response(JSON.stringify({ error: 'Puppy ID parameter is missing' }), { status: 400, headers: corsHeaders });
+  }
+  return puppiesController.getPuppyHealthRecords(req, env, { puppyId }, (req as any).auth);
+});
+
+router.post('/api/puppies/:puppyId/health-records', authMiddleware, (req, env) => {
+  const puppyId = req.params?.puppyId;
+  if (!puppyId) {
+    return new Response(JSON.stringify({ error: 'Puppy ID parameter is missing' }), { status: 400, headers: corsHeaders });
+  }
+  return puppiesController.addPuppyHealthRecord(req, env, (req as any).auth, { puppyId });
+});
+
+
+// Chat Routes (Protected by standard authMiddleware - session/JWT based)
+router.get('/api/my-conversations', authMiddleware, (req, env) => chatController.getMyConversations(req, env, (req as any).auth));
+router.post('/api/conversations', authMiddleware, (req, env) => chatController.startConversation(req, env, (req as any).auth));
+
+router.get('/api/conversations/:conversationId/messages', authMiddleware, (req, env) => {
+  const conversationId = req.params?.conversationId;
+  if (!conversationId) {
+    return new Response(JSON.stringify({ error: 'Conversation ID parameter is missing' }), { status: 400, headers: corsHeaders });
+  }
+  return chatController.getMessagesForConversation(req, env, (req as any).auth, conversationId);
+});
+
+router.post('/api/conversations/:conversationId/messages', authMiddleware, (req, env) => {
+  const conversationId = req.params?.conversationId;
+  if (!conversationId) {
+    return new Response(JSON.stringify({ error: 'Conversation ID parameter is missing' }), { status: 400, headers: corsHeaders });
+  }
+  return chatController.sendMessage(req, env, (req as any).auth, conversationId);
+});
+
+
 // Checkout route
 // Updated to call processPayment
 async function handleCheckout(request: Request, env: Env): Promise<Response> {
@@ -277,26 +328,21 @@ router.post('/api/checkout', handleCheckout);
 // Square Webhook route
 router.post('/api/webhooks/square', handleSquareWebhook);
 
-router.get('/api/user', async (req, env) => {
-  const auth = await authMiddleware(req, env);
-  if (auth instanceof Response) return auth;
-  return usersController.getCurrentUser(req, env, auth);
-});
-
-router.post('/api/logout', async (req, env) => {
-  // Logout might use session token from verifySessionAuth if that's what's being invalidated
-  const authResult = await verifySessionAuth(request, env);
+router.post('/api/logout', async (req, env) => { // authMiddleware could be used here too if desired
+  const authResult = await verifySessionAuth(request, env); // Keep session based logout for now
   if (!authResult.authenticated) {
      return new Response(JSON.stringify({ error: authResult.error || 'Unauthorized' }), {
       status: 401,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }
-  return usersController.logout(req, env); // usersController.logout should handle token extraction
+  // Pass the whole request, as logout in usersController might need header token
+  return usersController.logout(req, env);
 });
 
 
 // Admin User Management Routes (Protected by adminAuthMiddleware - JWT based)
+// listUsers, getUserByIdAdmin, etc. are already correctly using adminAuthMiddleware
 router.get('/api/admin/users', adminAuthMiddleware, listUsers);
 
 router.get('/api/admin/users/:userId', adminAuthMiddleware, (request, env) => {

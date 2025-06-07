@@ -58,6 +58,9 @@ CREATE TABLE IF NOT EXISTS users (
   name TEXT,
   password TEXT NOT NULL, -- Stored as a secure hash
   roles TEXT DEFAULT '["user"]', -- JSON array of roles, e.g., ["user"], ["admin"], ["super-admin"]
+  phone TEXT NULL,
+  address TEXT NULL,
+  preferences TEXT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -208,6 +211,42 @@ CREATE TABLE IF NOT EXISTS third_party_integrations (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP  -- Changed to use default
 );
 
+CREATE TABLE IF NOT EXISTS puppy_health_records (
+  id TEXT PRIMARY KEY,
+  puppy_id TEXT REFERENCES puppies(id) ON DELETE CASCADE,
+  record_type TEXT NOT NULL, -- e.g., 'vaccination', 'weight_log', 'height_log', 'document', 'note'
+  date DATE NOT NULL,
+  details TEXT, -- For notes, document URL/title, vaccine name, weight value (e.g. "15.2 lbs"), etc.
+  value REAL NULL, -- Optional: For numeric values like weight, height
+  unit TEXT NULL, -- Optional: e.g., 'lbs', 'kg', 'in', 'cm'
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS conversations (
+  id TEXT PRIMARY KEY,
+  user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+  title TEXT, -- e.g., "Chat about Bella", "Inquiry about adoption"
+  related_entity_id TEXT NULL, -- e.g., puppy_id, litter_id
+  related_entity_type TEXT NULL, -- e.g., 'puppy', 'litter', 'general_support'
+  last_message_preview TEXT NULL, -- Store first few words of the last message
+  last_message_at TIMESTAMP,
+  is_archived BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS messages (
+  id TEXT PRIMARY KEY,
+  conversation_id TEXT REFERENCES conversations(id) ON DELETE CASCADE,
+  sender_id TEXT, -- Can be user_id or a system/admin identifier like 'admin_01', 'breeder_gds'
+  sender_type TEXT NOT NULL, -- 'user', 'admin', 'system', 'breeder'
+  content TEXT NOT NULL,
+  attachments TEXT NULL, -- JSON array of attachment URLs or identifiers
+  sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Renamed from 'timestamp' for clarity
+  read_at TIMESTAMP NULL
+);
+
 CREATE TABLE IF NOT EXISTS stud_dogs (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
@@ -255,6 +294,14 @@ CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON transactions(user_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_status ON transactions(status);
 CREATE INDEX IF NOT EXISTS idx_email_templates_template_name ON email_templates(template_name);
 CREATE INDEX IF NOT EXISTS idx_third_party_integrations_service_name ON third_party_integrations(service_name);
+
+-- Indexes for new tables
+CREATE INDEX IF NOT EXISTS idx_puppy_health_records_puppy_id ON puppy_health_records(puppy_id);
+CREATE INDEX IF NOT EXISTS idx_puppy_health_records_record_type ON puppy_health_records(record_type);
+CREATE INDEX IF NOT EXISTS idx_conversations_user_id ON conversations(user_id);
+CREATE INDEX IF NOT EXISTS idx_conversations_related_entity ON conversations(related_entity_id, related_entity_type);
+CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON messages(conversation_id);
+CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_id, sender_type);
 
 -- Removed blog_related_posts as it's less common and can be complex.
 -- A simpler approach is often keyword/category based recommendations or manual linking in content.

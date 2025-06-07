@@ -26,11 +26,11 @@ VALUES
 
 -- Seed data for users (password for all is "Password123$Puppies")
 -- Hash: $2a$10$s76.T9AT3qW3lJ5L9Dvck.DK3HbMAFt2CkTtE3pLEJ.QQRguKQKsu
-INSERT OR IGNORE INTO users (id, email, name, password, roles, created_at, updated_at)
+INSERT OR IGNORE INTO users (id, email, name, password, roles, created_at, updated_at, phone, address, preferences)
 VALUES
-  ('user-admin-001', 'admin@example.com', 'Admin User', '$2a$10$s76.T9AT3qW3lJ5L9Dvck.DK3HbMAFt2CkTtE3pLEJ.QQRguKQKsu', '["admin", "super-admin"]', STRFTIME('%Y-%m-%d %H:%M:%f', 'now'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now')),
-  ('user-editor-001', 'editor@example.com', 'Blog Editor', '$2a$10$s76.T9AT3qW3lJ5L9Dvck.DK3HbMAFt2CkTtE3pLEJ.QQRguKQKsu', '["editor", "user"]', STRFTIME('%Y-%m-%d %H:%M:%f', 'now'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now')),
-  ('user-customer-001', 'customer@example.com', 'John Smith', '$2a$10$s76.T9AT3qW3lJ5L9Dvck.DK3HbMAFt2CkTtE3pLEJ.QQRguKQKsu', '["user"]', STRFTIME('%Y-%m-%d %H:%M:%f', 'now'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now'));
+  ('user-admin-001', 'admin@example.com', 'Admin User', '$2a$10$s76.T9AT3qW3lJ5L9Dvck.DK3HbMAFt2CkTtE3pLEJ.QQRguKQKsu', '["admin", "super-admin"]', STRFTIME('%Y-%m-%d %H:%M:%f', 'now'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now'), '555-0000', '1 Admin Way, System City, USA 00000', 'Only critical email alerts.'),
+  ('user-editor-001', 'editor@example.com', 'Blog Editor', '$2a$10$s76.T9AT3qW3lJ5L9Dvck.DK3HbMAFt2CkTtE3pLEJ.QQRguKQKsu', '["editor", "user"]', STRFTIME('%Y-%m-%d %H:%M:%f', 'now'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now'), '555-0002', '456 Content Ave, Blogsville, USA 11111', 'Email for blog updates.'),
+  ('user-customer-001', 'customer@example.com', 'John Smith', '$2a$10$s76.T9AT3qW3lJ5L9Dvck.DK3HbMAFt2CkTtE3pLEJ.QQRguKQKsu', '["user"]', STRFTIME('%Y-%m-%d %H:%M:%f', 'now'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now'), '555-0101', '123 Main St, Anytown, USA 12345', 'Email for general updates, SMS for urgent alerts.');
 
 -- Seed data for blog_categories
 INSERT OR IGNORE INTO blog_categories (id, name, slug, description, created_at, updated_at)
@@ -138,3 +138,64 @@ VALUES
 INSERT OR IGNORE INTO transactions (id, user_id, related_entity_id, entity_type, square_payment_id, amount_cents, currency, payment_method_details, status, notes, created_at, updated_at)
 VALUES
   ('txn-001', 'user-customer-001', 'puppy-003', 'litter_deposit', 'sq_payment_id_example_123', 50000, 'USD', '{"brand": "Visa", "last4": "4242"}', 'succeeded', 'Deposit for Rex the black lab.', STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-5 days'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-5 days'));
+
+-- Seed data for puppy_health_records
+-- For puppy-001 (Buddy, Labrador, born 2025-06-15)
+INSERT OR IGNORE INTO puppy_health_records (id, puppy_id, record_type, date, details, value, unit, created_at, updated_at)
+VALUES
+  ('phr-vac-001', 'puppy-001', 'vaccination', '2025-07-01', 'Parvovirus - 1st dose', NULL, NULL, STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-30 days'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-30 days')),
+  ('phr-wl-001', 'puppy-001', 'weight_log', '2025-07-01', 'Regular check-up', 4.5, 'lbs', STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-30 days'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-30 days')),
+  ('phr-vac-002', 'puppy-001', 'vaccination', '2025-07-22', 'DHPP - 1st dose', NULL, NULL, STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-20 days'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-20 days')),
+  ('phr-wl-002', 'puppy-001', 'weight_log', '2025-07-22', '3 week check-up', 7.8, 'lbs', STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-20 days'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-20 days')),
+  ('phr-doc-001', 'puppy-001', 'document', '2025-08-10', '{"name": "Adoption Certificate Placeholder", "url": "/documents/puppy-001/adoption_cert_placeholder.pdf"}', NULL, NULL, STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-10 days'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-10 days')),
+  ('phr-note-002', 'puppy-001', 'note', '2025-08-15', 'Started puppy kindergarten. Doing well with basic commands.', NULL, NULL, STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-5 days'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-5 days'));
+
+-- For puppy-002 (Lucy, Labrador, born 2025-06-15)
+INSERT OR IGNORE INTO puppy_health_records (id, puppy_id, record_type, date, details, value, unit, created_at, updated_at)
+VALUES
+  ('phr-note-001', 'puppy-002', 'note', '2025-07-10', 'Slightly timid during vet visit, but healthy.', NULL, NULL, STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-25 days'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-25 days')),
+  ('phr-vac-003', 'puppy-002', 'vaccination', '2025-07-01', 'Parvovirus - 1st dose', NULL, NULL, STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-30 days'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-30 days')),
+  ('phr-wl-003', 'puppy-002', 'weight_log', '2025-07-01', 'Check-up', 4.2, 'lbs', STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-30 days'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-30 days'));
+
+-- For puppy-004 (Goldie, Golden Retriever, born 2025-03-20)
+INSERT OR IGNORE INTO puppy_health_records (id, puppy_id, record_type, date, details, value, unit, created_at, updated_at)
+VALUES
+  ('phr-vac-004', 'puppy-004', 'vaccination', '2025-04-05', 'DHPP - 1st dose', NULL, NULL, STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-60 days'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-60 days')),
+  ('phr-hl-001', 'puppy-004', 'height_log', '2025-04-05', 'Initial measurement', 8.0, 'in', STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-60 days'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-60 days'));
+
+-- Seed data for conversations
+INSERT OR IGNORE INTO conversations (id, user_id, title, related_entity_id, related_entity_type, last_message_preview, last_message_at, is_archived, created_at, updated_at)
+VALUES
+  ('conv-001', 'user-customer-001', 'Question about website features', NULL, 'general_support', 'Okay, thank you for the clarification!', STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-2 days'), FALSE, STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-3 days'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-2 days')),
+  ('conv-002', 'user-customer-001', 'Checking in on Rex (puppy-003)', 'puppy-003', 'puppy', 'He sounds wonderful! Can''t wait.', STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-1 days'), FALSE, STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-2 days'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-1 days')),
+  ('conv-003', 'user-customer-001', 'Post-adoption questions for Lucy', 'puppy-002', 'puppy', 'Thanks for the tips!', STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-7 days'), TRUE, STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-10 days'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-7 days'));
+
+-- Seed data for messages
+-- For conv-001 (General Support)
+INSERT OR IGNORE INTO messages (id, conversation_id, sender_id, sender_type, content, attachments, sent_at, read_at)
+VALUES
+  ('msg-001', 'conv-001', 'user-customer-001', 'user', 'Hi, I had a question about how to view my past orders.', NULL, STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-3 days 1 hour'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-3 days 30 minutes')),
+  ('msg-002', 'conv-001', 'admin-support-01', 'admin', 'Hello! You can view your past orders and receipts under the "My Adoption Records" section in your dashboard.', NULL, STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-3 days'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-2 days 50 minutes')),
+  ('msg-003', 'conv-001', 'user-customer-001', 'user', 'Okay, thank you for the clarification!', NULL, STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-2 days'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-2 days')),
+  ('msg-004', 'conv-001', 'admin-support-01', 'admin', 'You''re welcome! Let us know if you have any other questions.', NULL, STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-2 days'), NULL);
+-- Update conv-001 last message details
+UPDATE conversations SET last_message_preview = 'You''re welcome! Let us know if you ...', last_message_at = (SELECT sent_at FROM messages WHERE id = 'msg-004') WHERE id = 'conv-001';
+
+
+-- For conv-002 (About puppy-003, Rex)
+INSERT OR IGNORE INTO messages (id, conversation_id, sender_id, sender_type, content, attachments, sent_at, read_at)
+VALUES
+  ('msg-005', 'conv-002', 'user-customer-001', 'user', 'Just wanted to see how Rex is doing before his pickup date!', NULL, STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-2 days 2 hours'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-2 days 1 hour')),
+  ('msg-006', 'conv-002', 'admin-breeder-01', 'admin', 'Rex is doing great! He''s very playful and eating well. We''re excited for you to meet him.', NULL, STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-2 days'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-1 day 23 hours')),
+  ('msg-007', 'conv-002', 'user-customer-001', 'user', 'He sounds wonderful! Can''t wait.', NULL, STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-1 day'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-1 day'));
+-- Update conv-002 last message details
+UPDATE conversations SET last_message_preview = 'He sounds wonderful! Can''t wait.', last_message_at = (SELECT sent_at FROM messages WHERE id = 'msg-007') WHERE id = 'conv-002';
+
+-- For conv-003 (Post-adoption for puppy-002, Lucy)
+INSERT OR IGNORE INTO messages (id, conversation_id, sender_id, sender_type, content, attachments, sent_at, read_at)
+VALUES
+  ('msg-008', 'conv-003', 'user-customer-001', 'user', 'We brought Lucy home yesterday, she''s settling in but seems a bit shy. Any tips?', NULL, STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-10 days'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-9 days 23 hours')),
+  ('msg-009', 'conv-003', 'admin-support-01', 'admin', 'That''s very normal for the first few days! Give her a quiet space, stick to a routine, and let her explore at her own pace. Gentle positive reinforcement will help build her confidence.', NULL, STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-9 days'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-9 days')),
+  ('msg-010', 'conv-003', 'user-customer-001', 'user', 'Thanks for the tips!', NULL, STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-7 days'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now', '-7 days'));
+-- Update conv-003 last message details
+UPDATE conversations SET last_message_preview = 'Thanks for the tips!', last_message_at = (SELECT sent_at FROM messages WHERE id = 'msg-010') WHERE id = 'conv-003';

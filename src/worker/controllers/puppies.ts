@@ -1,383 +1,464 @@
-
 import { corsHeaders } from '../utils/cors';
+import type { Env } from '../env'; // Import Env type
+import { D1Database, D1PreparedStatement } from '@cloudflare/workers-types'; // Import D1Database type
 
-export async function getAllPuppies(request: Request, env: any) {
+// Helper to get D1 binding more type-safely
+const getDB = (env: Env): D1Database => env.PUPPIES_DB;
+
+interface AuthResult {
+    userId: string;
+    roles: string[];
+}
+
+// Helper for consistent error responses
+function createErrorResponse(message: string, details: string | null = null, status: number): Response {
+  return new Response(
+    JSON.stringify({ error: message, details: details }),
+    { status: status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  );
+}
+
+// Define a basic Puppy type based on master_schema.sql
+// This should be expanded and moved to a shared types file eventually
+interface Puppy {
+    id: string;
+    name: string;
+    litter_id: string | null;
+    breed_id: string | null; // Changed from 'breed'
+    gender: string;
+    color: string | null;
+    birth_date: string; // YYYY-MM-DD
+    weight: number | null;
+    price: number | null;
+    status: string; // e.g., available, reserved, adopted
+    microchip_id: string | null;
+    description: string | null;
+    temperament_notes: string | null;
+    health_notes: string | null;
+    image_urls: string; // JSON string array
+    created_at: string;
+    updated_at: string;
+    breed_name?: string; // For joined data
+    litter_name?: string; // For joined data
+}
+
+
+export async function getAllPuppies(request: Request, env: Env) {
   const url = new URL(request.url);
-  const breed = url.searchParams.get('breed');
+  const breedName = url.searchParams.get('breed');
   const status = url.searchParams.get('status');
-  const limit = parseInt(url.searchParams.get('limit') || '20');
-  const offset = parseInt(url.searchParams.get('offset') || '0');
+  const limit = parseInt(url.searchParams.get('limit') || '10', 10);
+  const page = parseInt(url.searchParams.get('page') || '1', 10);
+  const offset = (page - 1) * limit;
   
-  let query = 'SELECT * FROM puppies WHERE 1=1';
-  const params: any[] = [];
+  let queryString = 'SELECT p.*, b.name as breed_name, l.name as litter_name FROM puppies p LEFT JOIN breeds b ON p.breed_id = b.id LEFT JOIN litters l ON p.litter_id = l.id WHERE 1=1';
+  const queryParams: any[] = [];
   
-  if (breed) {
-    query += ' AND breed = ?';
-    params.push(breed);
+  if (breedName) {
+    queryString += ' AND b.name = ?';
+    queryParams.push(breedName);
   }
   
   if (status) {
-    query += ' AND status = ?';
-    params.push(status);
+    queryString += ' AND p.status = ?';
+    queryParams.push(status);
   }
   
-  query += ' LIMIT ? OFFSET ?';
-  params.push(limit, offset);
+  queryString += ' ORDER BY p.created_at DESC LIMIT ? OFFSET ?';
+  queryParams.push(limit, offset);
   
   try {
-    const { results } = await env.PUPPIES_DB.prepare(query).bind(...params).all();
+    const db = getDB(env);
+    const { results } = await db.prepare(queryString).bind(...queryParams).all<Puppy>();
     
-    // Count total for pagination
-    const countResult = await env.PUPPIES_DB.prepare('SELECT COUNT(*) as total FROM puppies').all();
-    const total = countResult.results[0].total;
+    const puppies = results.map(p => ({
+        ...p,
+        image_urls: JSON.parse(p.image_urls || "[]") // Parse image_urls
+    }));
+
+    let countQueryString = 'SELECT COUNT(p.id) as total FROM puppies p LEFT JOIN breeds b ON p.breed_id = b.id WHERE 1=1';
+    const countParams: any[] = [];
+    if (breedName) {
+      countQueryString += ' AND b.name = ?';
+      countParams.push(breedName);
+    }
+    if (status) {
+      countQueryString += ' AND p.status = ?';
+      countParams.push(status);
+    }
+
+    const countResult = await db.prepare(countQueryString).bind(...countParams).first<{total: number}>();
+    const totalItems = countResult?.total || 0;
     
     return new Response(JSON.stringify({
-      puppies: results,
-      pagination: {
-        total,
-        limit,
-        offset
-      }
-    }), {
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/json'
-      }
-    });
-  } catch (error) {
+      data: puppies,
+      page,
+      limit,
+      totalPages: Math.ceil(totalItems / limit),
+      totalItems
+    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }});
+  } catch (error: any) {
     console.error('Error fetching puppies:', error);
-    return new Response(JSON.stringify({ error: 'Failed to fetch puppies' }), {
-      status: 500,
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/json'
-      }
-    });
+    return createErrorResponse('Failed to fetch puppies', error.message, 500);
   }
 }
 
-export async function getPuppyById(request: Request, env: any) {
-  const { params } = request as any;
-  const id = params.id;
+export async function getPuppyById(request: Request, env: Env) {
+  const { params: requestParams } = request as any; // request.params is from itty-router
+  const id = requestParams.id;
   
   try {
-    // Get the puppy data
-    const puppyResult = await env.PUPPIES_DB
-      .prepare('SELECT * FROM puppies WHERE id = ?')
+    const db = getDB(env);
+    const puppyResult = await db
+      .prepare('SELECT p.*, b.name as breed_name, l.name as litter_name FROM puppies p LEFT JOIN breeds b ON p.breed_id = b.id LEFT JOIN litters l ON p.litter_id = l.id WHERE p.id = ?')
       .bind(id)
-      .first();
+      .first<Puppy>();
       
     if (!puppyResult) {
-      return new Response(JSON.stringify({ error: 'Puppy not found' }), {
-        status: 404,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
-      });
+      return createErrorResponse('Puppy not found', `No puppy found with ID: ${id}`, 404);
     }
     
-    // Get the puppy's images
-    const imagesResult = await env.PUPPIES_DB
-      .prepare('SELECT * FROM puppy_images WHERE puppy_id = ?')
-      .bind(id)
-      .all();
-    
-    // Get the puppy's parents if any
-    const parentsResult = await env.PUPPIES_DB
-      .prepare(`
-        SELECT p.* FROM puppies p
-        JOIN puppy_parents pp ON p.id = pp.parent_id
-        WHERE pp.puppy_id = ?
-      `)
-      .bind(id)
-      .all();
-    
-    const puppy = {
-      ...puppyResult,
-      images: imagesResult.results.map((img: any) => img.image_url),
-      parents: {
-        dad: parentsResult.results.find((p: any) => p.gender === 'Male'),
-        mom: parentsResult.results.find((p: any) => p.gender === 'Female')
-      }
+    const puppyWithParsedImages = {
+        ...puppyResult,
+        image_urls: JSON.parse(puppyResult.image_urls || "[]")
     };
     
-    return new Response(JSON.stringify(puppy), {
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/json'
-      }
-    });
-  } catch (error) {
-    console.error('Error fetching puppy:', error);
-    return new Response(JSON.stringify({ error: 'Failed to fetch puppy' }), {
-      status: 500,
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/json'
-      }
-    });
+    return new Response(JSON.stringify(puppyWithParsedImages), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }});
+  } catch (error: any) {
+    console.error(`Error fetching puppy ${id}:`, error);
+    return createErrorResponse('Failed to fetch puppy details', error.message, 500);
   }
 }
 
-export async function createPuppy(request: Request, env: any, authResult: any) {
-  // Ensure the user has admin privileges
-  if (authResult.role !== 'admin') {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 403,
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/json'
-      }
-    });
+export async function createPuppy(request: Request, env: Env, authResult: AuthResult) {
+  if (!authResult.roles || !authResult.roles.includes('admin')) {
+    return createErrorResponse('Unauthorized', 'Admin role required to create puppies.', 403);
   }
   
   try {
-    const puppy = await request.json();
+    const puppyData = await request.json() as Partial<Puppy>;
+    const db = getDB(env);
     
-    // Validate the puppy data
-    if (!puppy.name || !puppy.breed) {
-      return new Response(JSON.stringify({ error: 'Name and breed are required' }), {
-        status: 400,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
-      });
+    if (!puppyData.name || !puppyData.gender || !puppyData.birth_date || !puppyData.litter_id || !puppyData.breed_id) {
+      return createErrorResponse('Validation Error', 'Missing required fields: name, gender, birth_date, litter_id, breed_id.', 400);
     }
+    // TODO: Add more specific validation (e.g., breed_id exists, litter_id exists) by querying the respective tables.
+
+    const puppyId = crypto.randomUUID();
+    const now = new Date().toISOString();
     
-    // Insert the puppy
-    const result = await env.PUPPIES_DB
+    await db
       .prepare(`
-        INSERT INTO puppies (name, breed, gender, birth_date, price, description, status, weight, color, microchipped)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO puppies (
+          id, name, litter_id, breed_id, gender, color, birth_date,
+          weight, price, status, microchip_id, description,
+          temperament_notes, health_notes, image_urls, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `)
       .bind(
-        puppy.name,
-        puppy.breed,
-        puppy.gender,
-        puppy.birthDate,
-        puppy.price,
-        puppy.description,
-        puppy.status || 'Available',
-        puppy.weight,
-        puppy.color,
-        puppy.microchipped ? 1 : 0
+        puppyId,
+        puppyData.name,
+        puppyData.litter_id,
+        puppyData.breed_id,
+        puppyData.gender,
+        puppyData.color || null,
+        puppyData.birth_date,
+        puppyData.weight === undefined ? null : puppyData.weight,
+        puppyData.price === undefined ? null : puppyData.price,
+        puppyData.status || 'available',
+        puppyData.microchip_id || null,
+        puppyData.description || null,
+        puppyData.temperament_notes || null,
+        puppyData.health_notes || null,
+        JSON.stringify(puppyData.image_urls || []),
+        now,
+        now
       )
       .run();
     
-    const puppyId = result.meta.last_row_id;
-    
-    // Insert the puppy's images
-    if (puppy.images && Array.isArray(puppy.images)) {
-      const imageInserts = puppy.images.map((imageUrl: string, index: number) => {
-        return env.PUPPIES_DB
-          .prepare('INSERT INTO puppy_images (puppy_id, image_url, display_order) VALUES (?, ?, ?)')
-          .bind(puppyId, imageUrl, index)
-          .run();
-      });
-      
-      await Promise.all(imageInserts);
-    }
-    
-    // Insert the puppy's parents
-    if (puppy.parents && puppy.parents.dad) {
-      await env.PUPPIES_DB
-        .prepare('INSERT INTO puppy_parents (puppy_id, parent_id, relation_type) VALUES (?, ?, ?)')
-        .bind(puppyId, puppy.parents.dad.id, 'Father')
-        .run();
-    }
-    
-    if (puppy.parents && puppy.parents.mom) {
-      await env.PUPPIES_DB
-        .prepare('INSERT INTO puppy_parents (puppy_id, parent_id, relation_type) VALUES (?, ?, ?)')
-        .bind(puppyId, puppy.parents.mom.id, 'Mother')
-        .run();
-    }
-    
-    // Get the newly created puppy
-    const newPuppy = await env.PUPPIES_DB
-      .prepare('SELECT * FROM puppies WHERE id = ?')
+    const newPuppy = await db
+      .prepare('SELECT p.*, b.name as breed_name, l.name as litter_name FROM puppies p LEFT JOIN breeds b ON p.breed_id = b.id LEFT JOIN litters l ON p.litter_id = l.id WHERE p.id = ?')
       .bind(puppyId)
-      .first();
-    
-    return new Response(JSON.stringify(newPuppy), {
-      status: 201,
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/json'
-      }
-    });
-  } catch (error) {
+      .first<Puppy>();
+
+    if (newPuppy) {
+        const newPuppyWithParsedImages = {...newPuppy, image_urls: JSON.parse(newPuppy.image_urls || "[]")};
+        return new Response(JSON.stringify(newPuppyWithParsedImages), { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' }});
+    } else {
+        return createErrorResponse('Failed to retrieve created puppy', null, 500);
+    }
+
+  } catch (error: any) {
     console.error('Error creating puppy:', error);
-    return new Response(JSON.stringify({ error: 'Failed to create puppy' }), {
-      status: 500,
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/json'
-      }
-    });
+    // Check for D1_CONSTRAINT to provide more specific error for foreign key violations if possible
+    if (error.message && error.message.includes('FOREIGN KEY constraint failed')) {
+        return createErrorResponse('Validation Error', 'Invalid litter_id or breed_id. Ensure they exist.', 400);
+    }
+    return createErrorResponse('Failed to create puppy', error.message, 500);
   }
 }
 
-export async function updatePuppy(request: Request, env: any, authResult: any) {
-  // Ensure the user has admin privileges
-  if (authResult.role !== 'admin') {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 403,
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/json'
-      }
-    });
+export async function updatePuppy(request: Request, env: Env, authResult: AuthResult) {
+  if (!authResult.roles || !authResult.roles.includes('admin')) {
+    return createErrorResponse('Unauthorized', 'Admin role required to update puppies.', 403);
   }
   
-  const { params } = request as any;
-  const id = params.id;
+  const { params: requestParams } = request as any;
+  const id = requestParams.id;
   
   try {
-    const puppy = await request.json();
-    
-    // Update the puppy
-    await env.PUPPIES_DB
-      .prepare(`
-        UPDATE puppies 
-        SET 
-          name = ?, 
-          breed = ?, 
-          gender = ?, 
-          birth_date = ?, 
-          price = ?, 
-          description = ?, 
-          status = ?, 
-          weight = ?, 
-          color = ?,
-          microchipped = ?
-        WHERE id = ?
-      `)
-      .bind(
-        puppy.name,
-        puppy.breed,
-        puppy.gender,
-        puppy.birthDate,
-        puppy.price,
-        puppy.description,
-        puppy.status,
-        puppy.weight,
-        puppy.color,
-        puppy.microchipped ? 1 : 0,
-        id
-      )
-      .run();
-    
-    // Update images: first delete existing ones then add new ones
-    await env.PUPPIES_DB
-      .prepare('DELETE FROM puppy_images WHERE puppy_id = ?')
-      .bind(id)
-      .run();
-    
-    if (puppy.images && Array.isArray(puppy.images)) {
-      const imageInserts = puppy.images.map((imageUrl: string, index: number) => {
-        return env.PUPPIES_DB
-          .prepare('INSERT INTO puppy_images (puppy_id, image_url, display_order) VALUES (?, ?, ?)')
-          .bind(id, imageUrl, index)
-          .run();
-      });
-      
-      await Promise.all(imageInserts);
+    const puppyData = await request.json() as Partial<Puppy>;
+    const db = getDB(env);
+
+    const existingPuppy = await db.prepare("SELECT id FROM puppies WHERE id = ?").bind(id).first();
+    if (!existingPuppy) {
+        return createErrorResponse('Puppy not found', `No puppy found with ID: ${id} to update.`, 404);
+    }
+
+    const updates: Record<string, any> = {};
+    // Only include fields that are present in puppyData
+    for (const key in puppyData) {
+        if (Object.prototype.hasOwnProperty.call(puppyData, key) && key !== 'id' && key !== 'created_at' && key !== 'updated_at' && key !== 'breed_name' && key !== 'litter_name') {
+            if (key === 'image_urls' && Array.isArray((puppyData as any)[key])) {
+                 updates[key] = JSON.stringify((puppyData as any)[key]);
+            } else if ((puppyData as any)[key] !== undefined) {
+                 updates[key] = (puppyData as any)[key];
+            }
+        }
     }
     
-    // Update parents: first delete existing ones then add new ones
-    await env.PUPPIES_DB
-      .prepare('DELETE FROM puppy_parents WHERE puppy_id = ?')
-      .bind(id)
-      .run();
-    
-    if (puppy.parents && puppy.parents.dad) {
-      await env.PUPPIES_DB
-        .prepare('INSERT INTO puppy_parents (puppy_id, parent_id, relation_type) VALUES (?, ?, ?)')
-        .bind(id, puppy.parents.dad.id, 'Father')
-        .run();
+    if (Object.keys(updates).length === 0) {
+      return createErrorResponse('No update fields provided.', null, 400);
     }
+    updates.updated_at = new Date().toISOString();
+
+    const setClauses = Object.keys(updates).map(key => `${key} = ?`).join(', ');
+    const values = [...Object.values(updates), id];
     
-    if (puppy.parents && puppy.parents.mom) {
-      await env.PUPPIES_DB
-        .prepare('INSERT INTO puppy_parents (puppy_id, parent_id, relation_type) VALUES (?, ?, ?)')
-        .bind(id, puppy.parents.mom.id, 'Mother')
-        .run();
-    }
+    await db.prepare(`UPDATE puppies SET ${setClauses} WHERE id = ?`).bind(...values).run();
     
-    // Get the updated puppy
-    const updatedPuppy = await env.PUPPIES_DB
-      .prepare('SELECT * FROM puppies WHERE id = ?')
+    const updatedPuppy = await db
+      .prepare('SELECT p.*, b.name as breed_name, l.name as litter_name FROM puppies p LEFT JOIN breeds b ON p.breed_id = b.id LEFT JOIN litters l ON p.litter_id = l.id WHERE p.id = ?')
       .bind(id)
-      .first();
-    
-    return new Response(JSON.stringify(updatedPuppy), {
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/json'
-      }
-    });
-  } catch (error) {
-    console.error('Error updating puppy:', error);
-    return new Response(JSON.stringify({ error: 'Failed to update puppy' }), {
-      status: 500,
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/json'
-      }
-    });
+      .first<Puppy>();
+
+    if (updatedPuppy) {
+        const updatedPuppyWithParsedImages = {...updatedPuppy, image_urls: JSON.parse(updatedPuppy.image_urls || "[]")};
+        return new Response(JSON.stringify(updatedPuppyWithParsedImages), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }});
+    } else {
+        return createErrorResponse('Failed to retrieve updated puppy', null, 500);
+    }
+
+  } catch (error: any) {
+    console.error(`Error updating puppy ${id}:`, error);
+    if (error.message && error.message.includes('FOREIGN KEY constraint failed')) {
+        return createErrorResponse('Validation Error', 'Invalid litter_id or breed_id. Ensure they exist.', 400);
+    }
+    return createErrorResponse('Failed to update puppy', error.message, 500);
   }
 }
 
-export async function deletePuppy(request: Request, env: any, authResult: any) {
-  // Ensure the user has admin privileges
-  if (authResult.role !== 'admin') {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 403,
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/json'
-      }
-    });
+export async function deletePuppy(request: Request, env: Env, authResult: AuthResult) {
+  if (!authResult.roles || !authResult.roles.includes('admin')) {
+    return createErrorResponse('Unauthorized', 'Admin role required to delete puppies.', 403);
   }
   
-  const { params } = request as any;
-  const id = params.id;
+  const { params: requestParams } = request as any;
+  const id = requestParams.id;
+  const db = getDB(env);
   
   try {
-    // First delete related records
-    await env.PUPPIES_DB
-      .prepare('DELETE FROM puppy_images WHERE puppy_id = ?')
-      .bind(id)
-      .run();
+    const existingPuppy = await db.prepare("SELECT id FROM puppies WHERE id = ?").bind(id).first();
+    if (!existingPuppy) {
+        return createErrorResponse('Puppy not found', `No puppy found with ID: ${id} to delete.`, 404);
+    }
     
-    await env.PUPPIES_DB
-      .prepare('DELETE FROM puppy_parents WHERE puppy_id = ?')
-      .bind(id)
-      .run();
+    const result = await db.prepare('DELETE FROM puppies WHERE id = ?').bind(id).run();
+
+    if (result.meta.changes === 0) {
+      return createErrorResponse('Puppy not found or already deleted', `Failed to delete puppy with ID: ${id}.`, 404);
+    }
     
-    // Then delete the puppy
-    await env.PUPPIES_DB
-      .prepare('DELETE FROM puppies WHERE id = ?')
-      .bind(id)
-      .run();
-    
-    return new Response(JSON.stringify({ success: true }), {
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/json'
-      }
-    });
-  } catch (error) {
-    console.error('Error deleting puppy:', error);
-    return new Response(JSON.stringify({ error: 'Failed to delete puppy' }), {
-      status: 500,
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/json'
-      }
-    });
+    return new Response(JSON.stringify({ success: true, message: `Puppy ${id} deleted successfully.` }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }});
+  } catch (error: any) {
+    console.error(`Error deleting puppy ${id}:`, error);
+    return createErrorResponse('Failed to delete puppy', error.message, 500);
   }
+}
+
+export async function getMyPuppies(request: Request, env: Env, authResult: AuthResult) {
+    const { userId } = authResult;
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const limit = parseInt(searchParams.get('limit') || '10', 10);
+    const offset = (page - 1) * limit;
+
+    try {
+        const db = getDB(env);
+        const puppiesStmt = db.prepare(`
+            SELECT p.*, b.name as breed_name, l.name as litter_name
+            FROM puppies p
+            JOIN adoptions a ON p.id = a.puppy_id
+            LEFT JOIN breeds b ON p.breed_id = b.id
+            LEFT JOIN litters l ON p.litter_id = l.id
+            WHERE a.user_id = ?
+            ORDER BY p.created_at DESC
+            LIMIT ? OFFSET ?
+        `).bind(userId, limit, offset);
+        const { results } = await puppiesStmt.all<Puppy>();
+
+        const puppies = results.map(p => ({
+            ...p,
+            image_urls: JSON.parse(p.image_urls || "[]")
+        }));
+
+        const countStmt = db.prepare(`
+            SELECT COUNT(p.id) as total
+            FROM puppies p
+            JOIN adoptions a ON p.id = a.puppy_id
+            WHERE a.user_id = ?
+        `).bind(userId);
+        const countResult = await countStmt.first<{total: number}>();
+        const totalItems = countResult?.total || 0;
+
+        return new Response(JSON.stringify({
+            data: puppies,
+            page,
+            limit,
+            totalPages: Math.ceil(totalItems / limit),
+            totalItems,
+        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+    } catch (error: any) {
+        console.error('Error fetching my puppies:', error);
+        return createErrorResponse('Failed to fetch your puppies', error.message, 500);
+    }
+}
+
+export async function getPuppyHealthRecords(request: Request, env: Env, params: { puppyId: string }, authResult: AuthResult) {
+    const { puppyId } = params;
+    const { userId, roles } = authResult;
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const limit = parseInt(searchParams.get('limit') || '10', 10);
+    const offset = (page - 1) * limit;
+
+    try {
+        const db = getDB(env);
+
+        const puppyExists = await db.prepare("SELECT id FROM puppies WHERE id = ?").bind(puppyId).first();
+        if (!puppyExists) {
+             return createErrorResponse('Not Found', `Puppy with ID ${puppyId} not found.`, 404);
+        }
+
+        let isAuthorized = false;
+        if (roles && roles.includes('admin')) {
+            isAuthorized = true;
+        } else {
+            const ownerCheckStmt = db.prepare(`SELECT user_id FROM adoptions WHERE puppy_id = ? AND user_id = ?`).bind(puppyId, userId);
+            const ownerCheck = await ownerCheckStmt.first();
+            if (ownerCheck) {
+                isAuthorized = true;
+            }
+        }
+
+        if (!isAuthorized) {
+            return createErrorResponse('Forbidden', 'You do not own this puppy or are not authorized to view its health records.', 403);
+        }
+
+        const recordsStmt = db.prepare(`
+            SELECT * FROM puppy_health_records
+            WHERE puppy_id = ?
+            ORDER BY date DESC, created_at DESC
+            LIMIT ? OFFSET ?
+        `).bind(puppyId, limit, offset);
+        const { results: records } = await recordsStmt.all();
+
+        const countStmt = db.prepare(`SELECT COUNT(id) as total FROM puppy_health_records WHERE puppy_id = ?`).bind(puppyId);
+        const countResult = await countStmt.first<{total: number}>();
+        const totalItems = countResult?.total || 0;
+
+        return new Response(JSON.stringify({
+            data: records,
+            page,
+            limit,
+            totalPages: Math.ceil(totalItems / limit),
+            totalItems,
+        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+    } catch (error: any) {
+        console.error(`Error fetching health records for puppy ${puppyId}:`, error);
+        return createErrorResponse('Failed to fetch health records', error.message, 500);
+    }
+}
+
+export async function addPuppyHealthRecord(request: Request, env: Env, authResult: AuthResult, params: { puppyId: string }) {
+    const { puppyId } = params;
+    const { userId, roles } = authResult;
+
+    let body;
+    try {
+        body = await request.json();
+    } catch (e: any) {
+        return createErrorResponse('Invalid JSON body', e.message, 400);
+    }
+
+    const { record_type, date, details, value, unit } = body as { record_type?: string, date?: string, details?: string, value?: number | null, unit?: string | null };
+
+    if (!record_type || typeof record_type !== 'string' || record_type.trim() === '') {
+        return createErrorResponse('record_type is required and must be a non-empty string', null, 400);
+    }
+    if (!date || typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        return createErrorResponse('date is required and must be in YYYY-MM-DD format', null, 400);
+    }
+    if (details && typeof details !== 'string') {
+        return createErrorResponse('details must be a string if provided', null, 400);
+    }
+    if (value !== undefined && value !== null && typeof value !== 'number') {
+        return createErrorResponse('value must be a number or null if provided', null, 400);
+    }
+    if (unit !== undefined && unit !== null && typeof unit !== 'string') {
+        return createErrorResponse('unit must be a string or null if provided', null, 400);
+    }
+
+    try {
+        const db = getDB(env);
+
+        const puppyExistsCheck = await db.prepare("SELECT id FROM puppies WHERE id = ?").bind(puppyId).first();
+        if (!puppyExistsCheck) {
+             return createErrorResponse('Not Found', `Puppy with ID ${puppyId} not found. Cannot add health record.`, 404);
+        }
+
+        let isAuthorized = false;
+        if (roles && roles.includes('admin')) {
+            isAuthorized = true;
+        } else {
+            const ownerCheckStmt = db.prepare(`SELECT user_id FROM adoptions WHERE puppy_id = ? AND user_id = ?`).bind(puppyId, userId);
+            const ownerCheck = await ownerCheckStmt.first();
+            if (ownerCheck) {
+                isAuthorized = true;
+            }
+        }
+
+        if (!isAuthorized) {
+            return createErrorResponse('Forbidden', 'You do not own this puppy or are not authorized to add health records.', 403);
+        }
+
+        const recordId = crypto.randomUUID();
+        const now = new Date().toISOString();
+
+        const stmt = db.prepare(`
+            INSERT INTO puppy_health_records (id, puppy_id, record_type, date, details, value, unit, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(recordId, puppyId, record_type, date, details || null, value === undefined ? null : value, unit === undefined ? null : unit, now, now);
+
+        await stmt.run();
+
+        const newRecord = await db.prepare("SELECT * FROM puppy_health_records WHERE id = ?").bind(recordId).first();
+
+        return new Response(JSON.stringify(newRecord), { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    } catch (error: any) {
+        console.error(`Error adding health record for puppy ${puppyId}:`, error);
+        return createErrorResponse('Failed to add health record', error.message, 500);
+    }
 }

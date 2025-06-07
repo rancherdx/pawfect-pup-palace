@@ -1,105 +1,95 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, PawPrint } from "lucide-react";
-import CreatureProfileForm from "./CreatureProfileForm";
+import { PlusCircle, PawPrint, AlertCircle, Loader2 } from "lucide-react";
+// import CreatureProfileForm from "./CreatureProfileForm"; // Disabled for now
 import CreatureCard from "./creature/CreatureCard";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom"; // For "Adopt a Puppy" button
 
-// Mock data for creature profiles
-const mockCreatures = [
-  {
-    id: "1",
-    name: "Luna",
-    breed: "Golden Retriever",
-    birthday: "2022-06-15",
-    image: "https://images.unsplash.com/photo-1615233500064-caa995e2f9dd?ixlib=rb-4.0.3",
-    weightHistory: [
-      { month: 1, weight: 4.5 },
-      { month: 2, weight: 7.8 },
-      { month: 3, weight: 12.3 },
-      { month: 4, weight: 18.5 },
-      { month: 5, weight: 24.1 },
-      { month: 6, weight: 29.8 },
-    ],
-    heightHistory: [
-      { month: 1, height: 8.2 },
-      { month: 2, height: 12.4 },
-      { month: 3, height: 16.8 },
-      { month: 4, height: 19.5 },
-      { month: 5, height: 21.7 },
-      { month: 6, height: 22.8 },
-    ],
-    feedingNotes: "Luna enjoys Royal Canin puppy food, 3 cups daily split into two meals.",
-    documents: [
-      { name: "Vaccination Record", date: "2023-01-15" },
-      { name: "Microchip Certificate", date: "2022-06-22" },
-    ],
-    milestones: {
-      walking: true,
-      sitting: true,
-      fetch: true,
-      stay: false,
-      rollOver: false,
-    }
-  },
-  {
-    id: "2",
-    name: "Buddy",
-    breed: "Labrador Retriever",
-    birthday: "2021-08-10",
-    image: "https://images.unsplash.com/photo-1552053831-71594a27632d?ixlib=rb-4.0.3",
-    weightHistory: [
-      { month: 1, weight: 5.2 },
-      { month: 3, weight: 14.1 },
-      { month: 6, weight: 22.5 },
-      { month: 9, weight: 28.7 },
-      { month: 12, weight: 32.4 },
-      { month: 18, weight: 34.9 },
-    ],
-    heightHistory: [
-      { month: 1, height: 9.1 },
-      { month: 3, height: 17.5 },
-      { month: 6, height: 22.3 },
-      { month: 9, height: 23.1 },
-      { month: 12, height: 23.8 },
-      { month: 18, height: 24.2 },
-    ],
-    feedingNotes: "Buddy is on a grain-free diet with 2 cups of food in the morning and 2 cups in the evening.",
-    documents: [
-      { name: "Vaccination Record", date: "2022-08-15" },
-      { name: "Health Certificate", date: "2021-08-12" },
-    ],
-    milestones: {
-      walking: true,
-      sitting: true,
-      fetch: true,
-      stay: true,
-      rollOver: true,
-    }
+// Define Puppy interface based on expected API response and CreatureCard needs
+export interface PuppyProfileData {
+  id: string;
+  name: string;
+  breed_name?: string; // From joined breeds table
+  litter_name?: string; // From joined litters table
+  birth_date: string;
+  image_urls: string[]; // Parsed JSON
+  // Add other fields that might come from /api/my-puppies and are needed by CreatureCard
+  // For now, CreatureCard primarily uses name, breed_name, birth_date, image_urls
+  // The mock data had more detailed fields like weightHistory, etc. which are not directly on puppy from /api/my-puppies
+  // These will be fetched in PuppyProfile.tsx (the detailed view)
+  // For CreatureCard, we'll pass what we have and let it adapt.
+  [key: string]: any; // Allow other properties
+}
+
+
+async function fetchMyPuppiesAPI(token: string | null): Promise<PuppyProfileData[]> {
+  if (!token) throw new Error("Authentication token not found.");
+  const response = await fetch("/api/my-puppies?limit=20&page=1", { // Added pagination params
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || "Failed to fetch your puppies.");
   }
-];
+  const result = await response.json();
+  return result.data as PuppyProfileData[]; // Assuming API returns { data: [], ...pagination }
+}
+
 
 const CreatureProfiles = () => {
-  const [creatures, setCreatures] = useState(mockCreatures);
-  const [showAddForm, setShowAddForm] = useState(false);
+  const { token } = useAuth();
+  const { toast } = useToast();
+  const [creatures, setCreatures] = useState<PuppyProfileData[]>([]);
+  // const [showAddForm, setShowAddForm] = useState(false); // Disabled as per instructions
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleAddCreature = (newCreature: any) => {
-    setCreatures([...creatures, {
-      ...newCreature,
-      id: (creatures.length + 1).toString(),
-      weightHistory: [],
-      heightHistory: [],
-      documents: [],
-      milestones: {
-        walking: false,
-        sitting: false,
-        fetch: false,
-        stay: false,
-        rollOver: false,
+  useEffect(() => {
+    const loadCreatures = async () => {
+      if (!token) {
+        setError("Not authenticated. Please log in.");
+        setIsLoading(false);
+        toast({ variant: "destructive", title: "Authentication Error", description: "Please log in to see your pets." });
+        return;
       }
-    }]);
-    setShowAddForm(false);
-  };
+      setIsLoading(true);
+      setError(null);
+      try {
+        const fetchedPuppies = await fetchMyPuppiesAPI(token);
+        setCreatures(fetchedPuppies);
+      } catch (err: any) {
+        setError(err.message);
+        toast({
+          variant: "destructive",
+          title: "Error fetching your pets",
+          description: err.message,
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadCreatures();
+  }, [token, toast]);
+
+  // Add Creature functionality is disabled for now as per instructions.
+  // const handleAddCreature = (newCreature: any) => {
+  //   // This would involve a POST request to a new backend endpoint if implemented
+  //   // For now, it's removed.
+  // };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-red" />
+        <p className="ml-2">Loading your furry family...</p>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -109,41 +99,53 @@ const CreatureProfiles = () => {
           Your Fur Family
         </h2>
         
-        <Button 
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="bg-brand-red hover:bg-red-700 text-white"
-        >
-          <PlusCircle className="h-5 w-5 mr-2" />
-          {showAddForm ? "Cancel" : "Add Creature"}
-        </Button>
+        {/* "Add Creature" button is removed/commented out as per instructions.
+            Instead, a user might want to go to the adoption page.
+        */}
+         <Button asChild className="bg-brand-red hover:bg-red-700 text-white">
+           <Link to="/adopt">
+             <PlusCircle className="h-5 w-5 mr-2" />
+             Adopt a Puppy
+           </Link>
+         </Button>
       </div>
       
-      {showAddForm && (
+      {/* {showAddForm && (
         <div className="mb-8 animate-fade-in">
           <CreatureProfileForm onSubmit={handleAddCreature} onCancel={() => setShowAddForm(false)} />
         </div>
+      )} */}
+
+      {error && (
+        <div className="text-center py-10 bg-red-50 dark:bg-red-900/10 rounded-lg">
+          <AlertCircle className="h-12 w-12 mx-auto text-red-500 mb-4" />
+          <h3 className="text-xl font-semibold text-red-600">Could Not Load Your Pets</h3>
+          <p className="text-muted-foreground mb-6">{error}</p>
+          {/* Optional: Add a retry button */}
+        </div>
       )}
       
-      <div className="space-y-6">
-        {creatures.length === 0 ? (
-          <div className="text-center py-12 bg-muted/30 rounded-lg">
-            <PawPrint className="h-12 w-12 mx-auto text-muted-foreground" />
-            <h3 className="text-xl font-semibold mt-4">No Creatures Yet</h3>
-            <p className="text-muted-foreground mb-6">Add your first pet to get started</p>
-            <Button 
-              onClick={() => setShowAddForm(true)}
-              className="bg-brand-red hover:bg-red-700 text-white"
-            >
+      {!isLoading && !error && creatures.length === 0 && (
+        <div className="text-center py-12 bg-muted/30 rounded-lg">
+          <PawPrint className="h-12 w-12 mx-auto text-muted-foreground" />
+          <h3 className="text-xl font-semibold mt-4">No Adopted Pets Yet</h3>
+          <p className="text-muted-foreground mb-6">Once you adopt a puppy, they will appear here.</p>
+          <Button asChild className="bg-brand-red hover:bg-red-700 text-white">
+            <Link to="/adopt">
               <PlusCircle className="h-5 w-5 mr-2" />
-              Add Your First Creature
-            </Button>
-          </div>
-        ) : (
-          creatures.map(creature => (
-            <CreatureCard key={creature.id} creature={creature} />
-          ))
-        )}
-      </div>
+              Find a Puppy to Adopt
+            </Link>
+          </Button>
+        </div>
+      )}
+
+      {!isLoading && !error && creatures.length > 0 && (
+        <div className="space-y-8"> {/* Increased space between cards */}
+          {creatures.map(creature => (
+            <CreatureCard key={creature.id} puppy={creature} />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
