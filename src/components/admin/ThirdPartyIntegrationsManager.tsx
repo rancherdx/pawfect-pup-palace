@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Edit, ToggleLeft, ToggleRight, Trash2, HelpCircle, ExternalLink, Loader2, AlertTriangle, PlusCircle } from 'lucide-react';
-import IntegrationForm, { IntegrationFormData } from './IntegrationForm';
+import IntegrationForm from './IntegrationForm';
 import {
   Dialog,
   DialogContent,
@@ -15,109 +15,102 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchAdminAPI } from '@/api';
+import { apiRequest } from '@/api/client';
 import { toast } from 'sonner';
 
-// Matches backend response structure, other_config parsed to object
 interface Integration {
   id: string;
   service_name: string;
   is_active: boolean;
   api_key_set: boolean;
-  other_config: object; // Store as object after parsing
+  other_config: object;
   created_at?: string;
   updated_at?: string;
 }
 
-// For data payload to API (POST/PUT)
 interface IntegrationApiPayload {
     service_name: string;
-    api_key?: string; // Optional: only if updating/setting for the first time
+    api_key?: string;
     other_config: object;
     is_active: boolean;
+}
+
+interface IntegrationFormData {
+  serviceName: string;
+  apiKey: string;
+  otherConfig: string;
+  isActive: boolean;
 }
 
 const ThirdPartyIntegrationsManager: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingIntegration, setEditingIntegration] = useState<Integration | null>(null);
-  // configError state might be needed for form validation if not handled by IntegrationForm directly
-  // const [configError, setConfigError] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
 
-  const { data: integrationsData, isLoading, isError, error } = useQuery<Integration[], Error>(
-    ['integrations'],
-    async () => {
-      const response = await fetchAdminAPI('/api/admin/integrations');
-      const rawIntegrations = response.integrations || response; // Adapt to actual response
+  const { data: integrationsData, isLoading, isError, error } = useQuery({
+    queryKey: ['integrations'],
+    queryFn: async () => {
+      const response = await apiRequest<any>('/admin/integrations');
+      const rawIntegrations = response.integrations || response;
       return rawIntegrations.map((int: any) => ({
         ...int,
         other_config: typeof int.other_config === 'string' ? JSON.parse(int.other_config || '{}') : (int.other_config || {}),
       }));
     },
-    {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      onError: (err) => {
-        toast.error(`Failed to fetch integrations: ${err.message}`);
-      }
-    }
-  );
+    staleTime: 5 * 60 * 1000,
+  });
+  
   const integrations = integrationsData || [];
 
   const commonMutationOptions = {
     onSuccess: () => {
-      queryClient.invalidateQueries(['integrations']);
+      queryClient.invalidateQueries({ queryKey: ['integrations'] });
       setShowForm(false);
       setEditingIntegration(null);
     },
   };
 
-  const addIntegrationMutation = useMutation<Integration, Error, IntegrationApiPayload>(
-    (newData) => fetchAdminAPI('/api/admin/integrations', {
+  const addIntegrationMutation = useMutation({
+    mutationFn: (newData: IntegrationApiPayload) => apiRequest<Integration>('/admin/integrations', {
       method: 'POST',
       body: JSON.stringify(newData),
     }),
-    {
-      ...commonMutationOptions,
-      onSuccess: () => {
-        commonMutationOptions.onSuccess();
-        toast.success('Integration added successfully!');
-      },
-      onError: (err) => {
-        toast.error(`Failed to add integration: ${err.message}`);
-      }
+    ...commonMutationOptions,
+    onSuccess: () => {
+      commonMutationOptions.onSuccess();
+      toast.success('Integration added successfully!');
+    },
+    onError: (err: Error) => {
+      toast.error(`Failed to add integration: ${err.message}`);
     }
-  );
+  });
 
-  const updateIntegrationMutation = useMutation<Integration, Error, { id: string; data: Partial<IntegrationApiPayload> }>(
-    ({ id, data }) => fetchAdminAPI(`/api/admin/integrations/${id}`, {
+  const updateIntegrationMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<IntegrationApiPayload> }) => apiRequest<Integration>(`/admin/integrations/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
-    {
-      ...commonMutationOptions,
-      onSuccess: () => {
-        commonMutationOptions.onSuccess();
-        toast.success('Integration updated successfully!');
-      },
-      onError: (err) => {
-        toast.error(`Failed to update integration: ${err.message}`);
-      }
+    ...commonMutationOptions,
+    onSuccess: () => {
+      commonMutationOptions.onSuccess();
+      toast.success('Integration updated successfully!');
+    },
+    onError: (err: Error) => {
+      toast.error(`Failed to update integration: ${err.message}`);
     }
-  );
+  });
 
-  const deleteIntegrationMutation = useMutation<void, Error, string>(
-    (id) => fetchAdminAPI(`/api/admin/integrations/${id}`, { method: 'DELETE' }),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['integrations']);
-        toast.success('Integration deleted successfully!');
-      },
-      onError: (err) => {
-        toast.error(`Failed to delete integration: ${err.message}`);
-      }
+  const deleteIntegrationMutation = useMutation({
+    mutationFn: (id: string) => apiRequest(`/admin/integrations/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['integrations'] });
+      toast.success('Integration deleted successfully!');
+    },
+    onError: (err: Error) => {
+      toast.error(`Failed to delete integration: ${err.message}`);
     }
-  );
+  });
 
   const handleToggleActive = (integration: Integration) => {
     const updatedData: Partial<IntegrationApiPayload> = {
@@ -129,63 +122,45 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
   };
 
   const handleEditIntegration = (integration: Integration) => {
-    // Map Integration (from API/query) to what IntegrationForm expects (IntegrationFormData)
-    // The form expects otherConfig as a string.
     setEditingIntegration({
-        ...integration, // Contains id, service_name, is_active, api_key_set, other_config (object)
-        // serviceName: integration.service_name, // No, IntegrationForm expects integration.serviceName
-        // isActive: integration.is_active, // No, IntegrationForm expects integration.isActive
-        // otherConfig: typeof integration.other_config === 'object' ? JSON.stringify(integration.other_config, null, 2) : (integration.other_config || '{}'),
-        // apiKeySet: integration.api_key_set, // Form doesn't directly use apiKeySet, but good to pass if needed
+        ...integration,
     });
     setShowForm(true);
   };
 
   const handleDeleteIntegration = (integrationId: string) => {
-    // Consider adding a confirmation dialog here
-    // Example: if (window.confirm("Are you sure you want to delete this integration?")) { ... }
     deleteIntegrationMutation.mutate(integrationId);
   };
 
   const handleAddNewIntegration = () => {
-    setEditingIntegration(null); // Clear any editing state
+    setEditingIntegration(null);
     setShowForm(true);
   };
 
   const handleSaveForm = (formData: IntegrationFormData) => {
-    // formData comes from IntegrationForm.tsx
-    // It should have: serviceName, apiKey (optional), otherConfig (string), isActive
-    // We need to convert it to IntegrationApiPayload
-
     let parsedOtherConfig = {};
     try {
-      if (formData.otherConfig) { // Ensure otherConfig is not empty before parsing
+      if (formData.otherConfig) {
         parsedOtherConfig = JSON.parse(formData.otherConfig);
       }
     } catch (error) {
       toast.error('Other Configuration must be valid JSON.');
-      return; // Prevent submission
+      return;
     }
 
     const payload: IntegrationApiPayload = {
-      service_name: formData.serviceName, // Form uses serviceName
+      service_name: formData.serviceName,
       other_config: parsedOtherConfig,
       is_active: formData.isActive,
     };
 
-    // Only include api_key in payload if it's explicitly provided by user in the form
-    // (meaning they want to set or change it)
     if (formData.apiKey && formData.apiKey.trim() !== "") {
       payload.api_key = formData.apiKey;
     }
 
     if (editingIntegration && editingIntegration.id) {
-      // If we are editing, and no new API key is provided, we should NOT send api_key field,
-      // so backend doesn't try to update it with an empty value or re-encrypt nothing.
-      // The logic above already handles this: if formData.apiKey is empty, it's not added to payload.
       updateIntegrationMutation.mutate({ id: editingIntegration.id, data: payload });
     } else {
-      // For new integrations, if no API key is provided, it's fine, it just means api_key_set will be false.
       addIntegrationMutation.mutate(payload);
     }
   };
@@ -195,31 +170,25 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
     setEditingIntegration(null);
   };
 
-  // If form is shown, render only the form
   if (showForm) {
     return (
       <div className="p-4 md:p-6">
         <IntegrationForm
-          // Pass data in the shape IntegrationForm expects
-          // It expects: id?, serviceName, apiKey, otherConfig (string), isActive
           integration={editingIntegration ? {
             id: editingIntegration.id,
             serviceName: editingIntegration.service_name,
-            apiKey: '', // API key is write-only, so form starts blank for it
+            apiKey: '',
             otherConfig: typeof editingIntegration.other_config === 'object' ? JSON.stringify(editingIntegration.other_config, null, 2) : (editingIntegration.other_config as string || '{}'),
             isActive: editingIntegration.is_active,
-            apiKeySet: editingIntegration.api_key_set // Pass this to the form for display logic (e.g. "API Key (already set)")
-          } : null} // For new integration, pass null or undefined
+          } : null}
           onSave={handleSaveForm}
           onCancel={handleCancelForm}
-          // Pass loading states from relevant mutations
-          isSaving={addIntegrationMutation.isLoading || updateIntegrationMutation.isLoading}
+          isSaving={addIntegrationMutation.isPending || updateIntegrationMutation.isPending}
         />
       </div>
     );
   }
 
-  // Otherwise, show the table and main UI
   return (
     <div className="p-4 md:p-6 space-y-6">
       <div className="flex justify-between items-start">
@@ -232,7 +201,6 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
           </p>
         </div>
         <div className="flex space-x-2">
-          {/* Dialog for Setup Guides - remains unchanged */}
           <Dialog>
             <DialogTrigger asChild>
               <Button variant="outline" size="icon" title="View Setup Guides">
@@ -312,7 +280,6 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
         </div>
       </div>
 
-      {/* Table Display */}
       <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-x-auto">
         <Table>
           <TableHeader>
@@ -333,7 +300,7 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
                 <TableRow key={integration.id}>
                   <TableCell className="font-medium">{integration.service_name}</TableCell>
                   <TableCell>
-                    <Badge variant={integration.is_active ? 'success' : 'outline'}>
+                    <Badge variant={integration.is_active ? 'default' : 'outline'}>
                       {integration.is_active ? 'Active' : 'Inactive'}
                     </Badge>
                   </TableCell>
@@ -348,7 +315,7 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
                       size="icon"
                       onClick={() => handleToggleActive(integration)}
                       title={integration.is_active ? 'Deactivate' : 'Activate'}
-                      disabled={updateIntegrationMutation.isLoading && updateIntegrationMutation.variables?.id === integration.id}
+                      disabled={updateIntegrationMutation.isPending && updateIntegrationMutation.variables?.id === integration.id}
                     >
                       {integration.is_active ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
                     </Button>
@@ -357,7 +324,7 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
                       size="icon"
                       onClick={() => handleEditIntegration(integration)}
                       title="Edit"
-                       disabled={updateIntegrationMutation.isLoading || addIntegrationMutation.isLoading}
+                       disabled={updateIntegrationMutation.isPending || addIntegrationMutation.isPending}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -366,7 +333,7 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
                       size="icon"
                       onClick={() => handleDeleteIntegration(integration.id)}
                       title="Delete"
-                      disabled={deleteIntegrationMutation.isLoading && deleteIntegrationMutation.variables === integration.id}
+                      disabled={deleteIntegrationMutation.isPending && deleteIntegrationMutation.variables === integration.id}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

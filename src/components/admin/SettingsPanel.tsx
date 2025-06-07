@@ -2,15 +2,14 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea"; // For multi-line settings like SEO description
+import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Settings, Save, Loader2, AlertTriangle } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { fetchAdminAPI } from '@/api';
+import { apiRequest } from '@/api/client';
 
-// Interface for Site Settings, should match backend structure
 interface SiteSettings {
   siteName: string;
   contactEmail: string;
@@ -26,9 +25,8 @@ interface SiteSettings {
   seoDefaults: {
     title: string;
     description: string;
-    keywords: string; // Comma-separated
+    keywords: string;
   };
-  // Add any other fields that are part of the settings object
 }
 
 const initialFormData: SiteSettings = {
@@ -54,48 +52,43 @@ const SettingsPanel = () => {
   const [formData, setFormData] = useState<SiteSettings>(initialFormData);
   const queryClient = useQueryClient();
 
-  const siteSettingsQuery = useQuery<SiteSettings, Error>(
-    ['siteSettings'],
-    () => fetchAdminAPI('/api/admin/settings'),
-    {
-      onSuccess: (data) => {
-        setFormData(data);
-      },
-      onError: (error) => {
-        toast.error(`Failed to load site settings: ${error.message}`);
-      }
-    }
-  );
+  const siteSettingsQuery = useQuery({
+    queryKey: ['siteSettings'],
+    queryFn: () => apiRequest<SiteSettings>('/admin/settings'),
+  });
 
-  const saveSettingsMutation = useMutation<SiteSettings, Error, SiteSettings>(
-    (updatedSettings) => fetchAdminAPI('/api/admin/settings', {
+  const saveSettingsMutation = useMutation({
+    mutationFn: (updatedSettings: SiteSettings) => apiRequest<SiteSettings>('/admin/settings', {
       method: 'POST',
       body: JSON.stringify(updatedSettings),
     }),
-    {
-      onSuccess: (savedData) => {
-        toast.success('Site settings updated successfully!');
-        queryClient.setQueryData(['siteSettings'], savedData); // Update cache with saved data
-        if (savedData) setFormData(savedData); // Re-sync form with data from server response
-      },
-      onError: (error) => {
-        toast.error(`Failed to save settings: ${error.message}`);
-      },
+    onSuccess: (savedData) => {
+      toast.success('Site settings updated successfully!');
+      queryClient.setQueryData(['siteSettings'], savedData);
+      if (savedData) setFormData(savedData);
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to save settings: ${error.message}`);
+    },
+  });
+
+  useEffect(() => {
+    if (siteSettingsQuery.data) {
+      setFormData(siteSettingsQuery.data);
     }
-  );
+  }, [siteSettingsQuery.data]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     const checked = type === 'checkbox' ? (e.target as HTMLInputElement).checked : undefined;
 
     setFormData(prev => {
-      // Handle nested properties (socialMediaLinks, seoDefaults)
       if (name.includes('.')) {
         const [outerKey, innerKey] = name.split('.') as [keyof SiteSettings, string];
         return {
           ...prev,
           [outerKey]: {
-            // @ts-ignore - TS struggles with dynamic nested keys here
+            // @ts-ignore
             ...prev[outerKey],
             [innerKey]: value,
           },
@@ -142,7 +135,6 @@ const SettingsPanel = () => {
       </div>
       
       <form onSubmit={handleSubmit} className="space-y-8">
-        {/* General Site Settings Card */}
         <Card className="shadow-lg dark:border-gray-700">
           <CardHeader>
             <CardTitle>General Configuration</CardTitle>
@@ -188,7 +180,6 @@ const SettingsPanel = () => {
           </CardContent>
         </Card>
 
-        {/* Social Media Links Card */}
         <Card className="shadow-lg dark:border-gray-700">
           <CardHeader>
             <CardTitle>Social Media Links</CardTitle>
@@ -210,7 +201,6 @@ const SettingsPanel = () => {
           </CardContent>
         </Card>
         
-        {/* SEO Defaults Card */}
         <Card className="shadow-lg dark:border-gray-700">
           <CardHeader>
             <CardTitle>Default SEO Settings</CardTitle>
@@ -236,9 +226,9 @@ const SettingsPanel = () => {
           <Button
             type="submit"
             className="bg-brand-red hover:bg-red-700 text-white min-w-[150px]"
-            disabled={saveSettingsMutation.isLoading || siteSettingsQuery.isLoading}
+            disabled={saveSettingsMutation.isPending || siteSettingsQuery.isLoading}
           >
-            {saveSettingsMutation.isLoading ? (
+            {saveSettingsMutation.isPending ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <Save className="mr-2 h-4 w-4" />

@@ -1,10 +1,9 @@
-
-import { useState, useEffect } from "react"; // Added useEffect
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Plus, PawPrint, Edit, Trash, Search, Loader2, AlertTriangle } from "lucide-react"; // Added Loader2, AlertTriangle
+import { Plus, PawPrint, Edit, Trash, Search, Loader2, AlertTriangle } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchAPI } from '@/api'; // Use fetchAPI for session token auth
+import { apiRequest } from '@/api/client';
 import { toast } from 'sonner';
 
 interface Litter {
@@ -13,14 +12,14 @@ interface Litter {
   mother: string;
   father: string;
   breed: string;
-  dateOfBirth: string; // Keep as string for form compatibility, can be Date if API handles conversion
+  dateOfBirth: string;
   puppyCount: number;
   status: string;
   created_at?: string;
   updated_at?: string;
 }
 
-interface LitterApiPayload { // For POST/PUT
+interface LitterApiPayload {
   name: string;
   mother: string;
   father: string;
@@ -48,79 +47,67 @@ const LitterManagement = () => {
 
   const queryClient = useQueryClient();
 
-  const { data: littersData, isLoading, isError, error } = useQuery<Litter[], Error>(
-    ['litters'],
-    async () => {
-      const response = await fetchAPI('/litters'); // GET /api/litters
-      return response.litters || response; // Adjust based on API response structure
+  const { data: littersData, isLoading, isError, error } = useQuery({
+    queryKey: ['litters'],
+    queryFn: async () => {
+      const response = await apiRequest<any>('/litters');
+      return response.litters || response;
     },
-    {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      onError: (err) => {
-        toast.error(`Failed to fetch litters: ${err.message}`);
-      }
-    }
-  );
+    staleTime: 5 * 60 * 1000,
+  });
+  
   const litters = littersData || [];
 
-  const addLitterMutation = useMutation<Litter, Error, LitterApiPayload>(
-    (newData) => fetchAPI('/litters', {
+  const addLitterMutation = useMutation({
+    mutationFn: (newData: LitterApiPayload) => apiRequest<Litter>('/litters', {
       method: 'POST',
       body: JSON.stringify(newData),
     }),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['litters']);
-        toast.success('Litter added successfully!');
-        setShowForm(false);
-      },
-      onError: (err) => {
-        toast.error(`Failed to add litter: ${err.message}`);
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['litters'] });
+      toast.success('Litter added successfully!');
+      setShowForm(false);
+    },
+    onError: (err: Error) => {
+      toast.error(`Failed to add litter: ${err.message}`);
     }
-  );
+  });
 
-  const updateLitterMutation = useMutation<Litter, Error, { id: string; data: LitterApiPayload }>(
-    ({ id, data }) => fetchAPI(`/litters/${id}`, {
+  const updateLitterMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: LitterApiPayload }) => apiRequest<Litter>(`/litters/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['litters']);
-        toast.success('Litter updated successfully!');
-        setShowForm(false);
-        setCurrentLitter(null);
-      },
-      onError: (err) => {
-        toast.error(`Failed to update litter: ${err.message}`);
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['litters'] });
+      toast.success('Litter updated successfully!');
+      setShowForm(false);
+      setCurrentLitter(null);
+    },
+    onError: (err: Error) => {
+      toast.error(`Failed to update litter: ${err.message}`);
     }
-  );
+  });
 
-  const deleteLitterMutation = useMutation<void, Error, string>(
-    (id) => fetchAPI(`/litters/${id}`, { method: 'DELETE' }),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['litters']);
-        toast.success('Litter deleted successfully!');
-      },
-      onError: (err) => {
-        toast.error(`Failed to delete litter: ${err.message}`);
-      }
+  const deleteLitterMutation = useMutation({
+    mutationFn: (id: string) => apiRequest(`/litters/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['litters'] });
+      toast.success('Litter deleted successfully!');
+    },
+    onError: (err: Error) => {
+      toast.error(`Failed to delete litter: ${err.message}`);
     }
-  );
+  });
   
   useEffect(() => {
     if (currentLitter) {
-      // When editing, populate formData from currentLitter, excluding id and other non-payload fields
       const { id, created_at, updated_at, ...payloadData } = currentLitter;
       setFormData(payloadData);
     } else {
       setFormData(initialFormData);
     }
   }, [currentLitter, showForm]);
-
 
   const handleDeleteLitter = (id: string) => {
     if (window.confirm("Are you sure you want to delete this litter?")) {
@@ -130,19 +117,16 @@ const LitterManagement = () => {
 
   const handleEditLitter = (litter: Litter) => {
     setCurrentLitter(litter);
-    // FormData population is handled by useEffect watching currentLitter
     setShowForm(true);
   };
 
   const handleAddLitter = () => {
     setCurrentLitter(null);
-    // FormData reset to initial is handled by useEffect watching currentLitter being null
     setShowForm(true);
   };
 
   const handleSaveLitter = (e: React.FormEvent) => {
     e.preventDefault();
-    // Ensure puppyCount is a number
     const payload: LitterApiPayload = {
         ...formData,
         puppyCount: Number(formData.puppyCount) || 0
@@ -170,7 +154,7 @@ const LitterManagement = () => {
     litter.breed.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const isMutationLoading = addLitterMutation.isLoading || updateLitterMutation.isLoading;
+  const isMutationLoading = addLitterMutation.isPending || updateLitterMutation.isPending;
 
   return (
     <div className="space-y-6">
@@ -203,6 +187,7 @@ const LitterManagement = () => {
       </div>
       
       {showForm ? (
+        
         <Card className="shadow-lg border-t-4 border-t-brand-red animate-fade-in">
           <CardHeader className="bg-gray-50 dark:bg-gray-900/20">
             <CardTitle className="text-2xl">
@@ -347,6 +332,7 @@ const LitterManagement = () => {
           </CardContent>
         </Card>
       ) : (
+        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredLitters.length === 0 ? (
             <div className="col-span-full text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-300">
