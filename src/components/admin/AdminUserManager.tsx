@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -36,7 +37,7 @@ interface UsersApiResponse {
   limit: number;
 }
 
-const AVAILABLE_ROLES = ['user', 'admin', 'editor', 'super-admin']; // Define available roles
+const AVAILABLE_ROLES = ['user', 'admin', 'editor', 'super-admin'];
 
 const AdminUserManager: React.FC = () => {
   const [searchUserQuery, setSearchUserQuery] = useState("");
@@ -71,54 +72,43 @@ const AdminUserManager: React.FC = () => {
     return fetchAdminAPI(`/api/admin/users?${params.toString()}`);
   };
 
-  const { data, isLoading, isError, error, isPreviousData } = useQuery<UsersApiResponse, Error>(
-    ['adminUsers', currentPage, rowsPerPage, debouncedSearchQuery],
-    fetchUsers,
-    {
-      keepPreviousData: true,
-      staleTime: 5 * 60 * 1000,
-      onError: (err) => {
-        toast.error(`Failed to fetch users: ${err.message}`);
-      }
-    }
-  );
+  const { data, isLoading, isError, error, isPlaceholderData } = useQuery({
+    queryKey: ['adminUsers', currentPage, rowsPerPage, debouncedSearchQuery],
+    queryFn: fetchUsers,
+    placeholderData: (previousData) => previousData,
+    staleTime: 5 * 60 * 1000,
+  });
 
-  // Mutation for updating user roles
-  const editUserMutation = useMutation(
-    ({ userId, roles }: { userId: string, roles: string[] }) =>
+  const editUserMutation = useMutation({
+    mutationFn: ({ userId, roles }: { userId: string, roles: string[] }) =>
       fetchAdminAPI(`/api/admin/users/${userId}`, {
         method: 'PUT',
         body: JSON.stringify({ roles }),
       }),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['adminUsers']);
-        setShowEditRoleModal(false);
-        setSelectedUser(null);
-        toast.success('User roles updated successfully!');
-      },
-      onError: (err: Error) => {
-        toast.error(`Failed to update user roles: ${err.message}`);
-      },
-    }
-  );
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+      setShowEditRoleModal(false);
+      setSelectedUser(null);
+      toast.success('User roles updated successfully!');
+    },
+    onError: (err: Error) => {
+      toast.error(`Failed to update user roles: ${err.message}`);
+    },
+  });
 
-  // Mutation for deleting a user
-  const deleteUserMutation = useMutation(
-    (userId: string) =>
+  const deleteUserMutation = useMutation({
+    mutationFn: (userId: string) =>
       fetchAdminAPI(`/api/admin/users/${userId}`, { method: 'DELETE' }),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['adminUsers']);
-        setShowDeleteConfirmModal(false);
-        setSelectedUser(null);
-        toast.success('User deleted successfully!');
-      },
-      onError: (err: Error) => {
-        toast.error(`Failed to delete user: ${err.message}`);
-      },
-    }
-  );
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+      setShowDeleteConfirmModal(false);
+      setSelectedUser(null);
+      toast.success('User deleted successfully!');
+    },
+    onError: (err: Error) => {
+      toast.error(`Failed to delete user: ${err.message}`);
+    },
+  });
 
   const openEditRoleModal = (user: User) => {
     setSelectedUser(user);
@@ -221,9 +211,9 @@ const AdminUserManager: React.FC = () => {
         <div className="flex items-center justify-between pt-2 text-sm text-muted-foreground">
           <p>Showing {Math.min((data.currentPage - 1) * data.limit + 1, data.totalUsers)} - {Math.min(data.currentPage * data.limit, data.totalUsers)} of {data.totalUsers} users</p>
           <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={data.currentPage <= 1 || isLoading || isPreviousData}><ArrowLeft className="mr-2 h-4 w-4" />Previous</Button>
+            <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={data.currentPage <= 1 || isLoading || isPlaceholderData}><ArrowLeft className="mr-2 h-4 w-4" />Previous</Button>
             <span>Page {data.currentPage} of {data.totalPages}</span>
-            <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => prev + 1)} disabled={data.currentPage >= data.totalPages || isLoading || isPreviousData}><ArrowRight className="ml-2 h-4 w-4" />Next</Button>
+            <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => prev + 1)} disabled={data.currentPage >= data.totalPages || isLoading || isPlaceholderData}><ArrowRight className="ml-2 h-4 w-4" />Next</Button>
           </div>
         </div>
       )}
@@ -249,9 +239,9 @@ const AdminUserManager: React.FC = () => {
             ))}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEditRoleModal(false)} disabled={editUserMutation.isLoading}>Cancel</Button>
-            <Button onClick={handleSaveRoles} disabled={editUserMutation.isLoading}>
-              {editUserMutation.isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            <Button variant="outline" onClick={() => setShowEditRoleModal(false)} disabled={editUserMutation.isPending}>Cancel</Button>
+            <Button onClick={handleSaveRoles} disabled={editUserMutation.isPending}>
+              {editUserMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Save Roles
             </Button>
           </DialogFooter>
@@ -269,9 +259,9 @@ const AdminUserManager: React.FC = () => {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeleteConfirmModal(false)} disabled={deleteUserMutation.isLoading}>Cancel</Button>
-            <Button variant="destructive" onClick={handleDeleteConfirmed} disabled={deleteUserMutation.isLoading}>
-              {deleteUserMutation.isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            <Button variant="outline" onClick={() => setShowDeleteConfirmModal(false)} disabled={deleteUserMutation.isPending}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDeleteConfirmed} disabled={deleteUserMutation.isPending}>
+              {deleteUserMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Confirm Delete
             </Button>
           </DialogFooter>

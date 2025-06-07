@@ -25,7 +25,7 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   }
 
   // If a specific role is required and the user doesn't have it
-  if (requiredRole && user?.primaryRole !== requiredRole) {
+  if (requiredRole && !user?.roles?.includes(requiredRole)) {
     return <Navigate to="/dashboard" replace />;
   }
 

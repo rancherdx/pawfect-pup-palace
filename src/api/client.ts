@@ -1,4 +1,3 @@
-
 // API Base URL - uses environment variable or defaults to current origin for API calls
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -24,7 +23,6 @@ export const apiRequest = async <T>(
   const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
   
   const config: RequestInit = {
-    headers: getAuthHeaders(),
     ...options,
     headers: {
       ...getAuthHeaders(),

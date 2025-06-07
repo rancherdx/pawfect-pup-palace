@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -6,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dog, Search, ArrowLeft, ArrowRight, Edit2, Trash2, Loader2, PlusCircle, X } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import StudDogForm, { StudDogFormData, StudDogApiPayload } from './StudDogForm'; // Import the form
+import StudDogForm, { StudDogFormData, StudDogApiPayload } from './StudDogForm';
 import {
   Dialog,
   DialogContent,
@@ -14,19 +15,17 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  // DialogClose, // Not always needed if form has cancel
 } from "@/components/ui/dialog";
 import { fetchAdminAPI } from '@/api';
 
-interface AdminStudDog extends StudDogApiPayload { // API Payload fields plus IDs and names
+interface AdminStudDog extends StudDogApiPayload {
   id: string;
-  owner_user_id?: string; // From backend if needed
+  owner_user_id?: string;
   owner_name?: string | null;
   owner_email?: string | null;
   breed_name?: string | null;
   created_at: string;
   updated_at: string;
-  // Raw JSON string fields also available if needed from API, but prefer parsed
   image_urls_raw_json?: string;
   certifications_raw_json?: string;
 }
@@ -44,7 +43,7 @@ const AdminStudDogManager: React.FC = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
-  const [filterAvailability, setFilterAvailability] = useState<string>("all"); // "all", "true", "false"
+  const [filterAvailability, setFilterAvailability] = useState<string>("all");
   const [filterBreedId, setFilterBreedId] = useState("");
 
   const [showFormModal, setShowFormModal] = useState(false);
@@ -70,56 +69,70 @@ const AdminStudDogManager: React.FC = () => {
     return fetchAdminAPI(`/api/admin/stud-dogs?${params.toString()}`);
   };
 
-  const { data, isLoading, isError, error, isPreviousData } = useQuery<AdminStudDogsApiResponse, Error>(
-    ['adminStudDogs', currentPage, rowsPerPage, debouncedSearchQuery, filterAvailability, filterBreedId],
-    fetchAdminStudDogs,
-    { keepPreviousData: true, staleTime: 5 * 60 * 1000, onError: (err) => toast.error(`Failed to fetch stud dogs: ${err.message}`) }
-  );
+  const { data, isLoading, isError, error, isPlaceholderData } = useQuery({
+    queryKey: ['adminStudDogs', currentPage, rowsPerPage, debouncedSearchQuery, filterAvailability, filterBreedId],
+    queryFn: fetchAdminStudDogs,
+    placeholderData: (previousData) => previousData,
+    staleTime: 5 * 60 * 1000,
+  });
 
-  const commonMutationOptions = {
-    onSuccess: () => queryClient.invalidateQueries(['adminStudDogs']),
-  };
+  const addStudDogMutation = useMutation({
+    mutationFn: (newData: StudDogApiPayload) => fetchAdminAPI('/api/admin/stud-dogs', { method: 'POST', body: JSON.stringify(newData) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminStudDogs'] });
+      setShowFormModal(false);
+      toast.success("Stud dog added successfully!");
+    },
+    onError: (err: Error) => {
+      toast.error(`Failed to add stud dog: ${err.message}`);
+    }
+  });
 
-  const addStudDogMutation = useMutation(
-    (newData: StudDogApiPayload) => fetchAdminAPI('/api/admin/stud-dogs', { method: 'POST', body: JSON.stringify(newData) }),
-    { ...commonMutationOptions, onSuccess: () => { commonMutationOptions.onSuccess(); setShowFormModal(false); toast.success("Stud dog added successfully!"); }}
-  );
+  const updateStudDogMutation = useMutation({
+    mutationFn: ({ id, data: updateData }: { id: string, data: StudDogApiPayload }) => 
+      fetchAdminAPI(`/api/admin/stud-dogs/${id}`, { method: 'PUT', body: JSON.stringify(updateData) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminStudDogs'] });
+      setShowFormModal(false);
+      setEditingStudDog(null);
+      toast.success("Stud dog updated successfully!");
+    },
+    onError: (err: Error) => {
+      toast.error(`Failed to update stud dog: ${err.message}`);
+    }
+  });
 
-  const updateStudDogMutation = useMutation(
-    ({ id, data: updateData }: { id: string, data: StudDogApiPayload }) => fetchAdminAPI(`/api/admin/stud-dogs/${id}`, { method: 'PUT', body: JSON.stringify(updateData) }),
-    { ...commonMutationOptions, onSuccess: () => { commonMutationOptions.onSuccess(); setShowFormModal(false); setEditingStudDog(null); toast.success("Stud dog updated successfully!"); }}
-  );
-
-  const deleteStudDogMutation = useMutation(
-    (id: string) => fetchAdminAPI(`/api/admin/stud-dogs/${id}`, { method: 'DELETE' }),
-    { ...commonMutationOptions, onSuccess: () => { commonMutationOptions.onSuccess(); setShowDeleteConfirmModal(false); setDeletingStudDogId(null); toast.success("Stud dog deleted successfully!"); }}
-  );
+  const deleteStudDogMutation = useMutation({
+    mutationFn: (id: string) => fetchAdminAPI(`/api/admin/stud-dogs/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminStudDogs'] });
+      setShowDeleteConfirmModal(false);
+      setDeletingStudDogId(null);
+      toast.success("Stud dog deleted successfully!");
+    },
+    onError: (err: Error) => {
+      toast.error(`Failed to delete stud dog: ${err.message}`);
+    }
+  });
 
   const handleAddClick = () => { setEditingStudDog(null); setShowFormModal(true); };
   const handleEditClick = (studDog: AdminStudDog) => {
-    const formData: StudDogFormData = {
-        ...studDog,
-        age: studDog.age ?? '',
-        stud_fee: studDog.stud_fee ?? '',
-        // Convert arrays back to string for form if needed, or form handles array
-        certifications: studDog.certifications_raw_json || JSON.stringify(studDog.certifications || []),
-        image_urls: studDog.image_urls_raw_json || JSON.stringify(studDog.image_urls || []),
-        is_available: Boolean(studDog.is_available),
-    };
-    setEditingStudDog(studDog); // Keep original AdminStudDog for ID
+    setEditingStudDog(studDog);
     setShowFormModal(true);
-};
+  };
   const handleDeleteClick = (id: string) => { setDeletingStudDogId(id); setShowDeleteConfirmModal(true); };
 
   const handleSaveStudDog = (formDataValues: StudDogApiPayload, id?: string) => {
-    if (id) { // Editing existing
+    if (id) {
       updateStudDogMutation.mutate({ id, data: formDataValues });
-    } else { // Adding new
+    } else {
       addStudDogMutation.mutate(formDataValues);
     }
   };
 
-  const confirmDelete = () => { if (deletingStudDogId) deleteStudDogMutation.mutate(deletingStudDogId); };
+  const confirmDelete = () => { 
+    if (deletingStudDogId) deleteStudDogMutation.mutate(deletingStudDogId); 
+  };
 
   const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 
@@ -161,7 +174,7 @@ const AdminStudDogManager: React.FC = () => {
                   <TableCell>{dog.breed_name || dog.breed_id}</TableCell>
                   <TableCell>{dog.owner_name || dog.owner_user_id?.substring(0,8) || 'N/A'}</TableCell>
                   <TableCell>${dog.stud_fee.toFixed(2)}</TableCell>
-                  <TableCell><Badge variant={dog.is_available ? "success" : "outline"}>{dog.is_available ? "Yes" : "No"}</Badge></TableCell>
+                  <TableCell><Badge variant={dog.is_available ? "default" : "outline"}>{dog.is_available ? "Yes" : "No"}</Badge></TableCell>
                   <TableCell className="text-xs">{formatDate(dog.updated_at)}</TableCell>
                   <TableCell className="text-right space-x-1">
                     <Button variant="outline" size="icon" title="Edit" onClick={() => handleEditClick(dog)}><Edit2 className="h-4 w-4" /></Button>
@@ -178,9 +191,9 @@ const AdminStudDogManager: React.FC = () => {
         <div className="flex items-center justify-between pt-2 text-sm text-muted-foreground">
           <p>Showing {Math.min((data.currentPage - 1) * data.limit + 1, data.totalStudDogs)} - {Math.min(data.currentPage * data.limit, data.totalStudDogs)} of {data.totalStudDogs} stud dogs</p>
           <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={data.currentPage <= 1 || isLoading || isPreviousData}><ArrowLeft className="mr-1 h-4 w-4" />Prev</Button>
+            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={data.currentPage <= 1 || isLoading || isPlaceholderData}><ArrowLeft className="mr-1 h-4 w-4" />Prev</Button>
             <span>Page {data.currentPage} of {data.totalPages}</span>
-            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => p + 1)} disabled={data.currentPage >= data.totalPages || isLoading || isPreviousData}>Next<ArrowRight className="ml-1 h-4 w-4" /></Button>
+            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => p + 1)} disabled={data.currentPage >= data.totalPages || isLoading || isPlaceholderData}>Next<ArrowRight className="ml-1 h-4 w-4" /></Button>
           </div>
         </div>
       )}
@@ -203,7 +216,7 @@ const AdminStudDogManager: React.FC = () => {
             } : undefined}
             onSave={handleSaveStudDog}
             onCancel={() => { setShowFormModal(false); setEditingStudDog(null); }}
-            isLoading={addStudDogMutation.isLoading || updateStudDogMutation.isLoading}
+            isLoading={addStudDogMutation.isPending || updateStudDogMutation.isPending}
           />
         </DialogContent>
       </Dialog>
@@ -218,9 +231,9 @@ const AdminStudDogManager: React.FC = () => {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeleteConfirmModal(false)} disabled={deleteStudDogMutation.isLoading}>Cancel</Button>
-            <Button variant="destructive" onClick={confirmDelete} disabled={deleteStudDogMutation.isLoading}>
-              {deleteStudDogMutation.isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            <Button variant="outline" onClick={() => setShowDeleteConfirmModal(false)} disabled={deleteStudDogMutation.isPending}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmDelete} disabled={deleteStudDogMutation.isPending}>
+              {deleteStudDogMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Confirm Delete
             </Button>
           </DialogFooter>
