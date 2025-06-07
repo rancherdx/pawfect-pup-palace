@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { DatePicker } from "@/components/ui/date-picker"; // Assuming a date picker component exists
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 
@@ -346,7 +346,7 @@ const PuppyProfile = () => {
                             </SelectContent>
                         </Select>
                       </div>
-                       <div><Label htmlFor="date">Date</Label><Input type="date" id="date" value={newHealthRecord.date} onChange={e => setNewHealthRecord(prev => ({...prev, date: e.target.value}))} required/></div> {/* Replace with DatePicker if available */}
+                       <div><Label htmlFor="date">Date</Label><Input type="date" id="date" value={newHealthRecord.date} onChange={e => setNewHealthRecord(prev => ({...prev, date: e.target.value}))} required/></div>
                       <div><Label htmlFor="details">Details / Name</Label><Textarea id="details" value={newHealthRecord.details} onChange={e => setNewHealthRecord(prev => ({...prev, details: e.target.value}))} required/></div>
                       {(newHealthRecord.record_type === 'weight_log' || newHealthRecord.record_type === 'height_log') && (
                         <>

@@ -1,144 +1,109 @@
 import React from 'react';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import Section from "@/components/Section"; // Assuming Section component is used for consistent page layout
-import { PawPrint, HelpCircle } from 'lucide-react'; // Optional icons
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 const faqData = [
   {
-    id: "faq-1",
-    question: "What is the adoption process?",
-    answer: (
-      <>
-        <p className="mb-2">Our adoption process is designed to ensure each puppy finds a loving and suitable home. It typically involves these steps:</p>
-        <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-          <li><strong>Application:</strong> Fill out our online adoption application form with details about your lifestyle and experience with pets.</li>
-          <li><strong>Review:</strong> Our team reviews your application (usually within 2-3 business days).</li>
-          <li><strong>Interview:</strong> We may schedule a brief call or video chat to discuss your application further and answer your questions.</li>
-          <li><strong>Meet & Greet (if applicable):</strong> Depending on location and litter availability, we may arrange a visit.</li>
-          <li><strong>Deposit & Contract:</strong> If approved, a non-refundable deposit is required to reserve your puppy, and you'll sign an adoption agreement.</li>
-          <li><strong>Preparation:</strong> We'll provide guidance on preparing for your new puppy.</li>
-          <li><strong>Go-Home Day:</strong> Schedule a time to pick up your puppy, or arrange for delivery if applicable. Final payment is typically due at this time.</li>
-        </ol>
-        <p className="mt-2">Please visit our <a href="/adopt" className="text-brand-red hover:underline">Adoption Page</a> for more details and to start your application.</p>
-      </>
-    )
+    question: "What breeds of puppies do you offer?",
+    answer: "We specialize in breeding high-quality Golden Retrievers, Labrador Retrievers, and German Shepherds. Each breed is carefully selected for health, temperament, and breed standards."
   },
   {
-    id: "faq-2",
-    question: "Are the puppies vaccinated and dewormed?",
-    answer: (
-      <p>
-        Yes, all our puppies receive age-appropriate vaccinations and deworming treatments before they go to their new homes.
-        You will receive a detailed health record for your puppy, outlining all treatments administered.
-        Please see our <a href="/health" className="text-brand-red hover:underline">Health Guarantee</a> page for more information on our health protocols.
-      </p>
-    )
+    question: "How do I start the adoption process?",
+    answer: "To begin the adoption process, please fill out our online application form. Once submitted, our team will review your application and contact you to discuss the next steps."
   },
   {
-    id: "faq-3",
-    question: "Can I visit the puppies and their parents?",
-    answer: (
-      <p>
-        We understand you're excited to meet our puppies! We schedule visits for approved applicants when puppies are old enough and it's safe for their health (typically after their first vaccinations).
-        The health and safety of our puppies and parent dogs are our top priority. Please contact us to discuss visitation policies for specific litters.
-      </p>
-    )
+    question: "What is included in the adoption fee?",
+    answer: "The adoption fee covers the cost of vaccinations, deworming, microchipping, and a health check by a licensed veterinarian. It also supports our breeding program and the care of our adult dogs."
   },
   {
-    id: "faq-4",
-    question: "What kind of food do you recommend for my new puppy?",
-    answer: (
-      <p>
-        Your puppy will come with a small supply of the high-quality puppy food they are currently eating. We provide detailed feeding guidelines and recommendations for transitioning to a new food if you choose to switch.
-        We generally recommend premium, age-appropriate puppy food that meets AAFCO standards. Specific brand recommendations may be discussed during the adoption process.
-      </p>
-    )
+    question: "Can I visit the puppies before adopting?",
+    answer: "Yes, we encourage potential adopters to visit our puppies and meet their parents. Please contact us to schedule a visit."
   },
   {
-    id: "faq-5",
-    question: "Do you offer shipping or delivery for puppies?",
-    answer: (
-      <p>
-        We prefer new owners to pick up their puppy in person to ensure a smooth transition. However, we understand this isn't always possible.
-        We may offer delivery options or work with trusted pet transport services on a case-by-case basis, at the buyer's expense. Please <a href="/contact" className="text-brand-red hover:underline">contact us</a> to discuss your specific situation.
-      </p>
-    )
+    question: "What kind of support do you offer after adoption?",
+    answer: "We provide ongoing support to our adopters, including advice on training, nutrition, and healthcare. We are always available to answer any questions you may have."
   },
   {
-    id: "faq-6",
-    question: "What is included with my puppy when I take them home?",
-    answer: (
-      <>
-        <p className="mb-2">Each GDS Puppy comes with a comprehensive take-home package, typically including:</p>
-        <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-          <li>Health record (vaccinations, deworming, vet checks).</li>
-          <li>Registration papers (if applicable for the breed).</li>
-          <li>Microchip information.</li>
-          <li>A small supply of their current puppy food.</li>
-          <li>A blanket or toy with their littermates' scent to help them transition.</li>
-          <li>Our detailed puppy care guide and health guarantee.</li>
-          <li>Lifetime breeder support.</li>
-        </ul>
-      </>
-    )
+    question: "How do you ensure the health of your puppies?",
+    answer: "We prioritize the health of our puppies by conducting regular health screenings, providing proper nutrition, and maintaining a clean and safe environment. Our puppies are raised with love and care to ensure they are well-adjusted and healthy."
   },
   {
-    id: "faq-7",
-    question: "How do I prepare my home for a new puppy?",
-    answer: (
-      <p>
-        Preparing your home is crucial for a safe and happy puppy. Key steps include puppy-proofing (removing hazards, securing cords), setting up a designated potty area, creating a comfortable den (crate), and having essential supplies like food/water bowls, leash, collar, toys, and grooming tools. We provide a detailed checklist to all our new puppy owners.
-      </p>
-    )
+    question: "Do you ship puppies to other states?",
+    answer: "Yes, we offer shipping services to select states. Please contact us to discuss shipping options and associated costs."
+  },
+  {
+    question: "What is your policy on returns?",
+    answer: "We understand that circumstances may change. If you are unable to care for your adopted puppy, we will gladly take them back. Please contact us to discuss the return process."
+  },
+  {
+    question: "How can I contact you for more information?",
+    answer: "You can reach us by phone, email, or through our website's contact form. We are always happy to assist you with any questions or concerns."
   }
 ];
 
-const FAQPage: React.FC = () => {
+const FAQPage = () => {
+  const [expandedItems, setExpandedItems] = useState<number[]>([]);
+
+  const toggleExpanded = (index: number) => {
+    setExpandedItems(prev => 
+      prev.includes(index) 
+        ? prev.filter(i => i !== index)
+        : [...prev, index]
+    );
+  };
+
   return (
-    <Section className="py-12 md:py-20 bg-gradient-to-br from-red-50 via-orange-50 to-amber-50 dark:from-gray-900 dark:via-gray-800 dark:to-background">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <HelpCircle className="h-16 w-16 mx-auto mb-4 text-brand-red" />
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-800 dark:text-white">
-            Frequently Asked Questions
-          </h1>
-          <p className="text-lg text-muted-foreground mt-4 max-w-2xl mx-auto">
-            Have questions about our puppies or the adoption process? We've compiled answers to some common inquiries below.
-          </p>
-        </div>
-
-        <Card className="max-w-3xl mx-auto shadow-xl dark:border-gray-700">
-          <CardContent className="p-6 md:p-8">
-            <Accordion type="single" collapsible className="w-full">
-              {faqData.map((faq) => (
-                <AccordionItem value={faq.id} key={faq.id} className="border-b dark:border-gray-700">
-                  <AccordionTrigger className="text-left text-base md:text-lg font-medium hover:text-brand-red dark:hover:text-brand-red/90 py-4">
-                    {faq.question}
-                  </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground text-sm md:text-base pt-2 pb-4 leading-relaxed">
-                    {faq.answer}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </CardContent>
-        </Card>
-
-        <div className="text-center mt-12">
-            <p className="text-muted-foreground">
-                Can't find the answer you're looking for?
-            </p>
-            <Button variant="link" asChild className="text-brand-red text-lg hover:underline">
-                <a href="/contact">Contact Us Directly</a>
-            </Button>
-        </div>
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+          Frequently Asked Questions
+        </h1>
+        <p className="text-lg text-gray-600 dark:text-gray-300">
+          Find answers to common questions about our puppies, adoption process, and more.
+        </p>
       </div>
-    </Section>
+
+      <div className="space-y-4">
+        {faqData.map((faq, index) => (
+          <Card key={index} className="border border-gray-200 dark:border-gray-700">
+            <CardContent className="p-0">
+              <Button
+                variant="ghost"
+                className="w-full p-6 text-left justify-between hover:bg-gray-50 dark:hover:bg-gray-800"
+                onClick={() => toggleExpanded(index)}
+              >
+                <span className="font-semibold text-gray-900 dark:text-white pr-4">
+                  {faq.question}
+                </span>
+                {expandedItems.includes(index) ? (
+                  <ChevronUp className="h-5 w-5 text-gray-500 flex-shrink-0" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 text-gray-500 flex-shrink-0" />
+                )}
+              </Button>
+              {expandedItems.includes(index) && (
+                <div className="px-6 pb-6">
+                  <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                    {faq.answer}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="mt-12 text-center">
+        <p className="text-gray-600 dark:text-gray-300 mb-6">
+          Still have questions? We're here to help!
+        </p>
+        <Button className="bg-brand-red hover:bg-red-700 text-white">
+          Contact Us
+        </Button>
+      </div>
+    </div>
   );
 };
 
