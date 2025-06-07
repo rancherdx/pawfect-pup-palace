@@ -1,118 +1,176 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react"; // Added useEffect
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Plus, PawPrint, Edit, Trash, Search } from "lucide-react";
+import { Plus, PawPrint, Edit, Trash, Search, Loader2, AlertTriangle } from "lucide-react"; // Added Loader2, AlertTriangle
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetchAPI } from '@/api'; // Use fetchAPI for session token auth
+import { toast } from 'sonner';
 
-// Mock data for demo purposes
-const initialLitters = [
-  {
-    id: "1",
-    name: "Summer 2024 Litter",
-    mother: "Daisy",
-    father: "Apollo",
-    breed: "Golden Retriever",
-    dateOfBirth: "2024-03-10",
-    puppyCount: 7,
-    status: "Active"
-  },
-  {
-    id: "2",
-    name: "Spring Special Litter",
-    mother: "Luna",
-    father: "Max",
-    breed: "German Shepherd",
-    dateOfBirth: "2024-02-15",
-    puppyCount: 5,
-    status: "Available Soon"
-  }
-];
+interface Litter {
+  id: string;
+  name: string;
+  mother: string;
+  father: string;
+  breed: string;
+  dateOfBirth: string; // Keep as string for form compatibility, can be Date if API handles conversion
+  puppyCount: number;
+  status: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface LitterApiPayload { // For POST/PUT
+  name: string;
+  mother: string;
+  father: string;
+  breed: string;
+  dateOfBirth: string;
+  puppyCount: number;
+  status: string;
+}
+
+const initialFormData: LitterApiPayload = {
+  name: "",
+  mother: "",
+  father: "",
+  breed: "",
+  dateOfBirth: new Date().toISOString().split("T")[0],
+  puppyCount: 0,
+  status: "Active"
+};
 
 const LitterManagement = () => {
-  const [litters, setLitters] = useState(initialLitters);
   const [searchQuery, setSearchQuery] = useState("");
   const [showForm, setShowForm] = useState(false);
-  const [currentLitter, setCurrentLitter] = useState<any>(null);
+  const [currentLitter, setCurrentLitter] = useState<Litter | null>(null);
+  const [formData, setFormData] = useState<LitterApiPayload>(initialFormData);
+
+  const queryClient = useQueryClient();
+
+  const { data: littersData, isLoading, isError, error } = useQuery<Litter[], Error>(
+    ['litters'],
+    async () => {
+      const response = await fetchAPI('/litters'); // GET /api/litters
+      return response.litters || response; // Adjust based on API response structure
+    },
+    {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      onError: (err) => {
+        toast.error(`Failed to fetch litters: ${err.message}`);
+      }
+    }
+  );
+  const litters = littersData || [];
+
+  const addLitterMutation = useMutation<Litter, Error, LitterApiPayload>(
+    (newData) => fetchAPI('/litters', {
+      method: 'POST',
+      body: JSON.stringify(newData),
+    }),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['litters']);
+        toast.success('Litter added successfully!');
+        setShowForm(false);
+      },
+      onError: (err) => {
+        toast.error(`Failed to add litter: ${err.message}`);
+      }
+    }
+  );
+
+  const updateLitterMutation = useMutation<Litter, Error, { id: string; data: LitterApiPayload }>(
+    ({ id, data }) => fetchAPI(`/litters/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['litters']);
+        toast.success('Litter updated successfully!');
+        setShowForm(false);
+        setCurrentLitter(null);
+      },
+      onError: (err) => {
+        toast.error(`Failed to update litter: ${err.message}`);
+      }
+    }
+  );
+
+  const deleteLitterMutation = useMutation<void, Error, string>(
+    (id) => fetchAPI(`/litters/${id}`, { method: 'DELETE' }),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['litters']);
+        toast.success('Litter deleted successfully!');
+      },
+      onError: (err) => {
+        toast.error(`Failed to delete litter: ${err.message}`);
+      }
+    }
+  );
   
-  // Form state
-  const [formData, setFormData] = useState({
-    name: "",
-    mother: "",
-    father: "",
-    breed: "",
-    dateOfBirth: "",
-    puppyCount: 0,
-    status: "Active"
-  });
+  useEffect(() => {
+    if (currentLitter) {
+      // When editing, populate formData from currentLitter, excluding id and other non-payload fields
+      const { id, created_at, updated_at, ...payloadData } = currentLitter;
+      setFormData(payloadData);
+    } else {
+      setFormData(initialFormData);
+    }
+  }, [currentLitter, showForm]);
+
 
   const handleDeleteLitter = (id: string) => {
     if (window.confirm("Are you sure you want to delete this litter?")) {
-      setLitters(litters.filter(litter => litter.id !== id));
+      deleteLitterMutation.mutate(id);
     }
   };
 
-  const handleEditLitter = (litter: any) => {
+  const handleEditLitter = (litter: Litter) => {
     setCurrentLitter(litter);
-    setFormData(litter);
+    // FormData population is handled by useEffect watching currentLitter
     setShowForm(true);
   };
 
   const handleAddLitter = () => {
     setCurrentLitter(null);
-    setFormData({
-      name: "",
-      mother: "",
-      father: "",
-      breed: "",
-      dateOfBirth: new Date().toISOString().split("T")[0],
-      puppyCount: 0,
-      status: "Active"
-    });
+    // FormData reset to initial is handled by useEffect watching currentLitter being null
     setShowForm(true);
   };
 
   const handleSaveLitter = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (currentLitter) {
-      // Update existing litter
-      setLitters(litters.map(litter => 
-        litter.id === currentLitter.id ? { ...formData, id: currentLitter.id } : litter
-      ));
-    } else {
-      // Add new litter
-      const newLitter = {
+    // Ensure puppyCount is a number
+    const payload: LitterApiPayload = {
         ...formData,
-        id: String(Date.now())
-      };
-      setLitters([...litters, newLitter]);
-    }
+        puppyCount: Number(formData.puppyCount) || 0
+    };
     
-    setShowForm(false);
+    if (currentLitter && currentLitter.id) {
+      updateLitterMutation.mutate({ id: currentLitter.id, data: payload });
+    } else {
+      addLitterMutation.mutate(payload);
+    }
   };
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    
-    if (name === "puppyCount") {
-      setFormData({
-        ...formData,
-        [name]: parseInt(value) || 0
-      });
-    } else {
-      setFormData({
-        ...formData,
-        [name]: value
-      });
-    }
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === "puppyCount" ? (parseInt(value) || 0) : value,
+    }));
   };
 
   const filteredLitters = litters.filter(litter => 
     litter.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     litter.breed.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const isMutationLoading = addLitterMutation.isLoading || updateLitterMutation.isLoading;
 
   return (
     <div className="space-y-6">
