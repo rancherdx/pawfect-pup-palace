@@ -1,48 +1,170 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { User, Check } from "lucide-react";
+import { User, Check, AlertCircle, Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext"; // Assuming AuthContext provides the token
+
+// Helper function for authenticated API calls (similar to fetchUserAPI in Receipts.tsx)
+// This should ideally be in a shared API client or hook
+async function fetchUserProfile(token: string | null) {
+  if (!token) throw new Error("Authentication token not found.");
+  const response = await fetch("/api/user", {
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || "Failed to fetch user profile.");
+  }
+  return response.json();
+}
+
+async function updateUserProfileAPI(token: string | null, data: any) {
+  if (!token) throw new Error("Authentication token not found.");
+  const response = await fetch("/api/user/profile", {
+    method: "PUT",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || "Failed to update user profile.");
+  }
+  return response.json();
+}
 
 const UserProfile = () => {
   const { toast } = useToast();
+  const { token } = useAuth(); // Get token from AuthContext
   const [isEditing, setIsEditing] = useState(false);
   
-  // Mock user data
   const [userData, setUserData] = useState({
-    name: "Alex Johnson",
-    email: "alex@example.com",
-    phone: "(555) 123-4567",
-    address: "123 Main St, Anytown, CA 12345",
-    preferences: "Please contact me by email for important updates. I'm interested in training resources for my puppies."
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    preferences: ""
   });
 
   const [formData, setFormData] = useState({...userData});
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await fetchUserProfile(token);
+        setUserData({
+          name: data.name || "",
+          email: data.email || "",
+          phone: data.phone || "",
+          address: data.address || "",
+          preferences: data.preferences || ""
+        });
+        setFormData({
+          name: data.name || "",
+          email: data.email || "",
+          phone: data.phone || "",
+          address: data.address || "",
+          preferences: data.preferences || ""
+        });
+      } catch (err: any) {
+        setError(err.message);
+        toast({
+          variant: "destructive",
+          title: "Error fetching profile",
+          description: err.message,
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (token) {
+      loadUserProfile();
+    } else {
+      setError("Not authenticated. Please log in.");
+      setIsLoading(false);
+       toast({
+          variant: "destructive",
+          title: "Authentication Error",
+          description: "You must be logged in to view your profile.",
+        });
+    }
+  }, [token, toast]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setUserData({...formData});
-    setIsEditing(false);
-    
-    toast({
-      title: "Profile Updated",
-      description: "Your profile information has been successfully updated."
-    });
+    setIsLoading(true); // Indicate loading for submission
+    setError(null);
+    try {
+      const updatedUser = await updateUserProfileAPI(token, formData);
+      setUserData({
+        name: updatedUser.name || "",
+        email: updatedUser.email || "",
+        phone: updatedUser.phone || "",
+        address: updatedUser.address || "",
+        preferences: updatedUser.preferences || ""
+      });
+      setFormData({...updatedUser}); // Sync formData as well
+      setIsEditing(false);
+      toast({
+        title: "Profile Updated",
+        description: "Your profile information has been successfully updated.",
+        className: "bg-green-500 text-white",
+      });
+    } catch (err: any) {
+      setError(err.message);
+      toast({
+        variant: "destructive",
+        title: "Error updating profile",
+        description: err.message,
+      });
+    } finally {
+      setIsLoading(false); // Submission loading finished
+    }
   };
 
   const handleCancel = () => {
     setFormData({...userData});
     setIsEditing(false);
   };
+
+  if (isLoading && !error && !userData.email) { // Initial load
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-red" />
+        <p className="ml-2">Loading your profile...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-10">
+        <AlertCircle className="h-12 w-12 mx-auto text-red-500 mb-4" />
+        <h3 className="text-xl font-semibold text-red-600">An Error Occurred</h3>
+        <p className="text-muted-foreground">{error}</p>
+        {/* Optionally, add a retry button or link to login */}
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -56,6 +178,7 @@ const UserProfile = () => {
           <Button 
             onClick={() => setIsEditing(true)}
             variant="outline"
+            disabled={isLoading} // Disable edit button during any loading state
           >
             Edit Profile
           </Button>
@@ -75,6 +198,7 @@ const UserProfile = () => {
                     value={formData.name}
                     onChange={handleChange}
                     required
+                    disabled={isLoading}
                   />
                 </div>
                 
@@ -87,6 +211,7 @@ const UserProfile = () => {
                     value={formData.email}
                     onChange={handleChange}
                     required
+                    disabled={isLoading} // Email usually not editable, or requires verification. For now, allow.
                   />
                 </div>
                 
@@ -97,6 +222,7 @@ const UserProfile = () => {
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
+                    disabled={isLoading}
                   />
                 </div>
                 
@@ -107,6 +233,7 @@ const UserProfile = () => {
                     name="address"
                     value={formData.address}
                     onChange={handleChange}
+                    disabled={isLoading}
                   />
                 </div>
                 
@@ -118,16 +245,17 @@ const UserProfile = () => {
                     value={formData.preferences}
                     onChange={handleChange}
                     rows={3}
+                    disabled={isLoading}
                   />
                 </div>
               </div>
               
               <div className="flex justify-end space-x-3 mt-6">
-                <Button type="button" variant="outline" onClick={handleCancel}>
+                <Button type="button" variant="outline" onClick={handleCancel} disabled={isLoading}>
                   Cancel
                 </Button>
-                <Button type="submit" className="bg-brand-red hover:bg-red-700 text-white">
-                  <Check className="h-4 w-4 mr-2" />
+                <Button type="submit" className="bg-brand-red hover:bg-red-700 text-white" disabled={isLoading}>
+                  {isLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Check className="h-4 w-4 mr-2" />}
                   Save Changes
                 </Button>
               </div>
@@ -137,28 +265,28 @@ const UserProfile = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Full Name</h3>
-                  <p className="text-lg">{userData.name}</p>
+                  <p className="text-lg">{userData.name || "-"}</p>
                 </div>
                 
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Email Address</h3>
-                  <p className="text-lg">{userData.email}</p>
+                  <p className="text-lg">{userData.email || "-"}</p>
                 </div>
                 
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Phone Number</h3>
-                  <p className="text-lg">{userData.phone}</p>
+                  <p className="text-lg">{userData.phone || "Not provided"}</p>
                 </div>
                 
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Address</h3>
-                  <p className="text-lg">{userData.address}</p>
+                  <p className="text-lg">{userData.address || "Not provided"}</p>
                 </div>
               </div>
               
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground">Communication Preferences</h3>
-                <p>{userData.preferences}</p>
+                <p className="whitespace-pre-wrap">{userData.preferences || "Not specified"}</p>
               </div>
             </div>
           )}

@@ -1,281 +1,123 @@
-
-import { useState } from "react";
+// import { useState } from "react"; // useState for showAssistant can be kept if that feature is maintained
 import { Progress } from "@/components/ui/progress";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+// import { Badge } from "@/components/ui/badge"; // Not used in current simplified card
 import { Button } from "@/components/ui/button";
-import { PawPrint, Bot } from "lucide-react";
-import { 
-  ChartContainer, 
-  ChartLegend, 
-  ChartTooltip, 
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
+import { PawPrint, CalendarDays, Link as LinkIcon } from "lucide-react"; // Bot icon removed for now
+import { Link } from "react-router-dom"; // For navigation
+import type { PuppyProfileData } from "../CreatureProfiles"; // Import the Puppy type
 
 interface CreatureCardProps {
-  creature: {
-    id: string;
-    name: string;
-    breed: string;
-    birthday: string;
-    image: string;
-    weightHistory: { month: number; weight: number }[];
-    heightHistory: { month: number; height: number }[];
-    feedingNotes: string;
-    documents: { name: string; date: string }[];
-    milestones: Record<string, boolean>;
-  };
+  puppy: PuppyProfileData; // Changed from 'creature' to 'puppy' for clarity
 }
 
 // Calculate age in a fun way
-const calculateAge = (birthdayStr: string) => {
+const calculateAge = (birthdayStr: string | null | undefined) => {
+  if (!birthdayStr) return "Unknown";
   const birthday = new Date(birthdayStr);
   const today = new Date();
   
-  // Calculate the time difference in milliseconds
-  const diffTime = Math.abs(today.getTime() - birthday.getTime());
+  let years = today.getFullYear() - birthday.getFullYear();
+  let months = today.getMonth() - birthday.getMonth();
   
-  // Calculate years, months, weeks
-  const diffYears = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 365));
-  const diffMonths = Math.floor((diffTime % (1000 * 60 * 60 * 24 * 365)) / (1000 * 60 * 60 * 24 * 30));
-  const diffWeeks = Math.floor((diffTime % (1000 * 60 * 60 * 24 * 30)) / (1000 * 60 * 60 * 24 * 7));
+  if (months < 0 || (months === 0 && today.getDate() < birthday.getDate())) {
+    years--;
+    months += 12;
+  }
   
-  let ageDisplay = "";
-  
-  if (diffYears > 0) {
-    ageDisplay += `${diffYears} year${diffYears > 1 ? 's' : ''}`;
-    if (diffMonths > 0) {
-      ageDisplay += ` ${diffMonths} month${diffMonths > 1 ? 's' : ''}`;
-    }
-  } else if (diffMonths > 0) {
-    ageDisplay += `${diffMonths} month${diffMonths > 1 ? 's' : ''}`;
-    if (diffWeeks > 0) {
-      ageDisplay += ` ${diffWeeks} week${diffWeeks > 1 ? 's' : ''}`;
-    }
+  if (years > 0) {
+    return `${years} year${years > 1 ? 's' : ''}${months > 0 ? `, ${months} month${months > 1 ? 's' : ''}` : ''}`;
+  } else if (months > 0) {
+    return `${months} month${months > 1 ? 's' : ''}`;
   } else {
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    ageDisplay = `${diffDays} day${diffDays > 1 ? 's' : ''}`;
+    const days = Math.floor((today.getTime() - birthday.getTime()) / (1000 * 60 * 60 * 24));
+    return `${days} day${days !== 1 ? 's' : ''} old`;
   }
-  
-  return ageDisplay;
 };
 
-// Calculate the growth progress
-const calculateGrowthProgress = (birthdayStr: string, breed: string) => {
-  // Estimate when puppy is fully grown based on breed (simplified)
-  let fullGrowthMonths = 12; // Default for medium-sized dogs
-  
-  if (breed.toLowerCase().includes("retriever") || breed.toLowerCase().includes("german shepherd")) {
-    fullGrowthMonths = 18; // Large breeds
-  } else if (breed.toLowerCase().includes("chihuahua") || breed.toLowerCase().includes("yorkie")) {
-    fullGrowthMonths = 9; // Small breeds
-  }
-  
+// Simplified growth progress - can be enhanced later if needed
+const calculateGrowthProgress = (birthdayStr: string | null | undefined): number => {
+  if (!birthdayStr) return 0;
   const birthday = new Date(birthdayStr);
   const today = new Date();
+  const monthsOld = (today.getFullYear() - birthday.getFullYear()) * 12 + (today.getMonth() - birthday.getMonth());
   
-  // Calculate months since birth
-  const diffMonths = (today.getFullYear() - birthday.getFullYear()) * 12 + 
-                     today.getMonth() - birthday.getMonth();
-  
-  // Calculate growth percentage
-  let growthPercentage = Math.min(100, Math.round((diffMonths / fullGrowthMonths) * 100));
-  
-  // For adult dogs, show 100%
-  if (diffMonths >= fullGrowthMonths) {
-    return 100;
-  }
-  
-  return growthPercentage;
+  // Assuming full growth around 12-18 months for simplicity in a card view
+  const typicalFullGrowthMonths = 15;
+  const progress = Math.min(100, Math.round((monthsOld / typicalFullGrowthMonths) * 100));
+  return progress < 0 ? 0 : progress; // Ensure progress isn't negative if bday is in future
 };
 
-const CreatureCard = ({ creature }: CreatureCardProps) => {
-  const [showAssistant, setShowAssistant] = useState(false);
-  const age = calculateAge(creature.birthday);
-  const growthProgress = calculateGrowthProgress(creature.birthday, creature.breed);
+const CreatureCard = ({ puppy }: CreatureCardProps) => {
+  // const [showAssistant, setShowAssistant] = useState(false); // AI Assistant feature can be re-added later
+  const age = calculateAge(puppy.birth_date);
+  const growthProgress = calculateGrowthProgress(puppy.birth_date);
 
-  const chartConfig = {
-    weight: { color: "#ef4444", label: "Weight (lbs)" },
-    height: { color: "#3b82f6", label: "Height (in)" },
-  };
-
-  const completedMilestones = Object.values(creature.milestones).filter(Boolean).length;
-  const totalMilestones = Object.values(creature.milestones).length;
-  const milestoneProgress = Math.round((completedMilestones / totalMilestones) * 100);
+  // Use first image from image_urls or a placeholder
+  const displayImage = puppy.image_urls && puppy.image_urls.length > 0
+    ? puppy.image_urls[0]
+    : "/placeholder.svg"; // Make sure you have a placeholder image in public folder
 
   return (
-    <div className="mb-10 animate-fade-in">
-      <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 p-6 rounded-xl shadow-md relative overflow-hidden">
-        <div className="absolute -bottom-8 -right-8 opacity-5">
-          <PawPrint className="h-48 w-48" />
+    <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 animate-fade-in">
+      <div className="md:flex">
+        <div className="md:w-1/3 md:shrink-0">
+          <img
+            src={displayImage}
+            alt={puppy.name}
+            className="w-full h-48 md:h-full object-cover"
+          />
         </div>
-        
-        <div className="flex flex-col md:flex-row gap-6">
-          <div className="md:w-1/3">
-            <div className="rounded-lg overflow-hidden mb-4 border-4 border-white shadow-lg">
-              <img 
-                src={creature.image} 
-                alt={creature.name} 
-                className="w-full h-60 object-cover"
-              />
+        <div className="p-6 md:w-2/3 flex flex-col justify-between">
+          <div>
+            <CardHeader className="p-0 mb-2">
+              <CardTitle className="text-2xl font-bold text-brand-red flex items-center">
+                <PawPrint className="h-6 w-6 mr-2" />
+                {puppy.name}
+              </CardTitle>
+            </CardHeader>
+            <p className="text-md text-muted-foreground mb-1">{puppy.breed_name || "Breed not specified"}</p>
+            <div className="flex items-center text-sm text-muted-foreground mb-3">
+              <CalendarDays className="h-4 w-4 mr-1.5" />
+              Born: {puppy.birth_date ? new Date(puppy.birth_date).toLocaleDateString() : "Unknown"} (Age: {age})
             </div>
-            
-            <div className="space-y-3">
-              <h3 className="text-2xl font-bold">{creature.name}</h3>
-              <p className="text-muted-foreground">{creature.breed}</p>
-              
-              <div className="flex items-center space-x-2">
-                <span className="text-sm font-medium">🎂 Birthday:</span>
-                <span>{new Date(creature.birthday).toLocaleDateString()}</span>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <span className="text-sm font-medium">🐾 Age:</span>
-                <span>{age}</span>
-              </div>
-              
-              <div className="pt-2">
-                <div className="flex justify-between mb-1 text-xs">
+
+            {puppy.birth_date && (
+              <div className="mb-4">
+                <div className="flex justify-between text-xs text-muted-foreground mb-1">
                   <span>Puppy</span>
-                  <span>Adult Dog</span>
+                  <span>Adult</span>
                 </div>
-                <div className="relative">
-                  <Progress value={growthProgress} className="h-3" />
-                  <div 
-                    className={`absolute top-0 h-full w-[3px] bg-yellow-400 transition-all duration-300`}
-                    style={{ left: `${growthProgress}%` }}
-                  />
-                </div>
-                <div className="text-xs text-center mt-1">Growth: {growthProgress}%</div>
+                <Progress value={growthProgress} className="h-2" />
+                <p className="text-xs text-muted-foreground text-center mt-1">Estimated Growth: {growthProgress}%</p>
               </div>
-            </div>
-          </div>
-          
-          <div className="md:w-2/3 space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* Weight and Height Chart */}
-              <Card className="col-span-1 lg:col-span-2">
-                <CardContent className="pt-6">
-                  <h4 className="font-semibold mb-4">Growth Chart</h4>
-                  <div className="h-64">
-                    <ChartContainer
-                      config={chartConfig}
-                    >
-                      <LineChart data={creature.weightHistory}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis 
-                          dataKey="month" 
-                          label={{ value: "Age (months)", position: "insideBottomRight", offset: -5 }} 
-                        />
-                        <YAxis />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Line 
-                          type="monotone" 
-                          dataKey="weight" 
-                          name="weight" 
-                          stroke="#ef4444" 
-                          strokeWidth={2}
-                          activeDot={{ r: 6 }} 
-                        />
-                        <Line 
-                          type="monotone" 
-                          dataKey="height" 
-                          name="height" 
-                          stroke="#3b82f6" 
-                          strokeWidth={2} 
-                          activeDot={{ r: 6 }}
-                        />
-                        <ChartLegend />
-                      </LineChart>
-                    </ChartContainer>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              {/* Feeding Notes */}
-              <Card>
-                <CardContent className="pt-6">
-                  <h4 className="font-semibold mb-2">Feeding Notes</h4>
-                  <p className="text-muted-foreground text-sm">{creature.feedingNotes}</p>
-                </CardContent>
-              </Card>
-              
-              {/* Training Milestones */}
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex justify-between items-center mb-2">
-                    <h4 className="font-semibold">Training Milestones</h4>
-                    <span className="text-sm">{completedMilestones}/{totalMilestones}</span>
-                  </div>
-                  <Progress value={milestoneProgress} className="h-2 mb-4" />
-                  <ul className="space-y-2">
-                    {Object.entries(creature.milestones).map(([key, value]) => (
-                      <li key={key} className="flex items-center">
-                        <div className={`w-4 h-4 rounded-full mr-2 ${value ? 'bg-green-500' : 'bg-gray-300'}`} />
-                        <span className={`text-sm ${value ? 'text-foreground' : 'text-muted-foreground'}`}>
-                          {key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            </div>
+            )}
             
-            {/* Documents Section */}
-            <Card>
-              <CardContent className="pt-6">
-                <h4 className="font-semibold mb-2">Documents</h4>
-                <ul className="divide-y">
-                  {creature.documents.map((doc, index) => (
-                    <li key={index} className="py-2 flex justify-between">
-                      <span>{doc.name}</span>
-                      <span className="text-sm text-muted-foreground">{new Date(doc.date).toLocaleDateString()}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-            
-            {/* AI Assistant */}
-            <div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full flex items-center justify-center"
-                onClick={() => setShowAssistant(!showAssistant)}
-              >
-                <Bot className="h-4 w-4 mr-2" />
-                {showAssistant ? "Hide AI Furry Friend" : "Ask AI Furry Friend"}
-              </Button>
-              
-              {showAssistant && (
-                <div className="mt-3 p-4 bg-background rounded-lg border animate-fade-in">
-                  <div className="flex items-start space-x-3">
-                    <div className="bg-primary/10 p-2 rounded-full">
-                      <Bot className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm">
-                        Hi there! I'm {creature.name}'s virtual companion. Based on {creature.name}'s 
-                        growth chart, {creature.name} is developing at a healthy rate for a {creature.breed}. 
-                        For the next stage of training, you might want to focus on the "{Object.entries(creature.milestones)
-                          .find(([_, value]) => !value)?.[0]?.replace(/([A-Z])/g, ' $1')
-                          .replace(/^./, (str) => str.toUpperCase()) || "advanced tricks"}" skill!
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Note: This is a placeholder for future AI assistant integration
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+            {/* Simplified content for the card. More details in PuppyProfile.tsx */}
+            {puppy.description && (
+                <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                    {puppy.description}
+                </p>
+            )}
+             {puppy.litter_name && (
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                    Part of the "{puppy.litter_name}" litter.
+                </p>
+            )}
           </div>
+
+          <CardFooter className="p-0 mt-4">
+            <Button asChild className="w-full bg-brand-red hover:bg-red-700 text-white">
+              <Link to={`/dashboard/puppy/${puppy.id}`}>
+                View Full Profile
+                <LinkIcon className="h-4 w-4 ml-2" />
+              </Link>
+            </Button>
+          </CardFooter>
         </div>
       </div>
-    </div>
+      {/* AI Assistant button and section removed for now to simplify card. Can be re-added. */}
+    </Card>
   );
 };
 
