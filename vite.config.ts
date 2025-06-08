@@ -18,7 +18,8 @@ export default defineConfig(({ mode }) => ({
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}']
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB limit
       },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
@@ -61,12 +62,19 @@ export default defineConfig(({ mode }) => ({
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: false,
+    chunkSizeWarningLimit: 1000, // Increase warning limit to 1MB
     rollupOptions: {
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
           router: ['react-router-dom'],
-          ui: ['@radix-ui/react-tabs', '@radix-ui/react-dialog']
+          ui: ['@radix-ui/react-tabs', '@radix-ui/react-dialog'],
+          query: ['@tanstack/react-query'],
+          charts: ['recharts'],
+          animation: ['framer-motion', 'canvas-confetti'],
+          forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
+          dates: ['date-fns', 'react-day-picker'],
+          icons: ['lucide-react'],
         }
       }
     }
