@@ -1,9 +1,8 @@
 import { corsHeaders } from '../utils/cors';
 import type { Env } from '../env'; // Import Env type
-import { D1Database, D1PreparedStatement } from '@cloudflare/workers-types'; // Import D1Database type
 
 // Helper to get D1 binding more type-safely
-const getDB = (env: Env): D1Database => env.PUPPIES_DB;
+const getDB = (env: Env) => env.PUPPIES_DB;
 
 interface AuthResult {
     userId: string;

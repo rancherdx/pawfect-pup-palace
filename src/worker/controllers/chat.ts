@@ -1,7 +1,5 @@
-
 import type { Env } from '../env';
 import { corsHeaders } from '../utils/cors';
-import type { D1Database } from '@cloudflare/workers-types';
 
 interface AuthResult {
     userId: string;
@@ -9,7 +7,7 @@ interface AuthResult {
 }
 
 // Helper to get D1 binding
-const getDB = (env: Env): D1Database => env.PUPPIES_DB;
+const getDB = (env: Env) => env.PUPPIES_DB;
 
 export async function getMyConversations(request: Request, env: Env, authResult: AuthResult) {
     const { userId } = authResult;
