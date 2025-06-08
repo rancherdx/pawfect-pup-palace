@@ -204,7 +204,7 @@ export async function deleteIntegration(request: Request, env: Env, integrationI
       .bind(integrationId)
       .run();
 
-    if (result.meta.changes === 0) {
+    if (result.changes === 0) {
       return createErrorResponse("Not Found", `Integration with ID ${integrationId} not found.`, 404);
     }
 

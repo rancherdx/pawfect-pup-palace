@@ -274,7 +274,7 @@ export async function deletePuppy(request: Request, env: Env, authResult: AuthRe
     
     const result = await db.prepare('DELETE FROM puppies WHERE id = ?').bind(id).run();
 
-    if (result.meta.changes === 0) {
+    if (result.changes === 0) {
       return createErrorResponse('Puppy not found or already deleted', `Failed to delete puppy with ID: ${id}.`, 404);
     }
     

@@ -1,3 +1,4 @@
+
 import type { Env } from '../env';
 import { corsHeaders } from '../utils/cors';
 
@@ -21,12 +22,12 @@ interface StudDogCore {
   is_available?: boolean;
 }
 
-interface StudDogRecord extends StudDogCore {
+interface StudDogRecord extends Omit<StudDogCore, 'is_available'> {
   id: string;
   owner_user_id: string;
   created_at: string;
   updated_at: string;
-  is_available: boolean | number;
+  is_available: boolean | number; // DB stores as 0/1
   certifications: string | null;
   image_urls: string | null;
 }
@@ -423,7 +424,7 @@ export async function deleteStudDog(request: Request, env: Env, studDogId: strin
 
   try {
     const result = await env.PUPPIES_DB.prepare("DELETE FROM stud_dogs WHERE id = ?").bind(studDogId).run();
-    if (result.meta.changes === 0) {
+    if (result.changes === 0) {
       return createErrorResponse("Not Found", `Stud dog with ID ${studDogId} not found.`, 404);
     }
     return new Response(JSON.stringify({ message: "Stud dog deleted successfully." }), { status: 200, headers: corsHeaders });

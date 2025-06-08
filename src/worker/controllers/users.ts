@@ -11,7 +11,6 @@ function createErrorResponse(message: string, details: string | null = null, sta
   );
 }
 
-
 export async function login(request: Request, env: Env) { // Changed env type to Env
   try {
     const { email, password } = await request.json() as { email?: string, password?: string };
@@ -23,7 +22,7 @@ export async function login(request: Request, env: Env) { // Changed env type to
     const userResult = await env.PUPPIES_DB
       .prepare('SELECT id, email, name, password, roles FROM users WHERE email = ?')
       .bind(email)
-      .first<{ id: string; email: string; name: string; password_hash: string; roles: string; }>();
+      .first<{ id: string; email: string; name: string; password: string; roles: string; }>();
     
     if (!userResult) {
       return createErrorResponse('Invalid email or password', null, 401);
@@ -278,10 +277,17 @@ export async function listUsers(request: Request, env: Env) {
       totalUsersQuery.first<{ total_users: number }>()
     ]);
     
-    const users = usersResults.results.map(user => ({
-        ...user,
-        roles: JSON.parse(user.roles || '["user"]')
-    }));
+    const users = usersResults.results.map(user => {
+      let parsedRoles = ['user'];
+      try {
+        if (user.roles && typeof user.roles === 'string') {
+          parsedRoles = JSON.parse(user.roles);
+        }
+      } catch (e) {
+        console.error("Failed to parse roles for user:", user.id, user.roles, e);
+      }
+      return { ...user, roles: parsedRoles };
+    });
     const totalUsers = totalResult?.total_users || 0;
     const totalPages = Math.ceil(totalUsers / limit);
 
@@ -402,7 +408,7 @@ export async function deleteUserAdmin(request: Request, env: Env, userIdParam: s
   try {
     const result = await env.PUPPIES_DB.prepare('DELETE FROM users WHERE id = ?').bind(userIdParam).run();
 
-    if (result.meta.changes === 0) {
+    if (result.changes === 0) {
       return createErrorResponse('User not found', `No user found with ID: ${userIdParam} to delete.`, 404);
     }
 
