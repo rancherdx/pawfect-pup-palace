@@ -1,3 +1,4 @@
+
 import type { Env } from '../env';
 import { corsHeaders } from '../utils/cors';
 
@@ -139,7 +140,7 @@ export async function listUserTransactions(request: Request, env: Env): Promise<
 
   const url = new URL(request.url);
   const page = parseInt(url.searchParams.get('page') || '1', 10);
-  const limit = parseInt(url.searchParams.get('limit') || 10, 10); // Default limit for user view
+  const limit = parseInt(url.searchParams.get('limit') || '10', 10); // Convert to string
 
   if (page < 1) return createErrorResponse("Bad Request", "Page number must be 1 or greater.", 400);
   if (limit < 1 || limit > 50) return createErrorResponse("Bad Request", "Limit must be between 1 and 50.", 400);
