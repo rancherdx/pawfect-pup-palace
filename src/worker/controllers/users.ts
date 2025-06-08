@@ -1,4 +1,3 @@
-
 import { corsHeaders } from '../utils/cors';
 import { hashPassword, generateToken, createJWT } from '../auth'; // Removed verifyJWT as it's not used here
 import type { Env } from '../env';
@@ -214,7 +213,7 @@ export async function updateUserProfile(request: Request, env: Env, authResult: 
     const updatedUser = await env.PUPPIES_DB
       .prepare('SELECT id, email, name, roles, phone, address, preferences, created_at, updated_at FROM users WHERE id = ?')
       .bind(userId)
-      .first();
+      .first<{ id: string; email: string; name: string; roles: string; phone: string | null; address: string | null; preferences: string | null; created_at: string; updated_at: string; }>();
 
     if (!updatedUser) {
         return createErrorResponse('User not found after update', null, 404);
