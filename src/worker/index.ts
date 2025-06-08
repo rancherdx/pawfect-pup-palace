@@ -1,16 +1,10 @@
-import { handleAuth } from './controllers/auth';
-import { handlePuppies, handleMyPuppies } from './controllers/puppies';
-import { handleLitters } from './controllers/litters';
-import { handleAdmin } from './controllers/admin';
-import { handleUpload } from './controllers/upload';
-import { handleBlog } from './controllers/blog';
-import { handleStudDogs } from './controllers/stud-dogs';
-import { handleUser } from './controllers/user';
-import { handleSettings } from './controllers/settings';
+
+import { getMyConversations, getMessagesForConversation, sendMessage, startConversation } from './controllers/chat';
 import { corsHeaders } from './utils/cors';
+import type { Env } from './env';
 
 export default {
-  async fetch(request: Request, env: any, ctx: ExecutionContext): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     
     // Handle CORS preflight requests
@@ -26,53 +20,12 @@ export default {
       const apiPath = url.pathname.replace('/api', '');
       
       try {
-        // Authentication routes
-        if (apiPath.startsWith('/auth/')) {
-          return await handleAuth(request, env, apiPath);
-        }
-        
-        // Puppies routes
-        if (apiPath.startsWith('/puppies')) {
-          return await handlePuppies(request, env, apiPath);
-        }
-        
-        if (apiPath.startsWith('/my-puppies')) {
-          return await handleMyPuppies(request, env);
-        }
-        
-        // Litters routes
-        if (apiPath.startsWith('/litters')) {
-          return await handleLitters(request, env, apiPath);
-        }
-        
-        // Blog routes
-        if (apiPath.startsWith('/blog')) {
-          return await handleBlog(request, env, apiPath);
-        }
-        
-        // Stud dogs routes
-        if (apiPath.startsWith('/stud-dogs')) {
-          return await handleStudDogs(request, env, apiPath);
-        }
-        
-        // User routes
-        if (apiPath.startsWith('/user')) {
-          return await handleUser(request, env, apiPath);
-        }
-        
-        // Upload routes
-        if (apiPath.startsWith('/upload')) {
-          return await handleUpload(request, env);
-        }
-        
-        // Settings routes
-        if (apiPath.startsWith('/settings')) {
-          return await handleSettings(request, env, apiPath);
-        }
-        
-        // Admin routes
-        if (apiPath.startsWith('/admin/')) {
-          return await handleAdmin(request, env, apiPath);
+        // Chat routes
+        if (apiPath.startsWith('/chat/')) {
+          // For now, return a simple message until we implement auth
+          return new Response(JSON.stringify({ message: 'Chat API coming soon' }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
         }
         
         // API route not found

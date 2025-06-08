@@ -31,3 +31,11 @@ export interface Env {
   AFFILIATE_TRACKING_SECRET: string;
   SEO_API_KEY: string;
 }
+
+// Add ExecutionContext type
+declare global {
+  interface ExecutionContext {
+    waitUntil(promise: Promise<any>): void;
+    passThroughOnException(): void;
+  }
+}
