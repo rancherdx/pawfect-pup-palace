@@ -1,3 +1,4 @@
+
 import { corsHeaders } from '../utils/cors';
 import { hashPassword, generateToken, createJWT } from '../auth'; // Removed verifyJWT as it's not used here
 import type { Env } from '../env';
@@ -20,9 +21,9 @@ export async function login(request: Request, env: Env) { // Changed env type to
     }
     
     const userResult = await env.PUPPIES_DB
-      .prepare('SELECT id, email, name, password, roles FROM users WHERE email = ?')
+      .prepare('SELECT id, email, name, password_hash, roles FROM users WHERE email = ?')
       .bind(email)
-      .first<{ id: string; email: string; name: string; password: string; roles: string; }>();
+      .first<{ id: string; email: string; name: string; password_hash: string; roles: string; }>();
     
     if (!userResult) {
       return createErrorResponse('Invalid email or password', null, 401);
@@ -34,7 +35,7 @@ export async function login(request: Request, env: Env) { // Changed env type to
     // And a separate `verifyPassword(plainPassword, storedHash)` function would be needed.
     // For now, sticking to the existing logic pattern in the file:
     const requestHashedPassword = await hashPassword(password);
-    if (userResult.password !== requestHashedPassword) {
+    if (userResult.password_hash !== requestHashedPassword) {
       return createErrorResponse('Invalid email or password', null, 401);
     }
     
