@@ -146,6 +146,15 @@ export const blogApi = {
 };
 
 // Admin API
+
+// Define the response type for successful Square sync
+interface SquareSyncResponse {
+  status: string;
+  message: string;
+  squareItemId: string;
+  syncedAt: string;
+}
+
 export const adminApi = {
   // Puppies management
   createPuppy: async (data: any) => {
@@ -164,6 +173,15 @@ export const adminApi = {
 
   deletePuppy: async (id: string) => {
     return apiRequest(`/admin/puppies/${id}`, { method: 'DELETE' });
+  },
+
+  // New function for Square sync
+  syncPuppyWithSquare: async (puppyId: string): Promise<SquareSyncResponse> => {
+    return apiRequest<SquareSyncResponse>(`/admin/puppies/${puppyId}/sync-square`, {
+      method: 'POST',
+      // Body can be empty if the backend fetches puppy data using puppyId from URL
+      // Or, if data needs to be sent: body: JSON.stringify(puppyData),
+    });
   },
 
   // Litters management
