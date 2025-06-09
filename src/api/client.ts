@@ -1,6 +1,18 @@
 // API Base URL - uses environment variable or defaults to current origin for API calls
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
+import {
+  Puppy,
+  PuppyCreationData,
+  PuppyUpdateData,
+  AdminPuppyListResponse,
+  PublicPuppyListResponse,
+  Litter,
+  LitterCreationData,
+  LitterUpdateData,
+  LitterListResponse
+} from '../types';
+
 // Helper function to get auth headers
 const getAuthHeaders = (): HeadersInit => {
   const token = localStorage.getItem('jwtToken');
@@ -172,19 +184,19 @@ export const apiRequest = async <T>(
 // These are defined after apiRequest and authApi, and use apiRequest.
 
 export const puppiesApi = {
-  getAll: async (params?: { limit?: number; page?: number; breed?: string; status?: string }) => {
+  getAll: async (params?: { limit?: number; page?: number; breed?: string; status?: string }): Promise<PublicPuppyListResponse> => {
     const searchParams = new URLSearchParams();
     if (params?.limit) searchParams.append('limit', params.limit.toString());
     if (params?.page) searchParams.append('page', params.page.toString());
     if (params?.breed) searchParams.append('breed', params.breed);
     if (params?.status) searchParams.append('status', params.status);
     
-    const query = searchParams.toString();
-    return apiRequest<{ data: any[]; pagination: any }>(`/puppies${query ? `?${query}` : ''}`);
+    const endpointWithQuery = `/puppies${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+    return apiRequest<PublicPuppyListResponse>(endpointWithQuery);
   },
 
-  getById: async (id: string) => {
-    return apiRequest<any>(`/puppies/${id}`);
+  getById: async (id: string): Promise<Puppy> => {
+    return apiRequest<Puppy>(`/puppies/${id}`);
   },
 
   getMyPuppies: async (params?: { limit?: number; page?: number }) => {
@@ -198,19 +210,19 @@ export const puppiesApi = {
 };
 
 export const littersApi = {
-  getAll: async (params?: { limit?: number; offset?: number; breed?: string; status?: string }) => {
+  getAll: async (params?: { limit?: number; offset?: number; breed?: string; status?: string }): Promise<LitterListResponse> => {
     const searchParams = new URLSearchParams();
     if (params?.limit) searchParams.append('limit', params.limit.toString());
     if (params?.offset) searchParams.append('offset', params.offset.toString());
     if (params?.breed) searchParams.append('breed', params.breed);
     if (params?.status) searchParams.append('status', params.status);
     
-    const query = searchParams.toString();
-    return apiRequest<{ litters: any[]; pagination: any }>(`/litters${query ? `?${query}` : ''}`);
+    const endpointWithQuery = `/litters${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+    return apiRequest<LitterListResponse>(endpointWithQuery);
   },
 
-  getById: async (id: string) => {
-    return apiRequest<any>(`/litters/${id}`);
+  getById: async (id: string): Promise<Litter> => {
+    return apiRequest<Litter>(`/litters/${id}`);
   },
 };
 
@@ -272,11 +284,12 @@ interface BreedTemplate {
 }
 
 export const adminApi = {
-  createPuppy: async (data: any) => {
-    return apiRequest<any>('/admin/puppies', { method: 'POST', body: JSON.stringify(data) });
+  getAllPuppies: async (): Promise<AdminPuppyListResponse> => apiRequest<AdminPuppyListResponse>('/admin/puppies'),
+  createPuppy: async (data: PuppyCreationData): Promise<Puppy> => {
+    return apiRequest<Puppy>('/admin/puppies', { method: 'POST', body: JSON.stringify(data) });
   },
-  updatePuppy: async (id: string, data: any) => {
-    return apiRequest<any>(`/admin/puppies/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  updatePuppy: async (id: string, data: PuppyUpdateData): Promise<Puppy> => {
+    return apiRequest<Puppy>(`/admin/puppies/${id}`, { method: 'PUT', body: JSON.stringify(data) });
   },
   deletePuppy: async (id: string) => {
     return apiRequest(`/admin/puppies/${id}`, { method: 'DELETE' });
@@ -284,14 +297,18 @@ export const adminApi = {
   syncPuppyWithSquare: async (puppyId: string): Promise<SquareSyncResponse> => {
     return apiRequest<SquareSyncResponse>(`/admin/puppies/${puppyId}/sync-square`, { method: 'POST' });
   },
-  createLitter: async (data: any) => {
-    return apiRequest<any>('/admin/litters', { method: 'POST', body: JSON.stringify(data) });
+  getAllLitters: async (params?: { limit?: number; offset?: number }): Promise<LitterListResponse> => {
+    const query = new URLSearchParams(params as any).toString();
+    return apiRequest<LitterListResponse>(`/admin/litters${query ? `?${query}` : ''}`);
   },
-  updateLitter: async (id: string, data: any) => {
-    return apiRequest<any>(`/admin/litters/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  createLitter: async (data: LitterCreationData): Promise<Litter> => {
+    return apiRequest<Litter>('/admin/litters', { method: 'POST', body: JSON.stringify(data) });
   },
-  deleteLitter: async (id: string) => {
-    return apiRequest(`/admin/litters/${id}`, { method: 'DELETE' });
+  updateLitter: async (id: string, data: LitterUpdateData): Promise<Litter> => {
+    return apiRequest<Litter>(`/admin/litters/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  },
+  deleteLitter: async (id: string): Promise<void> => {
+    return apiRequest<void>(`/admin/litters/${id}`, { method: 'DELETE' });
   },
   createPost: async (data: any) => {
     return apiRequest<any>('/admin/blog', { method: 'POST', body: JSON.stringify(data) });

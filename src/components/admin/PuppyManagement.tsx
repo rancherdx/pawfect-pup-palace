@@ -1,34 +1,47 @@
 
 import { useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Plus, Dog, Edit, Trash, Search, ArrowRight, Loader2 } from "lucide-react"; // Added Loader2
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import PuppyForm from "./PuppyForm";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { puppiesApi, adminApi } from "@/api"; // Added adminApi
+import { adminApi } from "@/api"; // adminApi now includes puppy functions
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Puppy, PuppyCreationData, PuppyUpdateData, AdminPuppyListResponse } from "@/types";
 
 const PuppyManagement = () => {
   const [isAddingPuppy, setIsAddingPuppy] = useState(false);
-  const [editingPuppy, setEditingPuppy] = useState<any | null>(null);
+  const [editingPuppy, setEditingPuppy] = useState<Puppy | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [puppyToDeleteId, setPuppyToDeleteId] = useState<string | null>(null);
   
   const queryClient = useQueryClient();
   
   // Fetch puppies from API
-  const { data, isLoading, error } = useQuery({
+  const { data: adminPuppiesData, isLoading, error } = useQuery<AdminPuppyListResponse, Error>({
     queryKey: ['admin-puppies'],
-    queryFn: () => puppiesApi.getAllPuppies(),
+    queryFn: adminApi.getAllPuppies,
   });
 
-  const puppies = data?.puppies || [];
+  const puppies: Puppy[] = adminPuppiesData?.puppies || [];
   
   // Create mutation for adding puppies
   const createPuppyMutation = useMutation({
-    mutationFn: (newPuppy: any) => puppiesApi.createPuppy(newPuppy),
-    onSuccess: (createdPuppy) => { // Assume createdPuppy is returned
+    mutationFn: (newPuppy: PuppyCreationData) => adminApi.createPuppy(newPuppy),
+    onSuccess: (createdPuppy: Puppy) => {
       queryClient.invalidateQueries({ queryKey: ['admin-puppies'] });
       toast.success("Puppy added successfully");
       setIsAddingPuppy(false);
@@ -43,8 +56,8 @@ const PuppyManagement = () => {
   
   // Update mutation for editing puppies
   const updatePuppyMutation = useMutation({
-    mutationFn: (updatedPuppy: any) => puppiesApi.updatePuppy(updatedPuppy.id, updatedPuppy),
-    onSuccess: (updatedPuppy) => { // Assume updatedPuppy is returned
+    mutationFn: (payload: { id: string; data: PuppyUpdateData }) => adminApi.updatePuppy(payload.id, payload.data),
+    onSuccess: (updatedPuppy: Puppy) => {
       queryClient.invalidateQueries({ queryKey: ['admin-puppies'] });
       toast.success("Puppy updated successfully");
       setEditingPuppy(null);
@@ -59,7 +72,7 @@ const PuppyManagement = () => {
   
   // Delete mutation for removing puppies
   const deletePuppyMutation = useMutation({
-    mutationFn: (id: string) => puppiesApi.deletePuppy(id),
+    mutationFn: (id: string) => adminApi.deletePuppy(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-puppies'] });
       toast.success("Puppy deleted successfully");
@@ -89,34 +102,47 @@ const PuppyManagement = () => {
     }
   });
 
-  const handleAddPuppy = (newPuppy: any) => {
-    createPuppyMutation.mutate(newPuppy);
+  const handleAddPuppy = (newPuppyData: PuppyCreationData) => {
+    createPuppyMutation.mutate(newPuppyData);
   };
 
-  const handleUpdatePuppy = (updatedPuppy: any) => {
-    updatePuppyMutation.mutate(updatedPuppy);
+  const handleUpdatePuppy = (updatedPuppyData: PuppyUpdateData, id: string) => {
+    updatePuppyMutation.mutate({ id, data: updatedPuppyData });
   };
 
   const handleDeletePuppy = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this puppy?")) {
-      deletePuppyMutation.mutate(id);
+    setPuppyToDeleteId(id);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeletePuppy = () => {
+    if (puppyToDeleteId) {
+      deletePuppyMutation.mutate(puppyToDeleteId);
     }
+    setShowDeleteDialog(false);
+    setPuppyToDeleteId(null);
   };
 
   const syncWithSquare = (id: string) => {
     syncWithSquareMutation.mutate(id);
   };
 
-  const filteredPuppies = puppies.filter((puppy: any) => 
+  const filteredPuppies: Puppy[] = puppies.filter((puppy: Puppy) =>
     puppy.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     puppy.breed.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (isAddingPuppy || editingPuppy) {
     return (
-      <PuppyForm 
+      <PuppyForm
         puppy={editingPuppy || undefined}
-        onSave={editingPuppy ? handleUpdatePuppy : handleAddPuppy} 
+        onSave={(formData, id) => {
+          if (id && editingPuppy) { // Check editingPuppy to ensure it's an update
+            handleUpdatePuppy(formData as PuppyUpdateData, id);
+          } else {
+            handleAddPuppy(formData as PuppyCreationData);
+          }
+        }}
         onCancel={() => {
           setIsAddingPuppy(false);
           setEditingPuppy(null);
@@ -201,7 +227,7 @@ const PuppyManagement = () => {
                   </TableRow>
                 ) : (
                   // Puppy list
-                  filteredPuppies.map((puppy: any) => (
+                  filteredPuppies.map((puppy: Puppy) => (
                     <TableRow key={puppy.id}>
                       <TableCell className="font-medium">{puppy.name}</TableCell>
                       <TableCell>{puppy.breed}</TableCell>
@@ -276,6 +302,26 @@ const PuppyManagement = () => {
           <li>• Photos can be added when editing a puppy.</li>
         </ul>
       </div>
+
+      {puppyToDeleteId && (
+        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the puppy
+                and remove its data from our servers.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setPuppyToDeleteId(null)}>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDeletePuppy}>
+                Yes, delete puppy
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 };

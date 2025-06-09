@@ -9,8 +9,9 @@ import PuppyCard from "@/components/PuppyCard";
 import TestimonialCard from "@/components/TestimonialCard";
 import { PawPrint, Heart, Award, CheckCircle, Loader2, AlertTriangle } from "lucide-react"; // Added AlertTriangle
 import { motion } from "framer-motion";
-import { puppiesApi, testimonialApi } from "@/api"; // Added testimonialApi
+import { puppiesApi, testimonialApi } from "@/api";
 import { calculateAge } from "@/utils/dateUtils";
+import { Puppy, PublicPuppyListResponse } from "@/types";
 
 const FeatureCard = ({ icon: Icon, title, description }) => {
   return (
@@ -35,11 +36,11 @@ const FeatureCard = ({ icon: Icon, title, description }) => {
 
 const Home = () => {
   // Fetch featured puppies from API
-  const { data: puppiesData, isLoading, error } = useQuery({
+  const { data: publicPuppiesData, isLoading, error } = useQuery<PublicPuppyListResponse, Error>({
     queryKey: ["featuredPuppies"],
-    queryFn: () => puppiesApi.getAllPuppies({ limit: 3 }), // Assuming this API exists and puppiesApi is correctly imported
+    queryFn: () => puppiesApi.getAll({ limit: 3 }),
   });
-  const featuredPuppies = puppiesData?.puppies || [];
+  const featuredPuppies: Puppy[] = publicPuppiesData?.data || [];
 
   // Fetch testimonials
   const {
@@ -84,7 +85,7 @@ const Home = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredPuppies.map((puppy, index) => (
+            {featuredPuppies.map((puppy: Puppy, index) => (
               <motion.div
                 key={puppy.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -96,11 +97,12 @@ const Home = () => {
                   id={puppy.id.toString()}
                   name={puppy.name}
                   breed={puppy.breed}
-                  age={calculateAge(puppy.birth_date)}
+                  age={calculateAge(puppy.birthDate)} // Use birthDate
                   gender={puppy.gender}
-                  imageSrc={puppy.image_url || "https://images.unsplash.com/photo-1591160690555-5debfba289f0?ixlib=rb-4.0.3"}
+                  imageSrc={puppy.photoUrl || "https://images.unsplash.com/photo-1591160690555-5debfba289f0?ixlib=rb-4.0.3"} // Use photoUrl
                   price={puppy.price}
                   available={puppy.status === 'Available'}
+                  status={puppy.status} // Pass status for PuppyCard
                 />
               </motion.div>
             ))}

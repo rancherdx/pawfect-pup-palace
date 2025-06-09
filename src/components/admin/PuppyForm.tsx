@@ -3,16 +3,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Image, PlusCircle, Calendar, Scale, Dog, Save, Loader2 } from "lucide-react"; // For loading spinner
 import { toast } from "sonner";
-// import { BreedTemplate } from "@/types/breedTemplate"; // Removed as type is local or inferred
-import { useMutation, useQuery } from "@tanstack/react-query"; // Added useQuery
-import { uploadApi, adminApi } from "@/api"; // Added adminApi
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { uploadApi, adminApi } from "@/api";
+import { Puppy, PuppyCreationData, PuppyUpdateData, PuppyStatus, PuppySize } from "@/types";
 
-// Local BreedTemplate definition (if not centrally available)
+// Local BreedTemplate definition - assuming adminApi.getBreedTemplates provides typed data
+// If BreedTemplate is also in @/types, it should be imported from there.
+// For now, let's assume adminApi.getBreedTemplates() returns data that matches this structure.
 interface BreedTemplate {
   id: string;
   breedName: string;
   description: string;
-  size: string;
+  size: PuppySize | string; // Allow string for flexibility if API returns other values
   temperament: string;
   careInstructions: string;
   commonTraits: string[];
@@ -22,31 +24,29 @@ interface BreedTemplate {
   };
 }
 
-
-type PuppyData = {
+type PuppyFormData = Omit<PuppyCreationData, 'status'> & { // status will be PuppyStatus
   id?: string;
-  name: string;
-  breed: string;
-  birthdate: string;
-  price: number;
-  description: string;
-  status: string;
-  squareStatus?: string;
+  status: PuppyStatus;
+  // Ensure all fields from PuppyCreationData that are optional are here if needed for form state
+  // and also include fields that are part of Puppy but not PuppyCreationData if form manages them.
+  // For this form, PuppyCreationData + id and specific status type should cover it.
+  // Let's ensure all optional fields from PuppyCreationData are explicitly listed for clarity in initial state
   photoUrl?: string;
   weight?: number;
-  size?: string;
+  size?: PuppySize;
   temperament?: string;
   careNotes?: string;
   motherName?: string;
   fatherName?: string;
   litterId?: string;
+  gender?: string;
 };
 
 type PuppyFormProps = {
-  puppy?: PuppyData;
-  onSave: (puppy: PuppyData) => void;
+  puppy?: Puppy; // Use the main Puppy interface for prop
+  onSave: (data: PuppyCreationData | PuppyUpdateData, id?: string) => void;
   onCancel: () => void;
-  litters?: Array<{id: string, name: string}>;
+  litters?: Array<{id: string, name: string}>; // Assuming litters structure is fine
 };
 
 const calculateAge = (birthdate: string): string => {
@@ -72,23 +72,25 @@ const calculateAge = (birthdate: string): string => {
 };
 
 const PuppyForm = ({ puppy, onSave, onCancel, litters = [] }: PuppyFormProps) => {
-  const [formData, setFormData] = useState<PuppyData>(
-    puppy || {
-      name: "",
-      breed: "",
-      birthdate: new Date().toISOString().split("T")[0],
-      price: 0,
-      description: "",
-      status: "Available",
-      weight: undefined,
-      size: "",
-      temperament: "",
-      careNotes: "",
-      motherName: "",
-      fatherName: "",
-      litterId: ""
-    }
-  );
+  const initialFormData: PuppyFormData = {
+    id: puppy?.id,
+    name: puppy?.name || "",
+    breed: puppy?.breed || "",
+    birthDate: puppy?.birthDate ? new Date(puppy.birthDate).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+    price: puppy?.price || 0,
+    description: puppy?.description || "",
+    status: puppy?.status || "Available",
+    photoUrl: puppy?.photoUrl,
+    weight: puppy?.weight,
+    size: puppy?.size || "",
+    temperament: puppy?.temperament || "",
+    careNotes: puppy?.careNotes || "",
+    motherName: puppy?.motherName || "",
+    fatherName: puppy?.fatherName || "",
+    litterId: puppy?.litterId || "",
+    gender: puppy?.gender || "",
+  };
+  const [formData, setFormData] = useState<PuppyFormData>(initialFormData);
 
   const [photoPreview, setPhotoPreview] = useState<string | null>(
     puppy?.photoUrl || null
@@ -121,31 +123,40 @@ const PuppyForm = ({ puppy, onSave, onCancel, litters = [] }: PuppyFormProps) =>
   });
 
   useEffect(() => {
-    if (formData.birthdate) {
-      setAge(calculateAge(formData.birthdate));
+    if (formData.birthDate) {
+      setAge(calculateAge(formData.birthDate));
     }
-  }, [formData.birthdate]);
+  }, [formData.birthDate]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     
-    // Handle numeric fields
     if (name === "price" || name === "weight") {
-      setFormData({
-        ...formData,
-        [name]: parseFloat(value) || 0
-      });
-    } else {
-      setFormData({
-        ...formData,
+      setFormData(prev => ({
+        ...prev,
+        [name]: parseFloat(value) || (name === "weight" ? undefined : 0) // weight can be undefined
+      }));
+    } else if (name === "status") {
+      setFormData(prev => ({
+        ...prev,
+        status: value as PuppyStatus
+      }));
+    } else if (name === "size") {
+      setFormData(prev => ({
+        ...prev,
+        size: value as PuppySize
+      }));
+    }
+     else {
+      setFormData(prev => ({
+        ...prev,
         [name]: value
-      });
+      }));
     }
     
-    // Update age when birthdate changes
-    if (name === "birthdate") {
+    if (name === "birthDate") {
       setAge(calculateAge(value));
     }
   };
@@ -183,11 +194,24 @@ const PuppyForm = ({ puppy, onSave, onCancel, litters = [] }: PuppyFormProps) =>
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Construct PuppyCreationData or PuppyUpdateData from formData
+    const { id, ...restOfFormData } = formData;
     
-    onSave(formData);
+    // Ensure all required fields for PuppyCreationData are present if it's a new puppy
+    // The types PuppyCreationData and PuppyUpdateData will guide what to send.
+    // PuppyUpdateData is Partial<PuppyCreationData>, so sending restOfFormData should be fine for updates.
+    // For creation, ensure `restOfFormData` matches `PuppyCreationData`.
+    // The `status` field in `formData` is already `PuppyStatus`, matching `PuppyCreationData`.
+
+    if (id) { // If id exists, it's an update
+      onSave(restOfFormData as PuppyUpdateData, id);
+    } else { // Otherwise, it's a creation
+      // Ensure all required fields are present, which should be guaranteed by form validation and initial state
+      onSave(restOfFormData as PuppyCreationData);
+    }
   };
 
-  const isEditing = Boolean(puppy);
+  const isEditing = Boolean(formData.id); // Use formData.id to determine edit mode
   const today = new Date().toISOString().split("T")[0];
 
   return (
@@ -283,13 +307,13 @@ const PuppyForm = ({ puppy, onSave, onCancel, litters = [] }: PuppyFormProps) =>
                     <input
                       required
                       type="date"
-                      name="birthdate"
+                    name="birthDate"
                       max={today}
-                      value={formData.birthdate}
+                    value={formData.birthDate}
                       onChange={handleInputChange}
                       className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
                     />
-                    {formData.birthdate && (
+                  {formData.birthDate && (
                       <div className="flex items-center mt-1">
                         <span className="text-sm font-medium mr-2">Age:</span>
                         <span className="text-sm bg-red-50 text-red-700 px-2 py-1 rounded-md">
@@ -328,11 +352,9 @@ const PuppyForm = ({ puppy, onSave, onCancel, litters = [] }: PuppyFormProps) =>
                     className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
                   >
                     <option value="">Select size...</option>
-                    <option value="Toy">Toy</option>
-                    <option value="Small">Small</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Large">Large</option>
-                    <option value="Giant">Giant</option>
+                    {Object.values(PuppySize).filter(s => typeof s === 'string' && s !== '').map(s => (
+                       <option key={s} value={s}>{s}</option>
+                    ))}
                   </select>
                 </div>
 
@@ -363,10 +385,9 @@ const PuppyForm = ({ puppy, onSave, onCancel, litters = [] }: PuppyFormProps) =>
                     onChange={handleInputChange}
                     className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
                   >
-                    <option value="Available">Available</option>
-                    <option value="Reserved">Reserved</option>
-                    <option value="Sold">Sold</option>
-                    <option value="Not For Sale">Not For Sale</option>
+                    {(Object.values(PuppyStatus) as PuppyStatus[]).map(s => (
+                       <option key={s} value={s}>{s}</option>
+                    ))}
                   </select>
                   <p className="text-xs text-gray-500 mt-1">
                     {formData.status === "Not For Sale" ? 
@@ -386,11 +407,26 @@ const PuppyForm = ({ puppy, onSave, onCancel, litters = [] }: PuppyFormProps) =>
                     className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
                   >
                     <option value="">No litter</option>
-                    {litters.map(litter => (
+                    {litters?.map(litter => (
                       <option key={litter.id} value={litter.id}>
                         {litter.name}
                       </option>
                     ))}
+                  </select>
+                </div>
+                 <div className="space-y-2">
+                  <label className="block text-lg font-medium">
+                    Gender
+                  </label>
+                  <select
+                    name="gender"
+                    value={formData.gender || ""}
+                    onChange={handleInputChange}
+                    className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
+                  >
+                    <option value="">Select gender...</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
                   </select>
                 </div>
               </div>
