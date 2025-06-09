@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Image, PlusCircle, Calendar, Scale, Dog, Save } from "lucide-react";
+import { ArrowLeft, Image, PlusCircle, Calendar, Scale, Dog, Save, Loader2 } from "lucide-react"; // For loading spinner
 import { toast } from "sonner";
 import { BreedTemplate } from "@/types/breedTemplate";
+import { useMutation } from "@tanstack/react-query";
+import { uploadApi } from "@/api"; // Assuming uploadApi is exported from @/api (likely client.ts)
 
 // Mock data for breed templates
 const breedTemplates = [
@@ -122,6 +124,20 @@ const PuppyForm = ({ puppy, onSave, onCancel, litters = [] }: PuppyFormProps) =>
   const [age, setAge] = useState<string>("");
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
 
+  const uploadImageMutation = useMutation({
+    mutationFn: (file: File) => uploadApi.uploadFile(file, "puppy-images"), // Pass folder context
+    onSuccess: (data: { url: string }) => { // data should be { url: string }
+      setFormData(prev => ({ ...prev, photoUrl: data.url }));
+      setPhotoPreview(data.url);
+      toast.success("Photo uploaded successfully!");
+    },
+    onError: (error: Error) => {
+      toast.error(`Photo upload failed: ${error.message}`);
+      // Optionally clear photoPreview if upload fails
+      // setPhotoPreview(null);
+    }
+  });
+
   useEffect(() => {
     if (formData.birthdate) {
       setAge(calculateAge(formData.birthdate));
@@ -155,14 +171,9 @@ const PuppyForm = ({ puppy, onSave, onCancel, litters = [] }: PuppyFormProps) =>
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // In a real app, you'd upload this to your server or cloud storage
-      // For demo purposes, we're just creating a local URL
-      const objectUrl = URL.createObjectURL(file);
-      setPhotoPreview(objectUrl);
-      setFormData({
-        ...formData,
-        photoUrl: objectUrl // In real app, this would be the URL from your server
-      });
+      // Clear previous preview immediately to indicate change
+      setPhotoPreview(null);
+      uploadImageMutation.mutate(file);
     }
   };
 
@@ -398,7 +409,12 @@ const PuppyForm = ({ puppy, onSave, onCancel, litters = [] }: PuppyFormProps) =>
                     Photo
                   </label>
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center h-60 bg-gray-50 hover:bg-gray-100 transition">
-                    {photoPreview ? (
+                    {uploadImageMutation.isPending ? (
+                      <div className="flex flex-col items-center">
+                        <Loader2 className="h-8 w-8 animate-spin text-brand-red mb-2" />
+                        <p className="text-sm text-gray-500">Uploading...</p>
+                      </div>
+                    ) : photoPreview ? (
                       <>
                         <img 
                           src={photoPreview} 
@@ -408,7 +424,8 @@ const PuppyForm = ({ puppy, onSave, onCancel, litters = [] }: PuppyFormProps) =>
                         <Button 
                           type="button" 
                           variant="outline"
-                          onClick={() => document.getElementById('photo-upload')?.click()}
+                          onClick={() => !uploadImageMutation.isPending && document.getElementById('photo-upload')?.click()}
+                          disabled={uploadImageMutation.isPending}
                         >
                           Change Photo
                         </Button>
@@ -422,7 +439,8 @@ const PuppyForm = ({ puppy, onSave, onCancel, litters = [] }: PuppyFormProps) =>
                         <Button 
                           type="button" 
                           variant="outline"
-                          onClick={() => document.getElementById('photo-upload')?.click()}
+                          onClick={() => !uploadImageMutation.isPending && document.getElementById('photo-upload')?.click()}
+                          disabled={uploadImageMutation.isPending}
                         >
                           <PlusCircle className="mr-2 h-4 w-4" />
                           Upload Photo
@@ -435,6 +453,7 @@ const PuppyForm = ({ puppy, onSave, onCancel, litters = [] }: PuppyFormProps) =>
                       accept="image/*"
                       onChange={handlePhotoChange}
                       className="hidden"
+                      disabled={uploadImageMutation.isPending} // Disable file input during upload
                     />
                   </div>
                 </div>
