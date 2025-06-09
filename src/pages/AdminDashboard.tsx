@@ -16,7 +16,8 @@ import ThirdPartyIntegrationsManager from "@/components/admin/ThirdPartyIntegrat
 import EmailTemplatesManager from "@/components/admin/EmailTemplatesManager";
 import AdminUserManager from "@/components/admin/AdminUserManager";
 import AdminStudDogManager from "@/components/admin/AdminStudDogManager";
-import AdvancedSecurityFeatures from "@/components/admin/AdvancedSecurityFeatures"; // Import AdvancedSecurityFeatures
+import AdvancedSecurityFeatures from "@/components/admin/AdvancedSecurityFeatures";
+import DataDeletionRequestsManager from "@/components/admin/DataDeletionRequestsManager"; // Import the new component
 
 const AdminDashboard = () => {
   // For demo purposes, we're using a fake authentication state
@@ -37,8 +38,8 @@ const AdminDashboard = () => {
           
           <Tabs defaultValue="puppies" className="w-full">
             <div className="bg-white dark:bg-black/30 p-4 rounded-t-xl shadow-sm border-b overflow-x-auto">
-              {/* Adjusted grid-cols to 14 and min-w */}
-              <TabsList className="grid grid-cols-14 w-full h-auto gap-2 min-w-[1400px]">
+              {/* Adjusted grid-cols to 15 and min-w */}
+              <TabsList className="grid grid-cols-15 w-full h-auto gap-2 min-w-[1500px]"> {/* Increased min-w */}
                 <TabsTrigger value="puppies" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
                   <Dog className="h-5 w-5 mr-2" />
                   <span>Puppies</span>
@@ -95,6 +96,10 @@ const AdminDashboard = () => {
                   <ShieldCheck className="h-5 w-5 mr-2" />
                   <span>Adv. Security</span>
                 </TabsTrigger>
+                <TabsTrigger value="data_deletion" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
+                  <ShieldCheck className="h-5 w-5 mr-2" /> {/* Consider a more specific icon if available */}
+                  <span>Data Deletion</span>
+                </TabsTrigger>
               </TabsList>
             </div>
             
@@ -148,6 +153,9 @@ const AdminDashboard = () => {
               </TabsContent>
               <TabsContent value="adv_security" className="mt-0 animate-fade-in">
                 <AdvancedSecurityFeatures />
+              </TabsContent>
+              <TabsContent value="data_deletion" className="mt-0 animate-fade-in">
+                <DataDeletionRequestsManager />
               </TabsContent>
             </div>
           </Tabs>

@@ -2,6 +2,81 @@
 import { getMyConversations, getMessagesForConversation, sendMessage, startConversation } from './controllers/chat';
 import { corsHeaders } from './utils/cors';
 import type { Env } from './env';
+// Import authentication functions if you're using them directly in the router
+// import { verifyJwtAuth, adminAuthMiddleware } from './auth';
+// Import controller functions
+// import { login, register, getCurrentUser } from './controllers/users';
+
+//
+// IMPORTANT: ROUTING AND AUTH MIDDLEWARE APPLICATION
+//
+// This basic `fetch` function in `index.ts` is suitable for serving static assets
+// and very simple API endpoints. For a more complex application, you'll need a
+// proper router (like itty-router, Hono, or Cloudflare's built-in router for Workers)
+// to handle different API routes, methods, and parameters.
+//
+// Authentication middleware (`verifyJwtAuth` and `adminAuthMiddleware` from
+// `./auth.ts`) should be applied at the router level before calling protected
+// controller functions.
+//
+// Conceptual Example with itty-router:
+//
+// import { Router } from 'itty-router';
+// import { verifyJwtAuth, adminAuthMiddleware } from './auth';
+// import { getCurrentUser, listUsers } from './controllers/users';
+// import { createPuppy } from './controllers/puppies';
+//
+// const router = Router();
+//
+// // Public routes
+// router.post('/api/login', login);
+// router.post('/api/register', register);
+//
+// // Protected user routes (example)
+// router.get('/api/users/me', async (request, env, ctx) => {
+//   const authResult = await verifyJwtAuth(request, env);
+//   if (!authResult.authenticated) {
+//     return new Response(JSON.stringify({ error: authResult.error }), { status: 401, headers: corsHeaders });
+//   }
+//   // Pass authResult or specific parts (like userId) to the controller
+//   return getCurrentUser(request, env, authResult.decodedToken);
+// });
+//
+// router.post('/api/puppies', async (request, env, ctx) => {
+//   const authResult = await verifyJwtAuth(request, env);
+//   if (!authResult.authenticated) {
+//     return new Response(JSON.stringify({ error: authResult.error }), { status: 401, headers: corsHeaders });
+//   }
+//   return createPuppy(request, env, authResult.decodedToken);
+// });
+//
+// // Protected admin routes (example)
+// router.get('/api/admin/users', async (request, env, ctx) => {
+//   const adminAuthResponse = await adminAuthMiddleware(request, env);
+//   if (adminAuthResponse) { // adminAuthMiddleware returns a Response if auth fails
+//     return adminAuthResponse;
+//   }
+//   // If adminAuthMiddleware passes, (request as any).auth will have the decoded token.
+//   // You can then call the controller function.
+//   return listUsers(request, env); // listUsers might expect (request as any).auth
+// });
+//
+// export default {
+//   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+//     if (url.pathname.startsWith('/api/')) { // Basic check
+//        return router.handle(request, env, ctx)
+//          .catch(error => { /* handle errors from router */ })
+//          .then(response => { /* ensure CORS headers on router responses */ });
+//     }
+//     // ... rest of your static asset serving logic ...
+//   }
+// }
+//
+// Remember to adapt this conceptual example to the specific router and structure
+// you choose for your application. The key is that `verifyJwtAuth` and
+// `adminAuthMiddleware` are called *before* your actual controller logic for
+// protected routes.
+//
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -16,6 +91,10 @@ export default {
     }
 
     // API Routes - handle these first
+    // Recommendation: Implement rate limiting for sensitive endpoints, especially
+    // authentication routes like /api/login and /api/register, as part of
+    // production readiness. This can be done using Cloudflare's Rate Limiting
+    // product or custom logic (e.g., with Durable Objects).
     if (url.pathname.startsWith('/api/')) {
       const apiPath = url.pathname.replace('/api', '');
       

@@ -34,7 +34,8 @@ import FAQPage from "@/pages/FAQPage";
 import TermsOfServicePage from "@/pages/TermsOfServicePage";
 import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
 import RefundPolicyPage from "@/pages/RefundPolicyPage";
-import UserDataDeletionPage from "@/pages/UserDataDeletionPage";
+// import UserDataDeletionPage from "@/pages/UserDataDeletionPage"; // Old one if it exists
+import DataDeletionRequestPage from "@/pages/DataDeletionRequestPage"; // New page
 import ProtectedRoute from "@/components/ProtectedRoute";
 import TawkToWidget from "@/components/chat/TawkToWidget";
 
@@ -135,7 +136,8 @@ const App = () => {
                       <Route path="/terms-of-service" element={<TermsOfServicePage />} />
                       <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
                       <Route path="/refund-policy" element={<RefundPolicyPage />} />
-                      <Route path="/user-data-deletion" element={<UserDataDeletionPage />} />
+                      {/* <Route path="/user-data-deletion" element={<UserDataDeletionPage />} /> */}
+                      <Route path="/privacy/request-deletion" element={<DataDeletionRequestPage />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Layout>
