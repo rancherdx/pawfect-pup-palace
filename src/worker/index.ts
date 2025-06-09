@@ -1,3 +1,4 @@
+
 import { Router, IRequest } from 'itty-router';
 import { corsHeaders } from './utils/cors';
 import type { Env } from './env';
@@ -177,38 +178,38 @@ router.delete('/api/admin/users/:id', async (request: IRequest, env: Env, ctx: E
 router.post('/api/admin/puppies', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
   if (authResponse) return authResponse;
-  return createPuppy(request as unknown as Request, env, (request as any).auth);
+  return createPuppy(request as unknown as Request, env);
 });
 router.put('/api/admin/puppies/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
   if (authResponse) return authResponse;
-    const params = request.params || {};
-  return updatePuppy(request as unknown as Request, env, (request as any).auth, params.id);
+  const params = request.params || {};
+  return updatePuppy(request as unknown as Request, env, params.id);
 });
 router.delete('/api/admin/puppies/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
   if (authResponse) return authResponse;
-    const params = request.params || {};
-  return deletePuppy(request as unknown as Request, env, (request as any).auth, params.id);
+  const params = request.params || {};
+  return deletePuppy(request as unknown as Request, env, params.id);
 });
 
 // Litter Management (Admin)
 router.post('/api/admin/litters', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
   if (authResponse) return authResponse;
-  return createLitter(request as unknown as Request, env, (request as any).auth);
+  return createLitter(request as unknown as Request, env);
 });
 router.put('/api/admin/litters/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
   if (authResponse) return authResponse;
-    const params = request.params || {};
-  return updateLitter(request as unknown as Request, env, (request as any).auth, params.id);
+  const params = request.params || {};
+  return updateLitter(request as unknown as Request, env, params.id);
 });
 router.delete('/api/admin/litters/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
   if (authResponse) return authResponse;
-    const params = request.params || {};
-  return deleteLitter(request as unknown as Request, env, (request as any).auth, params.id);
+  const params = request.params || {};
+  return deleteLitter(request as unknown as Request, env, params.id);
 });
 
 // Site Settings (Admin)
@@ -220,7 +221,7 @@ router.get('/api/admin/settings', async (request: IRequest, env: Env, ctx: Execu
 router.put('/api/admin/settings/:key', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
   if (authResponse) return authResponse;
-    const params = request.params || {};
+  const params = request.params || {};
   return updateSiteSetting(request as unknown as Request, env, params.key);
 });
 
@@ -233,7 +234,8 @@ router.get('/api/admin/email-templates', async (request: IRequest, env: Env, ctx
 router.get('/api/admin/email-templates/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
   if (authResponse) return authResponse;
-  return getEmailTemplateById(request as unknown as Request, env);
+  const params = request.params || {};
+  return getEmailTemplateById(request as unknown as Request, env, params.id);
 });
 router.post('/api/admin/email-templates', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
@@ -249,7 +251,8 @@ router.put('/api/admin/email-templates/:id', async (request: IRequest, env: Env,
 router.delete('/api/admin/email-templates/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
   if (authResponse) return authResponse;
-  return deleteEmailTemplate(request as unknown as Request, env);
+  const params = request.params || {};
+  return deleteEmailTemplate(request as unknown as Request, env, params.id);
 });
 
 // Integrations (Admin)
@@ -288,17 +291,17 @@ router.put('/api/admin/data-deletion-requests/:id/status', async (request: IRequ
 router.post('/api/admin/test-session', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
   if (authResponse) return authResponse;
-  return createAdminTestSession(request as unknown as Request, env, (request as any).auth);
+  return createAdminTestSession(request as unknown as Request, env);
 });
 router.post('/api/admin/test-session/impersonate', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
   if (authResponse) return authResponse;
-  return createImpersonationSession(request as unknown as Request, env, (request as any).auth);
+  return createImpersonationSession(request as unknown as Request, env);
 });
 router.get('/api/admin/test-logs', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
   if (authResponse) return authResponse;
-  return getTestSessionLogs(request as unknown as Request, env, (request as any).auth);
+  return getTestSessionLogs(request as unknown as Request, env);
 });
 
 // NEW: Transaction History Route (Fixed from AdminTest page)
