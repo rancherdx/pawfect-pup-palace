@@ -1,5 +1,6 @@
 import type { Env } from './env'; // Import Env
 import { corsHeaders } from './utils/cors'; // For error responses
+import bcrypt from 'bcryptjs';
 
 // In production, JWT_SECRET should be a secure environment variable
 // const JWT_SECRET = 'your-jwt-secret-key'; // Original hardcoded, will use env.JWT_SECRET
@@ -11,50 +12,6 @@ function createAuthErrorResponse(message: string, details: string | null = null,
     { status: status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   );
 }
-
-// Existing verifyAuth based on KV session token - keep for existing uses if any
-export async function verifySessionAuth(request: Request, env: Env) {
-  const authHeader = request.headers.get('Authorization');
-  
-  if (!authHeader || !authHeader.startsWith('Bearer ')) { // This typically expects a session token, not JWT
-    return { authenticated: false, error: "No token provided" };
-  }
-  
-  const token = authHeader.split(' ')[1]; // This is the session token
-  
-  try {
-    const sessionJson = await env.AUTH_STORE.get(`session:${token}`);
-    if (!sessionJson) {
-      return { authenticated: false, error: "Invalid session token" };
-    }
-    
-    const sessionData = JSON.parse(sessionJson);
-    
-    if (sessionData.expiresAt < Date.now()) {
-      await env.AUTH_STORE.delete(`session:${token}`);
-      return { authenticated: false, error: "Session expired" };
-    }
-    
-    // Ensure roles is an array, even if KV store had singular 'role'
-    let rolesArray = ['user']; // Default
-    if (sessionData.roles && Array.isArray(sessionData.roles)) {
-        rolesArray = sessionData.roles;
-    } else if (sessionData.role && typeof sessionData.role === 'string') { // Compatibility for old 'role'
-        rolesArray = [sessionData.role];
-    }
-
-    return {
-      authenticated: true,
-      userId: sessionData.userId,
-      email: sessionData.email, // Added email
-      roles: rolesArray // Ensure roles is an array
-    };
-  } catch (error) {
-    console.error('Session auth verification error:', error);
-    return { authenticated: false, error: "Auth verification failed" };
-  }
-}
-
 
 // --- JWT Related Functions ---
 
@@ -192,21 +149,18 @@ export async function adminAuthMiddleware(request: Request, env: Env): Promise<R
   (request as any).auth = authResult.decodedToken;
 }
 
-
-// --- Utility functions from original auth.ts, kept for compatibility if used elsewhere ---
-export async function generateToken(length = 32) {
-  const randomBytes = new Uint8Array(length);
-  crypto.getRandomValues(randomBytes);
-  return Array.from(randomBytes)
-    .map(byte => byte.toString(16).padStart(2, '0'))
-    .join('');
-}
+// Removed generateToken (simple string generator) as it's no longer needed.
+// hashPassword remains as it's used for password hashing with bcrypt.
 
 export async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hash = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hash))
-    .map(byte => byte.toString(16).padStart(2, '0'))
-    .join('');
+  // Password migration strategy:
+  // 1. Add a new boolean column to the users table, e.g., `is_password_bcrypt_hashed`.
+  // 2. When a user tries to log in:
+  //    - If `is_password_bcrypt_hashed` is true, use `bcrypt.compareSync` (or `bcrypt.compare`).
+  //    - If false (or null), attempt to verify with the old SHA-256 hash.
+  //      - If successful, re-hash the password with bcrypt, save it, set `is_password_bcrypt_hashed` to true, and then proceed with login.
+  //      - If SHA-256 verification also fails, then it's an invalid password.
+  // This allows for gradual migration without forcing all users to reset at once.
+  const saltRounds = 10;
+  return bcrypt.hashSync(password, saltRounds);
 }

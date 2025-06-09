@@ -17,6 +17,15 @@ function createErrorResponse(message: string, details: string | null = null, sta
   );
 }
 
+// Note: For all functions in this file that include an `authResult` parameter or imply admin-only access,
+// the router (e.g., in `src/worker/index.ts` or a dedicated router file) is responsible for:
+// 1. Calling `verifyJwtAuth(request, env)` to authenticate the user.
+// 2. If the route is admin-only (like createPuppy, updatePuppy, deletePuppy),
+//    also calling `adminAuthMiddleware(request, env)` to ensure admin privileges.
+// 3. Passing the `authResult.decodedToken` (or relevant parts like `userId`, `roles`)
+//    from the authentication functions to these controller functions.
+// The `authResult` parameter in these functions expects the decoded JWT payload.
+
 // Define a basic Puppy type based on master_schema.sql
 // This should be expanded and moved to a shared types file eventually
 interface Puppy {
@@ -129,7 +138,11 @@ export async function getPuppyById(request: Request, env: Env) {
   }
 }
 
+// Example: Router should call adminAuthMiddleware before this.
 export async function createPuppy(request: Request, env: Env, authResult: AuthResult) {
+  // authResult is expected to be the decoded JWT payload from adminAuthMiddleware
+  // The adminAuthMiddleware itself would have already checked for admin roles.
+  // However, keeping an explicit check here can be a secondary safeguard.
   if (!authResult.roles || !authResult.roles.includes('admin')) {
     return createErrorResponse('Unauthorized', 'Admin role required to create puppies.', 403);
   }
@@ -197,7 +210,9 @@ export async function createPuppy(request: Request, env: Env, authResult: AuthRe
   }
 }
 
+// Example: Router should call adminAuthMiddleware before this.
 export async function updatePuppy(request: Request, env: Env, authResult: AuthResult) {
+  // authResult is expected to be the decoded JWT payload from adminAuthMiddleware
   if (!authResult.roles || !authResult.roles.includes('admin')) {
     return createErrorResponse('Unauthorized', 'Admin role required to update puppies.', 403);
   }
@@ -257,7 +272,9 @@ export async function updatePuppy(request: Request, env: Env, authResult: AuthRe
   }
 }
 
+// Example: Router should call adminAuthMiddleware before this.
 export async function deletePuppy(request: Request, env: Env, authResult: AuthResult) {
+  // authResult is expected to be the decoded JWT payload from adminAuthMiddleware
   if (!authResult.roles || !authResult.roles.includes('admin')) {
     return createErrorResponse('Unauthorized', 'Admin role required to delete puppies.', 403);
   }
@@ -285,7 +302,9 @@ export async function deletePuppy(request: Request, env: Env, authResult: AuthRe
   }
 }
 
+// Example: Router should call verifyJwtAuth before this.
 export async function getMyPuppies(request: Request, env: Env, authResult: AuthResult) {
+    // authResult is expected to be the decoded JWT payload from verifyJwtAuth
     const { userId } = authResult;
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1', 10);
@@ -334,7 +353,10 @@ export async function getMyPuppies(request: Request, env: Env, authResult: AuthR
     }
 }
 
+// Example: Router should call verifyJwtAuth before this.
+// The function itself handles owner/admin checks based on authResult.
 export async function getPuppyHealthRecords(request: Request, env: Env, params: { puppyId: string }, authResult: AuthResult) {
+    // authResult is expected to be the decoded JWT payload from verifyJwtAuth
     const { puppyId } = params;
     const { userId, roles } = authResult;
     const { searchParams } = new URL(request.url);
@@ -391,7 +413,10 @@ export async function getPuppyHealthRecords(request: Request, env: Env, params: 
     }
 }
 
+// Example: Router should call verifyJwtAuth before this.
+// The function itself handles owner/admin checks based on authResult.
 export async function addPuppyHealthRecord(request: Request, env: Env, authResult: AuthResult, params: { puppyId: string }) {
+    // authResult is expected to be the decoded JWT payload from verifyJwtAuth
     const { puppyId } = params;
     const { userId, roles } = authResult;
 

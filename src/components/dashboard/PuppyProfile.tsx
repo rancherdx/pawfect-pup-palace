@@ -14,14 +14,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 import { 
   PawPrint, Calendar, Dog, Bone, Heart, Pill, FileText, MessageSquare, Clock, ChevronRight, ArrowUpRight,
-  Loader2, AlertCircle, PlusCircle, Send, Paperclip
-} from "lucide-react";
+  Loader2, AlertCircle, PlusCircle, Send, Paperclip, Printer
+} from "lucide-react"; // Added Printer icon
 import { 
   ChartContainer, ChartLegend, ChartTooltip, ChartTooltipContent,
 } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/api/client"; // Import the centralized API client
 
 // Interfaces for API data
 interface PuppyData {
@@ -73,24 +74,7 @@ interface Message {
   read_at?: string | null;
 }
 
-// API Fetcher Functions (should be in an api.ts or hooks)
-const makeApiRequest = async (url: string, method: string, token: string | null, body?: any) => {
-  if (!token) throw new Error("Authentication token is required.");
-  const response = await fetch(url, {
-    method,
-    headers: {
-      "Authorization": `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || `API request failed: ${response.statusText}`);
-  }
-  return response.json();
-};
-
+// API Fetcher Functions are now replaced by apiRequest from @/api/client
 
 // Helper to calculate age from birth_date
 const calculateAgeMonths = (birthDateStr: string): number => {
@@ -132,14 +116,15 @@ const PuppyProfile = () => {
   });
 
   const fetchPuppyData = useCallback(async () => {
-    if (!puppyId || !token) return;
+    if (!puppyId) return; // Token is handled by apiRequest
     setIsLoadingPuppy(true);
     try {
-      const data = await makeApiRequest(`/api/puppies/${puppyId}`, "GET", token);
-      // API returns image_urls as stringified JSON, parse it
+      // Use apiRequest, adjust endpoint if base URL is set in apiRequest
+      const data = await apiRequest(`/puppies/${puppyId}`, "GET");
+      // Keep image_urls parsing logic as apiRequest is generic
       setPuppy({ ...data, image_urls: Array.isArray(data.image_urls) ? data.image_urls : JSON.parse(data.image_urls || "[]") });
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message); // apiRequest should throw error with message
       toast({ variant: "destructive", title: "Failed to load puppy data", description: err.message });
     } finally {
       setIsLoadingPuppy(false);
@@ -147,11 +132,12 @@ const PuppyProfile = () => {
   }, [puppyId, token, toast]);
 
   const fetchHealthRecords = useCallback(async () => {
-    if (!puppyId || !token) return;
+    if (!puppyId) return;
     setIsLoadingHealth(true);
     try {
-      const data = await makeApiRequest(`/api/puppies/${puppyId}/health-records`, "GET", token);
-      setHealthRecords(data.data || []); // Assuming API returns { data: [] }
+      // Use apiRequest
+      const response = await apiRequest(`/puppies/${puppyId}/health-records`, "GET");
+      setHealthRecords(response.data || []); // Adjust based on typical apiRequest response structure
     } catch (err: any) {
       toast({ variant: "destructive", title: "Failed to load health records", description: err.message });
     } finally {
@@ -160,14 +146,14 @@ const PuppyProfile = () => {
   }, [puppyId, token, toast]);
   
   const fetchConversations = useCallback(async () => {
-    if (!puppyId || !token) return;
+    if (!puppyId) return;
     setIsLoadingConvos(true);
     try {
-      // Fetch conversations related to this puppy
-      const convosData = await makeApiRequest(`/api/my-conversations?related_entity_id=${puppyId}&related_entity_type=puppy`, "GET", token);
-      setConversations(convosData.data || []);
-      if (convosData.data && convosData.data.length > 0) {
-        setActiveConversation(convosData.data[0]); // Auto-select first one
+      // Use apiRequest
+      const convosResponse = await apiRequest(`/my-conversations?related_entity_id=${puppyId}&related_entity_type=puppy`, "GET");
+      setConversations(convosResponse.data || []);
+      if (convosResponse.data && convosResponse.data.length > 0) {
+        setActiveConversation(convosResponse.data[0]);
       }
     } catch (err: any) {
        toast({ variant: "destructive", title: "Failed to load conversations", description: err.message });
@@ -177,11 +163,12 @@ const PuppyProfile = () => {
   }, [puppyId, token, toast]);
 
   const fetchMessagesForConversation = useCallback(async (conversationId: string) => {
-    if (!token) return;
+    if (!conversationId) return;
     setIsLoadingMessages(true);
     try {
-      const messagesData = await makeApiRequest(`/api/conversations/${conversationId}/messages`, "GET", token);
-      setMessages(messagesData.data || []);
+      // Use apiRequest
+      const messagesResponse = await apiRequest(`/conversations/${conversationId}/messages`, "GET");
+      setMessages(messagesResponse.data || []);
     } catch (err: any) {
       toast({ variant: "destructive", title: "Failed to load messages", description: err.message });
     } finally {
@@ -206,7 +193,7 @@ const PuppyProfile = () => {
 
   const handleAddHealthRecordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!puppyId || !token) return;
+    if (!puppyId) return;
     try {
       const payload: any = {
         record_type: newHealthRecord.record_type,
@@ -217,7 +204,8 @@ const PuppyProfile = () => {
         if (newHealthRecord.value) payload.value = parseFloat(newHealthRecord.value);
         if (newHealthRecord.unit) payload.unit = newHealthRecord.unit;
       }
-      await makeApiRequest(`/api/puppies/${puppyId}/health-records`, "POST", token, payload);
+      // Use apiRequest
+      await apiRequest(`/puppies/${puppyId}/health-records`, "POST", payload);
       toast({ title: "Health Record Added", description: "Successfully added new health record.", className: "bg-green-500 text-white" });
       setShowAddHealthForm(false);
       fetchHealthRecords(); // Refresh list
@@ -228,11 +216,16 @@ const PuppyProfile = () => {
   };
   
   const handleStartOrSendMessage = async () => {
-    if (!newMessageContent.trim() || !token || !puppyId || !user) return;
+    if (!newMessageContent.trim() || !puppyId || !user) return; // Token handled by apiRequest
 
     try {
       if (activeConversation?.id) {
-        const sentMessage = await makeApiRequest(`/api/conversations/${activeConversation.id}/messages`, "POST", token, { content: newMessageContent });
+        // Use apiRequest
+        const sentMessage = await apiRequest(`/conversations/${activeConversation.id}/messages`, "POST", { content: newMessageContent });
+        // Assuming apiRequest returns the created message directly or within a `data` field.
+        // If `sentMessage.data` is the actual message object:
+        // setMessages(prev => [...prev, sentMessage.data || sentMessage]);
+        // For now, assuming it returns the message directly:
         setMessages(prev => [...prev, sentMessage]);
       } else { // Start a new conversation
         const newConvPayload = {
@@ -241,10 +234,27 @@ const PuppyProfile = () => {
           related_entity_id: puppyId,
           related_entity_type: 'puppy'
         };
-        const { conversation: newConv, message: firstMessage } = await makeApiRequest(`/api/conversations`, "POST", token, newConvPayload);
-        setConversations(prev => [newConv, ...prev]);
-        setActiveConversation(newConv);
-        setMessages([firstMessage]);
+        // Use apiRequest
+        const response = await apiRequest(`/conversations`, "POST", newConvPayload);
+        // Assuming response structure is { conversation: newConv, message: firstMessage }
+        const newConv = response.conversation;
+        const firstMessage = response.message;
+
+        if (newConv && firstMessage) {
+            setConversations(prev => [newConv, ...prev]);
+            setActiveConversation(newConv);
+            setMessages([firstMessage]);
+        } else {
+            // Fallback if the structure is different, e.g. the new conversation itself is returned
+            // This might need adjustment based on actual API response from apiRequest for this endpoint
+            setConversations(prev => [response, ...prev]);
+            setActiveConversation(response);
+            // And if starting a conversation doesn't return the first message immediately,
+            // you might need another fetch or to adjust UI expectation.
+            // For now, if firstMessage isn't separate, we add a placeholder or refetch.
+            // For simplicity, if only conversation is returned, messages might initially be empty.
+            if(response.id) fetchMessagesForConversation(response.id);
+        }
       }
       setNewMessageContent("");
     } catch (err: any) {
@@ -278,11 +288,17 @@ const PuppyProfile = () => {
   if (!puppy) return <div className="text-center py-10"><AlertCircle className="h-12 w-12 mx-auto text-orange-500 mb-4" /><h3 className="text-xl font-semibold text-orange-600">Puppy Not Found</h3><p className="text-muted-foreground">The requested puppy could not be found.</p></div>;
 
   return (
-    <div className="max-w-6xl mx-auto p-4">
+    <div id="printable-puppy-profile" className="max-w-6xl mx-auto p-4">
+      <div className="flex justify-end mb-4 no-print">
+        <Button onClick={() => window.print()} variant="outline">
+          <Printer className="mr-2 h-4 w-4" />
+          Print Profile
+        </Button>
+      </div>
       {/* Puppy Info Column */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div className="lg:col-span-1">
-          <Card className="overflow-hidden shadow-lg">
+          <Card className="overflow-hidden shadow-lg puppy-profile-card">
             <img src={puppy.image_urls[0] || "/placeholder.svg"} alt={puppy.name} className="w-full h-60 object-cover"/>
             <CardHeader>
               <CardTitle className="text-3xl flex items-center">{puppy.name} <PawPrint className="ml-2 h-6 w-6 text-brand-red" /></CardTitle>
@@ -298,8 +314,8 @@ const PuppyProfile = () => {
                 <Progress value={growthProgress} className="h-3 mt-1" />
               </div>
             </CardContent>
-             <CardFooter>
-                <Button asChild variant="outline" className="w-full">
+             <CardFooter className="no-print">
+                <Button asChild variant="outline" className="w-full mr-2">
                     <Link to={`/puppies/${puppy.id}`} target="_blank" rel="noopener noreferrer">
                         View Public Profile <ArrowUpRight className="ml-2 h-4 w-4" />
                     </Link>
@@ -311,24 +327,24 @@ const PuppyProfile = () => {
         {/* Tabs Column */}
         <div className="lg:col-span-2">
           <Tabs defaultValue="health">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-3 no-print">
               <TabsTrigger value="health">Health</TabsTrigger>
               <TabsTrigger value="documents">Documents</TabsTrigger>
               <TabsTrigger value="messages">Messages</TabsTrigger>
             </TabsList>
 
             {/* Health Tab */}
-            <TabsContent value="health">
-              <Card>
+            <TabsContent value="health" className="health-tab-content-class">
+              <Card className="puppy-profile-card">
                 <CardHeader>
                   <div className="flex justify-between items-center">
                     <CardTitle>Health Overview</CardTitle>
-                    <Button onClick={() => setShowAddHealthForm(true)} size="sm"><PlusCircle className="mr-2 h-4 w-4"/> Add Record</Button>
+                    <Button onClick={() => setShowAddHealthForm(true)} size="sm" className="no-print"><PlusCircle className="mr-2 h-4 w-4"/> Add Record</Button>
                   </div>
                 </CardHeader>
                 <CardContent>
                   {showAddHealthForm && (
-                    <form onSubmit={handleAddHealthRecordSubmit} className="mb-6 p-4 border rounded-lg space-y-3">
+                    <form onSubmit={handleAddHealthRecordSubmit} className="mb-6 p-4 border rounded-lg space-y-3 no-print add-health-form-class">
                       <h4 className="text-md font-semibold">Add New Health Record</h4>
                       <div>
                         <Label htmlFor="record_type">Record Type</Label>
@@ -354,7 +370,7 @@ const PuppyProfile = () => {
                           <div><Label htmlFor="unit">Unit (lbs, kg, in, cm)</Label><Input id="unit" value={newHealthRecord.unit} onChange={e => setNewHealthRecord(prev => ({...prev, unit: e.target.value}))} /></div>
                         </>
                       )}
-                      <div className="flex justify-end space-x-2">
+                      <div className="flex justify-end space-x-2 no-print action-button-class">
                         <Button type="button" variant="outline" onClick={() => setShowAddHealthForm(false)}>Cancel</Button>
                         <Button type="submit">Save Record</Button>
                       </div>
@@ -363,12 +379,12 @@ const PuppyProfile = () => {
                   <div className="space-y-4">
                     <div>
                       <h3 className="font-semibold mb-2">Vaccinations</h3>
-                      {isLoadingHealth && <Loader2 className="animate-spin" />}
+                      {isLoadingHealth && <Loader2 className="animate-spin no-print" />}
                       {vaccinations.length > 0 ? vaccinations.map(v => <div key={v.id} className="text-sm p-2 border-b">{v.details} - {new Date(v.date).toLocaleDateString()}</div>) : <p className="text-sm text-muted-foreground">No vaccination records.</p>}
                     </div>
-                    <div>
+                    <div className="chart-container-class no-print">
                       <h3 className="font-semibold mb-2">Growth Chart</h3>
-                       {isLoadingHealth && <Loader2 className="animate-spin" />}
+                       {isLoadingHealth && <Loader2 className="animate-spin no-print" />}
                       {(weightHistory.length > 0 || heightHistory.length > 0) ? (
                         <ResponsiveContainer width="100%" height={250}>
                           <LineChart>
@@ -390,17 +406,17 @@ const PuppyProfile = () => {
             </TabsContent>
 
             {/* Documents Tab */}
-            <TabsContent value="documents">
-              <Card>
+            <TabsContent value="documents" className="documents-tab-content-class">
+              <Card className="puppy-profile-card">
                 <CardHeader><CardTitle>Documents</CardTitle></CardHeader>
                 <CardContent>
-                  {isLoadingHealth && <Loader2 className="animate-spin" />}
+                  {isLoadingHealth && <Loader2 className="animate-spin no-print" />}
                   {documents.length > 0 ? documents.map(d => (
                     <div key={d.id} className="text-sm p-2 border-b flex justify-between items-center">
                       <span>{d.details} - {new Date(d.date).toLocaleDateString()}</span>
                       {/* Assuming details contains a URL for document type 'document' */}
                       {d.record_type === 'document' && d.details.startsWith('http') &&
-                        <Button variant="outline" size="sm" asChild><a href={d.details} target="_blank" rel="noopener noreferrer">View</a></Button>}
+                        <Button variant="outline" size="sm" asChild className="no-print action-button-class"><a href={d.details} target="_blank" rel="noopener noreferrer">View</a></Button>}
                     </div>
                   )) : <p className="text-sm text-muted-foreground">No documents uploaded.</p>}
                 </CardContent>
@@ -408,14 +424,14 @@ const PuppyProfile = () => {
             </TabsContent>
             
             {/* Messages Tab */}
-            <TabsContent value="messages">
-              <Card>
+            <TabsContent value="messages" className="messages-tab-content-class">
+              <Card className="puppy-profile-card">
                 <CardHeader><CardTitle>Messages {activeConversation ? `- ${activeConversation.title}`: ''}</CardTitle></CardHeader>
                 <CardContent>
-                  {isLoadingConvos && <Loader2 className="animate-spin" />}
+                  {isLoadingConvos && <Loader2 className="animate-spin no-print" />}
                   {/* TODO: UI to switch between multiple conversations if they exist for this puppy */}
                   <div className="h-[300px] overflow-y-auto border p-2 rounded-md mb-2 space-y-2">
-                    {isLoadingMessages && <Loader2 className="animate-spin" />}
+                    {isLoadingMessages && <Loader2 className="animate-spin no-print" />}
                     {messages.map(msg => (
                       <div key={msg.id} className={`p-2 rounded-lg ${msg.sender_id === user?.id ? 'bg-blue-100 text-right ml-auto' : 'bg-gray-100 text-left mr-auto'}`} style={{maxWidth: '80%'}}>
                         <p className="text-xs text-muted-foreground">{msg.sender_type} ({new Date(msg.sent_at).toLocaleTimeString()})</p>
@@ -424,11 +440,11 @@ const PuppyProfile = () => {
                     ))}
                     {!isLoadingMessages && messages.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No messages yet, or select/start a conversation.</p>}
                   </div>
-                  <div className="flex space-x-2">
+                  <div className="flex space-x-2 no-print message-input-class">
                     <Textarea value={newMessageContent} onChange={e => setNewMessageContent(e.target.value)} placeholder="Type your message..." rows={2} />
                     <Button onClick={handleStartOrSendMessage} disabled={isLoadingMessages || isLoadingConvos}><Send className="h-4 w-4"/></Button>
                   </div>
-                   {!activeConversation && !isLoadingConvos && <p className="text-xs text-muted-foreground mt-1">Sending a message will start a new conversation about {puppy.name}.</p>}
+                   {!activeConversation && !isLoadingConvos && <p className="text-xs text-muted-foreground mt-1 no-print">Sending a message will start a new conversation about {puppy.name}.</p>}
                 </CardContent>
               </Card>
             </TabsContent>

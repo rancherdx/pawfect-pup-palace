@@ -6,45 +6,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { User, Check, AlertCircle, Loader2 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext"; // Assuming AuthContext provides the token
-
-// Helper function for authenticated API calls (similar to fetchUserAPI in Receipts.tsx)
-// This should ideally be in a shared API client or hook
-async function fetchUserProfile(token: string | null) {
-  if (!token) throw new Error("Authentication token not found.");
-  const response = await fetch("/api/user", {
-    headers: {
-      "Authorization": `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || "Failed to fetch user profile.");
-  }
-  return response.json();
-}
-
-async function updateUserProfileAPI(token: string | null, data: any) {
-  if (!token) throw new Error("Authentication token not found.");
-  const response = await fetch("/api/user/profile", {
-    method: "PUT",
-    headers: {
-      "Authorization": `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || "Failed to update user profile.");
-  }
-  return response.json();
-}
+import { useAuth } from "@/contexts/AuthContext";
+import { authApi } from "@/api/client"; // Import the centralized API client
 
 const UserProfile = () => {
   const { toast } = useToast();
-  const { token } = useAuth(); // Get token from AuthContext
+  const { token, user } = useAuth(); // Get token and user from AuthContext
   const [isEditing, setIsEditing] = useState(false);
   
   const [userData, setUserData] = useState({
@@ -64,7 +31,8 @@ const UserProfile = () => {
       setIsLoading(true);
       setError(null);
       try {
-        const data = await fetchUserProfile(token);
+        // Use the new authApi client
+        const data = await authApi.getProfile();
         setUserData({
           name: data.name || "",
           email: data.email || "",
@@ -72,7 +40,7 @@ const UserProfile = () => {
           address: data.address || "",
           preferences: data.preferences || ""
         });
-        setFormData({
+        setFormData({ // Initialize form data with fetched user data
           name: data.name || "",
           email: data.email || "",
           phone: data.phone || "",
@@ -91,18 +59,19 @@ const UserProfile = () => {
       }
     };
 
+    // Check if user is authenticated (token exists) before fetching
     if (token) {
       loadUserProfile();
-    } else {
-      setError("Not authenticated. Please log in.");
-      setIsLoading(false);
-       toast({
-          variant: "destructive",
-          title: "Authentication Error",
-          description: "You must be logged in to view your profile.",
+    } else if (!user && !isLoading) { // If no user and not already loading (e.g. initial state)
+        setError("Not authenticated. Please log in.");
+        setIsLoading(false);
+        toast({
+            variant: "destructive",
+            title: "Authentication Error",
+            description: "You must be logged in to view your profile.",
         });
     }
-  }, [token, toast]);
+  }, [token, user, toast, isLoading]); // Added user and isLoading to dependency array
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -111,23 +80,24 @@ const UserProfile = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true); // Indicate loading for submission
+    setIsLoading(true);
     setError(null);
     try {
-      const updatedUser = await updateUserProfileAPI(token, formData);
-      setUserData({
+      // Use the new authApi client for updating profile
+      const updatedUser = await authApi.updateProfile(formData);
+      setUserData({ // Update local state with response from API
         name: updatedUser.name || "",
         email: updatedUser.email || "",
         phone: updatedUser.phone || "",
         address: updatedUser.address || "",
         preferences: updatedUser.preferences || ""
       });
-      setFormData({...updatedUser}); // Sync formData as well
+      setFormData({...updatedUser});
       setIsEditing(false);
       toast({
         title: "Profile Updated",
         description: "Your profile information has been successfully updated.",
-        className: "bg-green-500 text-white",
+        className: "bg-green-500 text-white", // Keep success styling
       });
     } catch (err: any) {
       setError(err.message);
@@ -137,7 +107,7 @@ const UserProfile = () => {
         description: err.message,
       });
     } finally {
-      setIsLoading(false); // Submission loading finished
+      setIsLoading(false);
     }
   };
 

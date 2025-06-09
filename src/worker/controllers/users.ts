@@ -1,10 +1,24 @@
+// src/worker/controllers/users.ts
+
+// IMPORTANT SECURITY CONSIDERATIONS:
+// 1. Rate Limiting: Endpoints like login and register are susceptible to brute-force
+//    and enumeration attacks. Implement rate limiting using Cloudflare's Rate Limiting
+//    product, or by building a custom solution (e.g., with Durable Objects to track attempts).
+// 2. Input Sanitization & Output Encoding: While this API primarily deals with JSON,
+//    always validate and sanitize inputs. If any user-controlled data were to be
+//    reflected in HTML without proper framework (like React/Vue) escaping, it could
+//    lead to XSS. For API responses, ensure content types are correctly set (e.g., application/json)
+//    and that data is structured to prevent injection into client-side scripts if consumers
+//    are not careful. The primary focus here is robust input validation for backend integrity.
+
 import { corsHeaders } from '../utils/cors';
-import { hashPassword, generateToken, createJWT } from '../auth'; // Removed verifyJWT as it's not used here
+import { hashPassword, createJWT } from '../auth';
+import bcrypt from 'bcryptjs';
 import type { Env } from '../env';
 import { sendTemplatedEmail } from '../utils/emailService'; // Added import
 
 // Helper for consistent error responses
-function createErrorResponse(message: string, details: string | null = null, status: number): Response {
+function createErrorResponse(message: string, details: string | string[] | null = null, status: number): Response {
   return new Response(
     JSON.stringify({ error: message, details: details }),
     { status: status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -15,8 +29,18 @@ export async function login(request: Request, env: Env) { // Changed env type to
   try {
     const { email, password } = await request.json() as { email?: string, password?: string };
     
-    if (!email || !password) {
-      return createErrorResponse('Email and password are required', null, 400);
+    const validationErrors: string[] = [];
+    if (!email) {
+      validationErrors.push('Email is required.');
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      validationErrors.push('Invalid email format.');
+    }
+    if (!password) {
+      validationErrors.push('Password is required.');
+    }
+
+    if (validationErrors.length > 0) {
+      return createErrorResponse('Login failed due to validation errors.', validationErrors, 400);
     }
     
     const userResult = await env.PUPPIES_DB
@@ -33,12 +57,16 @@ export async function login(request: Request, env: Env) { // Changed env type to
     // If `hashPassword` is used for hashing at registration, `userResult.password` should be the stored hash.
     // And a separate `verifyPassword(plainPassword, storedHash)` function would be needed.
     // For now, sticking to the existing logic pattern in the file:
-    const requestHashedPassword = await hashPassword(password);
-    if (userResult.password_hash !== requestHashedPassword) {
+    // const requestHashedPassword = await hashPassword(password); // Old SHA-256 comparison
+    // if (userResult.password_hash !== requestHashedPassword) { // Old SHA-256 comparison
+
+    // New bcrypt comparison
+    const isPasswordValid = bcrypt.compareSync(password, userResult.password_hash);
+    if (!isPasswordValid) {
       return createErrorResponse('Invalid email or password', null, 401);
     }
     
-    const sessionToken = await generateToken(); // This is a session token for KV store
+    // const sessionToken = await generateToken(); // This is a session token for KV store - REMOVED
     
     let userRoles: string[] = ['user'];
     try {
@@ -57,16 +85,16 @@ export async function login(request: Request, env: Env) { // Changed env type to
       roles: userRoles
     }, env ); // Pass full env to createJWT if it needs env.JWT_SECRET from there
     
-    const sessionData = {
-      userId: userResult.id,
-      email: userResult.email,
-      roles: userRoles,
-      expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000)
-    };
-    await env.AUTH_STORE.put(`session:${sessionToken}`, JSON.stringify(sessionData));
+    // const sessionData = { // REMOVED KV Store logic
+    //   userId: userResult.id,
+    //   email: userResult.email,
+    //   roles: userRoles,
+    //   expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000)
+    // };
+    // await env.AUTH_STORE.put(`session:${sessionToken}`, JSON.stringify(sessionData)); // REMOVED
     
     return new Response(JSON.stringify({
-      token: sessionToken, // This is the KV session token
+      // token: sessionToken, // This is the KV session token - REMOVED
       jwt,               // This is the JWT
       user: {
         id: userResult.id,
@@ -84,12 +112,32 @@ export async function login(request: Request, env: Env) { // Changed env type to
   }
 }
 
-export async function register(request: Request, env: Env) { // Changed env type to Env
+// Recommendation: Implement rate limiting for this endpoint.
+export async function register(request: Request, env: Env) {
   try {
     const { email, password, name } = await request.json() as { email?: string, password?: string, name?: string };
     
-    if (!email || !password || !name) {
-      return createErrorResponse('Email, password, and name are required', null, 400);
+    const validationErrors: string[] = [];
+    if (!email) {
+      validationErrors.push('Email is required.');
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      validationErrors.push('Invalid email format.');
+    }
+
+    if (!password) {
+      validationErrors.push('Password is required.');
+    } else if (password.length < 8) {
+      validationErrors.push('Password must be at least 8 characters long.');
+    }
+
+    if (!name) {
+      validationErrors.push('Name is required.');
+    } else if (name.length > 100) {
+      validationErrors.push('Name must be 100 characters or less.');
+    }
+
+    if (validationErrors.length > 0) {
+      return createErrorResponse('Registration failed due to validation errors.', validationErrors, 400);
     }
     
     const existingUser = await env.PUPPIES_DB
@@ -107,7 +155,7 @@ export async function register(request: Request, env: Env) { // Changed env type
     const now = new Date().toISOString();
 
     await env.PUPPIES_DB
-      .prepare('INSERT INTO users (id, email, password, name, roles, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
+      .prepare('INSERT INTO users (id, email, password_hash, name, roles, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
       .bind(userId, email, hashedPassword, name, defaultRoles, now, now)
       .run();
 
@@ -120,14 +168,14 @@ export async function register(request: Request, env: Env) { // Changed env type
         console.error(`Error queuing welcome email for ${email}:`, emailError);
       });
 
-    const sessionToken = await generateToken();
+    // const sessionToken = await generateToken(); // REMOVED
     const jwt = await createJWT({ userId, email, roles: ['user'] }, env); // Pass full env
 
-    const sessionData = { userId, email, roles: ['user'], expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000) };
-    await env.AUTH_STORE.put(`session:${sessionToken}`, JSON.stringify(sessionData));
+    // const sessionData = { userId, email, roles: ['user'], expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000) }; // REMOVED
+    // await env.AUTH_STORE.put(`session:${sessionToken}`, JSON.stringify(sessionData)); // REMOVED
     
     return new Response(JSON.stringify({
-      token: sessionToken,
+      // token: sessionToken, // REMOVED
       jwt,
       user: { id: userId, email, name, roles: ['user'] }
     }), {
@@ -141,6 +189,7 @@ export async function register(request: Request, env: Env) { // Changed env type
   }
 }
 
+// Note: The router is responsible for calling verifyJwtAuth before this function.
 export async function getCurrentUser(request: Request, env: Env, authResult: any) {
   try {
     const userId = authResult.userId;
@@ -176,6 +225,7 @@ export async function getCurrentUser(request: Request, env: Env, authResult: any
   }
 }
 
+// Note: The router is responsible for calling verifyJwtAuth before this function.
 export async function updateUserProfile(request: Request, env: Env, authResult: any) {
   try {
     const userId = authResult.userId;
@@ -192,11 +242,37 @@ export async function updateUserProfile(request: Request, env: Env, authResult: 
 
     const { name, phone, address, preferences } = body as { name?: string, phone?: string, address?: string, preferences?: string };
 
+    const validationErrors: string[] = [];
+    if (name !== undefined) {
+      if (typeof name !== 'string' || name.length > 100) {
+        validationErrors.push('Name must be a string and 100 characters or less.');
+      }
+    }
+    if (phone !== undefined && phone !== null) { // phone can be null
+      if (typeof phone !== 'string' || phone.length > 20) { // Simple length check for phone
+        validationErrors.push('Phone must be a string and 20 characters or less.');
+      }
+    }
+    if (address !== undefined && address !== null) { // address can be null
+      if (typeof address !== 'string' || address.length > 255) {
+        validationErrors.push('Address must be a string and 255 characters or less.');
+      }
+    }
+    if (preferences !== undefined && preferences !== null) { // preferences can be null
+      if (typeof preferences !== 'string' || preferences.length > 500) {
+        validationErrors.push('Preferences must be a string and 500 characters or less.');
+      }
+    }
+
+    if (validationErrors.length > 0) {
+        return createErrorResponse('Update failed due to validation errors.', validationErrors, 400);
+    }
+
     const updates: Record<string, any> = {};
     if (name !== undefined) updates.name = name;
-    if (phone !== undefined) updates.phone = phone;
-    if (address !== undefined) updates.address = address;
-    if (preferences !== undefined) updates.preferences = preferences;
+    if (phone !== undefined) updates.phone = phone; // Allow setting to null if provided as such
+    if (address !== undefined) updates.address = address; // Allow setting to null
+    if (preferences !== undefined) updates.preferences = preferences; // Allow setting to null
 
     if (Object.keys(updates).length === 0) {
       return createErrorResponse('No update fields provided. Please provide name, phone, address, or preferences.', null, 400);
@@ -239,19 +315,14 @@ export async function updateUserProfile(request: Request, env: Env, authResult: 
   }
 }
 
-export async function logout(request: Request, env: Env) { // Changed env type to Env
+export async function logout(request: Request, env: Env) {
   try {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return createErrorResponse('No token provided', 'Authorization header with Bearer session token is expected.', 400);
-    }
-    const token = authHeader.split(' ')[1]; // This is the session token
-    await env.AUTH_STORE.delete(`session:${token}`);
-
-    return new Response(JSON.stringify({ message: 'Logged out successfully' }), {
+    // No server-side session token to invalidate for JWT.
+    // Client is responsible for clearing the JWT.
+    return new Response(JSON.stringify({ message: 'Logout successful (client should clear token).' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
-  } catch (error) {
+  } catch (error) { // Should not happen with current implementation, but good practice
     console.error('Error during logout:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown logout error';
     return createErrorResponse('Logout failed', errorMessage, 500);
@@ -259,8 +330,98 @@ export async function logout(request: Request, env: Env) { // Changed env type t
 }
 
 // Admin User Management Functions
+// Note: The router is responsible for calling adminAuthMiddleware before these admin functions.
+
+// Recommendation: Implement rate limiting for login endpoint.
+export async function login(request: Request, env: Env) { // Changed env type to Env
+  try {
+    const { email, password } = await request.json() as { email?: string, password?: string };
+
+    const validationErrors: string[] = [];
+    if (!email) {
+      validationErrors.push('Email is required.');
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      validationErrors.push('Invalid email format.');
+    }
+    if (!password) {
+      validationErrors.push('Password is required.');
+    }
+
+    if (validationErrors.length > 0) {
+      return createErrorResponse('Login failed due to validation errors.', validationErrors, 400);
+    }
+
+    const userResult = await env.PUPPIES_DB
+      .prepare('SELECT id, email, name, password_hash, roles FROM users WHERE email = ?')
+      .bind(email)
+      .first<{ id: string; email: string; name: string; password_hash: string; roles: string; }>();
+
+    if (!userResult) {
+      return createErrorResponse('Invalid email or password', null, 401);
+    }
+
+    // IMPORTANT: Password verification logic needs to be robust.
+    // Assuming hashPassword is a one-way hash, direct comparison like this is only for already hashed passwords.
+    // If `hashPassword` is used for hashing at registration, `userResult.password` should be the stored hash.
+    // And a separate `verifyPassword(plainPassword, storedHash)` function would be needed.
+    // For now, sticking to the existing logic pattern in the file:
+    // const requestHashedPassword = await hashPassword(password); // Old SHA-256 comparison
+    // if (userResult.password_hash !== requestHashedPassword) { // Old SHA-256 comparison
+
+    // New bcrypt comparison
+    const isPasswordValid = bcrypt.compareSync(password, userResult.password_hash);
+    if (!isPasswordValid) {
+      return createErrorResponse('Invalid email or password', null, 401);
+    }
+
+    // const sessionToken = await generateToken(); // This is a session token for KV store - REMOVED
+
+    let userRoles: string[] = ['user'];
+    try {
+        if (typeof userResult.roles === 'string') {
+            userRoles = JSON.parse(userResult.roles);
+        } else if (Array.isArray(userResult.roles)) {
+            userRoles = userResult.roles;
+        }
+    } catch (e) {
+        console.error("Failed to parse roles from DB for user " + userResult.email + ":", userResult.roles, e);
+    }
+
+    const jwt = await createJWT({
+      userId: userResult.id,
+      email: userResult.email,
+      roles: userRoles
+    }, env ); // Pass full env to createJWT if it needs env.JWT_SECRET from there
+
+    // const sessionData = { // REMOVED KV Store logic
+    //   userId: userResult.id,
+    //   email: userResult.email,
+    //   roles: userRoles,
+    //   expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000)
+    // };
+    // await env.AUTH_STORE.put(`session:${sessionToken}`, JSON.stringify(sessionData)); // REMOVED
+
+    return new Response(JSON.stringify({
+      // token: sessionToken, // This is the KV session token - REMOVED
+      jwt,               // This is the JWT
+      user: {
+        id: userResult.id,
+        email: userResult.email,
+        name: userResult.name,
+        roles: userRoles
+      }
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Error during login:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown login error';
+    return createErrorResponse('Login failed', errorMessage, 500);
+  }
+}
 
 export async function listUsers(request: Request, env: Env) {
+  // Note: The router is responsible for calling adminAuthMiddleware before this function.
   const url = new URL(request.url);
   const page = parseInt(url.searchParams.get('page') || '1', 10);
   const limit = parseInt(url.searchParams.get('limit') || '20', 10);
@@ -306,6 +467,7 @@ export async function listUsers(request: Request, env: Env) {
 }
 
 export async function getUserByIdAdmin(request: Request, env: Env, userIdParam: string) {
+  // Note: The router is responsible for calling adminAuthMiddleware before this function.
   if (!userIdParam) {
     return createErrorResponse('User ID parameter is missing', null, 400);
   }
@@ -338,17 +500,25 @@ export async function getUserByIdAdmin(request: Request, env: Env, userIdParam: 
 }
 
 export async function updateUserAdmin(request: Request, env: Env, userIdParam: string) {
+  // Note: The router is responsible for calling adminAuthMiddleware before this function.
   if (!userIdParam) {
     return createErrorResponse('User ID parameter is missing', null, 400);
   }
   try {
     const body = await request.json() as { name?: string; roles?: string[] };
 
-    // TODO: Future - Consider triggering ID/Face Verification for sensitive changes (e.g., email/password change, role change to admin) or during account recovery processes.
-    // This would involve calling a verification service before proceeding with the update below.
-
+    const validationErrors: string[] = [];
+    if (body.name !== undefined) {
+      if (typeof body.name !== 'string' || body.name.length > 100) {
+        validationErrors.push('Name must be a string and 100 characters or less.');
+      }
+    }
     if (body.roles && (!Array.isArray(body.roles) || body.roles.some(r => typeof r !== 'string'))) {
-      return createErrorResponse('Invalid input for roles', 'Roles must be an array of strings.', 400);
+      validationErrors.push('Roles must be an array of strings.');
+    }
+
+    if (validationErrors.length > 0) {
+        return createErrorResponse('Update failed due to validation errors.', validationErrors, 400);
     }
     
      const existingUser = await env.PUPPIES_DB.prepare("SELECT id FROM users WHERE id = ?").bind(userIdParam).first();
@@ -402,6 +572,7 @@ export async function updateUserAdmin(request: Request, env: Env, userIdParam: s
 }
 
 export async function deleteUserAdmin(request: Request, env: Env, userIdParam: string) {
+  // Note: The router is responsible for calling adminAuthMiddleware before this function.
   if (!userIdParam) {
     return createErrorResponse('User ID parameter is missing', null, 400);
   }
