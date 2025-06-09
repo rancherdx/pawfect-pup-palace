@@ -134,7 +134,7 @@ router.get('/api/conversations/:conversationId/messages', async (request: IReque
     return new Response(JSON.stringify({ error: authResult.error || 'Authentication failed' }), { status: 401, headers: corsHeaders });
   }
   const params = request.params || {};
-  return getMessagesForConversation(request as unknown as Request, env, params as { conversationId: string }, authResult.decodedToken);
+  return getMessagesForConversation(request as unknown as Request, env, authResult.decodedToken, params.conversationId);
 });
 
 router.post('/api/conversations/:conversationId/messages', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
@@ -143,7 +143,7 @@ router.post('/api/conversations/:conversationId/messages', async (request: IRequ
     return new Response(JSON.stringify({ error: authResult.error || 'Authentication failed' }), { status: 401, headers: corsHeaders });
   }
   const params = request.params || {};
-  return sendMessage(request as unknown as Request, env, params as { conversationId: string }, authResult.decodedToken);
+  return sendMessage(request as unknown as Request, env, authResult.decodedToken, params.conversationId);
 });
 
 // --- Admin Only Routes (require adminAuthMiddleware) ---
@@ -243,6 +243,7 @@ router.post('/api/admin/email-templates', async (request: IRequest, env: Env, ct
 router.put('/api/admin/email-templates/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
   if (authResponse) return authResponse;
+  const params = request.params || {};
   return updateEmailTemplate(request as unknown as Request, env);
 });
 router.delete('/api/admin/email-templates/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
@@ -260,7 +261,8 @@ router.get('/api/admin/integrations', async (request: IRequest, env: Env, ctx: E
 router.put('/api/admin/integrations/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
   if (authResponse) return authResponse;
-  return updateIntegration(request as unknown as Request, env);
+  const params = request.params || {};
+  return updateIntegration(request as unknown as Request, env, params.id);
 });
 
 // Data Deletion Requests (Admin)
