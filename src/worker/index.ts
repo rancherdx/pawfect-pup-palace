@@ -244,7 +244,7 @@ router.put('/api/admin/email-templates/:id', async (request: IRequest, env: Env,
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
   if (authResponse) return authResponse;
   const params = request.params || {};
-  return updateEmailTemplate(request as unknown as Request, env);
+  return updateEmailTemplate(request as unknown as Request, env, params.id);
 });
 router.delete('/api/admin/email-templates/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
