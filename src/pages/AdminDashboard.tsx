@@ -1,7 +1,16 @@
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PawPrint, Plus, Dog, Receipt, Settings, CreditCard, Layers, FileText, Globe, Users, PlugZap, Mail, ShieldCheck, MessageSquare } from "lucide-react"; // Added ShieldCheck and MessageSquare
+import {
+  PawPrint, Dog, Receipt, Settings, CreditCard, Layers, FileText, Globe, Users, PlugZap, Mail, ShieldCheck, MessageSquare, MoreHorizontal
+} from "lucide-react"; // Added MoreHorizontal
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button"; // For the DropdownMenuTrigger
 import Section from "@/components/Section";
 import PuppyManagement from "@/components/admin/PuppyManagement";
 import LitterManagement from "@/components/admin/LitterManagement";
@@ -20,9 +29,97 @@ import AdvancedSecurityFeatures from "@/components/admin/AdvancedSecurityFeature
 import DataDeletionRequestsManager from "@/components/admin/DataDeletionRequestsManager"; // Import the new component
 import TestimonialManagement from '@/components/admin/TestimonialManagement'; // Import TestimonialManagement
 
+const allAdminTabs = [
+  { value: "puppies", label: "Puppies", icon: Dog, component: <PuppyManagement /> },
+  { value: "litters", label: "Litters", icon: PawPrint, component: <LitterManagement /> },
+  { value: "breeds", label: "Breeds", icon: Layers, component: <BreedTemplateManager /> },
+  { value: "blog", label: "Blog", icon: FileText, component: <BlogManager /> },
+  { value: "seo", label: "SEO", icon: Globe, component: <SEOManager /> },
+  { value: "marketing", label: "Marketing", icon: Users, component: <AffiliateManager /> }, // Assuming AffiliateManager is Marketing
+  { value: "transactions", label: "Transactions", icon: Receipt, component: <TransactionHistory /> },
+  { value: "square", label: "Square", icon: CreditCard, component: <SquareIntegration /> },
+  { value: "settings", label: "Settings", icon: Settings, component: <SettingsPanel /> },
+  { value: "integrations", label: "Integrations", icon: PlugZap, component: <ThirdPartyIntegrationsManager /> },
+  { value: "email_templates", label: "Email Templates", icon: Mail, component: <EmailTemplatesManager /> },
+  { value: "users_admin", label: "Users", icon: Users, component: <AdminUserManager /> }, // Users icon repeated, but context is different
+  { value: "stud_dogs_admin", label: "Stud Dogs", icon: Dog, component: <AdminStudDogManager /> }, // Dog icon repeated
+  { value: "adv_security", label: "Adv. Security", icon: ShieldCheck, component: <AdvancedSecurityFeatures /> },
+  { value: "data_deletion", label: "Data Deletion", icon: ShieldCheck, component: <DataDeletionRequestsManager /> }, // ShieldCheck repeated
+  { value: "testimonials", label: "Testimonials", icon: MessageSquare, component: <TestimonialManagement /> },
+];
+
 const AdminDashboard = () => {
-  // Comments about fake authentication are removed.
-  // The component now assumes it's rendered only if ProtectedRoute allows it.
+  const [activeTabValue, setActiveTabValue] = useState("puppies");
+  const [visibleTabs, setVisibleTabs] = useState<typeof allAdminTabs>([]);
+  const [dropdownTabs, setDropdownTabs] = useState<typeof allAdminTabs>([]);
+  const tabsListRef = useRef<HTMLDivElement>(null);
+  const moreMenuRef = useRef<HTMLButtonElement>(null); // Ref for the "More" button
+
+  useEffect(() => {
+    const calculateTabsLayout = () => {
+      if (!tabsListRef.current) return;
+
+      const containerWidth = tabsListRef.current.offsetWidth;
+      let moreMenuWidth = 0;
+      if (allAdminTabs.length > 0) { // Estimate "More" menu width or measure it if always rendered
+        // Temporarily render "More" button to measure it or use a fixed estimate
+        // For simplicity here, let's use an estimate. A more robust way is to measure it.
+        // If moreMenuRef.current is available (i.e., it's rendered when dropdownTabs will exist), use its width.
+        // This creates a slight paradox: we need its width to decide if it should exist.
+        // So, we'll use an estimated width for the calculation.
+        moreMenuWidth = 100; // Approximate width for "More" button with icon and text
+      }
+
+      let currentWidth = 0;
+      const newVisibleTabs: typeof allAdminTabs = [];
+      const newDropdownTabs: typeof allAdminTabs = [];
+
+      // Iterate over all tab elements to get their actual widths
+      const tabElements = Array.from(tabsListRef.current.querySelectorAll<HTMLElement>('button[role="tab"]'));
+
+      // Fallback if direct measurement isn't working as expected (e.g. initial render)
+      // This part needs careful implementation. For now, let's assume a simplified estimate if measurement is tricky.
+      // A robust solution would render all tabs, measure, then hide.
+      // For this iteration, we'll use a simpler logic: assume an average width if measurement is problematic.
+      // Average width estimate (can be refined)
+      const averageTabWidth = 130; // px, including icon, label, padding
+
+      let potentialVisibleTabsWidth = 0;
+      for (const tab of allAdminTabs) {
+        potentialVisibleTabsWidth += averageTabWidth; // Use estimated width
+      }
+
+      if (potentialVisibleTabsWidth <= containerWidth) {
+        // All tabs fit
+        setVisibleTabs(allAdminTabs);
+        setDropdownTabs([]);
+      } else {
+        // Not all tabs fit, calculate how many can be visible
+        let availableWidthForTabs = containerWidth - moreMenuWidth;
+        currentWidth = 0;
+        for (const tab of allAdminTabs) {
+          if (currentWidth + averageTabWidth <= availableWidthForTabs) {
+            newVisibleTabs.push(tab);
+            currentWidth += averageTabWidth;
+          } else {
+            newDropdownTabs.push(tab);
+          }
+        }
+        setVisibleTabs(newVisibleTabs);
+        setDropdownTabs(newDropdownTabs);
+      }
+    };
+
+    calculateTabsLayout(); // Calculate on initial mount
+
+    // Add resize listener
+    window.addEventListener("resize", calculateTabsLayout);
+    return () => window.removeEventListener("resize", calculateTabsLayout);
+  }, [allAdminTabs]); // Rerun if allAdminTabs changes (though it's constant here)
+
+  const handleTabChange = (value: string) => {
+    setActiveTabValue(value);
+  };
 
   return (
     <div className="min-h-screen bg-white dark:bg-black/95 paw-print-bg">
@@ -37,79 +134,60 @@ const AdminDashboard = () => {
             </h1>
           </div>
           
-          <Tabs defaultValue="puppies" className="w-full">
-            <div className="bg-white dark:bg-black/30 p-4 rounded-t-xl shadow-sm border-b overflow-x-auto">
-              {/* Adjusted grid-cols to 16 and min-w */}
-              <TabsList className="grid grid-cols-16 w-full h-auto gap-2 min-w-[1600px]"> {/* Increased min-w */}
-                <TabsTrigger value="puppies" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
-                  <Dog className="h-5 w-5 mr-2" />
-                  <span>Puppies</span>
-                </TabsTrigger>
-                <TabsTrigger value="litters" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
-                  <PawPrint className="h-5 w-5 mr-2" />
-                  <span>Litters</span>
-                </TabsTrigger>
-                <TabsTrigger value="breeds" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
-                  <Layers className="h-5 w-5 mr-2" />
-                  <span>Breeds</span>
-                </TabsTrigger>
-                <TabsTrigger value="blog" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
-                  <FileText className="h-5 w-5 mr-2" />
-                  <span>Blog</span>
-                </TabsTrigger>
-                <TabsTrigger value="seo" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
-                  <Globe className="h-5 w-5 mr-2" />
-                  <span>SEO</span>
-                </TabsTrigger>
-                <TabsTrigger value="marketing" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
-                  <Users className="h-5 w-5 mr-2" />
-                  <span>Marketing</span>
-                </TabsTrigger>
-                <TabsTrigger value="transactions" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
-                  <Receipt className="h-5 w-5 mr-2" />
-                  <span>Transactions</span>
-                </TabsTrigger>
-                <TabsTrigger value="square" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
-                  <CreditCard className="h-5 w-5 mr-2" />
-                  <span>Square</span>
-                </TabsTrigger>
-                <TabsTrigger value="settings" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
-                  <Settings className="h-5 w-5 mr-2" />
-                  <span>Settings</span>
-                </TabsTrigger>
-                <TabsTrigger value="integrations" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
-                  <PlugZap className="h-5 w-5 mr-2" />
-                  <span>Integrations</span>
-                </TabsTrigger>
-                <TabsTrigger value="email_templates" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
-                  <Mail className="h-5 w-5 mr-2" />
-                  <span>Email Templates</span>
-                </TabsTrigger>
-                <TabsTrigger value="users_admin" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
-                  <Users className="h-5 w-5 mr-2" />
-                  <span>Users</span>
-                </TabsTrigger>
-                <TabsTrigger value="stud_dogs_admin" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
-                  <Dog className="h-5 w-5 mr-2" />
-                  <span>Stud Dogs</span>
-                </TabsTrigger>
-                <TabsTrigger value="adv_security" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
-                  <ShieldCheck className="h-5 w-5 mr-2" />
-                  <span>Adv. Security</span>
-                </TabsTrigger>
-                <TabsTrigger value="data_deletion" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
-                  <ShieldCheck className="h-5 w-5 mr-2" /> {/* Consider a more specific icon if available */}
-                  <span>Data Deletion</span>
-                </TabsTrigger>
-                <TabsTrigger value="testimonials" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
-                  <MessageSquare className="h-5 w-5 mr-2" />
-                  <span>Testimonials</span>
-                </TabsTrigger>
+          <Tabs value={activeTabValue} onValueChange={handleTabChange} className="w-full">
+            <div className="bg-white dark:bg-black/30 p-4 rounded-t-xl shadow-sm border-b">
+              <TabsList ref={tabsListRef} className="flex items-center"> {/* Removed space-x-2 for more precise control if needed */}
+                {visibleTabs.map(tab => (
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white flex-shrink-0"
+                  >
+                    <tab.icon className="h-5 w-5 mr-2" />
+                    <span>{tab.label}</span>
+                  </TabsTrigger>
+                ))}
+                {dropdownTabs.length > 0 && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      {/* Attaching ref to the More button for potential measurement */}
+                      <Button ref={moreMenuRef} variant="ghost" className="py-3 text-sm md:text-base flex-shrink-0 ml-2 data-[state=open]:bg-muted">
+                        <MoreHorizontal className="h-5 w-5 mr-1 md:mr-2" />
+                        <span className="hidden sm:inline">More</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {dropdownTabs.map(tab => (
+                        <DropdownMenuItem
+                          key={tab.value}
+                          onSelect={() => handleTabChange(tab.value)}
+                          className={activeTabValue === tab.value ? "bg-muted font-semibold" : ""}
+                        >
+                          <tab.icon className="h-4 w-4 mr-2" />
+                          {tab.label}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </TabsList>
             </div>
             
             <div className="bg-white dark:bg-black/10 p-6 rounded-b-xl shadow-md min-h-[700px]">
-              <TabsContent value="puppies" className="mt-0 animate-fade-in">
+              {allAdminTabs.map(tab => (
+                <TabsContent key={tab.value} value={tab.value} className="mt-0 animate-fade-in">
+                  {tab.component}
+                </TabsContent>
+              ))}
+            </div>
+          </Tabs>
+        </div>
+      </Section>
+    </div>
+  );
+};
+
+export default AdminDashboard;
                 <PuppyManagement />
               </TabsContent>
               

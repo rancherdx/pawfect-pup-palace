@@ -1,72 +1,62 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Plus, PawPrint, Edit, Trash, Search, Loader2, AlertTriangle } from "lucide-react";
+import { Plus, PawPrint, Edit, Trash, Search, Loader2 } from "lucide-react"; // AlertTriangle might not be needed if error handling is via toast
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/api/client';
+import { adminApi, littersApi } from '@/api'; // Using specific APIs
 import { toast } from 'sonner';
+import { Litter, LitterCreationData, LitterUpdateData, LitterListResponse, LitterStatus } from "@/types";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
-interface Litter {
-  id: string;
-  name: string;
-  mother: string;
-  father: string;
-  breed: string;
-  dateOfBirth: string;
-  puppyCount: number;
-  status: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-interface LitterApiPayload {
-  name: string;
-  mother: string;
-  father: string;
-  breed: string;
-  dateOfBirth: string;
-  puppyCount: number;
-  status: string;
-}
-
-const initialFormData: LitterApiPayload = {
+const initialFormData: LitterCreationData = {
   name: "",
   mother: "",
   father: "",
   breed: "",
   dateOfBirth: new Date().toISOString().split("T")[0],
-  puppyCount: 0,
-  status: "Active"
+  expectedDate: undefined, // Optional field
+  puppyCount: 0, // Default to 0, ensure it's number
+  status: "Active", // Default status
+  description: "",
+  coverImageUrl: ""
 };
 
 const LitterManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [currentLitter, setCurrentLitter] = useState<Litter | null>(null);
-  const [formData, setFormData] = useState<LitterApiPayload>(initialFormData);
+  const [formData, setFormData] = useState<LitterCreationData>(initialFormData);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [litterToDeleteId, setLitterToDeleteId] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
 
-  const { data: littersData, isLoading, isError, error } = useQuery({
+  // Using littersApi.getAll for fetching, assuming it's suitable for admin or using adminApi.getAllLitters if available
+  const { data, isLoading, isError, error } = useQuery<LitterListResponse, Error>({
     queryKey: ['litters'],
-    queryFn: async () => {
-      const response = await apiRequest<any>('/litters');
-      return response.litters || response;
-    },
+    // Using littersApi.getAll, but could be adminApi.getAllLitters if that's preferred for admin context
+    queryFn: () => littersApi.getAll({ limit: 100 }),
     staleTime: 5 * 60 * 1000,
   });
   
-  const litters = littersData || [];
+  const litters: Litter[] = data?.litters || [];
 
   const addLitterMutation = useMutation({
-    mutationFn: (newData: LitterApiPayload) => apiRequest<Litter>('/litters', {
-      method: 'POST',
-      body: JSON.stringify(newData),
-    }),
+    mutationFn: (newData: LitterCreationData) => adminApi.createLitter(newData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['litters'] });
       toast.success('Litter added successfully!');
       setShowForm(false);
+      setFormData(initialFormData); // Reset form
     },
     onError: (err: Error) => {
       toast.error(`Failed to add litter: ${err.message}`);
@@ -74,15 +64,13 @@ const LitterManagement = () => {
   });
 
   const updateLitterMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: LitterApiPayload }) => apiRequest<Litter>(`/litters/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    }),
+    mutationFn: ({ id, data }: { id: string; data: LitterUpdateData }) => adminApi.updateLitter(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['litters'] });
       toast.success('Litter updated successfully!');
       setShowForm(false);
       setCurrentLitter(null);
+      setFormData(initialFormData); // Reset form
     },
     onError: (err: Error) => {
       toast.error(`Failed to update litter: ${err.message}`);
@@ -90,28 +78,44 @@ const LitterManagement = () => {
   });
 
   const deleteLitterMutation = useMutation({
-    mutationFn: (id: string) => apiRequest(`/litters/${id}`, { method: 'DELETE' }),
+    mutationFn: (id: string) => adminApi.deleteLitter(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['litters'] });
       toast.success('Litter deleted successfully!');
+      setLitterToDeleteId(null); // Reset delete id
+      setShowDeleteDialog(false); // Close dialog
     },
     onError: (err: Error) => {
       toast.error(`Failed to delete litter: ${err.message}`);
+      setLitterToDeleteId(null);
+      setShowDeleteDialog(false);
     }
   });
   
   useEffect(() => {
-    if (currentLitter) {
-      const { id, created_at, updated_at, ...payloadData } = currentLitter;
-      setFormData(payloadData);
+    if (currentLitter && showForm) {
+      // Map Litter to LitterCreationData for the form
+      const { id, createdAt, updatedAt, ...editableData } = currentLitter;
+      setFormData({
+        ...initialFormData, // Start with defaults for optional fields
+        ...editableData,
+        dateOfBirth: editableData.dateOfBirth ? new Date(editableData.dateOfBirth).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+        expectedDate: editableData.expectedDate ? new Date(editableData.expectedDate).toISOString().split("T")[0] : undefined,
+        puppyCount: editableData.puppyCount === undefined ? 0 : Number(editableData.puppyCount), // Ensure number
+      });
     } else {
       setFormData(initialFormData);
     }
   }, [currentLitter, showForm]);
 
   const handleDeleteLitter = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this litter?")) {
-      deleteLitterMutation.mutate(id);
+    setLitterToDeleteId(id);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteLitter = () => {
+    if (litterToDeleteId) {
+      deleteLitterMutation.mutate(litterToDeleteId);
     }
   };
 
@@ -121,35 +125,38 @@ const LitterManagement = () => {
   };
 
   const handleAddLitter = () => {
-    setCurrentLitter(null);
+    setCurrentLitter(null); // Ensure currentLitter is null for new entry
+    setFormData(initialFormData); // Reset form data for new entry
     setShowForm(true);
   };
 
   const handleSaveLitter = (e: React.FormEvent) => {
     e.preventDefault();
-    const payload: LitterApiPayload = {
+    const payload: LitterCreationData | LitterUpdateData = {
         ...formData,
-        puppyCount: Number(formData.puppyCount) || 0
+        puppyCount: Number(formData.puppyCount) || 0, // Ensure puppyCount is a number
+        // Ensure dateOfBirth and expectedDate are correctly formatted if needed by API, though already string
     };
     
     if (currentLitter && currentLitter.id) {
-      updateLitterMutation.mutate({ id: currentLitter.id, data: payload });
+      updateLitterMutation.mutate({ id: currentLitter.id, data: payload as LitterUpdateData });
     } else {
-      addLitterMutation.mutate(payload);
+      addLitterMutation.mutate(payload as LitterCreationData);
     }
   };
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === "puppyCount" ? (parseInt(value) || 0) : value,
+      [name]: name === "puppyCount" ? (parseInt(value) || 0) :
+             name === "status" ? (value as LitterStatus) : value,
     }));
   };
 
-  const filteredLitters = litters.filter(litter => 
+  const filteredLitters: Litter[] = litters.filter(litter =>
     litter.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     litter.breed.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -302,13 +309,49 @@ const LitterManagement = () => {
                         onChange={handleInputChange}
                         className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
                       >
-                        <option value="Active">Active</option>
-                        <option value="Available Soon">Available Soon</option>
-                        <option value="All Reserved">All Reserved</option>
-                        <option value="All Sold">All Sold</option>
-                        <option value="Archived">Archived</option>
+                        {(Object.values(LitterStatus) as LitterStatus[]).map(statusValue => (
+                          <option key={statusValue} value={statusValue}>{statusValue}</option>
+                        ))}
                       </select>
                     </div>
+                  </div>
+                   <div>
+                    <label className="block text-lg font-medium mb-1">
+                      Expected Date (Optional)
+                    </label>
+                    <input
+                      type="date"
+                      name="expectedDate"
+                      value={formData.expectedDate || ""}
+                      onChange={handleInputChange}
+                      className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
+                    />
+                  </div>
+                   <div>
+                    <label className="block text-lg font-medium mb-1">
+                      Description (Optional)
+                    </label>
+                    <textarea
+                      name="description"
+                      value={formData.description || ""}
+                      onChange={handleInputChange}
+                      placeholder="Brief description of the litter"
+                      rows={3}
+                      className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red resize-none"
+                    />
+                  </div>
+                   <div>
+                    <label className="block text-lg font-medium mb-1">
+                      Cover Image URL (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      name="coverImageUrl"
+                      value={formData.coverImageUrl || ""}
+                      onChange={handleInputChange}
+                      placeholder="https://example.com/image.jpg"
+                      className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
+                    />
                   </div>
                 </div>
               </div>
@@ -424,6 +467,27 @@ const LitterManagement = () => {
             <li>• Add individual puppies from a litter to your inventory when they're ready for sale.</li>
           </ul>
         </div>
+      )}
+
+      {litterToDeleteId && (
+        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the litter
+                and remove its data from our servers. Associated puppies will NOT be deleted but will lose their litter association.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => { setShowDeleteDialog(false); setLitterToDeleteId(null); }}>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDeleteLitter} disabled={deleteLitterMutation.isPending}>
+                {deleteLitterMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Yes, delete litter
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       )}
     </div>
   );

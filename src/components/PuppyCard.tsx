@@ -5,16 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { PuppyStatus } from "@/types";
 
 interface PuppyCardProps {
   id: string;
   name: string;
   breed: string;
   age: string;
-  gender: string;
-  imageSrc: string;
+  gender?: string; // Made optional as per instruction
+  imageSrc?: string; // Made optional as per instruction
   price: number;
-  available?: boolean;
+  status: PuppyStatus;
 }
 
 const PuppyCard = ({
@@ -25,10 +26,12 @@ const PuppyCard = ({
   gender,
   imageSrc,
   price,
-  available = true,
+  status,
 }: PuppyCardProps) => {
   const [isFavorite, setIsFavorite] = useState(false);
   const { toast } = useToast();
+
+  const available = status === 'Available';
 
   const toggleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -60,9 +63,11 @@ const PuppyCard = ({
             className={`h-5 w-5 ${isFavorite ? 'fill-brand-red text-brand-red' : 'text-gray-600 dark:text-gray-300'}`} 
           />
         </button>
-        {!available && (
+        {status !== 'Available' && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <Badge className="bg-brand-red text-white text-lg py-1 px-3">Reserved</Badge>
+            <Badge className="bg-brand-red text-white text-lg py-1 px-3">
+              {status === 'Reserved' ? 'Reserved' : status === 'Sold' ? 'Sold' : 'Not Available'}
+            </Badge>
           </div>
         )}
       </div>
@@ -70,9 +75,7 @@ const PuppyCard = ({
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <CardTitle className="text-xl">{name}</CardTitle>
-          <Badge variant="outline" className="bg-accent">
-            {gender}
-          </Badge>
+          {gender && <Badge variant="outline" className="bg-accent">{gender}</Badge>}
         </div>
         <CardDescription>{breed}</CardDescription>
       </CardHeader>
