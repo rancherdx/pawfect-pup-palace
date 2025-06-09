@@ -1,4 +1,3 @@
-
 import { Router, IRequest } from 'itty-router';
 import { corsHeaders } from './utils/cors';
 import type { Env } from './env';
@@ -183,12 +182,14 @@ router.post('/api/admin/puppies', async (request: IRequest, env: Env, ctx: Execu
 router.put('/api/admin/puppies/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
   if (authResponse) return authResponse;
-  return updatePuppy(request as unknown as Request, env, (request as any).auth);
+    const params = request.params || {};
+  return updatePuppy(request as unknown as Request, env, (request as any).auth, params.id);
 });
 router.delete('/api/admin/puppies/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
   if (authResponse) return authResponse;
-  return deletePuppy(request as unknown as Request, env, (request as any).auth);
+    const params = request.params || {};
+  return deletePuppy(request as unknown as Request, env, (request as any).auth, params.id);
 });
 
 // Litter Management (Admin)
@@ -200,12 +201,14 @@ router.post('/api/admin/litters', async (request: IRequest, env: Env, ctx: Execu
 router.put('/api/admin/litters/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
   if (authResponse) return authResponse;
-  return updateLitter(request as unknown as Request, env, (request as any).auth);
+    const params = request.params || {};
+  return updateLitter(request as unknown as Request, env, (request as any).auth, params.id);
 });
 router.delete('/api/admin/litters/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
   if (authResponse) return authResponse;
-  return deleteLitter(request as unknown as Request, env, (request as any).auth);
+    const params = request.params || {};
+  return deleteLitter(request as unknown as Request, env, (request as any).auth, params.id);
 });
 
 // Site Settings (Admin)
@@ -217,7 +220,8 @@ router.get('/api/admin/settings', async (request: IRequest, env: Env, ctx: Execu
 router.put('/api/admin/settings/:key', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
   if (authResponse) return authResponse;
-  return updateSiteSetting(request as unknown as Request, env);
+    const params = request.params || {};
+  return updateSiteSetting(request as unknown as Request, env, params.key);
 });
 
 // Email Templates (Admin)
