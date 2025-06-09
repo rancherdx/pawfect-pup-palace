@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PawPrint, Plus, Dog, Receipt, Settings, CreditCard, Layers, FileText, Globe, Users, PlugZap, Mail, ShieldCheck } from "lucide-react"; // Added ShieldCheck
+import { PawPrint, Plus, Dog, Receipt, Settings, CreditCard, Layers, FileText, Globe, Users, PlugZap, Mail, ShieldCheck, MessageSquare } from "lucide-react"; // Added ShieldCheck and MessageSquare
 import Section from "@/components/Section";
 import PuppyManagement from "@/components/admin/PuppyManagement";
 import LitterManagement from "@/components/admin/LitterManagement";
@@ -18,6 +18,7 @@ import AdminUserManager from "@/components/admin/AdminUserManager";
 import AdminStudDogManager from "@/components/admin/AdminStudDogManager";
 import AdvancedSecurityFeatures from "@/components/admin/AdvancedSecurityFeatures";
 import DataDeletionRequestsManager from "@/components/admin/DataDeletionRequestsManager"; // Import the new component
+import TestimonialManagement from '@/components/admin/TestimonialManagement'; // Import TestimonialManagement
 
 const AdminDashboard = () => {
   // Comments about fake authentication are removed.
@@ -38,8 +39,8 @@ const AdminDashboard = () => {
           
           <Tabs defaultValue="puppies" className="w-full">
             <div className="bg-white dark:bg-black/30 p-4 rounded-t-xl shadow-sm border-b overflow-x-auto">
-              {/* Adjusted grid-cols to 15 and min-w */}
-              <TabsList className="grid grid-cols-15 w-full h-auto gap-2 min-w-[1500px]"> {/* Increased min-w */}
+              {/* Adjusted grid-cols to 16 and min-w */}
+              <TabsList className="grid grid-cols-16 w-full h-auto gap-2 min-w-[1600px]"> {/* Increased min-w */}
                 <TabsTrigger value="puppies" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
                   <Dog className="h-5 w-5 mr-2" />
                   <span>Puppies</span>
@@ -100,6 +101,10 @@ const AdminDashboard = () => {
                   <ShieldCheck className="h-5 w-5 mr-2" /> {/* Consider a more specific icon if available */}
                   <span>Data Deletion</span>
                 </TabsTrigger>
+                <TabsTrigger value="testimonials" className="py-3 text-sm md:text-base data-[state=active]:bg-brand-red data-[state=active]:text-white">
+                  <MessageSquare className="h-5 w-5 mr-2" />
+                  <span>Testimonials</span>
+                </TabsTrigger>
               </TabsList>
             </div>
             
@@ -156,6 +161,9 @@ const AdminDashboard = () => {
               </TabsContent>
               <TabsContent value="data_deletion" className="mt-0 animate-fade-in">
                 <DataDeletionRequestsManager />
+              </TabsContent>
+              <TabsContent value="testimonials" className="mt-0 animate-fade-in">
+                <TestimonialManagement />
               </TabsContent>
             </div>
           </Tabs>
