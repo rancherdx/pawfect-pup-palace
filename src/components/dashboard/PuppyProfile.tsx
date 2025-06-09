@@ -72,7 +72,6 @@ interface Message {
   read_at?: string | null;
 }
 
-// Helper to calculate age from birth_date
 const calculateAgeMonths = (birthDateStr: string): number => {
   const birthDate = new Date(birthDateStr);
   const today = new Date();
@@ -239,7 +238,6 @@ const PuppyProfile = () => {
     }
   };
 
-  // Data transformations for UI
   const age = puppy ? calculateAgeMonths(puppy.birth_date) : 0;
   const displayAge = puppy ? (age > 12 ? `${Math.floor(age/12)}y ${age%12}m` : `${age}m old`) : "N/A";
   const growthProgress = puppy ? Math.min(100, Math.round((age / 18) * 100)) : 0; // Assuming 18 months to full growth
@@ -401,7 +399,7 @@ const PuppyProfile = () => {
             {/* Messages Tab */}
             <TabsContent value="messages" className="messages-tab-content-class">
               <Card className="puppy-profile-card">
-                <CardHeader><CardTitle>Messages {activeConversation ? `- ${activeConversation.title}`: ''}</CardHeader>
+                <CardHeader><CardTitle>Messages {activeConversation ? `- ${activeConversation.title}`: ''}</CardTitle></CardHeader>
                 <CardContent>
                   {isLoadingConvos && <Loader2 className="animate-spin no-print" />}
                   {/* TODO: UI to switch between multiple conversations if they exist for this puppy */}
