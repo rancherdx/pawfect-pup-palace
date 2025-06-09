@@ -1,3 +1,4 @@
+
 -- master_schema.sql
 
 -- Base tables for puppies and litters
@@ -165,30 +166,19 @@ CREATE TABLE IF NOT EXISTS site_settings (
   setting_value TEXT,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
--- Example site_settings:
--- ('siteName', 'GDS Puppies')
--- ('contactEmail', 'contact@gdspuppies.com')
--- ('maintenanceMode', 'false') -- 'true' or 'false'
--- ('logoUrl', '/images/logo.png')
--- ('defaultLanguage', 'en-US')
--- ('currency', 'USD')
--- ('socialMediaLinks', '{"facebook": "...", "instagram": "..."}') -- JSON
--- ('seoDefaults', '{"title": "...", "description": "..."}') -- JSON
 
 -- Transactions and Integrations
 CREATE TABLE IF NOT EXISTS transactions (
   id TEXT PRIMARY KEY,
   user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
-  related_entity_id TEXT, -- e.g., puppy_id, litter_id (for deposit), or other saleable item id
-  entity_type TEXT, -- e.g., 'puppy_sale', 'litter_deposit', 'stud_service_fee'
+  puppy_id TEXT REFERENCES puppies(id) ON DELETE SET NULL,
   square_payment_id TEXT UNIQUE,
-  amount_cents INTEGER NOT NULL, -- Store amount in cents to avoid floating point issues
-  currency TEXT NOT NULL, -- e.g., 'USD'
-  payment_method_details TEXT, -- JSON details from payment provider
-  status TEXT NOT NULL, -- e.g., 'pending', 'succeeded', 'failed', 'refunded'
-  notes TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Changed to use default
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP  -- Changed to use default
+  amount INTEGER NOT NULL,
+  currency TEXT NOT NULL DEFAULT 'USD',
+  payment_method_details TEXT,
+  status TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS email_templates (
@@ -265,6 +255,63 @@ CREATE TABLE IF NOT EXISTS stud_dogs (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP  -- Changed to use default
 );
 
+-- Data Deletion Requests Table
+CREATE TABLE IF NOT EXISTS data_deletion_requests (
+  id TEXT PRIMARY KEY,
+  name TEXT,
+  email TEXT,
+  account_creation_timeframe TEXT, -- e.g., "within last year", "1-2 years ago", "over 2 years ago"
+  puppy_ids TEXT, -- Comma-separated or JSON array of known puppy IDs
+  additional_details TEXT,
+  status TEXT DEFAULT 'pending', -- 'pending', 'processing', 'completed', 'rejected'
+  requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  processed_at TIMESTAMP NULL,
+  admin_notes TEXT NULL -- Notes by admin processing the request
+);
+
+-- NEW: System Status Tracking Tables
+CREATE TABLE IF NOT EXISTS system_status_checks (
+  id TEXT PRIMARY KEY,
+  service_name TEXT NOT NULL, -- 'API', 'Database', 'Storage', 'Auth', etc.
+  status TEXT NOT NULL, -- 'healthy', 'degraded', 'offline'
+  latency_ms INTEGER,
+  error_message TEXT NULL,
+  checked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS system_uptime_logs (
+  id TEXT PRIMARY KEY,
+  service_name TEXT NOT NULL,
+  uptime_start TIMESTAMP NOT NULL,
+  uptime_end TIMESTAMP NULL, -- NULL means currently up
+  downtime_duration_seconds INTEGER NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- NEW: Admin Test Session Management
+CREATE TABLE IF NOT EXISTS admin_test_sessions (
+  id TEXT PRIMARY KEY,
+  admin_user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+  impersonated_user_id TEXT REFERENCES users(id) ON DELETE CASCADE NULL,
+  test_token TEXT UNIQUE NOT NULL,
+  session_purpose TEXT, -- 'endpoint_testing', 'user_impersonation', 'debugging'
+  expires_at TIMESTAMP NOT NULL,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS admin_test_logs (
+  id TEXT PRIMARY KEY,
+  session_id TEXT REFERENCES admin_test_sessions(id) ON DELETE CASCADE,
+  endpoint TEXT NOT NULL,
+  method TEXT NOT NULL,
+  request_body TEXT,
+  response_status INTEGER,
+  response_body TEXT,
+  latency_ms INTEGER,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexes (some might be redundant if primary/unique keys already create them, but explicit is fine)
 -- Core Entities
 CREATE INDEX IF NOT EXISTS idx_puppies_litter_id ON puppies(litter_id);
@@ -295,20 +342,20 @@ CREATE INDEX IF NOT EXISTS idx_transactions_status ON transactions(status);
 CREATE INDEX IF NOT EXISTS idx_email_templates_template_name ON email_templates(template_name);
 CREATE INDEX IF NOT EXISTS idx_third_party_integrations_service_name ON third_party_integrations(service_name);
 
--- Indexes for new tables
+-- Indexes for existing tables
 CREATE INDEX IF NOT EXISTS idx_puppy_health_records_puppy_id ON puppy_health_records(puppy_id);
 CREATE INDEX IF NOT EXISTS idx_puppy_health_records_record_type ON puppy_health_records(record_type);
 CREATE INDEX IF NOT EXISTS idx_conversations_user_id ON conversations(user_id);
 CREATE INDEX IF NOT EXISTS idx_conversations_related_entity ON conversations(related_entity_id, related_entity_type);
 CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON messages(conversation_id);
 CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_id, sender_type);
+CREATE INDEX IF NOT EXISTS idx_data_deletion_requests_status ON data_deletion_requests(status);
+CREATE INDEX IF NOT EXISTS idx_data_deletion_requests_requested_at ON data_deletion_requests(requested_at);
 
--- Removed blog_related_posts as it's less common and can be complex.
--- A simpler approach is often keyword/category based recommendations or manual linking in content.
--- If needed, it can be added back:
--- CREATE TABLE IF NOT EXISTS blog_related_posts (
---   post_id TEXT REFERENCES blog_posts(id) ON DELETE CASCADE,
---   related_post_id TEXT REFERENCES blog_posts(id) ON DELETE CASCADE,
---   PRIMARY KEY (post_id, related_post_id),
---   CHECK (post_id != related_post_id) -- Ensure a post is not related to itself
--- );
+-- NEW: Indexes for system monitoring and admin testing
+CREATE INDEX IF NOT EXISTS idx_system_status_checks_service_name ON system_status_checks(service_name);
+CREATE INDEX IF NOT EXISTS idx_system_status_checks_checked_at ON system_status_checks(checked_at);
+CREATE INDEX IF NOT EXISTS idx_system_uptime_logs_service_name ON system_uptime_logs(service_name);
+CREATE INDEX IF NOT EXISTS idx_admin_test_sessions_admin_user_id ON admin_test_sessions(admin_user_id);
+CREATE INDEX IF NOT EXISTS idx_admin_test_sessions_test_token ON admin_test_sessions(test_token);
+CREATE INDEX IF NOT EXISTS idx_admin_test_logs_session_id ON admin_test_logs(session_id);
