@@ -35,9 +35,18 @@ export const apiRequest = async <T>(
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ 
-        error: `HTTP ${response.status}: ${response.statusText}` 
+        // Fallback if .json() fails or if it's not a JSON response
+        message: `HTTP ${response.status}: ${response.statusText}`
       }));
-      throw new Error(errorData.error || errorData.message || 'API request failed');
+
+      // Check for admin path and 401/403 for specific logging
+      if (endpoint.startsWith('/admin') && (response.status === 401 || response.status === 403)) {
+        console.error(`Admin API request unauthorized for ${endpoint}:`, errorData.details || errorData.message || errorData.error || `Status ${response.status}`);
+        // Note: The original fetchAdminAPI had a comment about not redirecting here, which is correct.
+        // ProtectedRoute handles redirection. This log is for server-side issues for an already "logged-in" admin.
+      }
+      // Prioritize 'details', then 'error', then 'message' from errorData
+      throw new Error(errorData.details || errorData.error || errorData.message || 'API request failed');
     }
 
     // Handle 204 No Content responses
@@ -47,8 +56,10 @@ export const apiRequest = async <T>(
 
     return await response.json();
   } catch (error) {
-    console.error('API request failed:', error);
-    throw error;
+    // The main error construction and specific admin 401/403 logging is done in the `if (!response.ok)` block.
+    // This catch block is for network errors or other issues before a response is processed.
+    console.error(`Network or unexpected error during API request to ${endpoint}:`, error);
+    throw error; // Re-throw the original error or a new generic one if needed
   }
 };
 
@@ -155,6 +166,21 @@ interface SquareSyncResponse {
   syncedAt: string;
 }
 
+// Define BreedTemplate interface
+interface BreedTemplate {
+  id: string;
+  breedName: string;
+  description: string;
+  size: string;
+  temperament: string;
+  careInstructions: string;
+  commonTraits: string[];
+  averageWeight?: {
+    min: number;
+    max: number;
+  };
+}
+
 export const adminApi = {
   // Puppies management
   createPuppy: async (data: any) => {
@@ -221,6 +247,16 @@ export const adminApi = {
   deletePost: async (id: string) => {
     return apiRequest(`/admin/blog/${id}`, { method: 'DELETE' });
   },
+
+  // New function for fetching breed templates
+  getBreedTemplates: async (): Promise<BreedTemplate[]> => {
+    // Assuming the API returns an array directly.
+    // If it's nested under a 'data' property like other GET ALLs, it would be:
+    // const response = await apiRequest<{ data: BreedTemplate[] }>('/admin/breed-templates');
+    // return response.data;
+    // For now, assume direct array response:
+    return apiRequest<BreedTemplate[]>('/admin/breed-templates');
+  }
 };
 
 // Upload API
