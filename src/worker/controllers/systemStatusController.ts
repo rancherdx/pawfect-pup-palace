@@ -22,7 +22,7 @@ export async function getSystemStatus(request: Request, env: Env): Promise<Respo
 
     // Store status check results
     for (const check of healthChecks) {
-      await env.DB
+      await env.PUPPIES_DB
         .prepare(`
           INSERT INTO system_status_checks 
           (id, service_name, status, latency_ms, error_message, checked_at)
@@ -59,7 +59,7 @@ async function checkDatabaseHealth(env: Env) {
   const startTime = Date.now();
   try {
     // Simple query to test database connectivity
-    await env.DB.prepare('SELECT 1 as test').first();
+    await env.PUPPIES_DB.prepare('SELECT 1 as test').first();
     const latency = Date.now() - startTime;
     
     return {
@@ -170,7 +170,7 @@ export async function getSystemUptime(request: Request, env: Env): Promise<Respo
     // Get uptime data for the last 24 hours
     const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     
-    const uptimeData = await env.DB
+    const uptimeData = await env.PUPPIES_DB
       .prepare(`
         SELECT service_name, status, checked_at, latency_ms
         FROM system_status_checks 

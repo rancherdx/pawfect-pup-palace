@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { apiRequest } from "@/api/client";
 import { useToast } from "@/hooks/use-toast";
@@ -97,8 +96,10 @@ const DataDeletionRequestsManager = () => {
     try {
       const updatedRequest = await apiRequest(
         `/admin/data-deletion-requests/${selectedRequest.id}/status`,
-        "PUT",
-        { status: editStatus, admin_notes: editAdminNotes }
+        {
+          method: "PUT",
+          body: JSON.stringify({ status: editStatus, admin_notes: editAdminNotes }),
+        }
       ) as { request: DeletionRequest };
       setRequests(prev => prev.map(r => (r.id === updatedRequest.request.id ? updatedRequest.request : r)));
       setIsEditModalOpen(false);
@@ -119,7 +120,7 @@ const DataDeletionRequestsManager = () => {
     switch (status) {
       case 'pending': return 'secondary';
       case 'processing': return 'secondary';
-      case 'completed': return 'secondary';
+      case 'completed': return 'default';
       case 'rejected': return 'destructive';
       default: return 'secondary';
     }

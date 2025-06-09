@@ -6,6 +6,7 @@ export interface Env {
 
   // D1 Database
   PUPPIES_DB: D1Database;
+  DB: D1Database; // Alias for PUPPIES_DB for compatibility
 
   // R2 Buckets
   PUPPY_IMAGES: R2Bucket;
@@ -30,6 +31,10 @@ export interface Env {
   // Marketing related keys
   AFFILIATE_TRACKING_SECRET: string;
   SEO_API_KEY: string;
+
+  // Admin configuration
+  ADMIN_EMAIL: string;
+  ADMIN_DASHBOARD_URL: string;
 }
 
 // Add ExecutionContext type

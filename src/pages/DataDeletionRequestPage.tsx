@@ -50,7 +50,10 @@ const DataDeletionRequestPage = () => {
     }
 
     try {
-      await apiRequest("/privacy/deletion-request", "POST", formData);
+      await apiRequest("/privacy/deletion-request", {
+        method: "POST",
+        body: JSON.stringify(formData),
+      });
       setIsSuccess(true);
       toast({
         title: "Request Submitted",

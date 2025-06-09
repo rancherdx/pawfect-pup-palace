@@ -26,7 +26,7 @@ export async function createAdminTestSession(request: Request, env: Env, adminTo
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hour from now
 
     // Store session in database
-    await env.DB
+    await env.PUPPIES_DB
       .prepare(`
         INSERT INTO admin_test_sessions 
         (id, admin_user_id, impersonated_user_id, test_token, session_purpose, expires_at, is_active, created_at)
@@ -85,7 +85,7 @@ export async function createImpersonationSession(request: Request, env: Env, adm
     }
 
     // Verify user exists
-    const user = await env.DB
+    const user = await env.PUPPIES_DB
       .prepare('SELECT id, email, name, roles FROM users WHERE id = ?')
       .bind(userId)
       .first();
@@ -116,7 +116,7 @@ export async function createImpersonationSession(request: Request, env: Env, adm
     const testToken = await createJWT(testPayload, env, 1/24); // 1 hour
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
 
-    await env.DB
+    await env.PUPPIES_DB
       .prepare(`
         INSERT INTO admin_test_sessions 
         (id, admin_user_id, impersonated_user_id, test_token, session_purpose, expires_at, is_active, created_at)
@@ -164,7 +164,7 @@ export async function createImpersonationSession(request: Request, env: Env, adm
 // Log test API calls
 export async function logTestCall(request: Request, env: Env, sessionId: string, testData: any): Promise<void> {
   try {
-    await env.DB
+    await env.PUPPIES_DB
       .prepare(`
         INSERT INTO admin_test_logs 
         (id, session_id, endpoint, method, request_body, response_status, response_body, latency_ms, created_at)
@@ -210,7 +210,7 @@ export async function getTestSessionLogs(request: Request, env: Env, adminToken:
     query += ` ORDER BY atl.created_at DESC LIMIT ?`;
     params.push(limit);
 
-    const result = await env.DB.prepare(query).bind(...params).all();
+    const result = await env.PUPPIES_DB.prepare(query).bind(...params).all();
 
     return new Response(JSON.stringify({ logs: result.results }), {
       status: 200,

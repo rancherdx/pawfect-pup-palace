@@ -194,7 +194,10 @@ const PuppyProfile = () => {
         if (newHealthRecord.value) payload.value = parseFloat(newHealthRecord.value);
         if (newHealthRecord.unit) payload.unit = newHealthRecord.unit;
       }
-      await apiRequest(`/puppies/${puppyId}/health-records`, "POST", payload);
+      await apiRequest(`/puppies/${puppyId}/health-records`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
       toast({ title: "Health Record Added", description: "Successfully added new health record.", className: "bg-green-500 text-white" });
       setShowAddHealthForm(false);
       fetchHealthRecords();
@@ -209,7 +212,10 @@ const PuppyProfile = () => {
 
     try {
       if (activeConversation?.id) {
-        const sentMessage = await apiRequest(`/conversations/${activeConversation.id}/messages`, "POST", { content: newMessageContent }) as Message;
+        const sentMessage = await apiRequest(`/conversations/${activeConversation.id}/messages`, {
+          method: "POST",
+          body: JSON.stringify({ content: newMessageContent }),
+        }) as Message;
         setMessages(prev => [...prev, sentMessage]);
       } else {
         const newConvPayload = {
@@ -218,7 +224,10 @@ const PuppyProfile = () => {
           related_entity_id: puppyId,
           related_entity_type: 'puppy'
         };
-        const response = await apiRequest(`/conversations`, "POST", newConvPayload) as { conversation: Conversation; message: Message };
+        const response = await apiRequest(`/conversations`, {
+          method: "POST",
+          body: JSON.stringify(newConvPayload),
+        }) as { conversation: Conversation; message: Message };
         const newConv = response.conversation;
         const firstMessage = response.message;
 

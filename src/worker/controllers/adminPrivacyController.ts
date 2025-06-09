@@ -28,8 +28,8 @@ export async function listDataDeletionRequests(request: Request, env: Env): Prom
     params.push(limit, offset);
 
     const [requestsResult, countResult] = await Promise.all([
-      env.DB.prepare(query).bind(...params).all(),
-      env.DB.prepare(countQuery).bind(...countParams).first()
+      env.PUPPIES_DB.prepare(query).bind(...params).all(),
+      env.PUPPIES_DB.prepare(countQuery).bind(...countParams).first()
     ]);
 
     const total = (countResult as any)?.total || 0;
@@ -63,7 +63,7 @@ export async function getDataDeletionRequestById(request: Request, env: Env, par
   try {
     const { id } = params;
     
-    const deletionRequest = await env.DB
+    const deletionRequest = await env.PUPPIES_DB
       .prepare('SELECT * FROM data_deletion_requests WHERE id = ?')
       .bind(id)
       .first();
@@ -106,7 +106,7 @@ export async function updateDataDeletionRequestStatus(request: Request, env: Env
 
     const processedAt = ['completed', 'rejected'].includes(status) ? new Date().toISOString() : null;
 
-    const result = await env.DB
+    const result = await env.PUPPIES_DB
       .prepare(`
         UPDATE data_deletion_requests 
         SET status = ?, admin_notes = ?, processed_at = ?
@@ -123,7 +123,7 @@ export async function updateDataDeletionRequestStatus(request: Request, env: Env
     }
 
     // Fetch the updated request
-    const updatedRequest = await env.DB
+    const updatedRequest = await env.PUPPIES_DB
       .prepare('SELECT * FROM data_deletion_requests WHERE id = ?')
       .bind(id)
       .first();
