@@ -7,9 +7,9 @@ import HeroSection from "@/components/HeroSection";
 import Section from "@/components/Section";
 import PuppyCard from "@/components/PuppyCard";
 import TestimonialCard from "@/components/TestimonialCard";
-import { PawPrint, Heart, Award, CheckCircle, Loader2 } from "lucide-react";
+import { PawPrint, Heart, Award, CheckCircle, Loader2, AlertTriangle } from "lucide-react"; // Added AlertTriangle
 import { motion } from "framer-motion";
-import { puppiesApi } from "@/api";
+import { puppiesApi, testimonialApi } from "@/api"; // Added testimonialApi
 import { calculateAge } from "@/utils/dateUtils";
 
 const FeatureCard = ({ icon: Icon, title, description }) => {
@@ -33,42 +33,25 @@ const FeatureCard = ({ icon: Icon, title, description }) => {
   );
 };
 
-// Testimonials from real customers
-const TESTIMONIALS = [
-  {
-    id: 1,
-    name: "Sarah Johnson",
-    location: "New York, NY",
-    testimonial: "We adopted Bella three months ago and she has brought so much joy to our family. The breeder was professional and caring throughout the entire process.",
-    rating: 5,
-    puppyName: "Bella (Golden Retriever)"
-  },
-  {
-    id: 2,
-    name: "Mark Wilson",
-    location: "Austin, TX",
-    testimonial: "Max is healthy, well-socialized, and everything we could have hoped for. The health guarantee gave us peace of mind with our new addition.",
-    rating: 5,
-    puppyName: "Max (German Shepherd)"
-  },
-  {
-    id: 3,
-    name: "Jennifer Lopez",
-    location: "Miami, FL",
-    testimonial: "The process was smooth from start to finish. Luna is a wonderful addition to our family and the ongoing support has been amazing.",
-    rating: 4,
-    puppyName: "Luna (Labrador Retriever)"
-  }
-];
-
 const Home = () => {
   // Fetch featured puppies from API
   const { data: puppiesData, isLoading, error } = useQuery({
     queryKey: ["featuredPuppies"],
-    queryFn: () => puppiesApi.getAllPuppies({ limit: 3 }),
+    queryFn: () => puppiesApi.getAllPuppies({ limit: 3 }), // Assuming this API exists and puppiesApi is correctly imported
   });
-
   const featuredPuppies = puppiesData?.puppies || [];
+
+  // Fetch testimonials
+  const {
+    data: testimonialsData,
+    isLoading: isLoadingTestimonials,
+    error: testimonialsError
+  } = useQuery({
+    queryKey: ['publicTestimonials'],
+    queryFn: () => testimonialApi.getAllPublic({ limit: 3 }), // Fetch top 3 for homepage
+    // staleTime: 1000 * 60 * 10 // Optional: 10 minutes stale time
+  });
+  const testimonials = testimonialsData || [];
 
   return (
     <div className="min-h-screen">
@@ -172,23 +155,47 @@ const Home = () => {
         curved
       >
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {TESTIMONIALS.map((testimonial, index) => (
-            <motion.div
-              key={testimonial.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.2 }}
-              viewport={{ once: true }}
-            >
-              <TestimonialCard
-                name={testimonial.name}
-                location={testimonial.location}
-                testimonial={testimonial.testimonial}
-                rating={testimonial.rating}
-                puppyName={testimonial.puppyName}
-              />
-            </motion.div>
-          ))}
+          {isLoadingTestimonials ? (
+            Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="bg-background p-6 rounded-lg shadow-md animate-pulse">
+                <div className="h-4 bg-muted rounded w-1/3 mb-2"></div>
+                <div className="h-3 bg-muted rounded w-1/4 mb-4"></div>
+                <div className="h-20 bg-muted rounded mb-4"></div>
+                <div className="flex items-center">
+                  {/* Simplified skeleton for stars */}
+                  <div className="h-5 w-20 bg-muted rounded"></div>
+                </div>
+              </div>
+            ))
+          ) : testimonialsError ? (
+            <div className="col-span-full text-center py-8 text-red-600 bg-red-50 p-4 rounded-md">
+              <AlertTriangle className="mx-auto h-8 w-8 mb-2" />
+              <p>Could not load testimonials at this time.</p>
+            </div>
+          ) : testimonials.length === 0 ? (
+            <div className="col-span-full text-center py-8 text-muted-foreground">
+              <p>No testimonials yet. Check back soon!</p>
+            </div>
+          ) : (
+            testimonials.map((testimonial, index) => (
+              <motion.div
+                key={testimonial.id} // Use testimonial.id from API
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.2 }}
+                viewport={{ once: true }}
+              >
+                <TestimonialCard
+                  name={testimonial.name}
+                  location={testimonial.location}
+                  testimonial={testimonial.testimonial_text} // Assuming API returns testimonial_text
+                  rating={testimonial.rating}
+                  puppyName={testimonial.puppy_name} // Assuming API returns puppy_name
+                  // imageUrl={testimonial.image_url} // If TestimonialCard supports image_url
+                />
+              </motion.div>
+            ))
+          )}
         </div>
         
         <div className="text-center mt-12">

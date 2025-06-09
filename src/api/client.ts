@@ -156,6 +156,32 @@ export const blogApi = {
   },
 };
 
+// Testimonial API for public fetching
+interface Testimonial {
+  id: string;
+  name: string;
+  location?: string;
+  testimonial_text: string;
+  rating: number; // e.g., 1-5
+  puppy_name?: string;
+  image_url?: string;
+  created_at: string;
+}
+
+// Define types for create/update payloads to omit generated fields
+type TestimonialCreationData = Omit<Testimonial, 'id' | 'created_at'>;
+type TestimonialUpdateData = Partial<TestimonialCreationData>;
+
+export const testimonialApi = {
+  getAllPublic: async (params?: { limit?: number }): Promise<Testimonial[]> => {
+    const searchParams = new URLSearchParams();
+    if (params?.limit) searchParams.append('limit', params.limit.toString());
+    const query = searchParams.toString();
+    // Assuming direct array response for public testimonials
+    return apiRequest<Testimonial[]>(`/testimonials${query ? `?${query}` : ''}`);
+  },
+};
+
 // Admin API
 
 // Define the response type for successful Square sync
@@ -256,6 +282,36 @@ export const adminApi = {
     // return response.data;
     // For now, assume direct array response:
     return apiRequest<BreedTemplate[]>('/admin/breed-templates');
+  },
+
+  // Testimonial Management
+  getAllTestimonials: async (params?: { page?: number; limit?: number }): Promise<{ data: Testimonial[]; pagination?: any }> => {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.append('page', params.page.toString());
+    if (params?.limit) searchParams.append('limit', params.limit.toString());
+    const query = searchParams.toString();
+    // Assuming admin endpoint might have pagination and data nesting
+    return apiRequest<{ data: Testimonial[]; pagination?: any }>(`/admin/testimonials${query ? `?${query}` : ''}`);
+  },
+
+  createTestimonial: async (data: TestimonialCreationData): Promise<Testimonial> => {
+    return apiRequest<Testimonial>('/admin/testimonials', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  updateTestimonial: async (id: string, data: TestimonialUpdateData): Promise<Testimonial> => {
+    return apiRequest<Testimonial>(`/admin/testimonials/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  deleteTestimonial: async (id: string): Promise<void> => {
+    return apiRequest<void>(`/admin/testimonials/${id}`, { // Expecting 204 No Content, so apiRequest might return {} which is fine for void
+      method: 'DELETE',
+    });
   }
 };
 
