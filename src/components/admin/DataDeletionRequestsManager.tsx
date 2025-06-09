@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { apiRequest } from "@/api/client";
 import { useToast } from "@/hooks/use-toast";
@@ -25,6 +26,16 @@ interface DeletionRequest {
   admin_notes?: string | null;
 }
 
+interface ApiResponse {
+  requests: DeletionRequest[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalRequests: number;
+    limit: number;
+  };
+}
+
 const DataDeletionRequestsManager = () => {
   const { toast } = useToast();
   const [requests, setRequests] = useState<DeletionRequest[]>([]);
@@ -41,7 +52,6 @@ const DataDeletionRequestsManager = () => {
   const [totalItems, setTotalItems] = useState(0);
   const limit = 10;
 
-
   const fetchRequests = useCallback(async (page = 1, status = "") => {
     setIsLoading(true);
     try {
@@ -49,11 +59,11 @@ const DataDeletionRequestsManager = () => {
       if (status) {
         url += `&status=${status}`;
       }
-      const response = await apiRequest(url, "GET");
-      setRequests(response.data || []);
-      setCurrentPage(response.page);
-      setTotalPages(response.totalPages);
-      setTotalItems(response.totalItems);
+      const response = await apiRequest(url) as ApiResponse;
+      setRequests(response.requests || []);
+      setCurrentPage(response.pagination?.currentPage || 1);
+      setTotalPages(response.pagination?.totalPages || 1);
+      setTotalItems(response.pagination?.totalRequests || 0);
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -89,11 +99,11 @@ const DataDeletionRequestsManager = () => {
         `/admin/data-deletion-requests/${selectedRequest.id}/status`,
         "PUT",
         { status: editStatus, admin_notes: editAdminNotes }
-      );
-      setRequests(prev => prev.map(r => (r.id === updatedRequest.id ? updatedRequest : r)));
+      ) as { request: DeletionRequest };
+      setRequests(prev => prev.map(r => (r.id === updatedRequest.request.id ? updatedRequest.request : r)));
       setIsEditModalOpen(false);
       toast({ title: "Status Updated", description: `Request ${selectedRequest.id} status updated to ${editStatus}.`, className: "bg-green-500 text-white" });
-      fetchRequests(currentPage, filterStatus); // Re-fetch to ensure data consistency
+      fetchRequests(currentPage, filterStatus);
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -107,10 +117,10 @@ const DataDeletionRequestsManager = () => {
 
   const getStatusBadgeVariant = (status: DeletionRequest['status']) => {
     switch (status) {
-      case 'pending': return 'yellow';
-      case 'processing': return 'blue';
-      case 'completed': return 'green';
-      case 'rejected': return 'red';
+      case 'pending': return 'secondary';
+      case 'processing': return 'secondary';
+      case 'completed': return 'secondary';
+      case 'rejected': return 'destructive';
       default: return 'secondary';
     }
   };
@@ -125,7 +135,6 @@ const DataDeletionRequestsManager = () => {
       </div>
     );
   };
-
 
   if (isLoading && requests.length === 0) {
     return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin text-brand-red" /><p className="ml-2">Loading requests...</p></div>;

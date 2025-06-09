@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,45 +10,44 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-
 import { 
   PawPrint, Calendar, Dog, Bone, Heart, Pill, FileText, MessageSquare, Clock, ChevronRight, ArrowUpRight,
   Loader2, AlertCircle, PlusCircle, Send, Paperclip, Printer
-} from "lucide-react"; // Added Printer icon
+} from "lucide-react";
 import { 
   ChartContainer, ChartLegend, ChartTooltip, ChartTooltipContent,
 } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/api/client"; // Import the centralized API client
+import { apiRequest } from "@/api/client";
 
 // Interfaces for API data
+
 interface PuppyData {
   id: string;
   name: string;
   breed_name?: string;
   litter_name?: string;
   birth_date: string;
-  image_urls: string[]; // Should be parsed from JSON string if API sends string
+  image_urls: string[];
   color?: string;
-  weight?: number; // Current weight
+  weight?: number;
   status?: string;
   microchip_id?: string;
   description?: string;
-  temperament_notes?: string[]; // Assuming this might be an array of strings if parsed from JSON
-  // Parent info and breeder info are not directly in puppies table per schema, might be from litter or separate calls
-  [key: string]: any; // Allow other properties
+  temperament_notes?: string[];
+  [key: string]: any;
 }
 
 interface HealthRecord {
   id: string;
   puppy_id: string;
   record_type: 'vaccination' | 'weight_log' | 'height_log' | 'document' | 'note';
-  date: string; // YYYY-MM-DD
-  details: string; // For notes, doc URL/title, vaccine name, etc.
-  value?: number | null; // For numeric values like weight, height
-  unit?: string | null; // e.g., 'lbs', 'kg', 'in', 'cm'
+  date: string;
+  details: string;
+  value?: number | null;
+  unit?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -69,12 +67,10 @@ interface Message {
   sender_id: string;
   sender_type: 'user' | 'admin' | 'system' | 'breeder';
   content: string;
-  attachments?: string | null; // JSON array
+  attachments?: string | null;
   sent_at: string;
   read_at?: string | null;
 }
-
-// API Fetcher Functions are now replaced by apiRequest from @/api/client
 
 // Helper to calculate age from birth_date
 const calculateAgeMonths = (birthDateStr: string): number => {
@@ -85,7 +81,6 @@ const calculateAgeMonths = (birthDateStr: string): number => {
   months += today.getMonth();
   return months <= 0 ? 0 : months;
 };
-
 
 const PuppyProfile = () => {
   const { puppyId } = useParams<{ puppyId: string }>();
@@ -105,52 +100,50 @@ const PuppyProfile = () => {
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // For Add Health Record Form
   const [showAddHealthForm, setShowAddHealthForm] = useState(false);
   const [newHealthRecord, setNewHealthRecord] = useState({
     record_type: 'note' as HealthRecord['record_type'],
-    date: new Date().toISOString().split('T')[0], // Default to today
+    date: new Date().toISOString().split('T')[0],
     details: "",
     value: "",
     unit: ""
   });
 
   const fetchPuppyData = useCallback(async () => {
-    if (!puppyId) return; // Token is handled by apiRequest
+    if (!puppyId) return;
     setIsLoadingPuppy(true);
     try {
-      // Use apiRequest, adjust endpoint if base URL is set in apiRequest
-      const data = await apiRequest(`/puppies/${puppyId}`, "GET");
-      // Keep image_urls parsing logic as apiRequest is generic
-      setPuppy({ ...data, image_urls: Array.isArray(data.image_urls) ? data.image_urls : JSON.parse(data.image_urls || "[]") });
+      const data = await apiRequest(`/puppies/${puppyId}`) as PuppyData;
+      setPuppy({ 
+        ...data, 
+        image_urls: Array.isArray(data.image_urls) ? data.image_urls : JSON.parse(data.image_urls || "[]") 
+      });
     } catch (err: any) {
-      setError(err.message); // apiRequest should throw error with message
+      setError(err.message);
       toast({ variant: "destructive", title: "Failed to load puppy data", description: err.message });
     } finally {
       setIsLoadingPuppy(false);
     }
-  }, [puppyId, token, toast]);
+  }, [puppyId, toast]);
 
   const fetchHealthRecords = useCallback(async () => {
     if (!puppyId) return;
     setIsLoadingHealth(true);
     try {
-      // Use apiRequest
-      const response = await apiRequest(`/puppies/${puppyId}/health-records`, "GET");
-      setHealthRecords(response.data || []); // Adjust based on typical apiRequest response structure
+      const response = await apiRequest(`/puppies/${puppyId}/health-records`) as { data: HealthRecord[] };
+      setHealthRecords(response.data || []);
     } catch (err: any) {
       toast({ variant: "destructive", title: "Failed to load health records", description: err.message });
     } finally {
       setIsLoadingHealth(false);
     }
-  }, [puppyId, token, toast]);
+  }, [puppyId, toast]);
   
   const fetchConversations = useCallback(async () => {
     if (!puppyId) return;
     setIsLoadingConvos(true);
     try {
-      // Use apiRequest
-      const convosResponse = await apiRequest(`/my-conversations?related_entity_id=${puppyId}&related_entity_type=puppy`, "GET");
+      const convosResponse = await apiRequest(`/my-conversations?related_entity_id=${puppyId}&related_entity_type=puppy`) as { data: Conversation[] };
       setConversations(convosResponse.data || []);
       if (convosResponse.data && convosResponse.data.length > 0) {
         setActiveConversation(convosResponse.data[0]);
@@ -160,21 +153,20 @@ const PuppyProfile = () => {
     } finally {
       setIsLoadingConvos(false);
     }
-  }, [puppyId, token, toast]);
+  }, [puppyId, toast]);
 
   const fetchMessagesForConversation = useCallback(async (conversationId: string) => {
     if (!conversationId) return;
     setIsLoadingMessages(true);
     try {
-      // Use apiRequest
-      const messagesResponse = await apiRequest(`/conversations/${conversationId}/messages`, "GET");
+      const messagesResponse = await apiRequest(`/conversations/${conversationId}/messages`) as { data: Message[] };
       setMessages(messagesResponse.data || []);
     } catch (err: any) {
       toast({ variant: "destructive", title: "Failed to load messages", description: err.message });
     } finally {
       setIsLoadingMessages(false);
     }
-  }, [token, toast]);
+  }, [toast]);
 
   useEffect(() => {
     fetchPuppyData();
@@ -186,10 +178,9 @@ const PuppyProfile = () => {
     if (activeConversation?.id) {
       fetchMessagesForConversation(activeConversation.id);
     } else {
-      setMessages([]); // Clear messages if no active conversation
+      setMessages([]);
     }
   }, [activeConversation, fetchMessagesForConversation]);
-
 
   const handleAddHealthRecordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -204,39 +195,31 @@ const PuppyProfile = () => {
         if (newHealthRecord.value) payload.value = parseFloat(newHealthRecord.value);
         if (newHealthRecord.unit) payload.unit = newHealthRecord.unit;
       }
-      // Use apiRequest
       await apiRequest(`/puppies/${puppyId}/health-records`, "POST", payload);
       toast({ title: "Health Record Added", description: "Successfully added new health record.", className: "bg-green-500 text-white" });
       setShowAddHealthForm(false);
-      fetchHealthRecords(); // Refresh list
-      setNewHealthRecord({ record_type: 'note', date: new Date().toISOString().split('T')[0], details: "", value: "", unit: "" }); // Reset form
+      fetchHealthRecords();
+      setNewHealthRecord({ record_type: 'note', date: new Date().toISOString().split('T')[0], details: "", value: "", unit: "" });
     } catch (err: any) {
       toast({ variant: "destructive", title: "Failed to add record", description: err.message });
     }
   };
   
   const handleStartOrSendMessage = async () => {
-    if (!newMessageContent.trim() || !puppyId || !user) return; // Token handled by apiRequest
+    if (!newMessageContent.trim() || !puppyId || !user) return;
 
     try {
       if (activeConversation?.id) {
-        // Use apiRequest
-        const sentMessage = await apiRequest(`/conversations/${activeConversation.id}/messages`, "POST", { content: newMessageContent });
-        // Assuming apiRequest returns the created message directly or within a `data` field.
-        // If `sentMessage.data` is the actual message object:
-        // setMessages(prev => [...prev, sentMessage.data || sentMessage]);
-        // For now, assuming it returns the message directly:
+        const sentMessage = await apiRequest(`/conversations/${activeConversation.id}/messages`, "POST", { content: newMessageContent }) as Message;
         setMessages(prev => [...prev, sentMessage]);
-      } else { // Start a new conversation
+      } else {
         const newConvPayload = {
           title: `Chat about ${puppy?.name || 'your puppy'}`,
           first_message_content: newMessageContent,
           related_entity_id: puppyId,
           related_entity_type: 'puppy'
         };
-        // Use apiRequest
-        const response = await apiRequest(`/conversations`, "POST", newConvPayload);
-        // Assuming response structure is { conversation: newConv, message: firstMessage }
+        const response = await apiRequest(`/conversations`, "POST", newConvPayload) as { conversation: Conversation; message: Message };
         const newConv = response.conversation;
         const firstMessage = response.message;
 
@@ -245,15 +228,9 @@ const PuppyProfile = () => {
             setActiveConversation(newConv);
             setMessages([firstMessage]);
         } else {
-            // Fallback if the structure is different, e.g. the new conversation itself is returned
-            // This might need adjustment based on actual API response from apiRequest for this endpoint
-            setConversations(prev => [response, ...prev]);
-            setActiveConversation(response);
-            // And if starting a conversation doesn't return the first message immediately,
-            // you might need another fetch or to adjust UI expectation.
-            // For now, if firstMessage isn't separate, we add a placeholder or refetch.
-            // For simplicity, if only conversation is returned, messages might initially be empty.
-            if(response.id) fetchMessagesForConversation(response.id);
+            setConversations(prev => [response as any, ...prev]);
+            setActiveConversation(response as any);
+            if((response as any).id) fetchMessagesForConversation((response as any).id);
         }
       }
       setNewMessageContent("");
@@ -262,24 +239,23 @@ const PuppyProfile = () => {
     }
   };
 
-
   // Data transformations for UI
   const age = puppy ? calculateAgeMonths(puppy.birth_date) : 0;
   const displayAge = puppy ? (age > 12 ? `${Math.floor(age/12)}y ${age%12}m` : `${age}m old`) : "N/A";
   const growthProgress = puppy ? Math.min(100, Math.round((age / 18) * 100)) : 0; // Assuming 18 months to full growth
 
   const weightHistory = healthRecords
-    .filter(r => r.record_type === 'weight_log' && r.value != null && puppy?.birth_date)
+    .filter(r => r.record_type === 'weight_log' && r.value != null && r.puppy_id === puppyId && puppy?.birth_date)
     .map(r => ({ month: calculateAgeMonths(puppy!.birth_date) - calculateAgeMonths(r.date) , weight: r.value! }))
     .sort((a,b) => a.month - b.month);
 
   const heightHistory = healthRecords
-    .filter(r => r.record_type === 'height_log' && r.value != null && puppy?.birth_date)
+    .filter(r => r.record_type === 'height_log' && r.value != null && r.puppy_id === puppyId && puppy?.birth_date)
     .map(r => ({ month: calculateAgeMonths(puppy!.birth_date) - calculateAgeMonths(r.date), height: r.value! }))
     .sort((a,b) => a.month - b.month);
 
-  const vaccinations = healthRecords.filter(r => r.record_type === 'vaccination');
-  const documents = healthRecords.filter(r => r.record_type === 'document');
+  const vaccinations = healthRecords.filter(r => r.record_type === 'vaccination' && r.puppy_id === puppyId);
+  const documents = healthRecords.filter(r => r.record_type === 'document' && r.puppy_id === puppyId);
 
   const chartConfig = { weight: { color: "#ef4444", label: "Weight (lbs)" }, height: { color: "#3b82f6", label: "Height (in)" } };
 
@@ -414,7 +390,6 @@ const PuppyProfile = () => {
                   {documents.length > 0 ? documents.map(d => (
                     <div key={d.id} className="text-sm p-2 border-b flex justify-between items-center">
                       <span>{d.details} - {new Date(d.date).toLocaleDateString()}</span>
-                      {/* Assuming details contains a URL for document type 'document' */}
                       {d.record_type === 'document' && d.details.startsWith('http') &&
                         <Button variant="outline" size="sm" asChild className="no-print action-button-class"><a href={d.details} target="_blank" rel="noopener noreferrer">View</a></Button>}
                     </div>
@@ -426,7 +401,7 @@ const PuppyProfile = () => {
             {/* Messages Tab */}
             <TabsContent value="messages" className="messages-tab-content-class">
               <Card className="puppy-profile-card">
-                <CardHeader><CardTitle>Messages {activeConversation ? `- ${activeConversation.title}`: ''}</CardTitle></CardHeader>
+                <CardHeader><CardTitle>Messages {activeConversation ? `- ${activeConversation.title}`: ''}</CardHeader>
                 <CardContent>
                   {isLoadingConvos && <Loader2 className="animate-spin no-print" />}
                   {/* TODO: UI to switch between multiple conversations if they exist for this puppy */}
