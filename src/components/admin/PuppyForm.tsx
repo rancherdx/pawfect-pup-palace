@@ -3,52 +3,25 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Image, PlusCircle, Calendar, Scale, Dog, Save, Loader2 } from "lucide-react"; // For loading spinner
 import { toast } from "sonner";
-import { BreedTemplate } from "@/types/breedTemplate";
-import { useMutation } from "@tanstack/react-query";
-import { uploadApi } from "@/api"; // Assuming uploadApi is exported from @/api (likely client.ts)
+// import { BreedTemplate } from "@/types/breedTemplate"; // Removed as type is local or inferred
+import { useMutation, useQuery } from "@tanstack/react-query"; // Added useQuery
+import { uploadApi, adminApi } from "@/api"; // Added adminApi
 
-// Mock data for breed templates
-const breedTemplates = [
-  {
-    id: "1",
-    breedName: "Golden Retriever",
-    description: "Friendly, intelligent dogs with a lustrous golden coat. Excellent family pets that are eager to please.",
-    size: "Large",
-    temperament: "Friendly, Reliable, Trustworthy",
-    careInstructions: "Regular grooming needed, moderate exercise requirements, prone to hip issues.",
-    commonTraits: ["Friendly", "Intelligent", "Devoted"],
-    averageWeight: {
-      min: 55,
-      max: 75
-    }
-  },
-  {
-    id: "2",
-    breedName: "French Bulldog",
-    description: "Charming small dogs with bat-like ears and a playful disposition.",
-    size: "Small",
-    temperament: "Playful, Alert, Affectionate",
-    careInstructions: "Minimal grooming, low exercise requirements, watch for breathing issues.",
-    commonTraits: ["Playful", "Adaptable", "Sociable"],
-    averageWeight: {
-      min: 16,
-      max: 28
-    }
-  },
-  {
-    id: "3",
-    breedName: "German Shepherd",
-    description: "Confident, courageous and smart working dogs that excel at various tasks.",
-    size: "Large",
-    temperament: "Confident, Courageous, Smart",
-    careInstructions: "Regular exercise needed, moderate grooming, watch for hip dysplasia.",
-    commonTraits: ["Loyal", "Intelligent", "Trainable"],
-    averageWeight: {
-      min: 50,
-      max: 90
-    }
-  }
-];
+// Local BreedTemplate definition (if not centrally available)
+interface BreedTemplate {
+  id: string;
+  breedName: string;
+  description: string;
+  size: string;
+  temperament: string;
+  careInstructions: string;
+  commonTraits: string[];
+  averageWeight?: {
+    min: number;
+    max: number;
+  };
+}
+
 
 type PuppyData = {
   id?: string;
@@ -124,6 +97,15 @@ const PuppyForm = ({ puppy, onSave, onCancel, litters = [] }: PuppyFormProps) =>
   const [age, setAge] = useState<string>("");
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
 
+  const {
+    data: fetchedBreedTemplates,
+    isLoading: isLoadingTemplates,
+    error: templatesError
+  } = useQuery<BreedTemplate[]>({ // Explicitly use the BreedTemplate type
+    queryKey: ['breedTemplates'],
+    queryFn: adminApi.getBreedTemplates
+  });
+
   const uploadImageMutation = useMutation({
     mutationFn: (file: File) => uploadApi.uploadFile(file, "puppy-images"), // Pass folder context
     onSuccess: (data: { url: string }) => { // data should be { url: string }
@@ -181,9 +163,9 @@ const PuppyForm = ({ puppy, onSave, onCancel, litters = [] }: PuppyFormProps) =>
     const templateId = e.target.value;
     setSelectedTemplate(templateId);
     
-    if (!templateId) return;
+    if (!templateId || !fetchedBreedTemplates) return; // Check if fetchedBreedTemplates is available
     
-    const template = breedTemplates.find(t => t.id === templateId);
+    const template = fetchedBreedTemplates.find(t => t.id === templateId); // Use fetchedBreedTemplates
     if (template) {
       // Apply template values to form but keep existing values for name, price, status, etc.
       setFormData(prev => ({
@@ -237,14 +219,24 @@ const PuppyForm = ({ puppy, onSave, onCancel, litters = [] }: PuppyFormProps) =>
                 value={selectedTemplate}
                 onChange={handleTemplateChange}
                 className="w-full md:w-1/2 p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
+                disabled={isLoadingTemplates || !!templatesError} // Disable if loading or error
               >
-                <option value="">Select a template...</option>
-                {breedTemplates.map(template => (
+                <option value="">
+                  {isLoadingTemplates ? "Loading templates..." :
+                   templatesError ? "Error loading templates" :
+                   "Select a template..."}
+                </option>
+                {fetchedBreedTemplates && !templatesError && fetchedBreedTemplates.map(template => (
                   <option key={template.id} value={template.id}>
                     {template.breedName}
                   </option>
                 ))}
               </select>
+              {templatesError && (
+                <p className="text-sm text-red-500 mt-1">
+                  Could not load breed templates. Please try again later.
+                </p>
+              )}
               <p className="text-sm text-gray-500 mt-1">
                 Templates auto-fill breed-specific details
               </p>
