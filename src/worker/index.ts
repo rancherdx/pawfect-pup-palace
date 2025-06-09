@@ -291,17 +291,23 @@ router.put('/api/admin/data-deletion-requests/:id/status', async (request: IRequ
 router.post('/api/admin/test-session', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
   if (authResponse) return authResponse;
-  return createAdminTestSession(request as unknown as Request, env);
+  // Get admin token from request
+  const authResult = await verifyJwtAuth(request as unknown as Request, env);
+  return createAdminTestSession(request as unknown as Request, env, authResult.decodedToken);
 });
 router.post('/api/admin/test-session/impersonate', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
   if (authResponse) return authResponse;
-  return createImpersonationSession(request as unknown as Request, env);
+  // Get admin token from request
+  const authResult = await verifyJwtAuth(request as unknown as Request, env);
+  return createImpersonationSession(request as unknown as Request, env, authResult.decodedToken);
 });
 router.get('/api/admin/test-logs', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
   if (authResponse) return authResponse;
-  return getTestSessionLogs(request as unknown as Request, env);
+  // Get admin token from request
+  const authResult = await verifyJwtAuth(request as unknown as Request, env);
+  return getTestSessionLogs(request as unknown as Request, env, authResult.decodedToken);
 });
 
 // NEW: Transaction History Route (Fixed from AdminTest page)
