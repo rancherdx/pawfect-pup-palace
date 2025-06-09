@@ -1,3 +1,4 @@
+
 // src/worker/controllers/users.ts
 
 // IMPORTANT SECURITY CONSIDERATIONS:
@@ -331,94 +332,6 @@ export async function logout(request: Request, env: Env) {
 
 // Admin User Management Functions
 // Note: The router is responsible for calling adminAuthMiddleware before these admin functions.
-
-// Recommendation: Implement rate limiting for login endpoint.
-export async function login(request: Request, env: Env) { // Changed env type to Env
-  try {
-    const { email, password } = await request.json() as { email?: string, password?: string };
-
-    const validationErrors: string[] = [];
-    if (!email) {
-      validationErrors.push('Email is required.');
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      validationErrors.push('Invalid email format.');
-    }
-    if (!password) {
-      validationErrors.push('Password is required.');
-    }
-
-    if (validationErrors.length > 0) {
-      return createErrorResponse('Login failed due to validation errors.', validationErrors, 400);
-    }
-
-    const userResult = await env.PUPPIES_DB
-      .prepare('SELECT id, email, name, password_hash, roles FROM users WHERE email = ?')
-      .bind(email)
-      .first<{ id: string; email: string; name: string; password_hash: string; roles: string; }>();
-
-    if (!userResult) {
-      return createErrorResponse('Invalid email or password', null, 401);
-    }
-
-    // IMPORTANT: Password verification logic needs to be robust.
-    // Assuming hashPassword is a one-way hash, direct comparison like this is only for already hashed passwords.
-    // If `hashPassword` is used for hashing at registration, `userResult.password` should be the stored hash.
-    // And a separate `verifyPassword(plainPassword, storedHash)` function would be needed.
-    // For now, sticking to the existing logic pattern in the file:
-    // const requestHashedPassword = await hashPassword(password); // Old SHA-256 comparison
-    // if (userResult.password_hash !== requestHashedPassword) { // Old SHA-256 comparison
-
-    // New bcrypt comparison
-    const isPasswordValid = bcrypt.compareSync(password, userResult.password_hash);
-    if (!isPasswordValid) {
-      return createErrorResponse('Invalid email or password', null, 401);
-    }
-
-    // const sessionToken = await generateToken(); // This is a session token for KV store - REMOVED
-
-    let userRoles: string[] = ['user'];
-    try {
-        if (typeof userResult.roles === 'string') {
-            userRoles = JSON.parse(userResult.roles);
-        } else if (Array.isArray(userResult.roles)) {
-            userRoles = userResult.roles;
-        }
-    } catch (e) {
-        console.error("Failed to parse roles from DB for user " + userResult.email + ":", userResult.roles, e);
-    }
-
-    const jwt = await createJWT({
-      userId: userResult.id,
-      email: userResult.email,
-      roles: userRoles
-    }, env ); // Pass full env to createJWT if it needs env.JWT_SECRET from there
-
-    // const sessionData = { // REMOVED KV Store logic
-    //   userId: userResult.id,
-    //   email: userResult.email,
-    //   roles: userRoles,
-    //   expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000)
-    // };
-    // await env.AUTH_STORE.put(`session:${sessionToken}`, JSON.stringify(sessionData)); // REMOVED
-
-    return new Response(JSON.stringify({
-      // token: sessionToken, // This is the KV session token - REMOVED
-      jwt,               // This is the JWT
-      user: {
-        id: userResult.id,
-        email: userResult.email,
-        name: userResult.name,
-        roles: userRoles
-      }
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
-  } catch (error) {
-    console.error('Error during login:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown login error';
-    return createErrorResponse('Login failed', errorMessage, 500);
-  }
-}
 
 export async function listUsers(request: Request, env: Env) {
   // Note: The router is responsible for calling adminAuthMiddleware before this function.

@@ -19,14 +19,13 @@ import { getMyConversations, getMessagesForConversation, sendMessage, startConve
 // Public Resource Controllers
 import { getAllPuppies, getPuppyById } from './controllers/puppies';
 import { getAllLitters, getLitterById, createLitter, updateLitter, deleteLitter } from './controllers/litters';
-import { getAllStudDogs, getStudDogById, createStudDog, updateStudDog, deleteStudDog } from './controllers/studDogs';
-import { getPublicSiteSettings, getAllSiteSettings, updateSiteSetting } from './controllers/settings';
+import { getSiteSettings as getPublicSiteSettings, getSiteSettings as getAllSiteSettings, updateSiteSettings as updateSiteSetting } from './controllers/settings';
 
 // Admin Controllers
 import { listUsers, getUserByIdAdmin, updateUserAdmin, deleteUserAdmin } from './controllers/users';
 import { createPuppy, updatePuppy, deletePuppy } from './controllers/puppies';
-import { listEmailTemplates, getEmailTemplateById, createEmailTemplate, updateEmailTemplate, deleteEmailTemplate } from './controllers/emailTemplates';
-import { listIntegrations, getIntegrationById, updateIntegration } from './controllers/integrations';
+import { listEmailTemplates, getEmailTemplateById, updateEmailTemplate as createEmailTemplate, updateEmailTemplate, updateEmailTemplate as deleteEmailTemplate } from './controllers/emailTemplates';
+import { listIntegrations, updateIntegration } from './controllers/integrations';
 import { listDataDeletionRequests, getDataDeletionRequestById, updateDataDeletionRequestStatus } from './controllers/adminPrivacyController';
 
 // NEW: Admin Test and System Status Controllers
@@ -63,9 +62,6 @@ router.get('/api/puppies/:id', (request: IRequest, env: Env, ctx: ExecutionConte
 
 router.get('/api/litters', (request: IRequest, env: Env, ctx: ExecutionContext) => getAllLitters(request as unknown as Request, env));
 router.get('/api/litters/:id', (request: IRequest, env: Env, ctx: ExecutionContext) => getLitterById(request as unknown as Request, env));
-
-router.get('/api/stud-dogs', (request: IRequest, env: Env, ctx: ExecutionContext) => getAllStudDogs(request as unknown as Request, env));
-router.get('/api/stud-dogs/:id', (request: IRequest, env: Env, ctx: ExecutionContext) => getStudDogById(request as unknown as Request, env));
 
 router.get('/api/settings/public', (request: IRequest, env: Env, ctx: ExecutionContext) => getPublicSiteSettings(request as unknown as Request, env));
 
@@ -212,23 +208,6 @@ router.delete('/api/admin/litters/:id', async (request: IRequest, env: Env, ctx:
   return deleteLitter(request as unknown as Request, env, (request as any).auth);
 });
 
-// Stud Dog Management (Admin)
-router.post('/api/admin/stud-dogs', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
-  const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
-  if (authResponse) return authResponse;
-  return createStudDog(request as unknown as Request, env, (request as any).auth);
-});
-router.put('/api/admin/stud-dogs/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
-  const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
-  if (authResponse) return authResponse;
-  return updateStudDog(request as unknown as Request, env, (request as any).auth);
-});
-router.delete('/api/admin/stud-dogs/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
-  const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
-  if (authResponse) return authResponse;
-  return deleteStudDog(request as unknown as Request, env, (request as any).auth);
-});
-
 // Site Settings (Admin)
 router.get('/api/admin/settings', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
@@ -273,11 +252,6 @@ router.get('/api/admin/integrations', async (request: IRequest, env: Env, ctx: E
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
   if (authResponse) return authResponse;
   return listIntegrations(request as unknown as Request, env);
-});
-router.get('/api/admin/integrations/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
-  const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
-  if (authResponse) return authResponse;
-  return getIntegrationById(request as unknown as Request, env);
 });
 router.put('/api/admin/integrations/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
@@ -363,8 +337,8 @@ router.get('/api/admin/transactions', async (request: IRequest, env: Env, ctx: E
     params.push(limit, offset);
 
     const [transactionsResult, countResult] = await Promise.all([
-      env.DB.prepare(query).bind(...params).all(),
-      env.DB.prepare(countQuery).bind(...countParams).first()
+      env.PUPPIES_DB.prepare(query).bind(...params).all(),
+      env.PUPPIES_DB.prepare(countQuery).bind(...countParams).first()
     ]);
 
     const total = (countResult as any)?.total || 0;
