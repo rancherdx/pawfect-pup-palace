@@ -1,4 +1,3 @@
-
 import { Router, IRequest } from 'itty-router';
 import { corsHeaders } from './utils/cors';
 import type { Env } from './env';
