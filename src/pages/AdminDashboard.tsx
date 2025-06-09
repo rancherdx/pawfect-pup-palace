@@ -20,8 +20,8 @@ import AdvancedSecurityFeatures from "@/components/admin/AdvancedSecurityFeature
 import DataDeletionRequestsManager from "@/components/admin/DataDeletionRequestsManager"; // Import the new component
 
 const AdminDashboard = () => {
-  // For demo purposes, we're using a fake authentication state
-  // In production, this would be connected to your auth system
+  // Comments about fake authentication are removed.
+  // The component now assumes it's rendered only if ProtectedRoute allows it.
 
   return (
     <div className="min-h-screen bg-white dark:bg-black/95 paw-print-bg">

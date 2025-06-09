@@ -5,6 +5,10 @@ import { Toaster } from 'sonner';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import './App.css';
 
+// Import ProtectedRoute
+import ProtectedRoute from '@/components/ProtectedRoute';
+// Assuming AuthProvider is in main.tsx, otherwise it would be imported and used here.
+
 import Index from '@/pages/Index';
 import Puppies from '@/pages/Puppies';
 import PuppyDetails from '@/pages/PuppyDetails';
@@ -50,12 +54,29 @@ function App() {
               <Route path="/blog/:slug" element={<BlogPost />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/dashboard" element={<Dashboard />} /> {/* Public dashboard route */}
+
+              {/* Protected Admin Routes */}
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin-test"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminTest />
+                  </ProtectedRoute>
+                }
+              />
+
               <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
               <Route path="/terms-of-service" element={<TermsOfServicePage />} />
               <Route path="/status" element={<SystemStatus />} />
-              <Route path="/admin-test" element={<AdminTest />} />
             </Routes>
             <Toaster />
           </div>
