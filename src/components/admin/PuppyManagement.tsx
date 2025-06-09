@@ -2,11 +2,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Plus, Dog, Edit, Trash, Search, ArrowRight } from "lucide-react";
+import { Plus, Dog, Edit, Trash, Search, ArrowRight, Loader2 } from "lucide-react"; // Added Loader2
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import PuppyForm from "./PuppyForm";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { puppiesApi } from "@/api";
+import { puppiesApi, adminApi } from "@/api"; // Added adminApi
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -28,10 +28,13 @@ const PuppyManagement = () => {
   // Create mutation for adding puppies
   const createPuppyMutation = useMutation({
     mutationFn: (newPuppy: any) => puppiesApi.createPuppy(newPuppy),
-    onSuccess: () => {
+    onSuccess: (createdPuppy) => { // Assume createdPuppy is returned
       queryClient.invalidateQueries({ queryKey: ['admin-puppies'] });
       toast.success("Puppy added successfully");
       setIsAddingPuppy(false);
+      if (createdPuppy && createdPuppy.id && createdPuppy.status === "Available") {
+        syncWithSquareMutation.mutate(createdPuppy.id);
+      }
     },
     onError: (error) => {
       toast.error(`Failed to add puppy: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -41,10 +44,13 @@ const PuppyManagement = () => {
   // Update mutation for editing puppies
   const updatePuppyMutation = useMutation({
     mutationFn: (updatedPuppy: any) => puppiesApi.updatePuppy(updatedPuppy.id, updatedPuppy),
-    onSuccess: () => {
+    onSuccess: (updatedPuppy) => { // Assume updatedPuppy is returned
       queryClient.invalidateQueries({ queryKey: ['admin-puppies'] });
       toast.success("Puppy updated successfully");
       setEditingPuppy(null);
+      if (updatedPuppy && updatedPuppy.id && updatedPuppy.status === "Available") {
+        syncWithSquareMutation.mutate(updatedPuppy.id);
+      }
     },
     onError: (error) => {
       toast.error(`Failed to update puppy: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -63,6 +69,26 @@ const PuppyManagement = () => {
     }
   });
 
+  // Sync with Square mutation
+  const syncWithSquareMutation = useMutation({
+    mutationFn: (puppyId: string) => adminApi.syncPuppyWithSquare(puppyId),
+    onSuccess: (data, puppyId) => { // data is SquareSyncResponse
+      queryClient.setQueryData(['admin-puppies'], (oldData: any) => {
+        if (!oldData || !oldData.puppies) return oldData;
+        const updatedPuppies = oldData.puppies.map((p: any) =>
+          p.id === puppyId ? { ...p, squareStatus: "Synced", squareItemId: data.squareItemId } : p
+        );
+        return { ...oldData, puppies: updatedPuppies };
+      });
+      toast.success(data.message || "Puppy synced with Square successfully!");
+    },
+    onError: (error: Error, puppyId) => {
+      toast.error(`Failed to sync puppy ${puppyId} with Square: ${error.message}`);
+      // Optionally, reset status if it was optimistically set
+      // queryClient.invalidateQueries({ queryKey: ['admin-puppies'] });
+    }
+  });
+
   const handleAddPuppy = (newPuppy: any) => {
     createPuppyMutation.mutate(newPuppy);
   };
@@ -78,20 +104,7 @@ const PuppyManagement = () => {
   };
 
   const syncWithSquare = (id: string) => {
-    // In a real app, this would make an API call to sync with Square
-    toast.success("Puppy synced with Square!");
-    
-    // Update the local state to show the puppy as synced
-    queryClient.setQueryData(['admin-puppies'], (old: any) => {
-      const updatedPuppies = old.puppies.map((p: any) => 
-        p.id === id ? { ...p, squareStatus: "Synced" } : p
-      );
-      
-      return { 
-        ...old,
-        puppies: updatedPuppies
-      };
-    });
+    syncWithSquareMutation.mutate(id);
   };
 
   const filteredPuppies = puppies.filter((puppy: any) => 
@@ -235,8 +248,12 @@ const PuppyManagement = () => {
                             size="sm"
                             variant="outline" 
                             onClick={() => syncWithSquare(puppy.id)}
+                            disabled={syncWithSquareMutation.isPending && syncWithSquareMutation.variables === puppy.id} // Disable button for this specific puppy if it's syncing
                             className="text-xs border-blue-300 hover:bg-blue-50"
                           >
+                            {syncWithSquareMutation.isPending && syncWithSquareMutation.variables === puppy.id ? (
+                              <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                            ) : null}
                             Sync <ArrowRight className="ml-1 h-3 w-3" />
                           </Button>
                         )}

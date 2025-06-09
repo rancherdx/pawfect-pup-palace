@@ -191,17 +191,7 @@ const PuppyForm = ({ puppy, onSave, onCancel, litters = [] }: PuppyFormProps) =>
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Simulate syncing with Square
-    const willSyncToSquare = formData.status !== "Not For Sale";
-    
-    if (willSyncToSquare) {
-      toast.success("Puppy data will be synced to Square inventory");
-    }
-    
-    onSave({
-      ...formData,
-      squareStatus: willSyncToSquare ? "Synced" : "Not Synced"
-    });
+    onSave(formData);
   };
 
   const isEditing = Boolean(puppy);
