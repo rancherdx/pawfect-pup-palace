@@ -23,6 +23,23 @@ import { getSiteSettings as getPublicSiteSettings, getSiteSettings as getAllSite
 // Admin Controllers
 import { listUsers, getUserByIdAdmin, updateUserAdmin, deleteUserAdmin } from './controllers/users';
 import { createPuppy, updatePuppy, deletePuppy } from './controllers/puppies';
+// Payment Controller (NEW)
+import { processPayment, handleSquareWebhook, captureAuthorizedPayment, refundPaymentHandler } from './controllers/payment';
+// Puppy Credits Controller (NEW)
+import { getUserPuppyCreditBalance, getPuppyCreditHistory, issuePuppyCredits } from './controllers/puppyCredits';
+// Email & Unified Inbox Controllers (NEW)
+import { handleInboundEmailWebhook } from './controllers/emailWebhookController';
+import { getConversations, getConversationMessages, replyToConversation } from './controllers/unifiedInboxController';
+// Site Tracking Controller (NEW)
+import { trackVisitHandler } from './controllers/trackingController';
+// Chat Controller (NEW)
+import {
+    saveChatMessage, // Utility, might be used by WebSocket handlers directly
+    getChatSessions,
+    getChatSessionHistory,
+    claimChatSession,
+    initiateChatSession
+} from './controllers/chatController';
 import { listEmailTemplates, getEmailTemplateById, updateEmailTemplate as createEmailTemplate, updateEmailTemplate, updateEmailTemplate as deleteEmailTemplate } from './controllers/emailTemplates';
 import { listIntegrations, updateIntegration } from './controllers/integrations';
 import { listDataDeletionRequests, getDataDeletionRequestById, updateDataDeletionRequestStatus } from './controllers/adminPrivacyController';
@@ -34,6 +51,48 @@ import { getSystemStatus, getSystemUptime } from './controllers/systemStatusCont
 // Create a new router instance
 const router = Router();
 
+// Global Set for Admin WebSocket connections (Simple in-memory store)
+// TODO: For durable/scalable WebSocket connections, use Cloudflare Durable Objects.
+const adminWebSockets = new Set<WebSocket>();
+// Global Map for Visitor WebSocket connections (visitorId -> WebSocket)
+// TODO: Similarly, consider Durable Objects for scalability.
+const visitorWebSockets = new Map<string, WebSocket>();
+
+// Function to broadcast messages to all connected admin WebSockets
+export function broadcastAdminNotification(payload: any, specificAdminWs?: WebSocket) {
+  const message = JSON.stringify(payload);
+  if (specificAdminWs) {
+    try {
+      console.log(`Sending targeted message to one admin: ${message.substring(0,100)}...`);
+      specificAdminWs.send(message);
+    } catch (err) {
+      console.error("Error sending targeted message to admin WebSocket:", err);
+    }
+  } else {
+    console.log(`Broadcasting to ${adminWebSockets.size} admin clients: ${message.substring(0,100)}...`);
+    adminWebSockets.forEach(ws => {
+      try {
+        ws.send(message);
+      } catch (err) {
+        console.error("Error sending message to admin WebSocket:", err);
+      }
+    });
+  }
+}
+
+// Helper to send message to a specific visitor WebSocket
+function sendToVisitor(visitorId: string, payload: any) {
+  const visitorWs = visitorWebSockets.get(visitorId);
+  if (visitorWs) {
+    try {
+      console.log(`Sending message to visitor ${visitorId}: ${JSON.stringify(payload).substring(0,100)}...`);
+      visitorWs.send(JSON.stringify(payload));
+    } catch (err) {
+      console.error(`Error sending message to visitor ${visitorId}:`, err);
+    }
+  } else {
+    console.log(`Visitor ${visitorId} not connected via WebSocket.`);
+  }
 // Global OPTIONS handler for CORS preflight requests
 router.options('*', () => {
   return new Response(null, {
@@ -67,6 +126,31 @@ router.get('/api/settings/public', (request: IRequest, env: Env, ctx: ExecutionC
 // NEW: Public System Status Routes
 router.get('/api/system/status', (request: IRequest, env: Env, ctx: ExecutionContext) => getSystemStatus(request as unknown as Request, env));
 router.get('/api/system/uptime', (request: IRequest, env: Env, ctx: ExecutionContext) => getSystemUptime(request as unknown as Request, env));
+
+// --- Payment and Webhook Routes ---
+
+// Checkout (user might be authenticated or guest, handle auth inside controller or make public and check for JWT)
+// For now, placing it as a public route. processPayment should ideally handle extracting user info if a JWT is present.
+router.post('/api/checkout', (request: IRequest, env: Env, ctx: ExecutionContext) => {
+  return processPayment(request as unknown as Request, env);
+});
+
+// Square Webhook (must be public)
+router.post('/api/webhooks/square', (request: IRequest, env: Env, ctx: ExecutionContext) => handleSquareWebhook(request as unknown as Request, env));
+
+// Email Inbound Webhook (public - security should be handled by provider signature or secret key in URL)
+router.post('/api/webhooks/email/inbound', (request: IRequest, env: Env, ctx: ExecutionContext) => handleInboundEmailWebhook(request as unknown as Request, env));
+
+// Site Visit Tracking (public, or light session-based)
+router.post('/api/track-visit', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
+  return trackVisitHandler(request as unknown as Request, env); // env already augmented in fetch()
+});
+
+// Chat Initiation (public)
+router.post('/api/chat/initiate', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
+  return initiateChatSession(request as unknown as Request, env); // env already augmented
+});
+
 
 // --- Protected User Routes (require verifyJwtAuth) ---
 
@@ -146,6 +230,24 @@ router.post('/api/conversations/:conversationId/messages', async (request: IRequ
   return sendMessage(request as unknown as Request, env, authResult.decodedToken, params.conversationId);
 });
 
+// --- Puppy Credits (User) ---
+router.get('/api/puppy-credits', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
+  const authResult = await verifyJwtAuth(request as unknown as Request, env);
+  if (!authResult.authenticated || !authResult.decodedToken) {
+    return new Response(JSON.stringify({ error: authResult.error || 'Authentication failed' }), { status: 401, headers: corsHeaders });
+  }
+  return getUserPuppyCreditBalance(request as unknown as Request, env, authResult.decodedToken);
+});
+
+router.get('/api/puppy-credits/history', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
+  const authResult = await verifyJwtAuth(request as unknown as Request, env);
+  if (!authResult.authenticated || !authResult.decodedToken) {
+    return new Response(JSON.stringify({ error: authResult.error || 'Authentication failed' }), { status: 401, headers: corsHeaders });
+  }
+  return getPuppyCreditHistory(request as unknown as Request, env, authResult.decodedToken);
+});
+
+
 // --- Admin Only Routes (require adminAuthMiddleware) ---
 
 // User Management (Admin)
@@ -210,6 +312,77 @@ router.delete('/api/admin/litters/:id', async (request: IRequest, env: Env, ctx:
   const params = request.params || {};
   return deleteLitter(request as unknown as Request, env, params.id);
 });
+
+// --- Admin Payment Routes ---
+router.post('/api/admin/payments/:paymentId/capture', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
+  const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
+  if (authResponse) return authResponse;
+  const params = request.params || {};
+  if (!params.paymentId) {
+    return new Response(JSON.stringify({ error: 'paymentId parameter is required' }), { status: 400, headers: corsHeaders });
+  }
+  return captureAuthorizedPayment(request as unknown as Request, env, params.paymentId);
+});
+
+router.post('/api/admin/refunds', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
+  const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
+  if (authResponse) return authResponse;
+  return refundPaymentHandler(request as unknown as Request, env);
+});
+
+// Puppy Credits Management (Admin)
+router.post('/api/admin/puppy-credits/issue', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
+  const authResponse = await adminAuthMiddleware(request as unknown as Request, env); // Ensures admin
+  if (authResponse) return authResponse;
+  // We need the admin's own authResult (decoded token) to pass to issuePuppyCredits for logging who issued it.
+  const adminAuthResult = await verifyJwtAuth(request as unknown as Request, env); // This will re-verify JWT but gives us the token
+  if (!adminAuthResult.authenticated || !adminAuthResult.decodedToken) {
+     // This should ideally not happen if adminAuthMiddleware passed, but as a safeguard:
+    return new Response(JSON.stringify({ error: 'Admin authentication token issue.' }), { status: 401, headers: corsHeaders });
+  }
+  return issuePuppyCredits(request as unknown as Request, env, adminAuthResult.decodedToken);
+});
+
+// Unified Inbox / Email Communication (Admin)
+router.get('/api/admin/inbox/conversations', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
+  const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
+  if (authResponse) return authResponse;
+  // We need admin's authResult for potential future use (e.g. filtering by assigned admin)
+  const adminAuthResult = await verifyJwtAuth(request as unknown as Request, env);
+   if (!adminAuthResult.authenticated || !adminAuthResult.decodedToken) {
+    return new Response(JSON.stringify({ error: 'Admin authentication token issue.' }), { status: 401, headers: corsHeaders });
+  }
+  return getConversations(request as unknown as Request, env, adminAuthResult.decodedToken);
+});
+
+router.get('/api/admin/inbox/conversations/:conversationId', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
+  const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
+  if (authResponse) return authResponse;
+  const params = request.params || {};
+  if (!params.conversationId) {
+    return new Response(JSON.stringify({ error: 'conversationId parameter is required' }), { status: 400, headers: corsHeaders });
+  }
+  const adminAuthResult = await verifyJwtAuth(request as unknown as Request, env);
+   if (!adminAuthResult.authenticated || !adminAuthResult.decodedToken) {
+    return new Response(JSON.stringify({ error: 'Admin authentication token issue.' }), { status: 401, headers: corsHeaders });
+  }
+  return getConversationMessages(request as unknown as Request, env, adminAuthResult.decodedToken, params.conversationId);
+});
+
+router.post('/api/admin/inbox/conversations/:conversationId/reply', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
+  const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
+  if (authResponse) return authResponse;
+  const params = request.params || {};
+  if (!params.conversationId) {
+    return new Response(JSON.stringify({ error: 'conversationId parameter is required' }), { status: 400, headers: corsHeaders });
+  }
+  const adminAuthResult = await verifyJwtAuth(request as unknown as Request, env);
+  if (!adminAuthResult.authenticated || !adminAuthResult.decodedToken) {
+    return new Response(JSON.stringify({ error: 'Admin authentication token issue.' }), { status: 401, headers: corsHeaders });
+  }
+  return replyToConversation(request as unknown as Request, env, adminAuthResult.decodedToken, params.conversationId);
+});
+
 
 // Site Settings (Admin)
 router.get('/api/admin/settings', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
@@ -381,19 +554,177 @@ router.get('/api/admin/transactions', async (request: IRequest, env: Env, ctx: E
 });
 
 // Catch-all for /api/* routes not matched above
+// IMPORTANT: This catch-all should be AFTER all specific API routes are defined.
 router.all('/api/*', () => new Response(JSON.stringify({ error: 'API endpoint not found' }), {
   status: 404,
   headers: { ...corsHeaders, 'Content-Type': 'application/json' }
 }));
 
+// Default export for the Worker
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 
+    // WebSocket endpoint for Admin Notifications & Chat
+    if (url.pathname === '/ws/admin-notifications') {
+      const token = url.searchParams.get('token');
+      if (!token) return new Response('Missing auth token for WebSocket.', { status: 401 });
+
+      const tempRequestForAuth = new Request(request.url, { headers: new Headers({ 'Authorization': `Bearer ${token}` }) });
+      const authResult = await verifyJwtAuth(tempRequestForAuth, env);
+
+      if (!authResult.authenticated || !authResult.decodedToken || !authResult.decodedToken.roles?.includes('admin')) {
+        return new Response('WebSocket auth failed or not admin.', { status: 403 });
+      }
+
+      const adminId = authResult.decodedToken.userId;
+      console.log(`Admin ${adminId} attempting WebSocket connection.`);
+      const pair = new WebSocketPair();
+      const [clientWs, serverWs] = Object.values(pair);
+
+      serverWs.accept();
+      adminWebSockets.add(serverWs);
+      // Store adminId with WebSocket if needed for targeted messaging from other admins, e.g., using a Map
+      // For now, adminWebSockets is a Set, so broadcast goes to all.
+      console.log(`Admin WebSocket for ${adminId} accepted. Total admin clients: ${adminWebSockets.size}`);
+
+      serverWs.addEventListener('message', async (event: MessageEvent) => {
+        try {
+          const message = JSON.parse(event.data as string);
+          console.log(`Message from admin ${adminId}:`, message);
+
+          if (message.type === 'chat_message_send' && message.payload) {
+            const { conversation_id: visitorId, message_text } = message.payload;
+            if (!visitorId || !message_text) {
+              serverWs.send(JSON.stringify({ type: 'error', message: 'Missing conversation_id or message_text.' }));
+              return;
+            }
+
+            const chatMessageData = {
+              conversation_id: visitorId,
+              sender_id: adminId,
+              sender_type: 'admin' as const,
+              message_text: message_text,
+            };
+            const saveResult = await saveChatMessage(env, chatMessageData);
+            if (!saveResult.success) {
+                serverWs.send(JSON.stringify({ type: 'error', message: 'Failed to save message: ' + saveResult.error }));
+                return;
+            }
+            const fullChatMessage = { ...chatMessageData, id: saveResult.messageId, timestamp: Math.floor(Date.now()/1000) };
+
+
+            // Relay to specific visitor
+            sendToVisitor(visitorId, { type: 'chat_message_receive', payload: fullChatMessage });
+            // serverWs.send(JSON.stringify({ type: 'chat_message_sent_confirmation', payload: fullChatMessage }));
+          }
+          // Handle other message types from admin (e.g., admin_join_chat, admin_typing)
+        } catch (err: any) {
+          console.error(`Error processing message from admin ${adminId}:`, err);
+          serverWs.send(JSON.stringify({ type: 'error', message: 'Error processing message: ' + err.message }));
+        }
+      });
+
+      const closeOrErrorHandler = (evt: Event) => {
+        adminWebSockets.delete(serverWs);
+        console.log(`Admin WebSocket for ${adminId} closed or errored. Total admin clients: ${adminWebSockets.size}.`);
+      };
+      serverWs.addEventListener('close', closeOrErrorHandler);
+      serverWs.addEventListener('error', closeOrErrorHandler);
+
+      return new Response(null, { status: 101, webSocket: clientWs });
+    }
+
+    // WebSocket endpoint for Visitor Chat
+    if (url.pathname === '/ws/chat-visitor') {
+      const visitorId = url.searchParams.get('visitorId');
+      if (!visitorId) {
+        return new Response('Missing visitorId for WebSocket.', { status: 400 });
+      }
+
+      console.log(`Visitor ${visitorId} attempting WebSocket connection.`);
+      const pair = new WebSocketPair();
+      const [clientWs, serverWs] = Object.values(pair);
+
+      serverWs.accept();
+      visitorWebSockets.set(visitorId, serverWs);
+      console.log(`Visitor WebSocket for ${visitorId} accepted. Total visitor clients: ${visitorWebSockets.size}`);
+
+      // Notify admins that a visitor has connected for chat
+      // TODO: Check if a chat session already exists and if it's currently 'active' with an admin.
+      // If so, maybe send a different type of notification or directly to the assigned admin.
+      broadcastAdminNotification({ type: 'visitor_chat_connect', data: { visitorId } });
+
+
+      serverWs.addEventListener('message', async (event: MessageEvent) => {
+        try {
+          const message = JSON.parse(event.data as string);
+          console.log(`Message from visitor ${visitorId}:`, message);
+
+          if (message.type === 'chat_message_send' && message.payload) {
+            const { message_text } = message.payload;
+             if (!message_text) {
+              serverWs.send(JSON.stringify({ type: 'error', message: 'Missing message_text.' }));
+              return;
+            }
+            const chatMessageData = {
+              conversation_id: visitorId,
+              sender_id: visitorId,
+              sender_type: 'visitor' as const,
+              message_text: message_text,
+            };
+            const saveResult = await saveChatMessage(env, chatMessageData);
+             if (!saveResult.success) {
+                serverWs.send(JSON.stringify({ type: 'error', message: 'Failed to save message: ' + saveResult.error }));
+                return;
+            }
+            const fullChatMessage = { ...chatMessageData, id: saveResult.messageId, timestamp: Math.floor(Date.now()/1000) };
+
+            // Relay to all admins
+            broadcastAdminNotification({ type: 'chat_message_receive', payload: fullChatMessage });
+            // serverWs.send(JSON.stringify({ type: 'chat_message_sent_confirmation', payload: fullChatMessage }));
+          }
+          // Handle other message types from visitor (e.g., visitor_typing)
+        } catch (err: any) {
+          console.error(`Error processing message from visitor ${visitorId}:`, err);
+          serverWs.send(JSON.stringify({ type: 'error', message: 'Error processing message: ' + err.message}));
+        }
+      });
+
+      const closeOrErrorHandler = (evt: Event) => {
+        visitorWebSockets.delete(visitorId);
+        console.log(`Visitor WebSocket for ${visitorId} closed or errored. Total visitor clients: ${visitorWebSockets.size}.`);
+        // Notify admins that visitor has disconnected from chat
+        broadcastAdminNotification({ type: 'visitor_chat_disconnect', data: { visitorId } });
+      };
+      serverWs.addEventListener('close', closeOrErrorHandler);
+      serverWs.addEventListener('error', closeOrErrorHandler);
+
+      return new Response(null, { status: 101, webSocket: clientWs });
+    }
+
+
+    // Handle API routes
     if (url.pathname.startsWith('/api/')) {
-      return router.handle(request, env, ctx)
+      const augmentedEnv = { ...env, broadcastAdminNotification, visitorWebSockets, adminWebSockets, sendToVisitor };
+      return router.handle(request, augmentedEnv, ctx)
+        .then(response => {
+          // Ensure CORS headers are applied to all API responses
+          const newHeaders = new Headers(response.headers);
+          Object.entries(corsHeaders).forEach(([key, value]) => {
+            if (!newHeaders.has(key)) { // Don't overwrite if already set by the route handler
+              newHeaders.set(key, value);
+            }
+          });
+          // Special case for 204 No Content, body should be null
+          if (response.status === 204) {
+            return new Response(null, { headers: newHeaders, status: response.status, statusText: response.statusText });
+          }
+          return new Response(response.body, { headers: newHeaders, status: response.status, statusText: response.statusText });
+        })
         .catch((error) => {
           console.error('Router Error:', error);
+          // Ensure CORS headers for error responses too
           return new Response(JSON.stringify({ error: 'Internal Server Error', details: error.message }), {
             status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -401,89 +732,62 @@ export default {
         });
     }
 
-    // --- Existing Static Asset Serving Logic (Fallback) ---
-    // Handle CORS preflight requests for non-API routes if necessary,
-    // though typically OPTIONS * from router should cover most cases if frontend and worker are same origin.
-    // For direct static asset access, browser usually handles this.
-    // If worker is on different domain than assets and direct fetch is needed, this might be required.
-    // For now, assuming frontend (which makes API calls) handles its own OPTIONS for static assets if needed,
-    // or they are served from same origin. The router's OPTIONS * is for API calls.
-
+    // --- Static Asset Serving Logic (Fallback for non-API routes) ---
     try {
-      if (url.pathname === '/') {
-        const object = await env.STATIC_ASSETS.get('index.html');
-        if (object) {
-          const headers = new Headers(corsHeaders);
-          headers.set('Content-Type', 'text/html');
-          headers.set('Cache-Control', 'public, max-age=3600');
-          return new Response(object.body, { headers });
-        }
-      }
-
       let assetPath = url.pathname;
-      
-      if (assetPath.startsWith('/')) {
+      if (assetPath === '/' || assetPath === '') {
+        assetPath = 'index.html';
+      } else if (assetPath.startsWith('/')) {
         assetPath = assetPath.substring(1);
       }
-      
-      let object = await env.STATIC_ASSETS.get(assetPath);
-      
-      if (!object && !assetPath.includes('.')) {
-        object = await env.STATIC_ASSETS.get('index.html');
-        assetPath = 'index.html';
+
+      // If the path doesn't have an extension, and is not explicitly 'index.html',
+      // assume it's a client-side route and serve index.html for SPA fallback.
+      if (!assetPath.includes('.') && assetPath !== 'index.html') {
+        const spaFallbackObject = await env.STATIC_ASSETS.get('index.html');
+        if (spaFallbackObject) {
+          const headers = new Headers(corsHeaders); // Apply CORS to SPA fallback too
+          headers.set('Content-Type', 'text/html');
+          headers.set('Cache-Control', 'no-cache, no-store, must-revalidate'); // Prevent caching of index.html for SPA routes
+          return new Response(spaFallbackObject.body, { headers });
+        }
       }
       
+      const object = await env.STATIC_ASSETS.get(assetPath);
+
       if (object) {
-        const headers = new Headers(corsHeaders);
+        const headers = new Headers(corsHeaders); // Apply CORS to static assets
+        let contentType = 'application/octet-stream'; // Default content type
         
-        if (assetPath.endsWith('.html')) {
-          headers.set('Content-Type', 'text/html');
-        } else if (assetPath.endsWith('.js')) {
-          headers.set('Content-Type', 'application/javascript');
-        } else if (assetPath.endsWith('.css')) {
-          headers.set('Content-Type', 'text/css');
-        } else if (assetPath.endsWith('.png')) {
-          headers.set('Content-Type', 'image/png');
-        } else if (assetPath.endsWith('.jpg') || assetPath.endsWith('.jpeg')) {
-          headers.set('Content-Type', 'image/jpeg');
-        } else if (assetPath.endsWith('.svg')) {
-          headers.set('Content-Type', 'image/svg+xml');
-        } else if (assetPath.endsWith('.ico')) {
-          headers.set('Content-Type', 'image/x-icon');
-        } else if (assetPath.endsWith('.json')) {
-          headers.set('Content-Type', 'application/json');
-        }
+        if (assetPath.endsWith('.html')) contentType = 'text/html';
+        else if (assetPath.endsWith('.js')) contentType = 'application/javascript';
+        else if (assetPath.endsWith('.css')) contentType = 'text/css';
+        else if (assetPath.endsWith('.png')) contentType = 'image/png';
+        else if (assetPath.endsWith('.jpg') || assetPath.endsWith('.jpeg')) contentType = 'image/jpeg';
+        else if (assetPath.endsWith('.svg')) contentType = 'image/svg+xml';
+        else if (assetPath.endsWith('.ico')) contentType = 'image/x-icon';
+        else if (assetPath.endsWith('.json')) contentType = 'application/json';
+
+        headers.set('Content-Type', contentType);
         
-        if (assetPath.includes('/assets/') || assetPath.endsWith('.js') || assetPath.endsWith('.css')) {
-          headers.set('Cache-Control', 'public, max-age=31536000');
+        // Cache policy: long for versioned assets, short for others
+        if (assetPath.match(/(\.[\da-f]{8,}\.(css|js|png|jpg|svg)$)/i) || assetPath.includes('/assets/')) { // Heuristic for versioned assets
+          headers.set('Cache-Control', 'public, max-age=31536000, immutable');
         } else {
-          headers.set('Cache-Control', 'public, max-age=3600');
+          headers.set('Cache-Control', 'public, max-age=3600'); // 1 hour for other assets
         }
         
         return new Response(object.body, { headers });
       }
-      
-      if (url.pathname.startsWith('/api/') || assetPath.includes('.')) {
-        return new Response('Not Found', { 
-          status: 404, 
-          headers: corsHeaders 
-        });
-      } else {
-        const indexObject = await env.STATIC_ASSETS.get('index.html');
-        if (indexObject) {
-          const headers = new Headers(corsHeaders);
-          headers.set('Content-Type', 'text/html');
-          return new Response(indexObject.body, { headers });
-        }
-      }
-      
     } catch (error) {
       console.error('Static serving error:', error);
+      // Fall through to 404 if asset not found or error during fetch
     }
 
+    // Fallback 404 for any other unhandled paths
     return new Response('Not Found', { 
       status: 404, 
-      headers: corsHeaders 
+      headers: { ...corsHeaders, 'Content-Type': 'text/plain' } // Plain text for generic 404
     });
   },
 };

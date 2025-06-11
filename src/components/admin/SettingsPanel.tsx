@@ -27,6 +27,17 @@ interface SiteSettings {
     description: string;
     keywords: string;
   };
+  tracking: TrackingSettings; // Added
+}
+
+// Client-side interface for Tracking Settings
+interface TrackingSettings {
+  googleAnalyticsId?: string;
+  googleSearchConsoleVerification?: string;
+  facebookPixelId?: string;
+  bingUetId?: string;
+  customHeadScripts?: string;
+  customBodyScripts?: string;
 }
 
 const initialFormData: SiteSettings = {
@@ -46,26 +57,47 @@ const initialFormData: SiteSettings = {
     description: "",
     keywords: "",
   },
+  tracking: { // Added default tracking object
+    googleAnalyticsId: "",
+    googleSearchConsoleVerification: "",
+    facebookPixelId: "",
+    bingUetId: "",
+    customHeadScripts: "",
+    customBodyScripts: "",
+  },
 };
 
 const SettingsPanel = () => {
   const [formData, setFormData] = useState<SiteSettings>(initialFormData);
   const queryClient = useQueryClient();
 
-  const siteSettingsQuery = useQuery({
+  const siteSettingsQuery = useQuery<SiteSettings, Error>({ // Explicitly type useQuery
     queryKey: ['siteSettings'],
     queryFn: () => apiRequest<SiteSettings>('/admin/settings'),
   });
 
-  const saveSettingsMutation = useMutation({
+  const saveSettingsMutation = useMutation<SiteSettings, Error, SiteSettings>({ // Explicit types
     mutationFn: (updatedSettings: SiteSettings) => apiRequest<SiteSettings>('/admin/settings', {
-      method: 'POST',
-      body: JSON.stringify(updatedSettings),
+      method: 'POST', // Should likely be PUT if replacing the whole settings object, or PATCH for partial.
+                     // The backend currently merges, so POST is acceptable if it's defined as "update or create". Let's stick to POST as per original.
+      body: JSON.stringify(updatedSettings), // Ensure this sends the whole object including tracking
     }),
     onSuccess: (savedData) => {
       toast.success('Site settings updated successfully!');
-      queryClient.setQueryData(['siteSettings'], savedData);
-      if (savedData) setFormData(savedData);
+      queryClient.setQueryData(['siteSettings'], savedData); // Update React Query cache
+      if (savedData) {
+        // Ensure tracking object is merged correctly from savedData
+        setFormData(prevData => ({
+          ...initialFormData, // Start with full structure
+          ...prevData,        // Overlay with any existing form data (e.g., unsaved changes the user made)
+          ...savedData,       // Overlay with saved data from API
+          tracking: {         // Deep merge tracking specifically
+            ...(initialFormData.tracking),
+            ...(prevData.tracking || {}),
+            ...(savedData.tracking || {}),
+          }
+        }));
+      }
     },
     onError: (error: Error) => {
       toast.error(`Failed to save settings: ${error.message}`);
@@ -74,7 +106,16 @@ const SettingsPanel = () => {
 
   useEffect(() => {
     if (siteSettingsQuery.data) {
-      setFormData(siteSettingsQuery.data);
+      // Ensure that the tracking field is initialized even if not present in fetched data
+      const dataWithTracking = {
+        ...initialFormData, // Provides default structure including tracking
+        ...siteSettingsQuery.data, // Overwrites with fetched data
+        tracking: {
+          ...initialFormData.tracking, // Default tracking values
+          ...(siteSettingsQuery.data.tracking || {}), // Fetched tracking values
+        },
+      };
+      setFormData(dataWithTracking);
     }
   }, [siteSettingsQuery.data]);
 
@@ -83,21 +124,28 @@ const SettingsPanel = () => {
     const checked = type === 'checkbox' ? (e.target as HTMLInputElement).checked : undefined;
 
     setFormData(prev => {
-      if (name.includes('.')) {
-        const [outerKey, innerKey] = name.split('.') as [keyof SiteSettings, string];
+      const keys = name.split('.');
+      if (keys.length > 1) {
+        // Handle nested state (e.g., socialMediaLinks.facebook, tracking.googleAnalyticsId)
+        return keys.reduce((acc, key, index) => {
+          if (index === keys.length - 1) {
+            // @ts-ignore
+            acc[key] = type === 'checkbox' ? checked : value;
+          } else {
+            // @ts-ignore
+            if (!acc[key]) acc[key] = {}; // Create nested object if it doesn't exist
+            // @ts-ignore
+            acc = acc[key]; // Move deeper into the object
+          }
+          return acc;
+        }, { ...prev }); // Start with a shallow copy of the previous state
+      } else {
+        // Handle top-level state
         return {
           ...prev,
-          [outerKey]: {
-            // @ts-ignore
-            ...prev[outerKey],
-            [innerKey]: value,
-          },
+          [name]: type === 'checkbox' ? checked : value,
         };
       }
-      return {
-        ...prev,
-        [name]: type === 'checkbox' ? checked : value,
-      };
     });
   };
 
@@ -221,6 +269,64 @@ const SettingsPanel = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Tracking & Analytics Card */}
+        <Card className="shadow-lg dark:border-gray-700">
+          <CardHeader>
+            <CardTitle>Tracking & Analytics</CardTitle>
+            <CardDescription>Configure IDs and scripts for analytics and tracking services.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
+            <div className="space-y-2">
+              <Label htmlFor="tracking.googleAnalyticsId">Google Analytics ID</Label>
+              <Input id="tracking.googleAnalyticsId" name="tracking.googleAnalyticsId" value={formData.tracking?.googleAnalyticsId || ""} onChange={handleInputChange} placeholder="e.g., G-XXXXXXXXXX" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="tracking.facebookPixelId">Facebook Pixel ID</Label>
+              <Input id="tracking.facebookPixelId" name="tracking.facebookPixelId" value={formData.tracking?.facebookPixelId || ""} onChange={handleInputChange} placeholder="e.g., 123456789012345" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="tracking.bingUetId">Bing UET ID</Label>
+              <Input id="tracking.bingUetId" name="tracking.bingUetId" value={formData.tracking?.bingUetId || ""} onChange={handleInputChange} placeholder="e.g., 12345678" />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="tracking.googleSearchConsoleVerification">Google Search Console (Meta Tag)</Label>
+              <Textarea
+                id="tracking.googleSearchConsoleVerification"
+                name="tracking.googleSearchConsoleVerification"
+                value={formData.tracking?.googleSearchConsoleVerification || ""}
+                onChange={handleInputChange}
+                rows={2}
+                placeholder='e.g., <meta name="google-site-verification" content="your_verification_string" />'
+              />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="tracking.customHeadScripts">Custom Head Scripts</Label>
+              <Textarea
+                id="tracking.customHeadScripts"
+                name="tracking.customHeadScripts"
+                value={formData.tracking?.customHeadScripts || ""}
+                onChange={handleInputChange}
+                rows={4}
+                placeholder="e.g., <meta ...>, <script>...</script>, <link ...>"
+              />
+               <p className="text-xs text-muted-foreground">Scripts/tags to be injected before `&lt;/head&gt;`.</p>
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="tracking.customBodyScripts">Custom Body Scripts (End of Body)</Label>
+              <Textarea
+                id="tracking.customBodyScripts"
+                name="tracking.customBodyScripts"
+                value={formData.tracking?.customBodyScripts || ""}
+                onChange={handleInputChange}
+                rows={4}
+                placeholder="e.g., <script>...</script> for analytics or chat widgets"
+              />
+              <p className="text-xs text-muted-foreground">Scripts/tags to be injected before `&lt;/body&gt;`.</p>
+            </div>
+          </CardContent>
+        </Card>
+
 
         <CardFooter className="flex justify-end pt-6 px-0">
           <Button

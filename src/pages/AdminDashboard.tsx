@@ -2,9 +2,9 @@
 import { useState, useEffect, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  PawPrint, Dog, Receipt, Settings, CreditCard, Layers, FileText, Globe, Users, PlugZap, Mail, ShieldCheck, MessageSquare, MoreHorizontal
-} from "lucide-react"; // Added MoreHorizontal
-import {
+  PawPrint, Dog, Receipt, Settings, CreditCard, Layers, FileText, Globe, Users, PlugZap, Mail, ShieldCheck, MessageSquare, MoreHorizontal, Inbox as InboxIcon
+} from "lucide-react"; // Added MoreHorizontal, InboxIcon, MessageCircle for Live Chat
+import { // MessageCircle might already be there from Testimonials, ensure it's available or aliased if needed.
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
@@ -28,8 +28,13 @@ import AdminStudDogManager from "@/components/admin/AdminStudDogManager";
 import AdvancedSecurityFeatures from "@/components/admin/AdvancedSecurityFeatures";
 import DataDeletionRequestsManager from "@/components/admin/DataDeletionRequestsManager"; // Import the new component
 import TestimonialManagement from '@/components/admin/TestimonialManagement'; // Import TestimonialManagement
+import UnifiedInboxManager from "@/components/admin/UnifiedInbox/UnifiedInboxManager"; // Import UnifiedInboxManager
+import ChatManager from "@/components/admin/LiveChat/ChatManager"; // Import ChatManager
+import useAdminNotificationSocket from "@/hooks/useAdminNotificationSocket"; // Import the WebSocket hook
 
 const allAdminTabs = [
+  { value: "inbox", label: "Inbox", icon: InboxIcon, component: <UnifiedInboxManager /> },
+  { value: "live_chat", label: "Live Chat", icon: MessageSquare, component: <ChatManager /> }, // MessageSquare was already imported for Testimonials
   { value: "puppies", label: "Puppies", icon: Dog, component: <PuppyManagement /> },
   { value: "litters", label: "Litters", icon: PawPrint, component: <LitterManagement /> },
   { value: "breeds", label: "Breeds", icon: Layers, component: <BreedTemplateManager /> },
@@ -54,6 +59,15 @@ const AdminDashboard = () => {
   const [dropdownTabs, setDropdownTabs] = useState<typeof allAdminTabs>([]);
   const tabsListRef = useRef<HTMLDivElement>(null);
   const moreMenuRef = useRef<HTMLButtonElement>(null); // Ref for the "More" button
+
+  // Initialize the Admin Notification WebSocket connection
+  // The hook itself handles connection logic based on auth state from useAuth
+  useAdminNotificationSocket({
+    onOpen: () => console.log("AdminDashboard: WebSocket connected for notifications."),
+    onClose: (event) => console.log("AdminDashboard: WebSocket disconnected.", event.reason),
+    onError: (event) => console.error("AdminDashboard: WebSocket error.", event),
+    // onMessage for specific handling here if needed, but toasts are handled in the hook itself
+  });
 
   useEffect(() => {
     const calculateTabsLayout = () => {

@@ -3,6 +3,16 @@ import { corsHeaders } from '../utils/cors';
 
 const SITE_SETTINGS_KEY = "site_settings";
 
+// Interface for Tracking Settings
+interface TrackingSettings {
+  googleAnalyticsId?: string;
+  googleSearchConsoleVerification?: string;
+  facebookPixelId?: string;
+  bingUetId?: string;
+  customHeadScripts?: string;
+  customBodyScripts?: string;
+}
+
 // Default settings structure, adjust as needed to match SettingsPanel.tsx expectations
 const defaultSiteSettings = {
   siteName: "GDS Puppies",
@@ -21,6 +31,14 @@ const defaultSiteSettings = {
     description: "Find your new best friend from our loving litters of puppies.",
     keywords: "puppies, dogs, breeder, family pets"
   },
+  tracking: { // New tracking settings field
+    googleAnalyticsId: "",
+    googleSearchConsoleVerification: "",
+    facebookPixelId: "",
+    bingUetId: "",
+    customHeadScripts: "",
+    customBodyScripts: "",
+  } as TrackingSettings,
   // Add other settings fields expected by SettingsPanel.tsx here
   // e.g. themeColor, itemsPerPage, etc.
 };
@@ -44,7 +62,10 @@ export async function getSiteSettings(request: Request, env: Env): Promise<Respo
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-    const settings = JSON.parse(settingsJson);
+    let settings = JSON.parse(settingsJson);
+    // Ensure tracking settings are present, merge with defaults if not
+    settings.tracking = { ...defaultSiteSettings.tracking, ...(settings.tracking || {}) };
+
     return new Response(JSON.stringify(settings), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -87,8 +108,27 @@ export async function updateSiteSettings(request: Request, env: Env): Promise<Re
     // For safety, merge with default settings to ensure all keys are present if client sends partial data
     // This also helps prevent removing essential keys if client sends a stripped-down object
     const currentSettingsJson = await env.AUTH_STORE.get(SITE_SETTINGS_KEY);
-    const currentSettings = currentSettingsJson ? JSON.parse(currentSettingsJson) : defaultSiteSettings;
-    const mergedSettings = { ...currentSettings, ...newSettings };
+    let currentSettings = defaultSiteSettings; // Start with defaults
+    if (currentSettingsJson) {
+        try {
+            currentSettings = JSON.parse(currentSettingsJson);
+        } catch (e) {
+            console.error("Error parsing current settings from KV, using defaults:", e);
+            // currentSettings remains defaultSiteSettings
+        }
+    }
+
+    // Ensure the tracking field itself exists before trying to spread it
+    const updatedTrackingSettings = {
+      ...(currentSettings.tracking || defaultSiteSettings.tracking), // Base with current or default tracking
+      ...(newSettings.tracking || {}), // Apply new tracking settings
+    };
+
+    const mergedSettings = {
+      ...currentSettings,
+      ...newSettings,
+      tracking: updatedTrackingSettings, // Ensure tracking is properly merged
+    };
 
 
     await env.AUTH_STORE.put(SITE_SETTINGS_KEY, JSON.stringify(mergedSettings));
