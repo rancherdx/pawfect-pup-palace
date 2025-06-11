@@ -1,25 +1,21 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authApi } from '@/api/client';
+import { User, AuthResponse, UserRegistrationData, UserLoginData } from '@/types';
 
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  roles: string[];
-}
+// Local User interface is removed. Imported User will be used.
 
 interface AuthContextType {
-  user: User | null;
-  token: string | null; // This is the access token
-  refreshToken: string | null; // New: refresh token
+  user: User | null; // Uses imported User
+  token: string | null;
+  refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (userData: { name: string; email: string; password: string }) => Promise<void>;
+  login: (credentials: UserLoginData) => Promise<void>; // Updated
+  register: (registrationData: UserRegistrationData) => Promise<void>; // Updated
   logout: () => Promise<void>;
-  updateUser: (userData: Partial<User>) => void;
-  setNewTokens: (newAccessToken: string, newRefreshToken?: string) => void; // New: for token refresh
+  updateUser: (userData: Partial<User>) => void; // Uses imported User
+  setNewTokens: (newAccessToken: string, newRefreshToken?: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -105,10 +101,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initializeAuth();
   }, []); // Empty dependency array means this runs once on mount
 
-  const login = async (email: string, password: string) => {
+  const login = async (credentials: UserLoginData) => {
     try {
-      // authApi.login now returns { token, user, refreshToken? }
-      const response = await authApi.login(email, password);
+      const response: AuthResponse = await authApi.login(credentials);
       const { token: newAccessToken, user: userData, refreshToken: newRefreshToken } = response;
       
       localStorage.setItem('jwtToken', newAccessToken);
@@ -134,10 +129,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (userData: { name: string; email: string; password: string }) => {
+  const register = async (registrationData: UserRegistrationData) => {
     try {
-      // authApi.register now returns { token, user, refreshToken? }
-      const response = await authApi.register(userData);
+      const response: AuthResponse = await authApi.register(registrationData);
       const { token: newAccessToken, user: newUser, refreshToken: newRefreshToken } = response;
       
       localStorage.setItem('jwtToken', newAccessToken);

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useMemo } from "react"; // Added useMemo
 import { Link } from "react-router-dom";
 import Section from "@/components/Section";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,258 +16,133 @@ import {
   ChevronDown, 
   Dog, 
   Heart, 
-  Calendar
+  Calendar,
+  Loader2, // Added
+  AlertTriangle // Added
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { littersApi } from "@/api";
+import { Litter, LitterListResponse, Puppy, PuppyStatus } from "@/types";
 
-// Sample data for litters
-const litterData = [
-  {
-    id: "l1",
-    name: "Luna & Max's Spring Litter",
-    breed: "Golden Retriever",
-    birthDate: "2024-01-15",
-    availability: "Some Available",
-    coverImage: "https://images.unsplash.com/photo-1611250282006-4484dd3fba6f?ixlib=rb-4.0.3",
-    damName: "Luna",
-    sireName: "Max",
-    description: "A beautiful litter of golden retriever puppies with excellent temperaments and health clearances. These puppies come from champion bloodlines.",
-    puppies: [
-      {
-        id: "p1",
-        name: "Bella",
-        gender: "Female",
-        color: "Light Golden",
-        price: 1800,
-        image: "https://images.unsplash.com/photo-1615233500064-caa995e2f9dd?ixlib=rb-4.0.3",
-        status: "Available",
-        reservable: true
-      },
-      {
-        id: "p2",
-        name: "Charlie",
-        gender: "Male",
-        color: "Golden",
-        price: 1800,
-        image: "https://images.unsplash.com/photo-1633722715463-d30f4f325e24?ixlib=rb-4.0.3",
-        status: "Reserved",
-        reservable: false
-      },
-      {
-        id: "p3",
-        name: "Lucy",
-        gender: "Female",
-        color: "Dark Golden",
-        price: 1800,
-        image: "https://images.unsplash.com/photo-1652531661755-f234b7fda163?ixlib=rb-4.0.3",
-        status: "Available",
-        reservable: true
-      }
-    ]
-  },
-  {
-    id: "l2",
-    name: "Bailey & Cooper's Winter Litter",
-    breed: "Labrador Retriever",
-    birthDate: "2023-12-10",
-    availability: "Limited Availability",
-    coverImage: "https://images.unsplash.com/photo-1560743641-3914f2c45636?ixlib=rb-4.0.3",
-    damName: "Bailey",
-    sireName: "Cooper",
-    description: "Healthy and playful lab puppies with excellent genetic background. These puppies are socialized from an early age and will make wonderful family pets.",
-    puppies: [
-      {
-        id: "p4",
-        name: "Rocky",
-        gender: "Male",
-        color: "Chocolate",
-        price: 1500,
-        image: "https://images.unsplash.com/photo-1605897472359-5624cca67d4c?ixlib=rb-4.0.3",
-        status: "Reserved",
-        reservable: false
-      },
-      {
-        id: "p5",
-        name: "Daisy",
-        gender: "Female",
-        color: "Yellow",
-        price: 1500,
-        image: "https://images.unsplash.com/photo-1590507076166-8c0917f543c6?ixlib=rb-4.0.3",
-        status: "Available",
-        reservable: true
-      },
-      {
-        id: "p6",
-        name: "Buddy",
-        gender: "Male",
-        color: "Black",
-        price: 1500,
-        image: "https://images.unsplash.com/photo-1552053831-71594a27632d?ixlib=rb-4.0.3",
-        status: "Available",
-        reservable: true
-      },
-      {
-        id: "p7",
-        name: "Molly",
-        gender: "Female",
-        color: "Chocolate",
-        price: 1500,
-        image: "https://images.unsplash.com/photo-1597237154674-1a0d2274cef4?ixlib=rb-4.0.3",
-        status: "Adopted",
-        reservable: false
-      }
-    ]
-  },
-  {
-    id: "l3",
-    name: "Rosie & Duke's Fall Litter",
-    breed: "French Bulldog",
-    birthDate: "2023-11-05",
-    availability: "All Reserved",
-    coverImage: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?ixlib=rb-4.0.3",
-    damName: "Rosie",
-    sireName: "Duke",
-    description: "Adorable Frenchie puppies with excellent structure and charming personalities. Health tested parents with AKC registration.",
-    puppies: [
-      {
-        id: "p8",
-        name: "Milo",
-        gender: "Male",
-        color: "Fawn",
-        price: 3500,
-        image: "https://images.unsplash.com/photo-1575425186775-b8de9a427e67?ixlib=rb-4.0.3",
-        status: "Reserved",
-        reservable: false
-      },
-      {
-        id: "p9",
-        name: "Sophie",
-        gender: "Female",
-        color: "Brindle",
-        price: 3500,
-        image: "https://images.unsplash.com/photo-1521907236370-15c67b6c0255?ixlib=rb-4.0.3",
-        status: "Reserved",
-        reservable: false
-      },
-      {
-        id: "p10",
-        name: "Oliver",
-        gender: "Male",
-        color: "Blue",
-        price: 4000,
-        image: "https://images.unsplash.com/photo-1541364983171-a8ba01e95cfc?ixlib=rb-4.0.3",
-        status: "Reserved",
-        reservable: false
-      }
-    ]
-  }
-];
 
 // Get badge color based on status
-const getStatusColor = (status: string) => {
+const getStatusColor = (status: PuppyStatus | string) => { // Accept PuppyStatus or string
   switch (status) {
     case "Available":
       return "bg-green-500 hover:bg-green-600";
     case "Reserved":
       return "bg-yellow-500 hover:bg-yellow-600";
-    case "Adopted":
+    case "Sold": // Updated to match PuppyStatus
       return "bg-blue-500 hover:bg-blue-600";
-    default:
+    default: // For 'Not For Sale' or any other status
       return "bg-gray-500 hover:bg-gray-600";
   }
 };
 
-// Calculate age in weeks
-const calculateAge = (birthdayStr: string) => {
+// Calculate age (more detailed: days, months, years)
+const calculateAge = (birthdayStr: string): string => {
+  if (!birthdayStr) return "N/A";
   const birthday = new Date(birthdayStr);
   const today = new Date();
-  
-  // Calculate the time difference in milliseconds
-  const diffTime = Math.abs(today.getTime() - birthday.getTime());
-  
-  // Calculate weeks
-  const diffWeeks = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7));
-  
-  return diffWeeks;
+  let ageMonths = (today.getFullYear() - birthday.getFullYear()) * 12;
+  ageMonths -= birthday.getMonth();
+  ageMonths += today.getMonth();
+
+  if (ageMonths < 0) ageMonths = 0;
+
+  if (ageMonths < 1) {
+    const diffDays = Math.floor((today.getTime() - birthday.getTime()) / (1000 * 60 * 60 * 24));
+    return `${diffDays} day${diffDays === 1 ? '' : 's'}`;
+  }
+  if (ageMonths < 12) {
+    return `${ageMonths} month${ageMonths === 1 ? '' : 's'}`;
+  }
+  const ageYears = Math.floor(ageMonths / 12);
+  const remainingMonths = ageMonths % 12;
+  if (remainingMonths > 0) {
+    return `${ageYears} year${ageYears === 1 ? '' : 's'}, ${remainingMonths} month${remainingMonths === 1 ? '' : 's'}`;
+  }
+  return `${ageYears} year${ageYears === 1 ? '' : 's'}`;
 };
+
 
 const Litters = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [priceRange, setPriceRange] = useState([0, 5000]);
   const [selectedBreeds, setSelectedBreeds] = useState<string[]>([]);
-  const [availabilityFilter, setAvailabilityFilter] = useState<string[]>([]);
+  const [availabilityFilter, setAvailabilityFilter] = useState<string[]>([]); // Stores "Available", "Reserved", "Sold"
   const [filterMenuOpen, setFilterMenuOpen] = useState(false);
-  
-  // Gather all unique breeds from the data
-  const allBreeds = Array.from(new Set(litterData.map(litter => litter.breed)));
-  
-  // Filter litters based on search and filters
-  const filteredLitters = litterData.filter(litter => {
-    // Search query filter
-    const matchesSearch = 
-      litter.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      litter.breed.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      litter.puppies.some(puppy => 
-        puppy.name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      
-    // Breed filter
-    const matchesBreed = 
-      selectedBreeds.length === 0 || 
-      selectedBreeds.includes(litter.breed);
-      
-    // Check if any puppy matches the price range
-    const matchesPrice = litter.puppies.some(
-      puppy => puppy.price >= priceRange[0] && puppy.price <= priceRange[1]
-    );
-    
-    // Check if litter matches availability filter
-    const matchesAvailability = 
-      availabilityFilter.length === 0 || 
-      (
-        (availabilityFilter.includes("available") && 
-         litter.puppies.some(puppy => puppy.status === "Available")) ||
-        (availabilityFilter.includes("reserved") && 
-         litter.puppies.some(puppy => puppy.status === "Reserved")) ||
-        (availabilityFilter.includes("adopted") && 
-         litter.puppies.some(puppy => puppy.status === "Adopted"))
-      );
-    
-    return matchesSearch && matchesBreed && matchesPrice && matchesAvailability;
+
+  const { data: littersResponse, isLoading, isError, error } = useQuery<LitterListResponse, Error>({
+    queryKey: ['publicLitters'],
+    queryFn: () => littersApi.getAll({ limit: 100 }),
+    staleTime: 1000 * 60 * 5,
   });
+  const rawLitters: Litter[] = littersResponse?.litters || [];
+
+  const allBreeds = useMemo(() => Array.from(new Set(rawLitters.map(litter => litter.breed))), [rawLitters]);
   
-  // Get all puppies from all litters for the "All Puppies" tab
-  const allPuppies = filteredLitters.flatMap(litter => 
-    litter.puppies.map(puppy => ({
-      ...puppy,
-      breed: litter.breed,
-      age: `${calculateAge(litter.birthDate)} weeks`,
-      litterName: litter.name,
-      litterid: litter.id
-    }))
-  );
+  const filteredLitters = useMemo(() => {
+    return rawLitters.filter(litter => {
+      const puppiesInLitter = litter.puppies || [];
+      const matchesSearch =
+        litter.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        litter.breed.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        puppiesInLitter.some(puppy =>
+          puppy.name.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+
+      const matchesBreed =
+        selectedBreeds.length === 0 ||
+        selectedBreeds.includes(litter.breed);
+
+      const matchesPrice = puppiesInLitter.length > 0 ? puppiesInLitter.some(
+        puppy => puppy.price >= priceRange[0] && puppy.price <= priceRange[1]
+      ) : true; // If no puppies, don't filter out by price
+      
+      const matchesAvailability =
+        availabilityFilter.length === 0 ||
+        (
+          (availabilityFilter.includes("Available") &&
+           puppiesInLitter.some(puppy => puppy.status === "Available")) ||
+          (availabilityFilter.includes("Reserved") &&
+           puppiesInLitter.some(puppy => puppy.status === "Reserved")) ||
+          (availabilityFilter.includes("Sold") &&
+           puppiesInLitter.some(puppy => puppy.status === "Sold"))
+        );
+      
+      return matchesSearch && matchesBreed && matchesPrice && matchesAvailability;
+    });
+  }, [rawLitters, searchQuery, selectedBreeds, priceRange, availabilityFilter]);
   
-  // Handle breed selection
+  const allPuppiesForDisplay = useMemo(() => {
+    return filteredLitters.flatMap(litter =>
+      (litter.puppies || []).map(puppy => ({
+        ...puppy,
+        breed: litter.breed,
+        age: calculateAge(puppy.birthDate || litter.dateOfBirth), // Use puppy's birthDate if available, else litter's
+        litterName: litter.name,
+        litterId: litter.id,
+        imageSrc: puppy.photoUrl,
+      }))
+    );
+  }, [filteredLitters]);
+  
   const toggleBreedFilter = (breed: string) => {
-    if (selectedBreeds.includes(breed)) {
-      setSelectedBreeds(selectedBreeds.filter(b => b !== breed));
-    } else {
-      setSelectedBreeds([...selectedBreeds, breed]);
-    }
+    setSelectedBreeds(prev =>
+      prev.includes(breed) ? prev.filter(b => b !== breed) : [...prev, breed]
+    );
   };
   
-  // Handle availability filter
-  const toggleAvailabilityFilter = (availability: string) => {
-    if (availabilityFilter.includes(availability)) {
-      setAvailabilityFilter(availabilityFilter.filter(a => a !== availability));
-    } else {
-      setAvailabilityFilter([...availabilityFilter, availability]);
-    }
+  const toggleAvailabilityFilter = (availabilityValue: string) => { // e.g., "Available", "Reserved"
+    setAvailabilityFilter(prev =>
+      prev.includes(availabilityValue) ? prev.filter(a => a !== availabilityValue) : [...prev, availabilityValue]
+    );
   };
   
-  // Reset all filters
   const resetFilters = () => {
     setSearchQuery("");
-    setPriceRange([0, 5000]);
+    setPriceRange([0, 5000]); // Reset to default max
     setSelectedBreeds([]);
     setAvailabilityFilter([]);
   };
@@ -360,8 +235,8 @@ const Litters = () => {
                     <label className="flex items-center space-x-2 cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={availabilityFilter.includes("available")}
-                        onChange={() => toggleAvailabilityFilter("available")}
+                        checked={availabilityFilter.includes("Available")}
+                        onChange={() => toggleAvailabilityFilter("Available")}
                         className="rounded text-green-500 focus:ring-green-500"
                       />
                       <span>Available</span>
@@ -369,8 +244,8 @@ const Litters = () => {
                     <label className="flex items-center space-x-2 cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={availabilityFilter.includes("reserved")}
-                        onChange={() => toggleAvailabilityFilter("reserved")}
+                        checked={availabilityFilter.includes("Reserved")}
+                        onChange={() => toggleAvailabilityFilter("Reserved")}
                         className="rounded text-yellow-500 focus:ring-yellow-500"
                       />
                       <span>Reserved</span>
@@ -378,11 +253,11 @@ const Litters = () => {
                     <label className="flex items-center space-x-2 cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={availabilityFilter.includes("adopted")}
-                        onChange={() => toggleAvailabilityFilter("adopted")}
+                        checked={availabilityFilter.includes("Sold")}
+                        onChange={() => toggleAvailabilityFilter("Sold")}
                         className="rounded text-blue-500 focus:ring-blue-500"
                       />
-                      <span>Adopted</span>
+                      <span>Sold</span>
                     </label>
                   </div>
                 </div>
@@ -405,17 +280,35 @@ const Litters = () => {
         
         {/* Litters Display */}
         <div className="space-y-12">
-          {filteredLitters.length === 0 ? (
+          {isLoading && (
+            <div className="flex justify-center items-center py-20">
+              <Loader2 className="h-12 w-12 animate-spin text-brand-red" />
+            </div>
+          )}
+          {isError && (
+            <div className="text-center py-20 bg-red-50 p-6 rounded-md">
+              <AlertTriangle className="h-12 w-12 mx-auto text-red-500 mb-4" />
+              <h3 className="text-xl font-semibold text-red-700">Error Loading Litters</h3>
+              <p className="text-muted-foreground mb-4">{error?.message || "An unknown error occurred."}</p>
+              {/* Optional: Add a retry button here */}
+            </div>
+          )}
+          {!isLoading && !isError && filteredLitters.length === 0 && (
             <div className="text-center py-12">
               <PawPrint className="h-12 w-12 mx-auto text-muted-foreground" />
-              <h3 className="text-xl font-semibold mt-4">No Litters Found</h3>
-              <p className="text-muted-foreground mb-6">Try adjusting your filters to see more results</p>
+              <h3 className="text-xl font-semibold mt-4">
+                {rawLitters.length === 0 ? "No Litters Currently Available" : "No Litters Match Your Filters"}
+              </h3>
+              <p className="text-muted-foreground mb-6">
+                {rawLitters.length === 0 ? "Please check back later or contact us." : "Try adjusting your filters to see more results."}
+              </p>
               <Button onClick={resetFilters}>
                 Reset All Filters
               </Button>
             </div>
-          ) : (
-            filteredLitters.map((litter) => (
+          )}
+          {!isLoading && !isError && filteredLitters.length > 0 && (
+            filteredLitters.map((litter: Litter) => (
               <div key={litter.id} className="animate-fade-in">
                 {/* Litter Card */}
                 <div className="bg-gradient-to-r from-red-50/80 to-orange-50/80 dark:from-red-950/20 dark:to-orange-950/20 rounded-xl overflow-hidden shadow-md mb-6 relative">
@@ -427,7 +320,7 @@ const Litters = () => {
                     {/* Litter Image */}
                     <div className="md:w-1/3 h-64 md:h-auto">
                       <img 
-                        src={litter.coverImage} 
+                        src={litter.coverImageUrl || "https://via.placeholder.com/400x300?text=Litter+Image"}
                         alt={litter.name} 
                         className="w-full h-full object-cover object-center" 
                       />
@@ -438,18 +331,18 @@ const Litters = () => {
                       <div className="flex justify-between items-start mb-3">
                         <h2 className="text-2xl font-bold">{litter.name}</h2>
                         <Badge className={`
-                          ${litter.availability === "All Reserved" 
+                          ${litter.status === "All Reserved"
                             ? "bg-yellow-500" 
-                            : litter.availability === "Some Available" 
+                            : litter.status === "Active" || litter.status === "Available Soon" || (litter.puppies || []).some(p => p.status === 'Available')
                               ? "bg-green-500" 
-                              : "bg-blue-500"
+                              : "bg-blue-500" // For All Sold or Archived
                           } text-white px-3 py-1`}
                         >
-                          {litter.availability}
+                          {litter.status} {/* Display litter status, or derive a custom one */}
                         </Badge>
                       </div>
                       
-                      <p className="text-muted-foreground mb-4">{litter.description}</p>
+                      <p className="text-muted-foreground mb-4">{litter.description || "No description available."}</p>
                       
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
                         <div className="flex items-center space-x-2">
@@ -459,7 +352,7 @@ const Litters = () => {
                         <div className="flex items-center space-x-2">
                           <Calendar className="h-4 w-4 text-brand-red" />
                           <span className="text-sm">
-                            Age: {calculateAge(litter.birthDate)} weeks
+                            Born: {new Date(litter.dateOfBirth).toLocaleDateString()}
                           </span>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -468,6 +361,12 @@ const Litters = () => {
                             Parents: {litter.damName} & {litter.sireName}
                           </span>
                         </div>
+                         {litter.puppyCount !== undefined && (
+                          <div className="flex items-center space-x-2">
+                            <PawPrint className="h-4 w-4 text-brand-red" />
+                            <span className="text-sm">Puppies: {litter.puppyCount}</span>
+                          </div>
+                        )}
                       </div>
                       
                       <Button
@@ -483,61 +382,55 @@ const Litters = () => {
                 </div>
                 
                 {/* Puppies Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
-                  {litter.puppies.map((puppy) => (
-                    <Card 
-                      key={puppy.id} 
-                      className="overflow-hidden border-none shadow-puppy group hover-scale transition-all duration-300"
-                    >
-                      <div className="relative">
-                        <img 
-                          src={puppy.image} 
-                          alt={puppy.name} 
-                          className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105" 
-                        />
-                        <Badge className={`
-                          absolute top-3 right-3 ${getStatusColor(puppy.status)} text-white px-3 py-1`}
-                        >
-                          {puppy.status}
-                        </Badge>
-                      </div>
-                      
-                      <CardContent className="p-4">
-                        <h3 className="font-bold text-lg mb-1">{puppy.name}</h3>
-                        <div className="flex justify-between mb-3">
-                          <span className="text-sm text-muted-foreground">{puppy.gender}</span>
-                          <span className="text-sm font-medium">${puppy.price}</span>
+                {(litter.puppies && litter.puppies.length > 0) && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
+                    {(litter.puppies || []).map((puppy: Puppy) => (
+                      <Card
+                        key={puppy.id}
+                        className="overflow-hidden border-none shadow-puppy group hover-scale transition-all duration-300"
+                      >
+                        <div className="relative">
+                          <img
+                            src={puppy.photoUrl || "https://via.placeholder.com/300x200?text=Puppy+Image"}
+                            alt={puppy.name}
+                            className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                          <Badge className={`
+                            absolute top-3 right-3 ${getStatusColor(puppy.status)} text-white px-3 py-1`}
+                          >
+                            {puppy.status}
+                          </Badge>
                         </div>
                         
-                        <div className="flex items-center text-sm text-muted-foreground mb-4">
-                          <Dog className="h-3 w-3 mr-1" />
-                          <span>{puppy.color} {litter.breed}</span>
-                        </div>
-                        
-                        {puppy.reservable ? (
+                        <CardContent className="p-4">
+                          <h3 className="font-bold text-lg mb-1">{puppy.name}</h3>
+                          <div className="flex justify-between mb-3">
+                            <span className="text-sm text-muted-foreground">{puppy.gender || "N/A"}</span>
+                            <span className="text-sm font-medium">${puppy.price}</span>
+                          </div>
+
+                          <div className="flex items-center text-sm text-muted-foreground mb-4">
+                            <Dog className="h-3 w-3 mr-1" />
+                            <span>{puppy.color || ""} {litter.breed}</span>
+                          </div>
+
                           <Button 
-                            asChild
-                            className="w-full bg-brand-red hover:bg-red-700 text-white"
-                          >
-                            <Link to={`/puppies/${puppy.id}`}>
-                              View Details
-                            </Link>
+                              asChild
+                              className="w-full bg-brand-red hover:bg-red-700 text-white"
+                              disabled={puppy.status !== "Available"}
+                            >
+                              <Link to={`/puppies/${puppy.id}`}>
+                                {puppy.status === "Available" ? "View Details" : puppy.status}
+                              </Link>
                           </Button>
-                        ) : (
-                          <Button 
-                            asChild
-                            variant="outline" 
-                            className="w-full"
-                          >
-                            <Link to={`/puppies/${puppy.id}`}>
-                              View Profile
-                            </Link>
-                          </Button>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+                 {(!litter.puppies || litter.puppies.length === 0) && (
+                  <p className="text-center text-muted-foreground mt-4">No individual puppy information available for this litter yet.</p>
+                )}
               </div>
             ))
           )}
@@ -546,22 +439,22 @@ const Litters = () => {
         {/* All Available Puppies Section */}
         <Section title="All Available Puppies" subtitle="Browse all our puppies in one place" className="mt-16">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {allPuppies.filter(puppy => puppy.status === "Available").map((puppy) => (
+            {allPuppiesForDisplay.filter(puppy => puppy.status === "Available").map((puppy) => (
               <PuppyCard
                 key={puppy.id}
                 id={puppy.id}
                 name={puppy.name}
                 breed={puppy.breed}
-                age={puppy.age}
+                age={puppy.age as string}
                 gender={puppy.gender}
-                imageSrc={puppy.image}
+                imageSrc={puppy.imageSrc || "https://via.placeholder.com/300x200?text=Puppy"}
                 price={puppy.price}
-                available={puppy.status === "Available"}
+                status={puppy.status as PuppyStatus}
               />
             ))}
           </div>
           
-          {allPuppies.filter(puppy => puppy.status === "Available").length === 0 && (
+          {!isLoading && !isError && allPuppiesForDisplay.filter(puppy => puppy.status === "Available").length === 0 && (
             <div className="text-center py-12">
               <PawPrint className="h-12 w-12 mx-auto text-muted-foreground" />
               <h3 className="text-xl font-semibold mt-4">No Available Puppies</h3>
@@ -569,6 +462,11 @@ const Litters = () => {
               <Button asChild>
                 <Link to="/contact">Contact Us</Link>
               </Button>
+            </div>
+          )}
+           {isLoading && ( // Loading indicator for "All Available Puppies" section as well
+            <div className="flex justify-center items-center py-20">
+              <Loader2 className="h-12 w-12 animate-spin text-brand-red" />
             </div>
           )}
         </Section>

@@ -10,7 +10,13 @@ import {
   Litter,
   LitterCreationData,
   LitterUpdateData,
-  LitterListResponse
+  LitterListResponse,
+  User,
+  UserRegistrationData,
+  UserLoginData,
+  AuthResponse,
+  RefreshTokenResponse as AuthRefreshTokenResponse,
+  UserProfileUpdateData
 } from '../types';
 
 // Helper function to get auth headers
@@ -27,49 +33,40 @@ const getAuthHeaders = (): HeadersInit => {
   return headers;
 };
 
-// Define RefreshTokenResponse Interface first as it's used by authApi
-interface RefreshTokenResponse {
-  token: string;
-  refreshToken?: string; // If backend rotates refresh tokens
-}
-
 // Define authApi next, so it's available to apiRequest
+// The local RefreshTokenResponse interface is removed as we'll use AuthRefreshTokenResponse from types.
 export const authApi = {
-  login: async (email: string, password: string) => {
-    // Note: apiRequest is not yet defined here, this is a forward declaration scenario.
-    // This is fine in JS/TS as long as the calls happen after full initialization.
-    // However, for direct call from apiRequest to authApi.refreshToken, authApi must be initialized.
-    // The current structure means login/register etc. call apiRequest, which might call authApi.refreshToken.
-    return apiRequest<{ token: string; user: any; refreshToken?: string }>('/auth/login', {
+  login: async (credentials: UserLoginData): Promise<AuthResponse> => {
+    return apiRequest<AuthResponse>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify(credentials),
     });
   },
 
-  register: async (userData: { name: string; email: string; password: string }) => {
-    return apiRequest<{ token: string; user: any; refreshToken?: string }>('/auth/register', {
+  register: async (registrationData: UserRegistrationData): Promise<AuthResponse> => {
+    return apiRequest<AuthResponse>('/auth/register', {
       method: 'POST',
-      body: JSON.stringify(userData),
+      body: JSON.stringify(registrationData),
     });
   },
 
-  logout: async () => {
+  logout: async () => { // No specific response type needed, or define one if backend sends structured logout confirmation
     return apiRequest('/auth/logout', { method: 'POST' });
   },
 
-  getProfile: async () => {
-    return apiRequest<any>('/user');
+  getProfile: async (): Promise<User> => {
+    return apiRequest<User>('/user');
   },
 
-  updateProfile: async (data: any) => {
-    return apiRequest<any>('/user/profile', {
+  updateProfile: async (profileData: UserProfileUpdateData): Promise<User> => {
+    return apiRequest<User>('/user/profile', {
       method: 'PUT',
-      body: JSON.stringify(data),
+      body: JSON.stringify(profileData),
     });
   },
 
   // refreshToken is defined here, and will be called by apiRequest below
-  refreshToken: async (currentRefreshToken: string): Promise<RefreshTokenResponse> => {
+  refreshToken: async (currentRefreshToken: string): Promise<AuthRefreshTokenResponse> => {
     // Special direct fetch or minimal apiRequest call for refresh to avoid loops
     // For this specific call, we construct it more directly to avoid apiRequest calling itself indefinitely for /auth/refresh-token
     const url = `${API_BASE_URL}/auth/refresh-token`;
@@ -85,7 +82,7 @@ export const authApi = {
         const errorData = await response.json().catch(() => ({ message: `HTTP ${response.status} ${response.statusText}` }));
         throw new Error(errorData.message || 'Token refresh failed');
     }
-    return response.json();
+    return response.json() as Promise<AuthRefreshTokenResponse>; // Ensure return type matches
   },
 };
 

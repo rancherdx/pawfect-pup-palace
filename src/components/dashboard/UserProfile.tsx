@@ -5,73 +5,39 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { User, Check, AlertCircle, Loader2 } from "lucide-react";
+import { User as UserIcon, Check, AlertCircle, Loader2 } from "lucide-react"; // Renamed User to UserIcon to avoid conflict
 import { useAuth } from "@/contexts/AuthContext";
-import { authApi } from "@/api/client"; // Import the centralized API client
+import { authApi } from "@/api/client";
+import { User, UserProfileUpdateData } from "@/types"; // Import User and UserProfileUpdateData
 
 const UserProfile = () => {
   const { toast } = useToast();
-  const { token, user } = useAuth(); // Get token and user from AuthContext
-  const [isEditing, setIsEditing] = useState(false);
-  
-  const [userData, setUserData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-    preferences: ""
-  });
+  const { user, updateUser, isLoading: isAuthLoading } = useAuth(); // Get user and updateUser from AuthContext
 
-  const [formData, setFormData] = useState({...userData});
-  const [isLoading, setIsLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  // Form data will only hold fields that can be updated.
+  // Initialize with user's current data when editing starts.
+  const [formData, setFormData] = useState<UserProfileUpdateData>({});
+  
+  const [isUpdating, setIsUpdating] = useState(false); // Separate loading state for profile update
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadUserProfile = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        // Use the new authApi client
-        const data = await authApi.getProfile();
-        setUserData({
-          name: data.name || "",
-          email: data.email || "",
-          phone: data.phone || "",
-          address: data.address || "",
-          preferences: data.preferences || ""
-        });
-        setFormData({ // Initialize form data with fetched user data
-          name: data.name || "",
-          email: data.email || "",
-          phone: data.phone || "",
-          address: data.address || "",
-          preferences: data.preferences || ""
-        });
-      } catch (err: any) {
-        setError(err.message);
-        toast({
-          variant: "destructive",
-          title: "Error fetching profile",
-          description: err.message,
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
 
-    // Check if user is authenticated (token exists) before fetching
-    if (token) {
-      loadUserProfile();
-    } else if (!user && !isLoading) { // If no user and not already loading (e.g. initial state)
-        setError("Not authenticated. Please log in.");
-        setIsLoading(false);
-        toast({
-            variant: "destructive",
-            title: "Authentication Error",
-            description: "You must be logged in to view your profile.",
-        });
+  useEffect(() => {
+    if (user && isEditing) {
+      // Initialize formData with fields from the global User type that are updatable
+      // Currently UserProfileUpdateData is Partial<Omit<User, 'id' | 'email' | 'roles' | 'createdAt' | 'lastLogin'>>
+      // This means only 'name' is directly updatable from the core User fields.
+      // If UserProfileUpdateData is expanded to include other fields like 'avatarUrl', they would be set here.
+      setFormData({
+        name: user.name || "",
+        // If other fields like phone, address, preferences were part of UserProfileUpdateData and User type:
+        // phone: user.phone || "",
+        // address: user.address || "",
+        // preferences: user.preferences || ""
+      });
     }
-  }, [token, user, toast, isLoading]); // Added user and isLoading to dependency array
+  }, [user, isEditing]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -80,24 +46,16 @@ const UserProfile = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setIsUpdating(true);
     setError(null);
     try {
-      // Use the new authApi client for updating profile
-      const updatedUser = await authApi.updateProfile(formData);
-      setUserData({ // Update local state with response from API
-        name: updatedUser.name || "",
-        email: updatedUser.email || "",
-        phone: updatedUser.phone || "",
-        address: updatedUser.address || "",
-        preferences: updatedUser.preferences || ""
-      });
-      setFormData({...updatedUser});
+      const updatedUserFromApi: User = await authApi.updateProfile(formData);
+      updateUser(updatedUserFromApi); // Update context with the full user object from API
       setIsEditing(false);
       toast({
         title: "Profile Updated",
         description: "Your profile information has been successfully updated.",
-        className: "bg-green-500 text-white", // Keep success styling
+        className: "bg-green-500 text-white",
       });
     } catch (err: any) {
       setError(err.message);
@@ -107,16 +65,19 @@ const UserProfile = () => {
         description: err.message,
       });
     } finally {
-      setIsLoading(false);
+      setIsUpdating(false);
     }
   };
 
   const handleCancel = () => {
-    setFormData({...userData});
+    // Reset formData from current user state if needed, or just exit editing mode
+    if (user) {
+      setFormData({ name: user.name }); // Reset to current user's name
+    }
     setIsEditing(false);
   };
 
-  if (isLoading && !error && !userData.email) { // Initial load
+  if (isAuthLoading && !user) { // Auth context is loading user
     return (
       <div className="flex justify-center items-center h-64">
         <Loader2 className="h-8 w-8 animate-spin text-brand-red" />
@@ -125,22 +86,32 @@ const UserProfile = () => {
     );
   }
 
-  if (error) {
+  if (!user) { // No user and auth is not loading (e.g. not logged in)
     return (
       <div className="text-center py-10">
         <AlertCircle className="h-12 w-12 mx-auto text-red-500 mb-4" />
-        <h3 className="text-xl font-semibold text-red-600">An Error Occurred</h3>
-        <p className="text-muted-foreground">{error}</p>
-        {/* Optionally, add a retry button or link to login */}
+        <h3 className="text-xl font-semibold text-red-600">Profile Not Available</h3>
+        <p className="text-muted-foreground">Please log in to view your profile.</p>
       </div>
     );
   }
+
+  // Display error from profile update attempt if any
+   if (error && !isEditing) { // Show general error if not in editing mode (where form might show field specific errors)
+     return (
+       <div className="text-center py-10">
+         <AlertCircle className="h-12 w-12 mx-auto text-red-500 mb-4" />
+         <h3 className="text-xl font-semibold text-red-600">An Error Occurred</h3>
+         <p className="text-muted-foreground">{error}</p>
+       </div>
+     );
+   }
 
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold flex items-center">
-          <User className="h-6 w-6 mr-2 text-brand-red" />
+          <UserIcon className="h-6 w-6 mr-2 text-brand-red" />
           Your Profile
         </h2>
         
@@ -148,7 +119,7 @@ const UserProfile = () => {
           <Button 
             onClick={() => setIsEditing(true)}
             variant="outline"
-            disabled={isLoading} // Disable edit button during any loading state
+            disabled={isUpdating}
           >
             Edit Profile
           </Button>
@@ -160,15 +131,21 @@ const UserProfile = () => {
           {isEditing ? (
             <form onSubmit={handleSubmit}>
               <div className="space-y-4">
+                {error && (
+                  <div className="bg-red-50 p-3 rounded-md flex items-start gap-3 text-red-800">
+                    <AlertCircle className="h-5 w-5 mt-0.5" />
+                    <p className="text-sm">{error}</p>
+                  </div>
+                )}
                 <div>
                   <Label htmlFor="name">Full Name</Label>
                   <Input
                     id="name"
                     name="name"
-                    value={formData.name}
+                    value={formData.name || ""} // Controlled component from UserProfileUpdateData
                     onChange={handleChange}
                     required
-                    disabled={isLoading}
+                    disabled={isUpdating}
                   />
                 </div>
                 
@@ -178,54 +155,34 @@ const UserProfile = () => {
                     id="email"
                     name="email"
                     type="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    disabled={isLoading} // Email usually not editable, or requires verification. For now, allow.
+                    value={user.email} // Email is not part of UserProfileUpdateData, display only
+                    readOnly
+                    disabled
+                    className="bg-muted/50"
                   />
                 </div>
                 
+                {/* Add other fields here if they become part of UserProfileUpdateData and User type */}
+                {/* Example for a hypothetical 'phone' field:
                 <div>
                   <Label htmlFor="phone">Phone Number</Label>
                   <Input
                     id="phone"
                     name="phone"
-                    value={formData.phone}
+                    value={formData.phone || ""}
                     onChange={handleChange}
-                    disabled={isLoading}
+                    disabled={isUpdating}
                   />
                 </div>
-                
-                <div>
-                  <Label htmlFor="address">Address</Label>
-                  <Input
-                    id="address"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleChange}
-                    disabled={isLoading}
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="preferences">Communication Preferences</Label>
-                  <Textarea
-                    id="preferences"
-                    name="preferences"
-                    value={formData.preferences}
-                    onChange={handleChange}
-                    rows={3}
-                    disabled={isLoading}
-                  />
-                </div>
+                */}
               </div>
               
               <div className="flex justify-end space-x-3 mt-6">
-                <Button type="button" variant="outline" onClick={handleCancel} disabled={isLoading}>
+                <Button type="button" variant="outline" onClick={handleCancel} disabled={isUpdating}>
                   Cancel
                 </Button>
-                <Button type="submit" className="bg-brand-red hover:bg-red-700 text-white" disabled={isLoading}>
-                  {isLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Check className="h-4 w-4 mr-2" />}
+                <Button type="submit" className="bg-brand-red hover:bg-red-700 text-white" disabled={isUpdating}>
+                  {isUpdating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Check className="h-4 w-4 mr-2" />}
                   Save Changes
                 </Button>
               </div>
@@ -235,28 +192,25 @@ const UserProfile = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Full Name</h3>
-                  <p className="text-lg">{userData.name || "-"}</p>
+                  <p className="text-lg">{user.name || "-"}</p>
                 </div>
                 
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Email Address</h3>
-                  <p className="text-lg">{userData.email || "-"}</p>
+                  <p className="text-lg">{user.email || "-"}</p>
                 </div>
                 
+                {/* Display other fields from user object if they exist and are relevant */}
+                {/* Example for hypothetical 'phone' field:
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">Phone Number</h3>
-                  <p className="text-lg">{userData.phone || "Not provided"}</p>
+                  <p className="text-lg">{user.phone || "Not provided"}</p>
                 </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Address</h3>
-                  <p className="text-lg">{userData.address || "Not provided"}</p>
-                </div>
+                */}
               </div>
-              
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground">Communication Preferences</h3>
-                <p className="whitespace-pre-wrap">{userData.preferences || "Not specified"}</p>
+                  <h3 className="text-sm font-medium text-muted-foreground">Roles</h3>
+                  <p className="text-lg">{user.roles?.join(', ') || "No roles assigned"}</p>
               </div>
             </div>
           )}

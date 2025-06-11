@@ -2,18 +2,21 @@
 
 export type LitterStatus = 'Active' | 'Available Soon' | 'All Reserved' | 'All Sold' | 'Archived';
 
+import { Puppy } from './puppy'; // Import Puppy type
+
 export interface Litter {
   id: string;
   name: string;
-  mother: string; // Assuming string ID or name
-  father: string; // Assuming string ID or name
+  damName: string; // Renamed from mother
+  sireName: string; // Renamed from father
   breed: string;
   dateOfBirth: string; // YYYY-MM-DD
   expectedDate?: string; // YYYY-MM-DD
   puppyCount?: number; // Made optional as it might not be known initially
   status: LitterStatus;
   description?: string;
-  coverImageUrl?: string;
+  coverImageUrl?: string; // Matches page's coverImage if API sends this
+  puppies?: Puppy[]; // Added for nested puppy data
   // Timestamps, if available from API
   createdAt?: string;
   updatedAt?: string;
