@@ -1,12 +1,22 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '@/api'; // Assuming adminApi is in @/api/index.ts or @/api/client.ts
-import TestimonialForm from './TestimonialForm'; // The form component created previously
+import TestimonialForm from './TestimonialForm';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Edit, Trash2, MessageSquare, Loader2, AlertTriangle } from 'lucide-react'; // Added MessageSquare
+import { Plus, Edit, Trash2, MessageSquare, Loader2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // Assuming Testimonial types are accessible, e.g., imported from where they are defined in client.ts or a global types file.
 // For this subtask, we'll define them locally if not easily importable.
@@ -27,6 +37,8 @@ type TestimonialUpdateData = Partial<TestimonialCreationData>;
 const TestimonialManagement: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingTestimonial, setEditingTestimonial] = useState<Testimonial | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [testimonialToDeleteId, setTestimonialToDeleteId] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -99,9 +111,17 @@ const TestimonialManagement: React.FC = () => {
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this testimonial?')) {
-      deleteTestimonialMutation.mutate(id);
+    setTestimonialToDeleteId(id);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteTestimonial = () => {
+    if (testimonialToDeleteId) {
+      deleteTestimonialMutation.mutate(testimonialToDeleteId);
+      // onSuccess of mutation already handles toast and query invalidation.
     }
+    setShowDeleteDialog(false); // Ensure dialog closes
+    // setTestimonialToDeleteId(null); // Handled by onOpenChange
   };
 
   const handleAddNew = () => {
@@ -173,7 +193,8 @@ const TestimonialManagement: React.FC = () => {
                       <TableCell>{testimonial.rating} / 5</TableCell>
                       <TableCell>{testimonial.puppy_name || '-'}</TableCell>
                       <TableCell className="text-right space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => handleEdit(testimonial)} disabled={deleteTestimonialMutation.isPending && deleteTestimonialMutation.variables === testimonial.id}>
+                        <Button variant="outline" size="sm" onClick={() => handleEdit(testimonial)}
+                                disabled={deleteTestimonialMutation.isPending && deleteTestimonialMutation.variables === testimonial.id}>
                           <Edit className="mr-1 h-4 w-4" /> Edit
                         </Button>
                         <Button variant="destructive" size="sm" onClick={() => handleDelete(testimonial.id)}
@@ -195,6 +216,29 @@ const TestimonialManagement: React.FC = () => {
           </CardContent>
         </Card>
       )}
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={(isOpen) => { setShowDeleteDialog(isOpen); if (!isOpen) setTestimonialToDeleteId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action will permanently delete the testimonial. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteTestimonial}
+              disabled={deleteTestimonialMutation.isPending && deleteTestimonialMutation.variables === testimonialToDeleteId}
+            >
+              {deleteTestimonialMutation.isPending && deleteTestimonialMutation.variables === testimonialToDeleteId ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

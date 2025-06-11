@@ -15,6 +15,16 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/api/client';
 import { toast } from 'sonner';
@@ -46,6 +56,8 @@ interface IntegrationFormData {
 const ThirdPartyIntegrationsManager: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingIntegration, setEditingIntegration] = useState<Integration | null>(null);
+  const [showDeleteIntegrationDialog, setShowDeleteIntegrationDialog] = useState(false);
+  const [integrationToDeleteId, setIntegrationToDeleteId] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -130,7 +142,16 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
   };
 
   const handleDeleteIntegration = (integrationId: string) => {
-    deleteIntegrationMutation.mutate(integrationId);
+    setIntegrationToDeleteId(integrationId);
+    setShowDeleteIntegrationDialog(true);
+  };
+
+  const confirmDeleteIntegration = () => {
+    if (integrationToDeleteId) {
+      deleteIntegrationMutation.mutate(integrationToDeleteId);
+    }
+    setShowDeleteIntegrationDialog(false);
+    // setIntegrationToDeleteId(null); // Handled by onOpenChange
   };
 
   const handleAddNewIntegration = () => {
@@ -350,6 +371,31 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
           </TableBody>
         </Table>
       </div>
+
+      {integrationToDeleteId && (
+        <AlertDialog open={showDeleteIntegrationDialog} onOpenChange={(isOpen) => { setShowDeleteIntegrationDialog(isOpen); if(!isOpen) setIntegrationToDeleteId(null); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action will delete the integration configuration. This cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDeleteIntegration}
+                disabled={deleteIntegrationMutation.isPending && deleteIntegrationMutation.variables === integrationToDeleteId}
+              >
+                {deleteIntegrationMutation.isPending && deleteIntegrationMutation.variables === integrationToDeleteId ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 };

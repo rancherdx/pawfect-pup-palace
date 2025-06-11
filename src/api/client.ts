@@ -16,7 +16,11 @@ import {
   UserLoginData,
   AuthResponse,
   RefreshTokenResponse as AuthRefreshTokenResponse,
-  UserProfileUpdateData
+  UserProfileUpdateData,
+  BlogPost,
+  BlogPostsResponse,
+  BlogPostCreateData,
+  BlogPostUpdateData
 } from '../types';
 
 // Helper function to get auth headers
@@ -224,17 +228,17 @@ export const littersApi = {
 };
 
 export const blogApi = {
-  getPosts: async (params?: { limit?: number; offset?: number }) => {
+  getPosts: async (params?: { limit?: number; offset?: number }): Promise<BlogPostsResponse> => {
     const searchParams = new URLSearchParams();
     if (params?.limit) searchParams.append('limit', params.limit.toString());
     if (params?.offset) searchParams.append('offset', params.offset.toString());
     
     const query = searchParams.toString();
-    return apiRequest<{ posts: any[]; pagination: any }>(`/blog${query ? `?${query}` : ''}`);
+    return apiRequest<BlogPostsResponse>(`/blog${query ? `?${query}` : ''}`);
   },
 
-  getBySlug: async (slug: string) => {
-    return apiRequest<any>(`/blog/${slug}`);
+  getBySlug: async (slug: string): Promise<BlogPost> => {
+    return apiRequest<BlogPost>(`/blog/${slug}`);
   },
 };
 
@@ -307,14 +311,14 @@ export const adminApi = {
   deleteLitter: async (id: string): Promise<void> => {
     return apiRequest<void>(`/admin/litters/${id}`, { method: 'DELETE' });
   },
-  createPost: async (data: any) => {
-    return apiRequest<any>('/admin/blog', { method: 'POST', body: JSON.stringify(data) });
+  createPost: async (data: BlogPostCreateData): Promise<BlogPost> => {
+    return apiRequest<BlogPost>('/admin/blog', { method: 'POST', body: JSON.stringify(data) });
   },
-  updatePost: async (id: string, data: any) => {
-    return apiRequest<any>(`/admin/blog/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  updatePost: async (id: string, data: BlogPostUpdateData): Promise<BlogPost> => {
+    return apiRequest<BlogPost>(`/admin/blog/${id}`, { method: 'PUT', body: JSON.stringify(data) });
   },
-  deletePost: async (id: string) => {
-    return apiRequest(`/admin/blog/${id}`, { method: 'DELETE' });
+  deletePost: async (id: string): Promise<void> => { // Assuming no content response (204)
+    return apiRequest<void>(`/admin/blog/${id}`, { method: 'DELETE' });
   },
   getBreedTemplates: async (): Promise<BreedTemplate[]> => {
     return apiRequest<BreedTemplate[]>('/admin/breed-templates');

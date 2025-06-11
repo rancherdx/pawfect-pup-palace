@@ -1,17 +1,64 @@
+// src/types/blogPost.ts
+
+export interface BlogPaginationInfo {
+  total?: number;
+  page?: number;
+  limit?: number;
+  offset?: number;
+}
+
+export type BlogPostStatus = 'draft' | 'published' | 'archived';
+
+export interface BlogPostAuthor {
+  id: string;
+  name: string;
+  avatarUrl?: string;
+}
 
 export interface BlogPost {
   id: string;
-  title: string;
   slug: string;
-  excerpt: string;
-  content: string;
-  image: string;
-  category: string;
-  publishedAt: string | null;
-  author: string;
-  status: "published" | "draft";
-  relatedPosts?: string[];
+  title: string;
+  content: string; // Can be HTML, Markdown, or plain text
+  excerpt?: string;
+  featuredImageUrl?: string; // Changed from 'image' for clarity
+
+  author?: BlogPostAuthor | string; // Could be a full author object or just an ID/name
+
+  status: BlogPostStatus;
+  tags?: string[];
+  category?: string; // Or categories?: string[]
+
+  createdAt: string; // ISO Date string - assuming API provides this
+  updatedAt?: string; // ISO Date string
+  publishedAt?: string | null; // ISO Date string, null if not published
+  relatedPosts?: string[]; // Kept from original
 }
+
+// For creating a new blog post
+export type BlogPostCreateData = Omit<BlogPost, 'id' | 'createdAt' | 'updatedAt' | 'publishedAt' | 'author' | 'relatedPosts'> & {
+  title: string;
+  content: string;
+  status: BlogPostStatus;
+  slug: string;
+  authorId?: string;
+  featuredImageUrl?: string; // Ensure this is part of creation data if user sets it
+  excerpt?: string;
+  tags?: string[];
+  category?: string;
+};
+
+// For updating an existing blog post
+export type BlogPostUpdateData = Partial<BlogPostCreateData>;
+
+// Response for fetching multiple blog posts
+export interface BlogPostsResponse {
+  posts: BlogPost[];
+  pagination?: BlogPaginationInfo;
+}
+
+// --- Other interfaces previously in this file ---
+// These might be better in separate files (e.g., category.ts, affiliate.ts) but are kept for now.
 
 export interface BlogCategory {
   id: string;

@@ -2,9 +2,19 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Plus, Edit, Trash, Search, Dog, Save } from "lucide-react";
+import { Plus, Edit, Trash, Search, Dog, Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { BreedTemplate } from "@/types/breedTemplate";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // Mock data for demo purposes
 const initialTemplates: BreedTemplate[] = [
@@ -43,6 +53,8 @@ const BreedTemplateManager = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [editingTemplate, setEditingTemplate] = useState<BreedTemplate | null>(null);
   const [isAddingTemplate, setIsAddingTemplate] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [templateToDeleteId, setTemplateToDeleteId] = useState<string | null>(null);
   
   const [formData, setFormData] = useState<BreedTemplate>({
     id: "",
@@ -109,10 +121,17 @@ const BreedTemplateManager = () => {
   };
 
   const handleDeleteTemplate = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this breed template?")) {
-      setTemplates(templates.filter(template => template.id !== id));
+    setTemplateToDeleteId(id);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteTemplate = () => {
+    if (templateToDeleteId) {
+      setTemplates(prevTemplates => prevTemplates.filter(template => template.id !== templateToDeleteId));
       toast.success("Breed template deleted successfully");
+      setTemplateToDeleteId(null);
     }
+    setShowDeleteDialog(false);
   };
 
   const handleSaveTemplate = (e: React.FormEvent) => {
@@ -448,6 +467,21 @@ const BreedTemplateManager = () => {
           </ul>
         </div>
       )}
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action will permanently delete the breed template. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => { setTemplateToDeleteId(null); setShowDeleteDialog(false); }}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteTemplate}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
