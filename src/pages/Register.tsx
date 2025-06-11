@@ -1,7 +1,8 @@
 
-import { useState } from "react";
+import { useState, ChangeEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { UserRegistrationData } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,9 +13,7 @@ import { AlertCircle, UserPlus } from "lucide-react";
 export default function Register() {
   const navigate = useNavigate();
   const { register, isAuthenticated } = useAuth();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [registrationInfo, setRegistrationInfo] = useState<UserRegistrationData>({ name: "", email: "", password: "" });
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,11 +23,15 @@ export default function Register() {
     return null;
   }
 
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setRegistrationInfo({ ...registrationInfo, [e.target.id]: e.target.value });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (password !== confirmPassword) {
+    if (registrationInfo.password !== confirmPassword) {
       setError("Passwords do not match");
       toast.error("Passwords do not match");
       return;
@@ -37,7 +40,7 @@ export default function Register() {
     setLoading(true);
 
     try {
-      await register({ name, email, password });
+      await register(registrationInfo);
       toast.success("Registration successful!");
       navigate("/dashboard");
     } catch (err) {
@@ -73,8 +76,8 @@ export default function Register() {
                 id="name"
                 type="text"
                 placeholder="John Doe"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                value={registrationInfo.name}
+                onChange={handleChange}
                 required
               />
             </div>
@@ -85,8 +88,8 @@ export default function Register() {
                 id="email"
                 type="email"
                 placeholder="email@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={registrationInfo.email}
+                onChange={handleChange}
                 required
               />
             </div>
@@ -96,8 +99,8 @@ export default function Register() {
               <Input
                 id="password"
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={registrationInfo.password}
+                onChange={handleChange}
                 required
                 minLength={6}
               />

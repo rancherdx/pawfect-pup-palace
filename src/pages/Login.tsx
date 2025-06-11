@@ -1,7 +1,8 @@
 
-import { useState } from "react";
+import { useState, ChangeEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { UserLoginData } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,8 +13,7 @@ import { AlertCircle, LogIn } from "lucide-react";
 export default function Login() {
   const navigate = useNavigate();
   const { login, isAuthenticated } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [credentials, setCredentials] = useState<UserLoginData>({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,13 +22,17 @@ export default function Login() {
     return null;
   }
 
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setCredentials({ ...credentials, [e.target.id]: e.target.value });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
     try {
-      await login(email, password);
+      await login(credentials);
       toast.success("Login successful!");
       navigate("/dashboard");
     } catch (err) {
@@ -64,8 +68,8 @@ export default function Login() {
                 id="email"
                 type="email"
                 placeholder="email@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={credentials.email}
+                onChange={handleChange}
                 required
               />
             </div>
@@ -80,8 +84,8 @@ export default function Login() {
               <Input
                 id="password"
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={credentials.password}
+                onChange={handleChange}
                 required
               />
             </div>

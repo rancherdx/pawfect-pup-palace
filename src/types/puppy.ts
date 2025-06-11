@@ -22,6 +22,7 @@ export interface Puppy {
   squareStatus?: 'Synced' | 'Not Synced' | 'Error' | string;
   squareItemId?: string;
   gender?: string;
+  color?: string; // Added for page display consistency
   // Timestamps, if available from API
   createdAt?: string;
   updatedAt?: string;
