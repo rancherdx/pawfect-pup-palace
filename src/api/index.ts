@@ -6,28 +6,39 @@ import * as littersApi from './littersApi';
 // --- fetchAdminAPI STUB (for admin pages expecting fetchAdminAPI as a default function) ---
 /** Dummy fetchAdminAPI implementation for wiring up admin pages. Replace with real API as appropriate. */
 const fetchAdminAPI = async (url: string, options?: RequestInit) => {
-  // Just return a dummy shape, enough for useQuery/Mutation fake calls.
-  // Add more branches if/when strict types needed
+  // Simulate both keys always present for type compatibility
   if (url.includes("users")) {
     return {
       users: [],
       currentPage: 1,
       totalPages: 1,
       totalUsers: 0,
+      studDogs: [],
+      totalStudDogs: 0,
       limit: 10,
     };
   }
   if (url.includes("stud-dogs")) {
     return {
       studDogs: [],
+      users: [],
       currentPage: 1,
       totalPages: 1,
       totalStudDogs: 0,
+      totalUsers: 0,
       limit: 10,
     };
   }
-  // Fallback
-  return {};
+  // Fallback: include both keys to satisfy both type checks
+  return {
+    users: [],
+    studDogs: [],
+    currentPage: 1,
+    totalPages: 1,
+    totalUsers: 0,
+    totalStudDogs: 0,
+    limit: 10,
+  };
 };
 
 // --- ADMIN API STUB: stub out all required admin methods so TS doesn't error ---
