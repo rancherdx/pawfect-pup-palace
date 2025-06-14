@@ -1,4 +1,5 @@
 // src/types/puppy.ts
+import { PaginationInfo } from './common';
 
 export type PuppyStatus = 'Available' | 'Reserved' | 'Sold' | 'Not For Sale';
 export type PuppySize = 'Toy' | 'Small' | 'Medium' | 'Large' | 'Giant' | '';
@@ -65,5 +66,10 @@ export interface AdminPuppyListResponse {
 // Let's align with client.ts structure for PublicPuppyListResponse
 export interface PublicPuppyListResponse {
   data: Puppy[];
-  pagination?: { /* Define pagination structure if known */ };
+  pagination?: PaginationInfo; // Updated to use PaginationInfo
+}
+
+export interface MyPuppiesResponse {
+  data: Puppy[];
+  pagination: PaginationInfo;
 }
