@@ -61,12 +61,7 @@ const AdminDashboard = () => {
 
       const containerWidth = tabsListRef.current.offsetWidth;
       let moreMenuWidth = 0;
-      if (allAdminTabs.length > 0) { // Estimate "More" menu width or measure it if always rendered
-        // Temporarily render "More" button to measure it or use a fixed estimate
-        // For simplicity here, let's use an estimate. A more robust way is to measure it.
-        // If moreMenuRef.current is available (i.e., it's rendered when dropdownTabs will exist), use its width.
-        // This creates a slight paradox: we need its width to decide if it should exist.
-        // So, we'll use an estimated width for the calculation.
+      if (allAdminTabs.length > 0) {
         moreMenuWidth = 100; // Approximate width for "More" button with icon and text
       }
 
@@ -74,14 +69,6 @@ const AdminDashboard = () => {
       const newVisibleTabs: typeof allAdminTabs = [];
       const newDropdownTabs: typeof allAdminTabs = [];
 
-      // Iterate over all tab elements to get their actual widths
-      const tabElements = Array.from(tabsListRef.current.querySelectorAll<HTMLElement>('button[role="tab"]'));
-
-      // Fallback if direct measurement isn't working as expected (e.g. initial render)
-      // This part needs careful implementation. For now, let's assume a simplified estimate if measurement is tricky.
-      // A robust solution would render all tabs, measure, then hide.
-      // For this iteration, we'll use a simpler logic: assume an average width if measurement is problematic.
-      // Average width estimate (can be refined)
       const averageTabWidth = 130; // px, including icon, label, padding
 
       let potentialVisibleTabsWidth = 0;
@@ -90,11 +77,9 @@ const AdminDashboard = () => {
       }
 
       if (potentialVisibleTabsWidth <= containerWidth) {
-        // All tabs fit
         setVisibleTabs(allAdminTabs);
         setDropdownTabs([]);
       } else {
-        // Not all tabs fit, calculate how many can be visible
         let availableWidthForTabs = containerWidth - moreMenuWidth;
         currentWidth = 0;
         for (const tab of allAdminTabs) {
@@ -112,10 +97,9 @@ const AdminDashboard = () => {
 
     calculateTabsLayout(); // Calculate on initial mount
 
-    // Add resize listener
     window.addEventListener("resize", calculateTabsLayout);
     return () => window.removeEventListener("resize", calculateTabsLayout);
-  }, [allAdminTabs]); // Rerun if allAdminTabs changes (though it's constant here)
+  }, [allAdminTabs]);
 
   const handleTabChange = (value: string) => {
     setActiveTabValue(value);
@@ -136,7 +120,7 @@ const AdminDashboard = () => {
           
           <Tabs value={activeTabValue} onValueChange={handleTabChange} className="w-full">
             <div className="bg-white dark:bg-black/30 p-4 rounded-t-xl shadow-sm border-b">
-              <TabsList ref={tabsListRef} className="flex items-center"> {/* Removed space-x-2 for more precise control if needed */}
+              <TabsList ref={tabsListRef} className="flex items-center">
                 {visibleTabs.map(tab => (
                   <TabsTrigger
                     key={tab.value}
@@ -150,8 +134,11 @@ const AdminDashboard = () => {
                 {dropdownTabs.length > 0 && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      {/* Attaching ref to the More button for potential measurement */}
-                      <Button ref={moreMenuRef} variant="ghost" className="py-3 text-sm md:text-base flex-shrink-0 ml-2 data-[state=open]:bg-muted">
+                      <Button
+                        ref={moreMenuRef}
+                        variant="ghost"
+                        className="py-3 text-sm md:text-base flex-shrink-0 ml-2 data-[state=open]:bg-muted"
+                      >
                         <MoreHorizontal className="h-5 w-5 mr-1 md:mr-2" />
                         <span className="hidden sm:inline">More</span>
                       </Button>
@@ -179,70 +166,6 @@ const AdminDashboard = () => {
                   {tab.component}
                 </TabsContent>
               ))}
-            </div>
-          </Tabs>
-        </div>
-      </Section>
-    </div>
-  );
-};
-
-export default AdminDashboard;
-                <PuppyManagement />
-              </TabsContent>
-              
-              <TabsContent value="litters" className="mt-0 animate-fade-in">
-                <LitterManagement />
-              </TabsContent>
-              
-              <TabsContent value="breeds" className="mt-0 animate-fade-in">
-                <BreedTemplateManager />
-              </TabsContent>
-              
-              <TabsContent value="blog" className="mt-0 animate-fade-in">
-                <BlogManager />
-              </TabsContent>
-              
-              <TabsContent value="seo" className="mt-0 animate-fade-in">
-                <SEOManager />
-              </TabsContent>
-              
-              <TabsContent value="marketing" className="mt-0 animate-fade-in">
-                <AffiliateManager />
-              </TabsContent>
-              
-              <TabsContent value="transactions" className="mt-0 animate-fade-in">
-                <TransactionHistory />
-              </TabsContent>
-              
-              <TabsContent value="square" className="mt-0 animate-fade-in">
-                <SquareIntegration />
-              </TabsContent>
-              
-              <TabsContent value="settings" className="mt-0 animate-fade-in">
-                <SettingsPanel />
-              </TabsContent>
-              <TabsContent value="integrations" className="mt-0 animate-fade-in">
-                <ThirdPartyIntegrationsManager />
-              </TabsContent>
-              <TabsContent value="email_templates" className="mt-0 animate-fade-in">
-                <EmailTemplatesManager />
-              </TabsContent>
-              <TabsContent value="users_admin" className="mt-0 animate-fade-in">
-                <AdminUserManager />
-              </TabsContent>
-              <TabsContent value="stud_dogs_admin" className="mt-0 animate-fade-in">
-                <AdminStudDogManager />
-              </TabsContent>
-              <TabsContent value="adv_security" className="mt-0 animate-fade-in">
-                <AdvancedSecurityFeatures />
-              </TabsContent>
-              <TabsContent value="data_deletion" className="mt-0 animate-fade-in">
-                <DataDeletionRequestsManager />
-              </TabsContent>
-              <TabsContent value="testimonials" className="mt-0 animate-fade-in">
-                <TestimonialManagement />
-              </TabsContent>
             </div>
           </Tabs>
         </div>
