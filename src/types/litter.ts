@@ -1,5 +1,5 @@
 // src/types/litter.ts
-
+import { PaginationInfo } from './common'; // Import PaginationInfo
 export type LitterStatus = 'Active' | 'Available Soon' | 'All Reserved' | 'All Sold' | 'Archived';
 
 import { Puppy } from './puppy'; // Import Puppy type
@@ -31,10 +31,5 @@ export type LitterUpdateData = Partial<LitterCreationData>;
 // For API responses that list litters (both public and admin if structure is same)
 export interface LitterListResponse {
   litters: Litter[];
-  pagination?: {
-    total?: number;
-    page?: number;
-    limit?: number;
-    offset?: number; // if used by API
-  };
+  pagination?: PaginationInfo; // Changed to use PaginationInfo
 }

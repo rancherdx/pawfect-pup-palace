@@ -1,11 +1,7 @@
 // src/types/blogPost.ts
+import { PaginationInfo } from './common'; // Import common PaginationInfo
 
-export interface BlogPaginationInfo {
-  total?: number;
-  page?: number;
-  limit?: number;
-  offset?: number;
-}
+// Local BlogPaginationInfo is removed in favor of common.ts PaginationInfo
 
 export type BlogPostStatus = 'draft' | 'published' | 'archived';
 
@@ -54,7 +50,7 @@ export type BlogPostUpdateData = Partial<BlogPostCreateData>;
 // Response for fetching multiple blog posts
 export interface BlogPostsResponse {
   posts: BlogPost[];
-  pagination?: BlogPaginationInfo;
+  pagination?: PaginationInfo; // Standardized to use common PaginationInfo
 }
 
 // --- Other interfaces previously in this file ---

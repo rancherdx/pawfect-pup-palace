@@ -20,7 +20,9 @@ import {
   BlogPost,
   BlogPostsResponse,
   BlogPostCreateData,
-  BlogPostUpdateData
+  BlogPostUpdateData,
+  PaginationInfo, // Added for use in various responses
+  MyPuppiesResponse // Added for getMyPuppies
 } from '../types';
 
 // Helper function to get auth headers
@@ -200,13 +202,13 @@ export const puppiesApi = {
     return apiRequest<Puppy>(`/puppies/${id}`);
   },
 
-  getMyPuppies: async (params?: { limit?: number; page?: number }) => {
+  getMyPuppies: async (params?: { limit?: number; page?: number }): Promise<MyPuppiesResponse> => {
     const searchParams = new URLSearchParams();
     if (params?.limit) searchParams.append('limit', params.limit.toString());
     if (params?.page) searchParams.append('page', params.page.toString());
     
     const query = searchParams.toString();
-    return apiRequest<{ data: any[]; pagination: any }>(`/my-puppies${query ? `?${query}` : ''}`);
+    return apiRequest<MyPuppiesResponse>(`/my-puppies${query ? `?${query}` : ''}`);
   },
 };
 
@@ -299,7 +301,8 @@ export const adminApi = {
     return apiRequest<SquareSyncResponse>(`/admin/puppies/${puppyId}/sync-square`, { method: 'POST' });
   },
   getAllLitters: async (params?: { limit?: number; offset?: number }): Promise<LitterListResponse> => {
-    const query = new URLSearchParams(params as any).toString();
+    // Ensure params are correctly stringified for URLSearchParams
+    const query = new URLSearchParams(params as Record<string, string>).toString();
     return apiRequest<LitterListResponse>(`/admin/litters${query ? `?${query}` : ''}`);
   },
   createLitter: async (data: LitterCreationData): Promise<Litter> => {
@@ -323,12 +326,12 @@ export const adminApi = {
   getBreedTemplates: async (): Promise<BreedTemplate[]> => {
     return apiRequest<BreedTemplate[]>('/admin/breed-templates');
   },
-  getAllTestimonials: async (params?: { page?: number; limit?: number }): Promise<{ data: Testimonial[]; pagination?: any }> => {
+  getAllTestimonials: async (params?: { page?: number; limit?: number }): Promise<{ data: Testimonial[]; pagination?: PaginationInfo }> => {
     const searchParams = new URLSearchParams();
     if (params?.page) searchParams.append('page', params.page.toString());
     if (params?.limit) searchParams.append('limit', params.limit.toString());
     const query = searchParams.toString();
-    return apiRequest<{ data: Testimonial[]; pagination?: any }>(`/admin/testimonials${query ? `?${query}` : ''}`);
+    return apiRequest<{ data: Testimonial[]; pagination?: PaginationInfo }>(`/admin/testimonials${query ? `?${query}` : ''}`);
   },
   createTestimonial: async (data: TestimonialCreationData): Promise<Testimonial> => {
     return apiRequest<Testimonial>('/admin/testimonials', { method: 'POST', body: JSON.stringify(data) });
