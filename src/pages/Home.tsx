@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -38,7 +37,7 @@ const Home = () => {
   // Fetch featured puppies from API
   const { data: publicPuppiesData, isLoading, error } = useQuery<PublicPuppyListResponse, Error>({
     queryKey: ["featuredPuppies"],
-    queryFn: () => puppiesApi.getAll({ limit: 3 }),
+    queryFn: () => puppiesApi.getAllPuppies({ limit: 3 }),
   });
   const featuredPuppies: Puppy[] = publicPuppiesData?.data || [];
 
@@ -49,7 +48,7 @@ const Home = () => {
     error: testimonialsError
   } = useQuery({
     queryKey: ['publicTestimonials'],
-    queryFn: () => testimonialApi.getAllPublic({ limit: 3 }), // Fetch top 3 for homepage
+    queryFn: () => testimonialApi.getAllPublic({ limit: 3 }),
     // staleTime: 1000 * 60 * 10 // Optional: 10 minutes stale time
   });
   const testimonials = testimonialsData || [];
@@ -101,7 +100,6 @@ const Home = () => {
                   gender={puppy.gender}
                   imageSrc={puppy.photoUrl || "https://images.unsplash.com/photo-1591160690555-5debfba289f0?ixlib=rb-4.0.3"} // Use photoUrl
                   price={puppy.price}
-                  available={puppy.status === 'Available'}
                   status={puppy.status} // Pass status for PuppyCard
                 />
               </motion.div>
