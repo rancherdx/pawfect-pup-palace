@@ -35,11 +35,12 @@ const FeatureCard = ({ icon: Icon, title, description }) => {
 
 const Home = () => {
   // Fetch featured puppies from API
-  const { data: publicPuppiesData, isLoading, error } = useQuery<PublicPuppyListResponse, Error>({
+  const { data: publicPuppiesData, isLoading, error } = useQuery({
     queryKey: ["featuredPuppies"],
-    queryFn: () => puppiesApi.getAllPuppies({ limit: 3 }),
+    queryFn: () => puppiesApi.getAllPuppies({ limit: 3 }), // This returns { puppies, pagination }
   });
-  const featuredPuppies: Puppy[] = publicPuppiesData?.data || [];
+  // Fix: The returned object is { puppies, pagination }
+  const featuredPuppies = publicPuppiesData?.puppies || [];
 
   // Fetch testimonials
   const {
@@ -49,7 +50,6 @@ const Home = () => {
   } = useQuery({
     queryKey: ['publicTestimonials'],
     queryFn: () => testimonialApi.getAllPublic({ limit: 3 }),
-    // staleTime: 1000 * 60 * 10 // Optional: 10 minutes stale time
   });
   const testimonials = testimonialsData || [];
 
