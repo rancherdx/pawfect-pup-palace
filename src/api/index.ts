@@ -3,6 +3,33 @@
 import * as puppiesApi from './puppiesApi';
 import * as littersApi from './littersApi';
 
+// --- fetchAdminAPI STUB (for admin pages expecting fetchAdminAPI as a default function) ---
+/** Dummy fetchAdminAPI implementation for wiring up admin pages. Replace with real API as appropriate. */
+const fetchAdminAPI = async (url: string, options?: RequestInit) => {
+  // Just return a dummy shape, enough for useQuery/Mutation fake calls.
+  // Add more branches if/when strict types needed
+  if (url.includes("users")) {
+    return {
+      users: [],
+      currentPage: 1,
+      totalPages: 1,
+      totalUsers: 0,
+      limit: 10,
+    };
+  }
+  if (url.includes("stud-dogs")) {
+    return {
+      studDogs: [],
+      currentPage: 1,
+      totalPages: 1,
+      totalStudDogs: 0,
+      limit: 10,
+    };
+  }
+  // Fallback
+  return {};
+};
+
 // --- ADMIN API STUB: stub out all required admin methods so TS doesn't error ---
 const adminApi = {
   // Puppies
@@ -23,6 +50,10 @@ const adminApi = {
   createTestimonial: async (_data: any) => ({}),
   updateTestimonial: async (_id: string, _data: any) => ({}),
   deleteTestimonial: async (_id: string) => ({}),
+  // Blog Posts (needed in BlogManager)
+  deletePost: async (_id: string) => ({}),
+  updatePost: async (_id: string, _data: any) => ({}),
+  createPost: async (_data: any) => ({}),
   // Stud Dogs, Users, etc can be added here as needed
 };
 
@@ -39,9 +70,7 @@ const testimonialApi = {
 const blogApi = {
   getPosts: async (_params?: any) => ({ posts: [], pagination: {} }),
   getBySlug: async (_slug: string) => ({}),
-  createPost: async (_data: any) => ({}),
-  updatePost: async (_id: string, _data: any) => ({}),
-  deletePost: async (_id: string) => ({}),
+  // CRUD here is stubbed on adminApi (for admin use)
 };
 
 // --- UPLOAD API stub ---
@@ -57,4 +86,5 @@ export {
   testimonialApi,
   blogApi,
   uploadApi,
+  fetchAdminAPI,
 };
