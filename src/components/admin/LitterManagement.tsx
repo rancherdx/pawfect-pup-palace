@@ -17,18 +17,20 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const initialFormData: LitterCreationData = {
+const initialFormData = {
   name: "",
-  mother: "",
-  father: "",
+  damName: "", // Use correct field
+  sireName: "",
   breed: "",
   dateOfBirth: new Date().toISOString().split("T")[0],
-  expectedDate: undefined, // Optional field
-  puppyCount: 0, // Default to 0, ensure it's number
-  status: "Active", // Default status
+  expectedDate: undefined,
+  puppyCount: 0,
+  status: "Active",
   description: "",
   coverImageUrl: ""
 };
+
+const LITTER_STATUS_VALUES = ["Active", "Available Soon", "All Reserved", "All Sold", "Archived"];
 
 const LitterManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -43,7 +45,6 @@ const LitterManagement = () => {
   // Using littersApi.getAll for fetching, assuming it's suitable for admin or using adminApi.getAllLitters if available
   const { data, isLoading, isError, error } = useQuery<LitterListResponse, Error>({
     queryKey: ['litters'],
-    // Using littersApi.getAll, but could be adminApi.getAllLitters if that's preferred for admin context
     queryFn: () => littersApi.getAll({ limit: 100 }),
     staleTime: 5 * 60 * 1000,
   });
@@ -94,14 +95,13 @@ const LitterManagement = () => {
   
   useEffect(() => {
     if (currentLitter && showForm) {
-      // Map Litter to LitterCreationData for the form
       const { id, createdAt, updatedAt, ...editableData } = currentLitter;
       setFormData({
-        ...initialFormData, // Start with defaults for optional fields
+        ...initialFormData,
         ...editableData,
         dateOfBirth: editableData.dateOfBirth ? new Date(editableData.dateOfBirth).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
         expectedDate: editableData.expectedDate ? new Date(editableData.expectedDate).toISOString().split("T")[0] : undefined,
-        puppyCount: editableData.puppyCount === undefined ? 0 : Number(editableData.puppyCount), // Ensure number
+        puppyCount: editableData.puppyCount === undefined ? 0 : Number(editableData.puppyCount),
       });
     } else {
       setFormData(initialFormData);
@@ -152,7 +152,7 @@ const LitterManagement = () => {
     setFormData(prev => ({
       ...prev,
       [name]: name === "puppyCount" ? (parseInt(value) || 0) :
-             name === "status" ? (value as LitterStatus) : value,
+             name === "status" ? value : value,
     }));
   };
 
@@ -220,33 +220,31 @@ const LitterManagement = () => {
                       className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
                     />
                   </div>
-                  
                   <div>
                     <label className="block text-lg font-medium mb-1">
-                      Mother's Name
+                      Dam (Mother's Name)
                     </label>
                     <input
                       required
                       type="text"
-                      name="mother"
-                      value={formData.mother}
+                      name="damName"
+                      value={formData.damName}
                       onChange={handleInputChange}
-                      placeholder="Enter mother's name"
+                      placeholder="Enter dam's name"
                       className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
                     />
                   </div>
-                  
                   <div>
                     <label className="block text-lg font-medium mb-1">
-                      Father's Name
+                      Sire (Father's Name)
                     </label>
                     <input
                       required
                       type="text"
-                      name="father"
-                      value={formData.father}
+                      name="sireName"
+                      value={formData.sireName}
                       onChange={handleInputChange}
-                      placeholder="Enter father's name"
+                      placeholder="Enter sire's name"
                       className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
                     />
                   </div>
@@ -425,7 +423,7 @@ const LitterManagement = () => {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">Parents:</span>
-                      <span className="font-medium">{litter.mother} & {litter.father}</span>
+                      <span className="font-medium">{litter.damName} &amp; {litter.sireName}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">Born:</span>

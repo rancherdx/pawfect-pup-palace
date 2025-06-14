@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { littersApi } from "@/api";
 import { toast } from "sonner";
@@ -6,7 +5,7 @@ import { toast } from "sonner";
 export const useLitters = (filters = {}) => {
   return useQuery({
     queryKey: ['litters', filters],
-    queryFn: () => littersApi.getAllLitters(filters),
+    queryFn: () => littersApi.getAll(filters),
   });
 };
 

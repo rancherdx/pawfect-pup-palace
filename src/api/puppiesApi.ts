@@ -1,11 +1,26 @@
+
 // --- Puppy API STUB ----
+import { Puppy, PublicPuppyListResponse } from '@/types/puppy';
 
-export const getAll = async (_params?: any) => {
-  return [];
+const dummyPuppy: Puppy = {
+  id: 'puppy-1',
+  name: 'Buddy',
+  breed: 'Golden Retriever',
+  birthDate: '2024-01-10',
+  price: 1500,
+  description: 'A playful golden retriever puppy.',
+  status: 'Available',
+  gender: 'Male',
 };
 
-export const getAllPuppies = async (_params?: any) => {
-  return { puppies: [], pagination: {} };
+export const getAll = async (_params?: any): Promise<Puppy[]> => {
+  return [dummyPuppy];
 };
 
-// ...additional stubs could go here as needed
+export const getAllPuppies = async (_params?: any): Promise<{ puppies: Puppy[]; pagination: any }> => {
+  return { puppies: [dummyPuppy], pagination: { currentPage: 1, totalPages: 1, totalPuppies: 1 } };
+};
+
+export const getPuppyById = async (id: string): Promise<Puppy> => {
+  return { ...dummyPuppy, id };
+};
