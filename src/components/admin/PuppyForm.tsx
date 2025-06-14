@@ -1,585 +1,326 @@
 import { useState, useEffect } from "react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Image, PlusCircle, Calendar, Scale, Dog, Save, Loader2 } from "lucide-react"; // For loading spinner
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { uploadApi, adminApi } from "@/api";
-import { Puppy, PuppyCreationData, PuppyUpdateData, PuppyStatus, PuppySize } from "@/types";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { adminApi } from "@/api";
+import {
+  Puppy,
+  PuppyCreationData,
+  PuppyUpdateData,
+  PuppyStatus,
+  PuppySize,
+} from "@/types";
+import { Loader2 } from "lucide-react";
 
-// Local BreedTemplate definition - assuming adminApi.getBreedTemplates provides typed data
-// If BreedTemplate is also in @/types, it should be imported from there.
-// For now, let's assume adminApi.getBreedTemplates() returns data that matches this structure.
-interface BreedTemplate {
-  id: string;
-  breedName: string;
-  description: string;
-  size: PuppySize | string; // Allow string for flexibility if API returns other values
-  temperament: string;
-  careInstructions: string;
-  commonTraits: string[];
-  averageWeight?: {
-    min: number;
-    max: number;
-  };
+// Define a type for the form data that includes all the fields
+type PuppyFormData = Omit<PuppyCreationData, "status" | "size"> & {
+  status: PuppyStatus;
+  size: PuppySize;
+};
+
+interface PuppyFormProps {
+  puppy?: Puppy;
+  onClose: () => void;
+  isEditMode?: boolean;
 }
 
-type PuppyFormData = Omit<PuppyCreationData, 'status'> & { // status will be PuppyStatus
-  id?: string;
-  status: PuppyStatus;
-  // Ensure all fields from PuppyCreationData that are optional are here if needed for form state
-  // and also include fields that are part of Puppy but not PuppyCreationData if form manages them.
-  // For this form, PuppyCreationData + id and specific status type should cover it.
-  // Let's ensure all optional fields from PuppyCreationData are explicitly listed for clarity in initial state
-  photoUrl?: string;
-  weight?: number;
-  size?: PuppySize;
-  temperament?: string;
-  careNotes?: string;
-  motherName?: string;
-  fatherName?: string;
-  litterId?: string;
-  gender?: string;
-};
+const PUPPY_SIZE_VALUES: PuppySize[] = ["Toy", "Small", "Medium", "Large", "Giant", ""];
+const PUPPY_STATUS_VALUES: PuppyStatus[] = ["Available", "Reserved", "Sold", "Not For Sale"];
 
-type PuppyFormProps = {
-  puppy?: Puppy; // Use the main Puppy interface for prop
-  onSave: (data: PuppyCreationData | PuppyUpdateData, id?: string) => void;
-  onCancel: () => void;
-  litters?: Array<{id: string, name: string}>; // Assuming litters structure is fine
-};
-
-const calculateAge = (birthdate: string): string => {
-  const today = new Date();
-  const birth = new Date(birthdate);
-  
-  let months = (today.getFullYear() - birth.getFullYear()) * 12;
-  months -= birth.getMonth();
-  months += today.getMonth();
-  
-  if (months < 0) months = 0;
-  
-  if (months < 1) {
-    const days = Math.floor((today.getTime() - birth.getTime()) / (1000 * 60 * 60 * 24));
-    return `${days} days`;
-  } else if (months < 24) {
-    return `${months} months`;
-  } else {
-    const years = Math.floor(months / 12);
-    const remainingMonths = months % 12;
-    return remainingMonths > 0 ? `${years} years, ${remainingMonths} months` : `${years} years`;
-  }
-};
-
-const PuppyForm = ({ puppy, onSave, onCancel, litters = [] }: PuppyFormProps) => {
-  const initialFormData: PuppyFormData = {
-    id: puppy?.id,
-    name: puppy?.name || "",
-    breed: puppy?.breed || "",
-    birthDate: puppy?.birthDate ? new Date(puppy.birthDate).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
-    price: puppy?.price || 0,
-    description: puppy?.description || "",
-    status: puppy?.status || "Available",
-    photoUrl: puppy?.photoUrl,
-    weight: puppy?.weight,
-    size: puppy?.size || "",
-    temperament: puppy?.temperament || "",
-    careNotes: puppy?.careNotes || "",
-    motherName: puppy?.motherName || "",
-    fatherName: puppy?.fatherName || "",
-    litterId: puppy?.litterId || "",
-    gender: puppy?.gender || "",
-  };
-  const [formData, setFormData] = useState<PuppyFormData>(initialFormData);
-
-  const [photoPreview, setPhotoPreview] = useState<string | null>(
-    puppy?.photoUrl || null
-  );
-
-  const [age, setAge] = useState<string>("");
-  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
-
-  const {
-    data: fetchedBreedTemplates,
-    isLoading: isLoadingTemplates,
-    error: templatesError
-  } = useQuery<BreedTemplate[]>({ // Explicitly use the BreedTemplate type
-    queryKey: ['breedTemplates'],
-    queryFn: adminApi.getBreedTemplates
-  });
-
-  const uploadImageMutation = useMutation({
-    mutationFn: (file: File) => uploadApi.uploadFile(file, "puppy-images"), // Pass folder context
-    onSuccess: (data: { url: string }) => { // data should be { url: string }
-      setFormData(prev => ({ ...prev, photoUrl: data.url }));
-      setPhotoPreview(data.url);
-      toast.success("Photo uploaded successfully!");
-    },
-    onError: (error: Error) => {
-      toast.error(`Photo upload failed: ${error.message}`);
-      // Optionally clear photoPreview if upload fails
-      // setPhotoPreview(null);
+const PuppyForm: React.FC<PuppyFormProps> = ({ puppy, onClose, isEditMode }) => {
+  const [formData, setFormData] = useState<PuppyFormData>(
+    {
+      breed: puppy?.breed || "",
+      description: puppy?.description || "",
+      size: puppy?.size || "",
+      temperament: puppy?.temperament || "",
+      careNotes: puppy?.careNotes || "",
+      name: puppy?.name || "",
+      birthDate: puppy?.birthDate || new Date().toISOString().split("T")[0],
+      price: puppy?.price || 0,
+      photoUrl: puppy?.photoUrl || "",
+      weight: puppy?.weight || 0,
+      motherName: puppy?.motherName || "",
+      fatherName: puppy?.fatherName || "",
+      litterId: puppy?.litterId || "",
+      gender: puppy?.gender || "",
+      status: (puppy?.status || "Available") as PuppyStatus,
     }
+  );
+  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation<any, Error, { id?: string; data: PuppyFormData }>({
+    mutationFn: ({ id, data }) => {
+      setIsLoading(true);
+      if (isEditMode && id) {
+        return adminApi.updatePuppy(id, data as PuppyUpdateData);
+      } else {
+        return adminApi.createPuppy(data as PuppyCreationData);
+      }
+    },
+    onSuccess: () => {
+      setIsLoading(false);
+      queryClient.invalidateQueries({ queryKey: ["puppies"] });
+      toast.success(`Puppy ${isEditMode ? "updated" : "created"} successfully!`);
+      onClose();
+    },
+    onError: (error) => {
+      setIsLoading(false);
+      toast.error(
+        `Failed to ${isEditMode ? "update" : "create"} puppy: ${error.message}`
+      );
+    },
   });
 
   useEffect(() => {
-    if (formData.birthDate) {
-      setAge(calculateAge(formData.birthDate));
+    if (puppy) {
+      setFormData({
+        breed: puppy.breed || "",
+        description: puppy.description || "",
+        size: puppy.size || "",
+        temperament: puppy.temperament || "",
+        careNotes: puppy.careNotes || "",
+        name: puppy.name || "",
+        birthDate: puppy.birthDate || new Date().toISOString().split("T")[0],
+        price: puppy.price || 0,
+        photoUrl: puppy.photoUrl || "",
+        weight: puppy.weight || 0,
+        motherName: puppy.motherName || "",
+        fatherName: puppy.fatherName || "",
+        litterId: puppy.litterId || "",
+        gender: puppy.gender || "",
+        status: puppy.status as PuppyStatus || "Available",
+      });
     }
-  }, [formData.birthDate]);
+  }, [puppy]);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isEditMode && puppy?.id) {
+      mutation.mutate({ id: puppy.id, data: formData });
+    } else {
+      mutation.mutate({ data: formData });
+    }
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
-    
-    if (name === "price" || name === "weight") {
-      setFormData(prev => ({
-        ...prev,
-        [name]: parseFloat(value) || (name === "weight" ? undefined : 0) // weight can be undefined
-      }));
-    } else if (name === "status") {
-      setFormData(prev => ({
-        ...prev,
-        status: value as PuppyStatus
-      }));
-    } else if (name === "size") {
-      setFormData(prev => ({
-        ...prev,
-        size: value as PuppySize
-      }));
-    }
-     else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    }
-    
-    if (name === "birthDate") {
-      setAge(calculateAge(value));
-    }
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
-
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Clear previous preview immediately to indicate change
-      setPhotoPreview(null);
-      uploadImageMutation.mutate(file);
-    }
-  };
-
-  const handleTemplateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const templateId = e.target.value;
-    setSelectedTemplate(templateId);
-    
-    if (!templateId || !fetchedBreedTemplates) return; // Check if fetchedBreedTemplates is available
-    
-    const template = fetchedBreedTemplates.find(t => t.id === templateId); // Use fetchedBreedTemplates
-    if (template) {
-      // Apply template values to form but keep existing values for name, price, status, etc.
-      setFormData(prev => ({
-        ...prev,
-        breed: template.breedName,
-        description: template.description || prev.description,
-        size: template.size || prev.size,
-        temperament: template.temperament || prev.temperament,
-        careNotes: template.careInstructions || prev.careNotes
-      }));
-      
-      toast.success(`Applied ${template.breedName} template`);
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Construct PuppyCreationData or PuppyUpdateData from formData
-    const { id, ...restOfFormData } = formData;
-    
-    // Ensure all required fields for PuppyCreationData are present if it's a new puppy
-    // The types PuppyCreationData and PuppyUpdateData will guide what to send.
-    // PuppyUpdateData is Partial<PuppyCreationData>, so sending restOfFormData should be fine for updates.
-    // For creation, ensure `restOfFormData` matches `PuppyCreationData`.
-    // The `status` field in `formData` is already `PuppyStatus`, matching `PuppyCreationData`.
-
-    if (id) { // If id exists, it's an update
-      onSave(restOfFormData as PuppyUpdateData, id);
-    } else { // Otherwise, it's a creation
-      // Ensure all required fields are present, which should be guaranteed by form validation and initial state
-      onSave(restOfFormData as PuppyCreationData);
-    }
-  };
-
-  const isEditing = Boolean(formData.id); // Use formData.id to determine edit mode
-  const today = new Date().toISOString().split("T")[0];
 
   return (
-    <div className="animate-fade-in">
-      <Button 
-        variant="ghost" 
-        onClick={onCancel}
-        className="mb-6 hover:bg-gray-100"
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Puppy List
-      </Button>
-      
-      <Card className="shadow-lg border-t-4 border-t-brand-red">
-        <CardHeader className="bg-gray-50 dark:bg-gray-900/20">
-          <CardTitle className="text-2xl flex items-center">
-            <Dog className="mr-2 h-6 w-6 text-brand-red" />
-            {isEditing ? "Edit Puppy Details" : "Add New Puppy"}
-          </CardTitle>
-        </CardHeader>
-        
-        <CardContent className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="mb-6">
-              <label className="block text-lg font-medium mb-2">
-                Apply Breed Template (Optional)
-              </label>
-              <select
-                value={selectedTemplate}
-                onChange={handleTemplateChange}
-                className="w-full md:w-1/2 p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                disabled={isLoadingTemplates || !!templatesError} // Disable if loading or error
-              >
-                <option value="">
-                  {isLoadingTemplates ? "Loading templates..." :
-                   templatesError ? "Error loading templates" :
-                   "Select a template..."}
-                </option>
-                {fetchedBreedTemplates && !templatesError && fetchedBreedTemplates.map(template => (
-                  <option key={template.id} value={template.id}>
-                    {template.breedName}
-                  </option>
-                ))}
-              </select>
-              {templatesError && (
-                <p className="text-sm text-red-500 mt-1">
-                  Could not load breed templates. Please try again later.
-                </p>
-              )}
-              <p className="text-sm text-gray-500 mt-1">
-                Templates auto-fill breed-specific details
-              </p>
-            </div>
-          
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <label className="block text-lg font-medium">
-                    Puppy Name
-                  </label>
-                  <input
-                    required
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    placeholder="Enter puppy name"
-                    className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="block text-lg font-medium">
-                    Breed
-                  </label>
-                  <input
-                    required
-                    type="text"
-                    name="breed"
-                    value={formData.breed}
-                    onChange={handleInputChange}
-                    placeholder="Enter breed"
-                    className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="block text-lg font-medium flex items-center">
-                      <Calendar className="mr-2 h-4 w-4 text-brand-red" />
-                      Birthdate
-                    </label>
-                    <input
-                      required
-                      type="date"
-                    name="birthDate"
-                      max={today}
-                    value={formData.birthDate}
-                      onChange={handleInputChange}
-                      className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                    />
-                  {formData.birthDate && (
-                      <div className="flex items-center mt-1">
-                        <span className="text-sm font-medium mr-2">Age:</span>
-                        <span className="text-sm bg-red-50 text-red-700 px-2 py-1 rounded-md">
-                          {age}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-lg font-medium flex items-center">
-                      <Scale className="mr-2 h-4 w-4 text-brand-red" />
-                      Weight (lbs)
-                    </label>
-                    <input
-                      type="number"
-                      name="weight"
-                      min="0"
-                      step="0.1"
-                      value={formData.weight || ""}
-                      onChange={handleInputChange}
-                      placeholder="Current weight"
-                      className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-lg font-medium">
-                    Size
-                  </label>
-                  <select
-                    name="size"
-                    value={formData.size || ""}
-                    onChange={handleInputChange}
-                    className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                  >
-                    <option value="">Select size...</option>
-                    {Object.values(PuppySize).filter(s => typeof s === 'string' && s !== '').map(s => (
-                       <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-lg font-medium">
-                    Price ($)
-                  </label>
-                  <input
-                    required
-                    type="number"
-                    name="price"
-                    min="0"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={handleInputChange}
-                    placeholder="Enter price"
-                    className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="block text-lg font-medium">
-                    Status
-                  </label>
-                  <select
-                    name="status"
-                    value={formData.status}
-                    onChange={handleInputChange}
-                    className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                  >
-                    {(Object.values(PuppyStatus) as PuppyStatus[]).map(s => (
-                       <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {formData.status === "Not For Sale" ? 
-                      "Puppy won't be synced to Square" : 
-                      "Puppy will be synced to Square inventory"}
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-lg font-medium">
-                    Litter (Optional)
-                  </label>
-                  <select
-                    name="litterId"
-                    value={formData.litterId || ""}
-                    onChange={handleInputChange}
-                    className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                  >
-                    <option value="">No litter</option>
-                    {litters?.map(litter => (
-                      <option key={litter.id} value={litter.id}>
-                        {litter.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                 <div className="space-y-2">
-                  <label className="block text-lg font-medium">
-                    Gender
-                  </label>
-                  <select
-                    name="gender"
-                    value={formData.gender || ""}
-                    onChange={handleInputChange}
-                    className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                  >
-                    <option value="">Select gender...</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <label className="block text-lg font-medium">
-                    Photo
-                  </label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center h-60 bg-gray-50 hover:bg-gray-100 transition">
-                    {uploadImageMutation.isPending ? (
-                      <div className="flex flex-col items-center">
-                        <Loader2 className="h-8 w-8 animate-spin text-brand-red mb-2" />
-                        <p className="text-sm text-gray-500">Uploading...</p>
-                      </div>
-                    ) : photoPreview ? (
-                      <>
-                        <img 
-                          src={photoPreview} 
-                          alt="Puppy preview" 
-                          className="max-h-40 max-w-full object-contain mb-4" 
-                        />
-                        <Button 
-                          type="button" 
-                          variant="outline"
-                          onClick={() => !uploadImageMutation.isPending && document.getElementById('photo-upload')?.click()}
-                          disabled={uploadImageMutation.isPending}
-                        >
-                          Change Photo
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <Image className="h-16 w-16 text-gray-400 mb-2" />
-                        <p className="text-gray-500 text-center mb-4">
-                          Click to upload a photo
-                        </p>
-                        <Button 
-                          type="button" 
-                          variant="outline"
-                          onClick={() => !uploadImageMutation.isPending && document.getElementById('photo-upload')?.click()}
-                          disabled={uploadImageMutation.isPending}
-                        >
-                          <PlusCircle className="mr-2 h-4 w-4" />
-                          Upload Photo
-                        </Button>
-                      </>
-                    )}
-                    <input
-                      id="photo-upload"
-                      type="file"
-                      accept="image/*"
-                      onChange={handlePhotoChange}
-                      className="hidden"
-                      disabled={uploadImageMutation.isPending} // Disable file input during upload
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-lg font-medium">
-                    Description
-                  </label>
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    placeholder="Enter a detailed description"
-                    rows={3}
-                    className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red resize-none"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="block text-lg font-medium">
-                    Temperament
-                  </label>
-                  <input
-                    type="text"
-                    name="temperament"
-                    value={formData.temperament || ""}
-                    onChange={handleInputChange}
-                    placeholder="E.g., Friendly, Playful, Calm"
-                    className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="block text-lg font-medium">
-                    Care Notes
-                  </label>
-                  <textarea
-                    name="careNotes"
-                    value={formData.careNotes || ""}
-                    onChange={handleInputChange}
-                    placeholder="Special care instructions or notes"
-                    rows={3}
-                    className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red resize-none"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="block text-lg font-medium">
-                      Mother's Name
-                    </label>
-                    <input
-                      type="text"
-                      name="motherName"
-                      value={formData.motherName || ""}
-                      onChange={handleInputChange}
-                      placeholder="Mother's name"
-                      className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="block text-lg font-medium">
-                      Father's Name
-                    </label>
-                    <input
-                      type="text"
-                      name="fatherName"
-                      value={formData.fatherName || ""}
-                      onChange={handleInputChange}
-                      placeholder="Father's name"
-                      className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="pt-4 flex justify-end gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onCancel}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                className="bg-brand-red hover:bg-red-700 text-white min-w-32"
-              >
-                <Save className="mr-2 h-4 w-4" />
-                {isEditing ? "Update Puppy" : "Add Puppy"}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>{isEditMode ? "Edit Puppy" : "Add New Puppy"}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="name">Name</Label>
+            <Input
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div>
+            <Label htmlFor="breed">Breed</Label>
+            <Input
+              type="text"
+              id="breed"
+              name="breed"
+              value={formData.breed}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div>
+            <Label htmlFor="birthDate">Birth Date</Label>
+            <Input
+              type="date"
+              id="birthDate"
+              name="birthDate"
+              value={formData.birthDate}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div>
+            <Label htmlFor="gender">Gender</Label>
+            <Input
+              type="text"
+              id="gender"
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div>
+            <Label htmlFor="price">Price</Label>
+            <Input
+              type="number"
+              id="price"
+              name="price"
+              value={formData.price}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div>
+            <Label htmlFor="photoUrl">Photo URL</Label>
+            <Input
+              type="text"
+              id="photoUrl"
+              name="photoUrl"
+              value={formData.photoUrl}
+              onChange={handleChange}
+            />
+          </div>
+          <div>
+            <Label htmlFor="weight">Weight</Label>
+            <Input
+              type="number"
+              id="weight"
+              name="weight"
+              value={formData.weight}
+              onChange={handleChange}
+            />
+          </div>
+          <div>
+            <Label htmlFor="motherName">Mother's Name</Label>
+            <Input
+              type="text"
+              id="motherName"
+              name="motherName"
+              value={formData.motherName}
+              onChange={handleChange}
+            />
+          </div>
+          <div>
+            <Label htmlFor="fatherName">Father's Name</Label>
+            <Input
+              type="text"
+              id="fatherName"
+              name="fatherName"
+              value={formData.fatherName}
+              onChange={handleChange}
+            />
+          </div>
+          <div>
+            <Label htmlFor="litterId">Litter ID</Label>
+            <Input
+              type="text"
+              id="litterId"
+              name="litterId"
+              value={formData.litterId}
+              onChange={handleChange}
+            />
+          </div>
+          <div>
+            <Label htmlFor="size">Size</Label>
+            <select
+              name="size"
+              value={formData.size}
+              onChange={e => setFormData(prev => ({ ...prev, size: e.target.value as PuppySize }))}
+            >
+              {PUPPY_SIZE_VALUES.map(sz => (
+                <option key={sz} value={sz}>{sz || "Unspecified"}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <Label htmlFor="temperament">Temperament</Label>
+            <Textarea
+              id="temperament"
+              name="temperament"
+              value={formData.temperament}
+              onChange={handleChange}
+            />
+          </div>
+          <div>
+            <Label htmlFor="careNotes">Care Notes</Label>
+            <Textarea
+              id="careNotes"
+              name="careNotes"
+              value={formData.careNotes}
+              onChange={handleChange}
+            />
+          </div>
+          <div>
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div>
+            <Label htmlFor="status">Status</Label>
+            <select
+              name="status"
+              value={formData.status}
+              onChange={e => setFormData(prev => ({ ...prev, status: e.target.value as PuppyStatus }))}
+            >
+              {PUPPY_STATUS_VALUES.map(st => (
+                <option key={st} value={st}>{st}</option>
+              ))}
+            </select>
+          </div>
+        </form>
+      </CardContent>
+      <CardFooter>
+        <div className="flex justify-between w-full">
+          <Button variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            className="bg-brand-red hover:bg-red-700 text-white"
+            onClick={handleSubmit}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Please wait
+              </>
+            ) : (
+              `${isEditMode ? "Update" : "Create"} Puppy`
+            )}
+          </Button>
+        </div>
+      </CardFooter>
+    </Card>
   );
 };
 

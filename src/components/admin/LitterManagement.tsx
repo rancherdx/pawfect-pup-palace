@@ -23,14 +23,14 @@ const initialFormData = {
   sireName: "",
   breed: "",
   dateOfBirth: new Date().toISOString().split("T")[0],
-  expectedDate: undefined,
+  expectedDate: undefined as string | undefined,
   puppyCount: 0,
-  status: "Active",
+  status: "Active" as LitterStatus,
   description: "",
   coverImageUrl: ""
 };
 
-const LITTER_STATUS_VALUES = ["Active", "Available Soon", "All Reserved", "All Sold", "Archived"];
+const LITTER_STATUS_VALUES: LitterStatus[] = ["Active", "Available Soon", "All Reserved", "All Sold", "Archived"];
 
 const LitterManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -101,6 +101,7 @@ const LitterManagement = () => {
         ...editableData,
         dateOfBirth: editableData.dateOfBirth ? new Date(editableData.dateOfBirth).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
         expectedDate: editableData.expectedDate ? new Date(editableData.expectedDate).toISOString().split("T")[0] : undefined,
+        status: (editableData.status || "Active") as LitterStatus,
         puppyCount: editableData.puppyCount === undefined ? 0 : Number(editableData.puppyCount),
       });
     } else {
@@ -151,8 +152,12 @@ const LitterManagement = () => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === "puppyCount" ? (parseInt(value) || 0) :
-             name === "status" ? value : value,
+      [name]:
+        name === "puppyCount"
+          ? (parseInt(value) || 0)
+          : name === "status"
+            ? value as LitterStatus
+            : value,
     }));
   };
 
@@ -307,7 +312,7 @@ const LitterManagement = () => {
                         onChange={handleInputChange}
                         className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
                       >
-                        {(Object.values(LitterStatus) as LitterStatus[]).map(statusValue => (
+                        {LITTER_STATUS_VALUES.map(statusValue => (
                           <option key={statusValue} value={statusValue}>{statusValue}</option>
                         ))}
                       </select>
