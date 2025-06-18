@@ -109,7 +109,7 @@ router.post('/api/puppies/:puppyId/health-records', async (request: IRequest, en
     return new Response(JSON.stringify({ error: authResult.error || 'Authentication failed' }), { status: 401, headers: corsHeaders });
   }
   const params = request.params || {};
-  return addPuppyHealthRecord(request as unknown as Request, env, authResult.decodedToken, params.puppyId);
+  return addPuppyHealthRecord(request as unknown as Request, env, authResult.decodedToken, { puppyId: params.puppyId });
 });
 
 router.get('/api/my-conversations', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
@@ -182,19 +182,21 @@ router.get('/api/admin/puppies', async (request: IRequest, env: Env, ctx: Execut
 router.post('/api/admin/puppies', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
   if (authResponse) return authResponse;
-  return createPuppy(request as unknown as Request, env);
+  const authResult = await verifyJwtAuth(request as unknown as Request, env);
+  return createPuppy(request as unknown as Request, env, authResult.decodedToken);
 });
 router.put('/api/admin/puppies/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
   if (authResponse) return authResponse;
-  const params = request.params || {};
-  return updatePuppy(request as unknown as Request, env, params.id);
+  const authResult = await verifyJwtAuth(request as unknown as Request, env);
+  return updatePuppy(request as unknown as Request, env, authResult.decodedToken);
 });
 router.delete('/api/admin/puppies/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
   if (authResponse) return authResponse;
   const params = request.params || {};
-  return deletePuppy(request as unknown as Request, env, params.id);
+  const authResult = await verifyJwtAuth(request as unknown as Request, env);
+  return deletePuppy(request as unknown as Request, env, authResult.decodedToken);
 });
 
 // Litter Management (Admin)

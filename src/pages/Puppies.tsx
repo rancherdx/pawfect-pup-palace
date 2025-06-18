@@ -32,7 +32,10 @@ const Puppies = () => {
     if (data?.puppies) {
       const uniqueBreeds = Array.from(new Set(
         data.puppies
-          .map((puppy: any) => typeof puppy.breed === 'string' ? puppy.breed : '')
+          .map((puppy: any) => {
+            const breed = puppy.breed || puppy.breed_name;
+            return typeof breed === 'string' ? breed : '';
+          })
           .filter((breed: string) => breed.length > 0)
       ));
       setBreeds(["All Breeds", ...uniqueBreeds]);
