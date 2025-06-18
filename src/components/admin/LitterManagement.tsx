@@ -1,9 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Plus, PawPrint, Edit, Trash, Search, Loader2 } from "lucide-react"; // AlertTriangle might not be needed if error handling is via toast
+import { Plus, PawPrint, Search } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { adminApi, littersApi } from '@/api'; // Using specific APIs
+import { adminApi, littersApi } from '@/api';
 import { toast } from 'sonner';
 import { Litter, LitterCreationData, LitterUpdateData, LitterListResponse, LitterStatus } from "@/types";
 import {
@@ -16,10 +16,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Loader2 } from "lucide-react";
+import LitterForm from "./LitterForm";
+import LitterCard from "./LitterCard";
 
 const initialFormData = {
   name: "",
-  damName: "", // Use correct field
+  damName: "",
   sireName: "",
   breed: "",
   dateOfBirth: new Date().toISOString().split("T")[0],
@@ -29,8 +32,6 @@ const initialFormData = {
   description: "",
   coverImageUrl: ""
 };
-
-const LITTER_STATUS_VALUES: LitterStatus[] = ["Active", "Available Soon", "All Reserved", "All Sold", "Archived"];
 
 const LitterManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -42,8 +43,7 @@ const LitterManagement = () => {
 
   const queryClient = useQueryClient();
 
-  // Using littersApi.getAll for fetching, assuming it's suitable for admin or using adminApi.getAllLitters if available
-  const { data, isLoading, isError, error } = useQuery<LitterListResponse, Error>({
+  const { data, isLoading, isError } = useQuery<LitterListResponse, Error>({
     queryKey: ['litters'],
     queryFn: () => littersApi.getAll({ limit: 100 }),
     staleTime: 5 * 60 * 1000,
@@ -57,7 +57,7 @@ const LitterManagement = () => {
       queryClient.invalidateQueries({ queryKey: ['litters'] });
       toast.success('Litter added successfully!');
       setShowForm(false);
-      setFormData(initialFormData); // Reset form
+      setFormData(initialFormData);
     },
     onError: (err: Error) => {
       toast.error(`Failed to add litter: ${err.message}`);
@@ -71,7 +71,7 @@ const LitterManagement = () => {
       toast.success('Litter updated successfully!');
       setShowForm(false);
       setCurrentLitter(null);
-      setFormData(initialFormData); // Reset form
+      setFormData(initialFormData);
     },
     onError: (err: Error) => {
       toast.error(`Failed to update litter: ${err.message}`);
@@ -83,8 +83,8 @@ const LitterManagement = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['litters'] });
       toast.success('Litter deleted successfully!');
-      setLitterToDeleteId(null); // Reset delete id
-      setShowDeleteDialog(false); // Close dialog
+      setLitterToDeleteId(null);
+      setShowDeleteDialog(false);
     },
     onError: (err: Error) => {
       toast.error(`Failed to delete litter: ${err.message}`);
@@ -126,8 +126,8 @@ const LitterManagement = () => {
   };
 
   const handleAddLitter = () => {
-    setCurrentLitter(null); // Ensure currentLitter is null for new entry
-    setFormData(initialFormData); // Reset form data for new entry
+    setCurrentLitter(null);
+    setFormData(initialFormData);
     setShowForm(true);
   };
 
@@ -135,8 +135,7 @@ const LitterManagement = () => {
     e.preventDefault();
     const payload: LitterCreationData | LitterUpdateData = {
         ...formData,
-        puppyCount: Number(formData.puppyCount) || 0, // Ensure puppyCount is a number
-        // Ensure dateOfBirth and expectedDate are correctly formatted if needed by API, though already string
+        puppyCount: Number(formData.puppyCount) || 0,
     };
     
     if (currentLitter && currentLitter.id) {
@@ -166,7 +165,13 @@ const LitterManagement = () => {
     litter.breed.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const isMutationLoading = addLitterMutation.isPending || updateLitterMutation.isPending;
+  if (isLoading) {
+    return <div>Loading litters...</div>;
+  }
+
+  if (isError) {
+    return <div>Error loading litters. Please try again.</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -199,186 +204,14 @@ const LitterManagement = () => {
       </div>
       
       {showForm ? (
-        
-        <Card className="shadow-lg border-t-4 border-t-brand-red animate-fade-in">
-          <CardHeader className="bg-gray-50 dark:bg-gray-900/20">
-            <CardTitle className="text-2xl">
-              {currentLitter ? "Edit Litter" : "Add New Litter"}
-            </CardTitle>
-          </CardHeader>
-          
-          <CardContent className="p-6">
-            <form onSubmit={handleSaveLitter} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-lg font-medium mb-1">
-                      Litter Name
-                    </label>
-                    <input
-                      required
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      placeholder="Enter litter name"
-                      className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-lg font-medium mb-1">
-                      Dam (Mother's Name)
-                    </label>
-                    <input
-                      required
-                      type="text"
-                      name="damName"
-                      value={formData.damName}
-                      onChange={handleInputChange}
-                      placeholder="Enter dam's name"
-                      className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-lg font-medium mb-1">
-                      Sire (Father's Name)
-                    </label>
-                    <input
-                      required
-                      type="text"
-                      name="sireName"
-                      value={formData.sireName}
-                      onChange={handleInputChange}
-                      placeholder="Enter sire's name"
-                      className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-lg font-medium mb-1">
-                      Breed
-                    </label>
-                    <input
-                      required
-                      type="text"
-                      name="breed"
-                      value={formData.breed}
-                      onChange={handleInputChange}
-                      placeholder="Enter breed"
-                      className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-lg font-medium mb-1">
-                      Date of Birth
-                    </label>
-                    <input
-                      required
-                      type="date"
-                      name="dateOfBirth"
-                      value={formData.dateOfBirth}
-                      onChange={handleInputChange}
-                      className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-lg font-medium mb-1">
-                        Number of Puppies
-                      </label>
-                      <input
-                        required
-                        type="number"
-                        name="puppyCount"
-                        min="1"
-                        value={formData.puppyCount}
-                        onChange={handleInputChange}
-                        placeholder="0"
-                        className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-lg font-medium mb-1">
-                        Status
-                      </label>
-                      <select
-                        name="status"
-                        value={formData.status}
-                        onChange={handleInputChange}
-                        className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                      >
-                        {LITTER_STATUS_VALUES.map(statusValue => (
-                          <option key={statusValue} value={statusValue}>{statusValue}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                   <div>
-                    <label className="block text-lg font-medium mb-1">
-                      Expected Date (Optional)
-                    </label>
-                    <input
-                      type="date"
-                      name="expectedDate"
-                      value={formData.expectedDate || ""}
-                      onChange={handleInputChange}
-                      className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                    />
-                  </div>
-                   <div>
-                    <label className="block text-lg font-medium mb-1">
-                      Description (Optional)
-                    </label>
-                    <textarea
-                      name="description"
-                      value={formData.description || ""}
-                      onChange={handleInputChange}
-                      placeholder="Brief description of the litter"
-                      rows={3}
-                      className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red resize-none"
-                    />
-                  </div>
-                   <div>
-                    <label className="block text-lg font-medium mb-1">
-                      Cover Image URL (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      name="coverImageUrl"
-                      value={formData.coverImageUrl || ""}
-                      onChange={handleInputChange}
-                      placeholder="https://example.com/image.jpg"
-                      className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex justify-end gap-3 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowForm(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  className="bg-brand-red hover:bg-red-700 text-white min-w-32"
-                >
-                  {currentLitter ? "Update Litter" : "Create Litter"}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+        <LitterForm
+          formData={formData}
+          onInputChange={handleInputChange}
+          onSubmit={handleSaveLitter}
+          onCancel={() => setShowForm(false)}
+          isEditing={!!currentLitter}
+        />
       ) : (
-        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredLitters.length === 0 ? (
             <div className="col-span-full text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-300">
@@ -395,67 +228,12 @@ const LitterManagement = () => {
             </div>
           ) : (
             filteredLitters.map((litter) => (
-              <Card key={litter.id} className="shadow-md hover:shadow-lg transition-shadow">
-                <div className="bg-brand-red h-2 rounded-t-lg" />
-                
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-start">
-                    <h3 className="font-bold text-xl truncate">{litter.name}</h3>
-                    <div className="flex space-x-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditLitter(litter)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteLitter(litter.id)}
-                        className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-4 text-sm space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Breed:</span>
-                      <span className="font-medium">{litter.breed}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Parents:</span>
-                      <span className="font-medium">{litter.damName} &amp; {litter.sireName}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Born:</span>
-                      <span className="font-medium">{new Date(litter.dateOfBirth).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Puppies:</span>
-                      <span className="font-medium">{litter.puppyCount}</span>
-                    </div>
-                    <div className="pt-3">
-                      <span className={`px-3 py-1 rounded-full text-xs ${
-                        litter.status === "Active" 
-                          ? "bg-green-100 text-green-800" 
-                          : litter.status === "Available Soon" 
-                            ? "bg-blue-100 text-blue-800"
-                            : litter.status === "All Reserved"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : litter.status === "All Sold"
-                                ? "bg-gray-100 text-gray-800"
-                                : "bg-gray-100 text-gray-800"
-                      }`}>
-                        {litter.status}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <LitterCard
+                key={litter.id}
+                litter={litter}
+                onEdit={handleEditLitter}
+                onDelete={handleDeleteLitter}
+              />
             ))
           )}
         </div>
@@ -472,26 +250,24 @@ const LitterManagement = () => {
         </div>
       )}
 
-      {litterToDeleteId && (
-        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the litter
-                and remove its data from our servers. Associated puppies will NOT be deleted but will lose their litter association.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => { setShowDeleteDialog(false); setLitterToDeleteId(null); }}>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={confirmDeleteLitter} disabled={deleteLitterMutation.isPending}>
-                {deleteLitterMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Yes, delete litter
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the litter
+              and remove its data from our servers. Associated puppies will NOT be deleted but will lose their litter association.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => { setShowDeleteDialog(false); setLitterToDeleteId(null); }}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteLitter} disabled={deleteLitterMutation.isPending}>
+              {deleteLitterMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Yes, delete litter
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

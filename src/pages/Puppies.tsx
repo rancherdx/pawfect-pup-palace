@@ -11,7 +11,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { puppiesApi } from "@/api";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2 } from "lucide-react";
 import { calculateAge } from "@/utils/dateUtils";
 
 const Puppies = () => {
@@ -20,7 +19,6 @@ const Puppies = () => {
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(false);
   const [breeds, setBreeds] = useState<string[]>([]);
   
-  // Fetch all puppies
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['puppies'],
     queryFn: () => puppiesApi.getAllPuppies(),
@@ -28,7 +26,6 @@ const Puppies = () => {
 
   const [filteredPuppies, setFilteredPuppies] = useState<any[]>([]);
 
-  // Extract unique breeds when data is loaded
   useEffect(() => {
     if (data?.puppies) {
       const uniqueBreeds = Array.from(new Set(
@@ -50,14 +47,17 @@ const Puppies = () => {
     let filtered = data.puppies;
     
     if (selectedBreed !== "All Breeds") {
-      filtered = filtered.filter((puppy: any) => puppy.breed === selectedBreed);
+      filtered = filtered.filter((puppy: any) => {
+        const puppyBreed = typeof puppy.breed === 'string' ? puppy.breed : '';
+        return puppyBreed === selectedBreed;
+      });
     }
     
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter((puppy: any) => 
         puppy.name?.toLowerCase().includes(term) || 
-        puppy.breed?.toLowerCase().includes(term)
+        (typeof puppy.breed === 'string' && puppy.breed.toLowerCase().includes(term))
       );
     }
     
@@ -172,7 +172,7 @@ const Puppies = () => {
                     key={puppy.id}
                     id={puppy.id.toString()}
                     name={puppy.name}
-                    breed={puppy.breed}
+                    breed={typeof puppy.breed === 'string' ? puppy.breed : ''}
                     age={calculateAge(puppy.birthDate)}
                     gender={puppy.gender}
                     imageSrc={puppy.photoUrl || "https://images.unsplash.com/photo-1591160690555-5debfba289f0?ixlib=rb-4.0.3"}
