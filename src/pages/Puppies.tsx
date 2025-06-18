@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import HeroSection from "@/components/HeroSection";
@@ -37,7 +38,7 @@ const Puppies = () => {
             return typeof breed === 'string' ? breed : '';
           })
           .filter((breed: string) => breed.length > 0)
-      ));
+      )) as string[];
       setBreeds(["All Breeds", ...uniqueBreeds]);
       setFilteredPuppies(data.puppies);
     }
