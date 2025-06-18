@@ -1,5 +1,5 @@
 
-import { Router, IRequest } from 'itty-router';
+import { IRequest } from 'itty-router';
 import { corsHeaders } from '../utils/cors';
 import type { Env } from '../env';
 import { verifyJwtAuth, adminAuthMiddleware } from '../auth';
@@ -12,7 +12,7 @@ import { listIntegrations, updateIntegration } from '../controllers/integrations
 import { listDataDeletionRequests, getDataDeletionRequestById, updateDataDeletionRequestStatus } from '../controllers/adminPrivacyController';
 import { createAdminTestSession, createImpersonationSession, getTestSessionLogs } from '../controllers/adminTestController';
 
-export const adminRoutes = (router: Router) => {
+export const adminRoutes = (router: any) => {
   // User Management (Admin)
   router.get('/api/admin/users', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
     const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
@@ -65,7 +65,8 @@ export const adminRoutes = (router: Router) => {
     if (!authResult.decodedToken) {
       return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
     }
-    return updatePuppy(request as unknown as Request, env, authResult.decodedToken);
+    const params = request.params || {};
+    return updatePuppy(request as unknown as Request, env, authResult.decodedToken, params.id);
   });
 
   router.delete('/api/admin/puppies/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
@@ -83,21 +84,33 @@ export const adminRoutes = (router: Router) => {
   router.post('/api/admin/litters', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
     const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
     if (authResponse) return authResponse;
-    return createLitter(request as unknown as Request, env);
+    const authResult = await verifyJwtAuth(request as unknown as Request, env);
+    if (!authResult.decodedToken) {
+      return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
+    }
+    return createLitter(request as unknown as Request, env, authResult.decodedToken);
   });
 
   router.put('/api/admin/litters/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
     const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
     if (authResponse) return authResponse;
     const params = request.params || {};
-    return updateLitter(request as unknown as Request, env, params.id);
+    const authResult = await verifyJwtAuth(request as unknown as Request, env);
+    if (!authResult.decodedToken) {
+      return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
+    }
+    return updateLitter(request as unknown as Request, env, authResult.decodedToken, params.id);
   });
 
   router.delete('/api/admin/litters/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
     const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
     if (authResponse) return authResponse;
     const params = request.params || {};
-    return deleteLitter(request as unknown as Request, env, params.id);
+    const authResult = await verifyJwtAuth(request as unknown as Request, env);
+    if (!authResult.decodedToken) {
+      return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
+    }
+    return deleteLitter(request as unknown as Request, env, authResult.decodedToken, params.id);
   });
 
   // Site Settings (Admin)

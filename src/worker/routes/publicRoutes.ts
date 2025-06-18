@@ -1,5 +1,5 @@
 
-import { Router, IRequest } from 'itty-router';
+import { IRequest } from 'itty-router';
 import { corsHeaders } from '../utils/cors';
 import type { Env } from '../env';
 import { requestDataDeletion } from '../controllers/privacyController';
@@ -8,7 +8,7 @@ import { getAllLitters, getLitterById } from '../controllers/litters';
 import { getSiteSettings as getPublicSiteSettings } from '../controllers/settings';
 import { getSystemStatus, getSystemUptime } from '../controllers/systemStatusController';
 
-export const publicRoutes = (router: Router) => {
+export const publicRoutes = (router: any) => {
   // Privacy routes
   router.post('/api/privacy/deletion-request', (request: IRequest, env: Env, ctx: ExecutionContext) => 
     requestDataDeletion(request as unknown as Request, env));

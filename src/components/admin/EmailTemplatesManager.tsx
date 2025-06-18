@@ -32,11 +32,11 @@ const EmailTemplatesManager: React.FC = () => {
   const { data: templatesData, isLoading, isError, error } = useQuery({
     queryKey: ['emailTemplates'],
     queryFn: async () => {
-      const response = await apiRequest<any>('/admin/email-templates');
-      return response.templates || response;
+      const response = await apiRequest<{ templates?: EmailTemplate[] }>('/admin/email-templates');
+      return response.templates || [];
     },
     staleTime: 5 * 60 * 1000,
-    select: (data: any[]) => data.map(t => ({ ...t, is_editable_in_admin: !t.is_system_template })),
+    select: (data: EmailTemplate[]) => data.map(t => ({ ...t, is_editable_in_admin: !t.is_system_template })),
   });
 
   const templates = templatesData || [];

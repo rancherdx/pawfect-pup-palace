@@ -1,5 +1,5 @@
 
-import { Router, IRequest } from 'itty-router';
+import { IRequest } from 'itty-router';
 import { corsHeaders } from '../utils/cors';
 import type { Env } from '../env';
 import { verifyJwtAuth } from '../auth';
@@ -7,7 +7,7 @@ import { getCurrentUser, updateUserProfile } from '../controllers/users';
 import { getMyPuppies, getPuppyHealthRecords, addPuppyHealthRecord } from '../controllers/puppies';
 import { getMyConversations, getMessagesForConversation, sendMessage, startConversation } from '../controllers/chat';
 
-export const protectedRoutes = (router: Router) => {
+export const protectedRoutes = (router: any) => {
   router.get('/api/users/me', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
     const authResult = await verifyJwtAuth(request as unknown as Request, env);
     if (!authResult.authenticated || !authResult.decodedToken) {
