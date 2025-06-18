@@ -66,7 +66,7 @@ export const adminRoutes = (router: any) => {
       return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
     }
     const params = request.params || {};
-    return updatePuppy(request as unknown as Request, env, authResult.decodedToken, params.id);
+    return updatePuppy(request as unknown as Request, env, params.id);
   });
 
   router.delete('/api/admin/puppies/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
@@ -77,7 +77,7 @@ export const adminRoutes = (router: any) => {
     if (!authResult.decodedToken) {
       return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
     }
-    return deletePuppy(request as unknown as Request, env, authResult.decodedToken, params.id);
+    return deletePuppy(request as unknown as Request, env, params.id);
   });
 
   // Litter Management (Admin)
@@ -99,7 +99,7 @@ export const adminRoutes = (router: any) => {
     if (!authResult.decodedToken) {
       return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
     }
-    return updateLitter(request as unknown as Request, env, authResult.decodedToken, params.id);
+    return updateLitter(request as unknown as Request, env, params.id);
   });
 
   router.delete('/api/admin/litters/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
@@ -110,7 +110,7 @@ export const adminRoutes = (router: any) => {
     if (!authResult.decodedToken) {
       return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
     }
-    return deleteLitter(request as unknown as Request, env, authResult.decodedToken, params.id);
+    return deleteLitter(request as unknown as Request, env, params.id);
   });
 
   // Site Settings (Admin)
