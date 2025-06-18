@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -126,7 +127,7 @@ const PuppyManagement = () => {
     puppy.breed.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const isMutationLoading = createPuppyMutation.isLoading || updatePuppyMutation.isLoading;
+  const isMutationLoading = createPuppyMutation.isPending || updatePuppyMutation.isPending;
 
   return (
     <div className="space-y-6">
@@ -222,8 +223,8 @@ const PuppyManagement = () => {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel onClick={() => { setShowDeleteDialog(false); setPuppyToDeleteId(null); }}>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={confirmDeletePuppy} disabled={deletePuppyMutation.isLoading}>
-                {deletePuppyMutation.isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              <AlertDialogAction onClick={confirmDeletePuppy} disabled={deletePuppyMutation.isPending}>
+                {deletePuppyMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Yes, delete puppy
               </AlertDialogAction>
             </AlertDialogFooter>

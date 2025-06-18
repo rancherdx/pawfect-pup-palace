@@ -1,3 +1,4 @@
+
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Section from "@/components/Section";
@@ -69,7 +70,7 @@ const PuppyDetails = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Puppy Images Carousel */}
             <PuppyImageCarousel 
-              images={puppy.image_url ? [puppy.image_url] : []} 
+              images={puppy.photoUrl ? [puppy.photoUrl] : []} 
               name={puppy.name} 
             />
 
@@ -81,7 +82,8 @@ const PuppyDetails = () => {
                 age: puppyAge,
                 weight: puppy.weight?.toString() || 'N/A',
                 color: puppy.color || 'N/A',
-                available: puppy.status === 'Available'
+                available: puppy.status === 'Available',
+                gender: puppy.gender || 'Unknown'
               }} 
               puppyAge={puppyAge} 
             />
@@ -90,9 +92,9 @@ const PuppyDetails = () => {
           {/* Temperament & Traits Card */}
           <div className="mt-8 mb-12">
             <TemperamentTraitsCard 
-              temperament={Array.isArray(puppy.temperament) ? puppy.temperament : puppy.temperament ? [puppy.temperament] : []}
-              trainability={puppy.trainability || 50}
-              activityLevel={puppy.activityLevel || 50}
+              temperament={Array.isArray(puppy.temperament) ? puppy.temperament : puppy.temperament ? [puppy.temperament] : ['Friendly']}
+              trainability={75} // Default value since not in puppy type
+              activityLevel={75} // Default value since not in puppy type
             />
           </div>
 

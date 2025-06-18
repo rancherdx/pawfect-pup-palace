@@ -1,10 +1,11 @@
+
 import { fetchAPI } from "@/utils/fetchAPI";
 import { User } from "@/types";
 
 const STRAPI_API_TOKEN = process.env.NEXT_PUBLIC_STRAPI_API_TOKEN;
 const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 
-const fetchAdminAPI = async (url: string, options: any = {}) => {
+export const fetchAdminAPI = async (url: string, options: any = {}) => {
   const mergedOptions = {
     headers: {
       'Content-Type': 'application/json',
@@ -34,6 +35,27 @@ export const adminApi = {
 
   deleteUser: (id: string) => 
     fetchAdminAPI(`/api/admin/users/${id}`, { method: 'DELETE' }),
+
+  // Puppies
+  getAllPuppies: async () => {
+    const response = await fetchAdminAPI('/api/admin/puppies', { method: 'GET' });
+    return { puppies: response.data || response.puppies || [], pagination: response.pagination || {} };
+  },
+
+  createPuppy: (puppyData: any) => 
+    fetchAdminAPI('/api/admin/puppies', {
+      method: 'POST',
+      body: JSON.stringify(puppyData),
+    }),
+
+  updatePuppy: (id: string, puppyData: any) => 
+    fetchAdminAPI(`/api/admin/puppies/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(puppyData),
+    }),
+
+  deletePuppy: (id: string) => 
+    fetchAdminAPI(`/api/admin/puppies/${id}`, { method: 'DELETE' }),
 
   // Stud Dogs
   getStudDogs: (params: { page?: number; limit?: number; search?: string } = {}) => 
@@ -143,34 +165,6 @@ export const adminApi = {
       method: 'DELETE',
     });
   },
-  // Puppies
-  getAllPuppies: async (filters = {}) => {
-    let query = '/api/puppies';
-    if (Object.keys(filters).length) {
-      query += '?' + new URLSearchParams(filters).toString();
-    }
-    return fetchAdminAPI(query);
-  },
-  getPuppyById: async (id: string) => {
-    return fetchAdminAPI(`/api/puppies/${id}`);
-  },
-  createPuppy: async (data: any) => {
-    return fetchAdminAPI('/api/puppies', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  },
-  updatePuppy: async (id: string, data: any) => {
-    return fetchAdminAPI(`/api/puppies/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
-  },
-  deletePuppy: async (id: string) => {
-    return fetchAdminAPI(`/api/puppies/${id}`, {
-      method: 'DELETE',
-    });
-  },
 };
 
 export const blogApi = {
@@ -190,12 +184,12 @@ export const blogApi = {
 
 export const puppiesApi = {
     getAllPuppies: async () => {
-        const query = '/api/puppies';
-        return fetchAPI(query);
+        const response = await fetchAPI('/api/puppies');
+        return { puppies: response.data || response.puppies || [] };
     },
     getPuppyById: async (id: string) => {
-        const query = `/api/puppies/${id}`;
-        return fetchAPI(query);
+        const response = await fetchAPI(`/api/puppies/${id}`);
+        return response.data || response;
     },
 };
 
@@ -228,5 +222,12 @@ export const littersApi = {
     return fetchAPI(`/api/litters/${id}`, {
       method: 'DELETE',
     });
+  },
+};
+
+export const testimonialApi = {
+  getAllPublic: async () => {
+    const response = await fetchAPI('/api/testimonials');
+    return response.data || response;
   },
 };

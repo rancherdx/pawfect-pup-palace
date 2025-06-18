@@ -1,250 +1,187 @@
-import { Link } from "react-router-dom";
+
 import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import HeroSection from "@/components/HeroSection";
 import Section from "@/components/Section";
-import PuppyCard from "@/components/PuppyCard";
 import TestimonialCard from "@/components/TestimonialCard";
-import { PawPrint, Heart, Award, CheckCircle, Loader2, AlertTriangle } from "lucide-react"; // Added AlertTriangle
-import { motion } from "framer-motion";
+import PuppyCard from "@/components/PuppyCard";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Heart, Star, Users, Award, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import { puppiesApi, testimonialApi } from "@/api";
 import { calculateAge } from "@/utils/dateUtils";
-import { Puppy, PublicPuppyListResponse } from "@/types";
-
-const FeatureCard = ({ icon: Icon, title, description }) => {
-  return (
-    <motion.div
-      whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(229, 62, 62, 0.2), 0 8px 10px -6px rgba(229, 62, 62, 0.1)" }}
-      transition={{ duration: 0.3 }}
-    >
-      <Card className="bg-background text-center p-6 h-full border-border/50">
-        <CardContent className="p-0 space-y-4">
-          <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-            <Icon className="h-8 w-8 text-primary" />
-          </div>
-          <h3 className="text-xl font-semibold">{title}</h3>
-          <p className="text-sm text-muted-foreground">
-            {description}
-          </p>
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
-};
 
 const Home = () => {
-  // Fetch featured puppies from API
-  const { data: publicPuppiesData, isLoading, error } = useQuery({
-    queryKey: ["featuredPuppies"],
-    queryFn: () => puppiesApi.getAllPuppies({ limit: 3 }), // This returns { puppies, pagination }
+  const { data: puppiesData, isLoading: puppiesLoading } = useQuery({
+    queryKey: ['featured-puppies'],
+    queryFn: () => puppiesApi.getAllPuppies(),
   });
-  // Fix: The returned object is { puppies, pagination }
-  const featuredPuppies = publicPuppiesData?.puppies || [];
 
-  // Fetch testimonials
-  const {
-    data: testimonialsData,
-    isLoading: isLoadingTestimonials,
-    error: testimonialsError
-  } = useQuery({
-    queryKey: ['publicTestimonials'],
-    queryFn: () => testimonialApi.getAllPublic({ limit: 3 }),
+  const { data: testimonialsData, isLoading: testimonialsLoading } = useQuery({
+    queryKey: ['testimonials'],
+    queryFn: () => testimonialApi.getAllPublic(),
   });
-  const testimonials = testimonialsData || [];
+
+  const featuredPuppies = puppiesData?.puppies?.slice(0, 3) || [];
+  const testimonials = Array.isArray(testimonialsData) ? testimonialsData.slice(0, 3) : [];
 
   return (
-    <div className="min-h-screen">
-      {/* Hero Section */}
+    <div>
       <HeroSection
-        title="Find Your Perfect Puppy Companion"
-        subtitle="Healthy, happy puppies raised with love. Browse our available puppies and bring home your new best friend today."
-        imageSrc="https://images.unsplash.com/photo-1546527868-ccb7ee7dfa6a?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1740&q=80"
+        title="Welcome to Golden Dreams Kennels"
+        subtitle="Where every puppy finds their perfect family and every family finds their perfect companion"
+        imageSrc="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1169&q=80"
         ctaText="View Available Puppies"
         ctaLink="/puppies"
       />
 
-      {/* Featured Puppies */}
-      <Section 
-        title="Featured Puppies" 
-        subtitle="Meet some of our adorable puppies looking for their forever homes"
-        withPawPrintBg
-        curved
-      >
-        {isLoading ? (
-          <div className="flex justify-center items-center py-16">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : error ? (
-          <div className="text-center py-16">
-            <h3 className="text-xl font-semibold mb-2">Unable to load puppies</h3>
-            <p className="text-muted-foreground mb-4">
-              We're having trouble loading the puppies right now. Please check back later.
-            </p>
+      {/* Why Choose Us Section */}
+      <Section>
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold mb-4">Why Choose Golden Dreams Kennels?</h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            We're passionate about raising healthy, happy puppies and connecting them with loving families
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <Card className="text-center">
+            <CardHeader>
+              <Heart className="h-12 w-12 text-brand-red mx-auto mb-4" />
+              <CardTitle>Health Guaranteed</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>
+                All our puppies come with health certificates and are vet-checked before going to their new homes
+              </CardDescription>
+            </CardContent>
+          </Card>
+          
+          <Card className="text-center">
+            <CardHeader>
+              <Star className="h-12 w-12 text-brand-red mx-auto mb-4" />
+              <CardTitle>Champion Bloodlines</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>
+                Our breeding program features champion bloodlines with excellent temperaments and conformation
+              </CardDescription>
+            </CardContent>
+          </Card>
+          
+          <Card className="text-center">
+            <CardHeader>
+              <Users className="h-12 w-12 text-brand-red mx-auto mb-4" />
+              <CardTitle>Lifetime Support</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>
+                We provide ongoing support and guidance throughout your puppy's life - we're always here to help
+              </CardDescription>
+            </CardContent>
+          </Card>
+        </div>
+      </Section>
+
+      {/* Featured Puppies Section */}
+      <Section className="bg-muted/30">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold mb-4">Featured Puppies</h2>
+          <p className="text-lg text-muted-foreground">
+            Meet some of our adorable puppies looking for their forever homes
+          </p>
+        </div>
+        
+        {puppiesLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="animate-pulse">
+                <div className="bg-gray-200 h-64 rounded-lg mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+              </div>
+            ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredPuppies.map((puppy: Puppy, index) => (
-              <motion.div
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            {featuredPuppies.map((puppy) => (
+              <PuppyCard
                 key={puppy.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.2 }}
-                viewport={{ once: true }}
-              >
-                <PuppyCard
-                  id={puppy.id.toString()}
-                  name={puppy.name}
-                  breed={puppy.breed}
-                  age={calculateAge(puppy.birthDate)} // Use birthDate
-                  gender={puppy.gender}
-                  imageSrc={puppy.photoUrl || "https://images.unsplash.com/photo-1591160690555-5debfba289f0?ixlib=rb-4.0.3"} // Use photoUrl
-                  price={puppy.price}
-                  status={puppy.status} // Pass status for PuppyCard
-                />
-              </motion.div>
+                id={puppy.id}
+                name={puppy.name}
+                breed={puppy.breed}
+                age={calculateAge(puppy.birthDate)}
+                gender={puppy.gender}
+                imageSrc={puppy.photoUrl || "https://images.unsplash.com/photo-1591160690555-5debfba289f0?ixlib=rb-4.0.3"}
+                price={puppy.price}
+                status={puppy.status}
+              />
             ))}
           </div>
         )}
         
-        <div className="text-center mt-12">
-          <Button asChild variant="outline" size="lg" className="rounded-full border-brand-red/30 hover:bg-brand-red/5">
-            <Link to="/puppies">View All Puppies</Link>
+        <div className="text-center">
+          <Button asChild size="lg" className="bg-brand-red hover:bg-red-700">
+            <Link to="/puppies">
+              View All Puppies <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
           </Button>
         </div>
       </Section>
 
-      {/* Why Choose Us */}
-      <Section
-        title="Why Choose Our Puppies"
-        subtitle="We take pride in our responsible breeding practices and the care we provide to our puppies"
-        className="bg-secondary"
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <FeatureCard
-            icon={Heart}
-            title="Loving Care"
-            description="Our puppies are raised in a loving home environment with daily socialization."
-          />
-          
-          <FeatureCard
-            icon={Award}
-            title="Health Guarantee"
-            description="All our puppies come with a comprehensive health guarantee and full vet check."
-          />
-          
-          <FeatureCard
-            icon={CheckCircle}
-            title="Ethical Breeding"
-            description="We follow responsible breeding practices and prioritize the health of our dogs."
-          />
-          
-          <FeatureCard
-            icon={PawPrint}
-            title="Ongoing Support"
-            description="We provide lifelong support and guidance for your new puppy."
-          />
-        </div>
-      </Section>
-
       {/* Testimonials Section */}
-      <Section
-        title="What Our Customers Say"
-        subtitle="Happy families and their furry friends"
-        withPawPrintBg
-        curved
-      >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {isLoadingTestimonials ? (
-            Array.from({ length: 3 }).map((_, index) => (
-              <div key={index} className="bg-background p-6 rounded-lg shadow-md animate-pulse">
-                <div className="h-4 bg-muted rounded w-1/3 mb-2"></div>
-                <div className="h-3 bg-muted rounded w-1/4 mb-4"></div>
-                <div className="h-20 bg-muted rounded mb-4"></div>
-                <div className="flex items-center">
-                  {/* Simplified skeleton for stars */}
-                  <div className="h-5 w-20 bg-muted rounded"></div>
-                </div>
-              </div>
-            ))
-          ) : testimonialsError ? (
-            <div className="col-span-full text-center py-8 text-red-600 bg-red-50 p-4 rounded-md">
-              <AlertTriangle className="mx-auto h-8 w-8 mb-2" />
-              <p>Could not load testimonials at this time.</p>
-            </div>
-          ) : testimonials.length === 0 ? (
-            <div className="col-span-full text-center py-8 text-muted-foreground">
-              <p>No testimonials yet. Check back soon!</p>
-            </div>
-          ) : (
-            testimonials.map((testimonial, index) => (
-              <motion.div
-                key={testimonial.id} // Use testimonial.id from API
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.2 }}
-                viewport={{ once: true }}
-              >
-                <TestimonialCard
-                  name={testimonial.name}
-                  location={testimonial.location}
-                  testimonial={testimonial.testimonial_text} // Assuming API returns testimonial_text
-                  rating={testimonial.rating}
-                  puppyName={testimonial.puppy_name} // Assuming API returns puppy_name
-                  // imageUrl={testimonial.image_url} // If TestimonialCard supports image_url
-                />
-              </motion.div>
-            ))
-          )}
+      <Section>
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold mb-4">Happy Families</h2>
+          <p className="text-lg text-muted-foreground">
+            Here's what our families have to say about their experience with us
+          </p>
         </div>
         
-        <div className="text-center mt-12">
-          <Button asChild variant="outline" size="lg" className="rounded-full border-brand-red/30 hover:bg-brand-red/5">
-            <Link to="/reviews">Read More Reviews</Link>
+        {testimonialsLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="animate-pulse">
+                <div className="bg-gray-200 h-32 rounded-lg mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            {testimonials.map((testimonial) => (
+              <TestimonialCard key={testimonial.id} {...testimonial} />
+            ))}
+          </div>
+        )}
+        
+        <div className="text-center">
+          <Button asChild variant="outline" size="lg">
+            <Link to="/reviews">View All Reviews</Link>
           </Button>
         </div>
       </Section>
 
       {/* CTA Section */}
       <Section className="bg-brand-red text-white">
-        <motion.div 
-          className="text-center max-w-3xl mx-auto"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-        >
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Meet Your New Best Friend?</h2>
-          <p className="mb-8 text-white/90">
-            Browse our available puppies or contact us to learn more about our adoption process.
-            We're here to help you find the perfect puppy for your family.
+        <div className="text-center">
+          <Award className="h-16 w-16 mx-auto mb-6" />
+          <h2 className="text-3xl font-bold mb-4">Ready to Find Your Perfect Companion?</h2>
+          <p className="text-xl mb-8 opacity-90">
+            Browse our available puppies or get in touch to learn more about our breeding program
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" variant="default" className="bg-white text-brand-red hover:bg-gray-100 rounded-full">
-              <Link to="/puppies">Available Puppies</Link>
+            <Button asChild size="lg" variant="secondary">
+              <Link to="/puppies">Browse Puppies</Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="border-white text-white hover:bg-white/20 rounded-full">
+            <Button asChild size="lg" variant="outline" className="bg-transparent border-white text-white hover:bg-white hover:text-brand-red">
               <Link to="/contact">Contact Us</Link>
             </Button>
           </div>
-        </motion.div>
+        </div>
       </Section>
-      
-      {/* Paw Print Trail Animation */}
-      <div className="relative h-24 overflow-hidden">
-        <motion.div
-          className="absolute"
-          initial={{ left: "-100px", bottom: "20px" }}
-          animate={{ left: "calc(100% + 100px)" }}
-          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-        >
-          <div className="flex space-x-8">
-            {[...Array(8)].map((_, i) => (
-              <PawPrint key={i} className="h-8 w-8 text-brand-red opacity-20" />
-            ))}
-          </div>
-        </motion.div>
-      </div>
     </div>
   );
 };

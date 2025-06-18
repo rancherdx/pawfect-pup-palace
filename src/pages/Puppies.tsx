@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import HeroSection from "@/components/HeroSection";
@@ -30,7 +31,7 @@ const Puppies = () => {
   // Extract unique breeds when data is loaded
   useEffect(() => {
     if (data?.puppies) {
-      const uniqueBreeds = Array.from(new Set(data.puppies.map((puppy: any) => puppy.breed)));
+      const uniqueBreeds = Array.from(new Set(data.puppies.map((puppy: any) => puppy.breed).filter(Boolean)));
       setBreeds(["All Breeds", ...uniqueBreeds]);
       setFilteredPuppies(data.puppies);
     }
@@ -48,8 +49,8 @@ const Puppies = () => {
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter((puppy: any) => 
-        puppy.name.toLowerCase().includes(term) || 
-        puppy.breed.toLowerCase().includes(term)
+        puppy.name?.toLowerCase().includes(term) || 
+        puppy.breed?.toLowerCase().includes(term)
       );
     }
     
@@ -165,10 +166,11 @@ const Puppies = () => {
                     id={puppy.id.toString()}
                     name={puppy.name}
                     breed={puppy.breed}
-                    age={calculateAge(puppy.birth_date)}
+                    age={calculateAge(puppy.birthDate)}
                     gender={puppy.gender}
-                    imageSrc={puppy.image_url || "https://images.unsplash.com/photo-1591160690555-5debfba289f0?ixlib=rb-4.0.3"}
+                    imageSrc={puppy.photoUrl || "https://images.unsplash.com/photo-1591160690555-5debfba289f0?ixlib=rb-4.0.3"}
                     price={puppy.price}
+                    status={puppy.status || 'Available'}
                   />
                 ))}
               </div>
