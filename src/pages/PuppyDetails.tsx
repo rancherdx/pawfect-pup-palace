@@ -1,4 +1,3 @@
-
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Section from "@/components/Section";
@@ -69,16 +68,29 @@ const PuppyDetails = () => {
           {/* Puppy Hero Section */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Puppy Images Carousel */}
-            <PuppyImageCarousel images={puppy.images} name={puppy.name} />
+            <PuppyImageCarousel 
+              images={puppy.image_url ? [puppy.image_url] : []} 
+              name={puppy.name} 
+            />
 
             {/* Puppy Info */}
-            <PuppyInfoSection puppy={puppy} puppyAge={puppyAge} />
+            <PuppyInfoSection 
+              puppy={{
+                ...puppy,
+                growthProgress: 75, // Default value
+                age: puppyAge,
+                weight: puppy.weight?.toString() || 'N/A',
+                color: puppy.color || 'N/A',
+                available: puppy.status === 'Available'
+              }} 
+              puppyAge={puppyAge} 
+            />
           </div>
 
           {/* Temperament & Traits Card */}
           <div className="mt-8 mb-12">
             <TemperamentTraitsCard 
-              temperament={puppy.temperament || []}
+              temperament={Array.isArray(puppy.temperament) ? puppy.temperament : puppy.temperament ? [puppy.temperament] : []}
               trainability={puppy.trainability || 50}
               activityLevel={puppy.activityLevel || 50}
             />

@@ -5,7 +5,7 @@ import { Plus, Edit, Trash, Search, Loader2, FileText, CheckCircle, XCircle } fr
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '@/api';
 import { toast } from 'sonner';
-import { BlogPost, BlogPostStatus, BlogPostCreationData, BlogPostUpdateData } from "@/types";
+import { BlogPost, BlogPostStatus, BlogPostCreateData, BlogPostUpdateData } from "@/types";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,16 +31,14 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
-const initialFormData: BlogPostCreationData = {
+const initialFormData: BlogPostCreateData = {
   title: "",
   slug: "",
   content: "",
-  author: "",
   category: "",
   status: "draft",
-  publishedAt: new Date().toISOString(),
   featuredImageUrl: "",
-  shortDescription: "",
+  excerpt: "",
 };
 
 const BLOG_POST_STATUS_VALUES: BlogPostStatus[] = ["draft", "published", "archived"];
@@ -49,7 +47,7 @@ const BlogManager = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [currentPost, setCurrentPost] = useState<BlogPost | null>(null);
-  const [formData, setFormData] = useState<BlogPostCreationData>(initialFormData);
+  const [formData, setFormData] = useState<BlogPostCreateData>(initialFormData);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [postToDeleteId, setPostToDeleteId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | BlogPostStatus>("all");
@@ -58,14 +56,14 @@ const BlogManager = () => {
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['blogPosts', { filter }],
-    queryFn: () => adminApi.getPosts({ status: filter === "all" ? undefined : filter }),
+    queryFn: () => adminApi.getAllPosts({ status: filter === "all" ? undefined : filter }),
     staleTime: 5 * 60 * 1000,
   });
 
   const posts: BlogPost[] = data?.posts || [];
 
   const addPostMutation = useMutation({
-    mutationFn: (newData: BlogPostCreationData) => adminApi.createPost(newData),
+    mutationFn: (newData: BlogPostCreateData) => adminApi.createPost(newData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['blogPosts'] });
       toast.success('Blog post added successfully!');
@@ -109,9 +107,13 @@ const BlogManager = () => {
   useEffect(() => {
     if (currentPost && showForm) {
       setFormData({
-        ...initialFormData,
-        ...currentPost,
-        publishedAt: currentPost.publishedAt ? new Date(currentPost.publishedAt).toISOString() : new Date().toISOString(),
+        title: currentPost.title,
+        slug: currentPost.slug,
+        content: currentPost.content,
+        category: currentPost.category || "",
+        status: currentPost.status,
+        featuredImageUrl: currentPost.featuredImageUrl || "",
+        excerpt: currentPost.excerpt || "",
       });
     } else {
       setFormData(initialFormData);
@@ -142,14 +144,14 @@ const BlogManager = () => {
 
   const handleSavePost = (e: React.FormEvent) => {
     e.preventDefault();
-    const payload: BlogPostCreationData | BlogPostUpdateData = {
+    const payload: BlogPostCreateData | BlogPostUpdateData = {
       ...formData,
     };
 
     if (currentPost && currentPost.id) {
       updatePostMutation.mutate({ id: currentPost.id, data: payload as BlogPostUpdateData });
     } else {
-      addPostMutation.mutate(payload as BlogPostCreationData);
+      addPostMutation.mutate(payload as BlogPostCreateData);
     }
   };
 
@@ -165,7 +167,7 @@ const BlogManager = () => {
 
   const filteredPosts: BlogPost[] = posts.filter(post =>
     post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    post.category.toLowerCase().includes(searchQuery.toLowerCase())
+    (post.category && post.category.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const isMutationLoading = addPostMutation.isPending || updatePostMutation.isPending;
@@ -200,7 +202,7 @@ const BlogManager = () => {
         </div>
       </div>
 
-      <BlogFilter value={filter} onChange={value => setFilter(value as "all" | BlogPostStatus)} />
+      <BlogFilter value={filter} onChange={(value) => setFilter(value)} />
 
       {showForm ? (
 
@@ -246,24 +248,9 @@ const BlogManager = () => {
                     </div>
                     <div>
                       <Label className="block text-lg font-medium mb-1">
-                        Author
-                      </Label>
-                      <Input
-                        required
-                        type="text"
-                        name="author"
-                        value={formData.author}
-                        onChange={handleInputChange}
-                        placeholder="Enter author name"
-                        className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                      />
-                    </div>
-                    <div>
-                      <Label className="block text-lg font-medium mb-1">
                         Category
                       </Label>
                       <Input
-                        required
                         type="text"
                         name="category"
                         value={formData.category}
@@ -274,13 +261,13 @@ const BlogManager = () => {
                     </div>
                     <div>
                       <Label className="block text-lg font-medium mb-1">
-                        Short Description
+                        Excerpt
                       </Label>
                       <Textarea
-                        name="shortDescription"
-                        value={formData.shortDescription}
+                        name="excerpt"
+                        value={formData.excerpt}
                         onChange={handleInputChange}
-                        placeholder="Enter short description"
+                        placeholder="Enter excerpt"
                         className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
                       />
                     </div>
@@ -297,20 +284,6 @@ const BlogManager = () => {
                         value={formData.featuredImageUrl}
                         onChange={handleInputChange}
                         placeholder="Enter featured image URL"
-                        className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                      />
-                    </div>
-
-                    <div>
-                      <Label className="block text-lg font-medium mb-1">
-                        Published At
-                      </Label>
-                      <Input
-                        required
-                        type="datetime-local"
-                        name="publishedAt"
-                        value={formData.publishedAt}
-                        onChange={handleInputChange}
                         className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
                       />
                     </div>
@@ -391,8 +364,10 @@ const BlogManager = () => {
                   <TableRow key={post.id}>
                     <TableCell className="font-medium">{post.title}</TableCell>
                     <TableCell>{post.category}</TableCell>
-                    <TableCell>{post.author}</TableCell>
-                    <TableCell>{format(new Date(post.publishedAt), 'MMM dd, yyyy')}</TableCell>
+                    <TableCell>
+                      {typeof post.author === 'string' ? post.author : post.author?.name || 'Anonymous'}
+                    </TableCell>
+                    <TableCell>{post.publishedAt ? format(new Date(post.publishedAt), 'MMM dd, yyyy') : 'Not published'}</TableCell>
                     <TableCell>
                       {post.status === 'draft' && (
                         <div className="flex items-center gap-1"><FileText className="w-4 h-4 text-gray-500" /> Draft</div>

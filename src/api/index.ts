@@ -1,101 +1,232 @@
+import { fetchAPI } from "@/utils/fetchAPI";
+import { User } from "@/types";
 
-// --- REAL imports that exist ---
-import * as puppiesApi from './puppiesApi';
-import * as littersApi from './littersApi';
+const STRAPI_API_TOKEN = process.env.NEXT_PUBLIC_STRAPI_API_TOKEN;
+const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 
-// --- fetchAdminAPI STUB (for admin pages expecting fetchAdminAPI as a default function) ---
-/** Dummy fetchAdminAPI implementation for wiring up admin pages. Replace with real API as appropriate. */
-const fetchAdminAPI = async (url: string, options?: RequestInit) => {
-  // Simulate both keys always present for type compatibility
-  if (url.includes("users")) {
-    return {
-      users: [],
-      currentPage: 1,
-      totalPages: 1,
-      totalUsers: 0,
-      studDogs: [],
-      totalStudDogs: 0,
-      limit: 10,
-    };
-  }
-  if (url.includes("stud-dogs")) {
-    return {
-      studDogs: [],
-      users: [],
-      currentPage: 1,
-      totalPages: 1,
-      totalStudDogs: 0,
-      totalUsers: 0,
-      limit: 10,
-    };
-  }
-  // Fallback: include both keys to satisfy both type checks
-  return {
-    users: [],
-    studDogs: [],
-    currentPage: 1,
-    totalPages: 1,
-    totalUsers: 0,
-    totalStudDogs: 0,
-    limit: 10,
+const fetchAdminAPI = async (url: string, options: any = {}) => {
+  const mergedOptions = {
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${STRAPI_API_TOKEN}`,
+    },
+    ...options,
   };
+
+  const response = await fetch(`${STRAPI_API_URL}${url}`, mergedOptions);
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to fetch data');
+  }
+  return await response.json();
 };
 
-// --- ADMIN API STUB: stub out all required admin methods so TS doesn't error ---
-const adminApi = {
-  // Puppies
-  getAllPuppies: async () => ({ puppies: [], pagination: {} }),
-  createPuppy: async (_data: any) => ({}),
-  updatePuppy: async (_id: string, _data: any) => ({}),
-  deletePuppy: async (_id: string) => ({}),
-  syncPuppyWithSquare: async (_id: string) => ({}),
-  // Litters
-  getAllLitters: async () => ({ litters: [], pagination: {} }),
-  createLitter: async (_data: any) => ({}),
-  updateLitter: async (_id: string, _data: any) => ({}),
-  deleteLitter: async (_id: string) => ({}),
-  // Breed Templates
-  getBreedTemplates: async () => [],
+export const adminApi = {
+  // Users
+  getAllUsers: (params: { page?: number; limit?: number; search?: string } = {}) => 
+    fetchAdminAPI('/api/admin/users', { method: 'GET' }),
+  
+  updateUser: (id: string, userData: any) => 
+    fetchAdminAPI(`/api/admin/users/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(userData),
+    }),
+
+  deleteUser: (id: string) => 
+    fetchAdminAPI(`/api/admin/users/${id}`, { method: 'DELETE' }),
+
+  // Stud Dogs
+  getStudDogs: (params: { page?: number; limit?: number; search?: string } = {}) => 
+    fetchAdminAPI('/api/admin/stud-dogs', { method: 'GET' }),
+
+  createStudDog: (studDogData: any) => 
+    fetchAdminAPI('/api/admin/stud-dogs', {
+      method: 'POST',
+      body: JSON.stringify(studDogData),
+    }),
+
+  updateStudDog: (id: string, studDogData: any) => 
+    fetchAdminAPI(`/api/admin/stud-dogs/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(studDogData),
+    }),
+
+  deleteStudDog: (id: string) => 
+    fetchAdminAPI(`/api/admin/stud-dogs/${id}`, { method: 'DELETE' }),
+
+  // Blog Posts
+  getAllPosts: (params: { status?: string; page?: number; limit?: number } = {}) => 
+    fetchAdminAPI('/api/admin/blog-posts', { method: 'GET' }),
+
+  createPost: (postData: any) => 
+    fetchAdminAPI('/api/admin/blog-posts', {
+      method: 'POST',
+      body: JSON.stringify(postData),
+    }),
+
+  updatePost: (id: string, postData: any) => 
+    fetchAdminAPI(`/api/admin/blog-posts/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(postData),
+    }),
+
+  deletePost: (id: string) => 
+    fetchAdminAPI(`/api/admin/blog-posts/${id}`, { method: 'DELETE' }),
+
   // Testimonials
-  getAllTestimonials: async () => [],
-  createTestimonial: async (_data: any) => ({}),
-  updateTestimonial: async (_id: string, _data: any) => ({}),
-  deleteTestimonial: async (_id: string) => ({}),
-  // Blog Posts (needed in BlogManager)
-  deletePost: async (_id: string) => ({}),
-  updatePost: async (_id: string, _data: any) => ({}),
-  createPost: async (_data: any) => ({}),
-  // Stud Dogs, Users, etc can be added here as needed
+  getTestimonials: async () => {
+    return fetchAdminAPI('/api/testimonials');
+  },
+  createTestimonial: async (data: any) => {
+    return fetchAdminAPI('/api/testimonials', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+  updateTestimonial: async (id: string, data: any) => {
+    return fetchAdminAPI(`/api/testimonials/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+  deleteTestimonial: async (id: string) => {
+    return fetchAdminAPI(`/api/testimonials/${id}`, {
+      method: 'DELETE',
+    });
+  },
+  // Breeds
+  getBreedTemplates: async () => {
+    return fetchAdminAPI('/api/breed-templates');
+  },
+  createBreedTemplate: async (data: any) => {
+    return fetchAdminAPI('/api/breed-templates', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+  updateBreedTemplate: async (id: string, data: any) => {
+    return fetchAdminAPI(`/api/breed-templates/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+   deleteBreedTemplate: async (id: string) => {
+    return fetchAdminAPI(`/api/breed-templates/${id}`, {
+      method: 'DELETE',
+    });
+  },
+  // Litters
+  getAllLitters: async (filters = {}) => {
+    let query = '/api/litters';
+    if (Object.keys(filters).length) {
+      query += '?' + new URLSearchParams(filters).toString();
+    }
+    return fetchAdminAPI(query);
+  },
+  getLitterById: async (id: string) => {
+    return fetchAdminAPI(`/api/litters/${id}`);
+  },
+  createLitter: async (data: any) => {
+    return fetchAdminAPI('/api/litters', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+  updateLitter: async (id: string, data: any) => {
+    return fetchAdminAPI(`/api/litters/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+  deleteLitter: async (id: string) => {
+    return fetchAdminAPI(`/api/litters/${id}`, {
+      method: 'DELETE',
+    });
+  },
+  // Puppies
+  getAllPuppies: async (filters = {}) => {
+    let query = '/api/puppies';
+    if (Object.keys(filters).length) {
+      query += '?' + new URLSearchParams(filters).toString();
+    }
+    return fetchAdminAPI(query);
+  },
+  getPuppyById: async (id: string) => {
+    return fetchAdminAPI(`/api/puppies/${id}`);
+  },
+  createPuppy: async (data: any) => {
+    return fetchAdminAPI('/api/puppies', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+  updatePuppy: async (id: string, data: any) => {
+    return fetchAdminAPI(`/api/puppies/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+  deletePuppy: async (id: string) => {
+    return fetchAdminAPI(`/api/puppies/${id}`, {
+      method: 'DELETE',
+    });
+  },
 };
 
-// --- TESTIMONIAL API stub ---
-const testimonialApi = {
-  getAllPublic: async (_params?: any) => [],
-  getAllTestimonials: async () => [],
-  createTestimonial: async (_data: any) => ({}),
-  updateTestimonial: async (_id: string, _data: any) => ({}),
-  deleteTestimonial: async (_id: string) => ({}),
+export const blogApi = {
+    getPosts: async (params: { page?: number; limit?: number; category?: string }) => {
+        let query = '/api/posts?populate=*';
+        if (params.page) query += `&pagination[page]=${params.page}`;
+        if (params.limit) query += `&pagination[pageSize]=${params.limit}`;
+        if (params.category) query += `&filters[category][$eq]=${params.category}`;
+        return fetchAPI(query);
+    },
+    getBySlug: async (slug: string) => {
+        const query = `/api/posts?filters[slug][$eq]=${slug}&populate=*`;
+        const result = await fetchAPI(query);
+        return result?.data?.[0]?.attributes;
+    },
 };
 
-// --- BLOG API stub ---
-const blogApi = {
-  getPosts: async (_params?: any) => ({ posts: [], pagination: {} }),
-  getBySlug: async (_slug: string) => ({}),
-  // CRUD here is stubbed on adminApi (for admin use)
+export const puppiesApi = {
+    getAllPuppies: async () => {
+        const query = '/api/puppies';
+        return fetchAPI(query);
+    },
+    getPuppyById: async (id: string) => {
+        const query = `/api/puppies/${id}`;
+        return fetchAPI(query);
+    },
 };
 
-// --- UPLOAD API stub ---
-const uploadApi = {
-  uploadFile: async (..._args: any[]) => ({}),
-};
-
-// --- EXPORTS ---
-export {
-  puppiesApi,
-  littersApi,
-  adminApi,
-  testimonialApi,
-  blogApi,
-  uploadApi,
-  fetchAdminAPI,
+export const littersApi = {
+  getAll: async (filters = {}) => {
+    let query = '/api/litters';
+    if (Object.keys(filters).length) {
+      query += '?' + new URLSearchParams(filters).toString();
+    }
+    return fetchAPI(query);
+  },
+  getLitterById: async (id: string) => {
+    const query = `/api/litters/${id}`;
+    return fetchAPI(query);
+  },
+  createLitter: async (data: any) => {
+    const query = `/api/litters`;
+     return fetchAPI(query, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+   updateLitter: async (id: string, data: any) => {
+    return fetchAPI(`/api/litters/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+   deleteLitter: async (id: string) => {
+    return fetchAPI(`/api/litters/${id}`, {
+      method: 'DELETE',
+    });
+  },
 };

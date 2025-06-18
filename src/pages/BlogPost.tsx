@@ -1,5 +1,5 @@
+
 import { useParams, Link, useNavigate } from "react-router-dom";
-// Removed useState, useEffect for direct useQuery usage
 import Section from "@/components/Section";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,7 +7,7 @@ import { ArrowLeft, Calendar, User, Tag, Share2, Link as LinkIcon, Loader2, Aler
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { blogApi } from "@/api";
-import { BlogPost as BlogPostType, BlogPostAuthor } from "@/types"; // Renamed BlogPost to BlogPostType to avoid conflict with component name
+import { BlogPost as BlogPostType, BlogPostAuthor } from "@/types";
 
 // Helper to display author information
 const getAuthorDisplay = (author?: BlogPostAuthor | string): string => {
@@ -16,32 +16,20 @@ const getAuthorDisplay = (author?: BlogPostAuthor | string): string => {
   return author.name;
 };
 
-const BlogPostPage = () => { // Renamed component to avoid conflict with type
+const BlogPostPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const { data: post, isLoading, isError, error } = useQuery<BlogPostType, Error>(
-    ['blogPost', slug],
-    () => {
+  const { data: post, isLoading, isError, error } = useQuery({
+    queryKey: ['blogPost', slug],
+    queryFn: () => {
       if (!slug) throw new Error("No slug provided");
       return blogApi.getBySlug(slug);
     },
-    {
-      enabled: !!slug, // Only run query if slug is available
-      retry: false, // Don't retry on 404s etc.
-    }
-  );
-
-  // For related posts, this is a placeholder.
-  // In a real app, you might fetch these based on post.relatedPosts slugs or tags/category.
-  // const { data: relatedPostsData } = useQuery<BlogPostsResponse, Error>(
-  //   ['relatedBlogPosts', post?.id],
-  //   () => blogApi.getPosts({ limit: 2, /* other params like category: post.category */ }),
-  //   { enabled: !!post && (post.relatedPosts && post.relatedPosts.length > 0) }
-  // );
-  // const relatedPostsList = relatedPostsData?.posts || [];
-
+    enabled: !!slug,
+    retry: false,
+  });
 
   const copyLinkToClipboard = () => {
     const url = window.location.href;
@@ -126,7 +114,7 @@ const BlogPostPage = () => { // Renamed component to avoid conflict with type
           <Button 
             variant="ghost" 
             size="sm" 
-            className="ml-auto -mr-2" // Adjust margin for better alignment
+            className="ml-auto -mr-2"
             onClick={copyLinkToClipboard}
           >
             <Share2 className="h-4 w-4 mr-2" />
@@ -136,7 +124,7 @@ const BlogPostPage = () => { // Renamed component to avoid conflict with type
         
         <div 
           className="prose prose-lg dark:prose-invert prose-headings:font-bold prose-a:text-primary max-w-none prose-img:rounded-md"
-          dangerouslySetInnerHTML={{ __html: post.content }} // Ensure content is sanitized if from user input
+          dangerouslySetInnerHTML={{ __html: post.content }}
         />
         
         <div className="flex items-center justify-between border-t border-b py-6 my-8">
@@ -148,45 +136,11 @@ const BlogPostPage = () => { // Renamed component to avoid conflict with type
             <Button variant="outline" size="icon" onClick={copyLinkToClipboard} title="Copy link">
               <LinkIcon className="h-4 w-4" />
             </Button>
-            {/* Additional social share buttons would go here */}
           </div>
         </div>
-        
-        {/* Placeholder for Related Posts - requires more logic or API support */}
-        {/* {relatedPostsList.length > 0 && (
-          <div className="mt-12">
-            <h2 className="text-2xl font-bold mb-6">Related Articles</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {relatedPostsList.map((relatedPost) => (
-                <Link key={relatedPost.slug} to={`/blog/${relatedPost.slug}`}>
-                  <Card className="overflow-hidden hover:shadow-md transition-shadow h-full">
-                    <div className="aspect-video w-full overflow-hidden">
-                      <img 
-                        src={relatedPost.featuredImageUrl || "https://via.placeholder.com/300x200?text=Related"}
-                        alt={relatedPost.title} 
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <CardContent className="p-4">
-                      {relatedPost.category && (
-                        <div className="bg-primary/10 text-primary px-2 py-1 rounded-full text-xs font-medium capitalize inline-block mb-2">
-                          {relatedPost.category}
-                        </div>
-                      )}
-                      <h3 className="font-bold mb-2">{relatedPost.title}</h3>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {relatedPost.excerpt}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )} */}
       </Section>
     </div>
   );
 };
 
-export default BlogPostPage; // Renamed component
+export default BlogPostPage;

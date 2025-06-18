@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import HeroSection from "@/components/HeroSection";
@@ -170,7 +169,6 @@ const Puppies = () => {
                     gender={puppy.gender}
                     imageSrc={puppy.image_url || "https://images.unsplash.com/photo-1591160690555-5debfba289f0?ixlib=rb-4.0.3"}
                     price={puppy.price}
-                    available={puppy.status === 'Available'}
                   />
                 ))}
               </div>
