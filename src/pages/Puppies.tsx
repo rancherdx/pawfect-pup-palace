@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import HeroSection from "@/components/HeroSection";
@@ -31,7 +30,11 @@ const Puppies = () => {
   // Extract unique breeds when data is loaded
   useEffect(() => {
     if (data?.puppies) {
-      const uniqueBreeds = Array.from(new Set(data.puppies.map((puppy: any) => puppy.breed).filter(Boolean)));
+      const uniqueBreeds = Array.from(new Set(
+        data.puppies
+          .map((puppy: any) => typeof puppy.breed === 'string' ? puppy.breed : '')
+          .filter((breed: string) => breed.length > 0)
+      ));
       setBreeds(["All Breeds", ...uniqueBreeds]);
       setFilteredPuppies(data.puppies);
     }

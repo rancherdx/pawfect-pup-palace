@@ -100,7 +100,7 @@ router.get('/api/puppies/:puppyId/health-records', async (request: IRequest, env
     return new Response(JSON.stringify({ error: authResult.error || 'Authentication failed' }), { status: 401, headers: corsHeaders });
   }
   const params = request.params || {};
-  return getPuppyHealthRecords(request as unknown as Request, env, params as { puppyId: string }, authResult.decodedToken);
+  return getPuppyHealthRecords(request as unknown as Request, env, authResult.decodedToken, params.puppyId);
 });
 
 router.post('/api/puppies/:puppyId/health-records', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
@@ -109,7 +109,7 @@ router.post('/api/puppies/:puppyId/health-records', async (request: IRequest, en
     return new Response(JSON.stringify({ error: authResult.error || 'Authentication failed' }), { status: 401, headers: corsHeaders });
   }
   const params = request.params || {};
-  return addPuppyHealthRecord(request as unknown as Request, env, authResult.decodedToken, params as { puppyId: string });
+  return addPuppyHealthRecord(request as unknown as Request, env, authResult.decodedToken, params.puppyId);
 });
 
 router.get('/api/my-conversations', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
@@ -174,6 +174,11 @@ router.delete('/api/admin/users/:id', async (request: IRequest, env: Env, ctx: E
 });
 
 // Puppy Management (Admin)
+router.get('/api/admin/puppies', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
+  const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
+  if (authResponse) return authResponse;
+  return getAllPuppies(request as unknown as Request, env);
+});
 router.post('/api/admin/puppies', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
   const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
   if (authResponse) return authResponse;
