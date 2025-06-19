@@ -61,10 +61,6 @@ export const adminRoutes = (router: any) => {
   router.put('/api/admin/puppies/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
     const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
     if (authResponse) return authResponse;
-    const authResult = await verifyJwtAuth(request as unknown as Request, env);
-    if (!authResult.decodedToken) {
-      return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
-    }
     const params = request.params || {};
     return updatePuppy(request as unknown as Request, env, params.id);
   });
@@ -73,10 +69,6 @@ export const adminRoutes = (router: any) => {
     const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
     if (authResponse) return authResponse;
     const params = request.params || {};
-    const authResult = await verifyJwtAuth(request as unknown as Request, env);
-    if (!authResult.decodedToken) {
-      return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
-    }
     return deletePuppy(request as unknown as Request, env, params.id);
   });
 
@@ -95,10 +87,6 @@ export const adminRoutes = (router: any) => {
     const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
     if (authResponse) return authResponse;
     const params = request.params || {};
-    const authResult = await verifyJwtAuth(request as unknown as Request, env);
-    if (!authResult.decodedToken) {
-      return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
-    }
     return updateLitter(request as unknown as Request, env, params.id);
   });
 
@@ -106,10 +94,6 @@ export const adminRoutes = (router: any) => {
     const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
     if (authResponse) return authResponse;
     const params = request.params || {};
-    const authResult = await verifyJwtAuth(request as unknown as Request, env);
-    if (!authResult.decodedToken) {
-      return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
-    }
     return deleteLitter(request as unknown as Request, env, params.id);
   });
 

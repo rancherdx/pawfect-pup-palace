@@ -40,6 +40,15 @@ export const apiRequest = async <T = any>(endpoint: string, options: RequestInit
   return response.json();
 };
 
+// Helper function to get auth headers
+export const getAuthHeaders = () => {
+  const token = localStorage.getItem('jwtToken');
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { Authorization: `Bearer ${token}` }),
+  };
+};
+
 // Auth API functions
 export const authApi = {
   login: async (credentials: { email: string; password: string }) => {
@@ -63,12 +72,15 @@ export const authApi = {
   },
   
   getProfile: async () => {
-    return apiRequest('/api/users/me');
+    return apiRequest('/api/users/me', {
+      headers: getAuthHeaders(),
+    });
   },
   
   updateProfile: async (userData: any) => {
     return apiRequest('/api/users/me/profile', {
       method: 'PUT',
+      headers: getAuthHeaders(),
       body: JSON.stringify(userData),
     });
   },
@@ -79,13 +91,4 @@ export const authApi = {
       body: JSON.stringify({ refreshToken }),
     });
   },
-};
-
-// Helper function to get auth headers
-export const getAuthHeaders = () => {
-  const token = localStorage.getItem('jwtToken');
-  return {
-    'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` }),
-  };
 };
