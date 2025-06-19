@@ -1,4 +1,3 @@
-
 import { IRequest } from 'itty-router';
 import { corsHeaders } from '../utils/cors';
 import type { Env } from '../env';
@@ -61,25 +60,23 @@ export const adminRoutes = (router: any) => {
   router.put('/api/admin/puppies/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
     const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
     if (authResponse) return authResponse;
-    const params = request.params || {};
     const authResult = await verifyJwtAuth(request as unknown as Request, env);
     if (!authResult.decodedToken) {
       return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
     }
-    // updatePuppy expects (request, env, puppyId)
-    return updatePuppy(request as unknown as Request, env, params.id);
+    // updatePuppy expects (request, env, authResult) and gets puppyId from request.params
+    return updatePuppy(request as unknown as Request, env, authResult.decodedToken);
   });
 
   router.delete('/api/admin/puppies/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
     const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
     if (authResponse) return authResponse;
-    const params = request.params || {};
     const authResult = await verifyJwtAuth(request as unknown as Request, env);
     if (!authResult.decodedToken) {
       return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
     }
-    // deletePuppy expects (request, env, puppyId)
-    return deletePuppy(request as unknown as Request, env, params.id);
+    // deletePuppy expects (request, env, authResult) and gets puppyId from request.params
+    return deletePuppy(request as unknown as Request, env, authResult.decodedToken);
   });
 
   // Litter Management (Admin)
@@ -96,24 +93,22 @@ export const adminRoutes = (router: any) => {
   router.put('/api/admin/litters/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
     const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
     if (authResponse) return authResponse;
-    const params = request.params || {};
     const authResult = await verifyJwtAuth(request as unknown as Request, env);
     if (!authResult.decodedToken) {
       return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
     }
-    // updateLitter expects (request, env, authResult)
+    // updateLitter expects (request, env, authResult) and gets litterId from request.params
     return updateLitter(request as unknown as Request, env, authResult.decodedToken);
   });
 
   router.delete('/api/admin/litters/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
     const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
     if (authResponse) return authResponse;
-    const params = request.params || {};
     const authResult = await verifyJwtAuth(request as unknown as Request, env);
     if (!authResult.decodedToken) {
       return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
     }
-    // deleteLitter expects (request, env, authResult.decodedToken)
+    // deleteLitter expects (request, env, authResult) and gets litterId from request.params
     return deleteLitter(request as unknown as Request, env, authResult.decodedToken);
   });
 
