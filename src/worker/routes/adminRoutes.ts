@@ -1,3 +1,4 @@
+
 import { IRequest } from 'itty-router';
 import { corsHeaders } from '../utils/cors';
 import type { Env } from '../env';
@@ -100,8 +101,8 @@ export const adminRoutes = (router: any) => {
     if (!authResult.decodedToken) {
       return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
     }
-    // updateLitter expects (request, env, params.id)
-    return updateLitter(request as unknown as Request, env, params.id);
+    // updateLitter expects (request, env, authResult)
+    return updateLitter(request as unknown as Request, env, authResult.decodedToken);
   });
 
   router.delete('/api/admin/litters/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
