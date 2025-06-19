@@ -1,14 +1,15 @@
+
 // Re-export all APIs from the unified API module
 export { authApi, publicApi, adminApi, littersApi, puppiesApi } from './unifiedApi';
 
 // Legacy exports for backward compatibility
 export { fetchAdminAPI } from './client';
 
-// Keep existing blog and testimonial APIs
+// Export blog and testimonial APIs from adminApi
 export const blogApi = {
-  getPosts: async (params: { page?: number; limit?: number; category?: string }) => {
-    // Implementation for blog posts if needed
-    return { data: [] };
+  getPosts: async (params: { page?: number; limit?: number; category?: string; status?: string } = {}) => {
+    const result = await adminApi.getAllPosts(params);
+    return { posts: result.posts || result.data || [] };
   },
   getBySlug: async (slug: string) => {
     // Implementation for blog post by slug if needed
@@ -18,7 +19,7 @@ export const blogApi = {
 
 export const testimonialApi = {
   getAllPublic: async () => {
-    // Implementation for testimonials if needed
-    return [];
+    const result = await adminApi.getTestimonials();
+    return result.testimonials || result.data || [];
   },
 };

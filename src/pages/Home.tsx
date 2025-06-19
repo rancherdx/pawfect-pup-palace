@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import HeroSection from "@/components/HeroSection";
 import Section from "@/components/Section";
@@ -26,6 +25,7 @@ const Home = () => {
   const featuredPuppies = puppiesData?.puppies?.slice(0, 3) || [];
   const testimonials = Array.isArray(testimonialsData) ? testimonialsData.slice(0, 3) : [];
 
+  
   return (
     <div>
       <HeroSection

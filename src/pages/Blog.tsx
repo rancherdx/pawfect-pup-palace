@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import HeroSection from "@/components/HeroSection";
@@ -6,7 +5,7 @@ import Section from "@/components/Section";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { FileText, Search, Tag, Loader2, AlertTriangle } from "lucide-react"; // Added Loader2, AlertTriangle
+import { FileText, Search, Tag, Loader2, AlertTriangle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { blogApi } from "@/api";
 import { BlogPost, BlogPostsResponse } from "@/types";
@@ -15,9 +14,9 @@ const Blog = () => {
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: blogData, isLoading, isError, error } = useQuery<BlogPostsResponse, Error>({
+  const { data: blogData, isLoading, isError, error } = useQuery({
     queryKey: ['blogPosts'],
-    queryFn: () => blogApi.getPosts({ limit: 100 }), // Fetch a good number of posts
+    queryFn: () => blogApi.getPosts({ limit: 100 }),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 

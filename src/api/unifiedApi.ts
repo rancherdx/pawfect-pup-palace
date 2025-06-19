@@ -88,7 +88,13 @@ export const publicApi = {
     if (params?.page) searchParams.set('page', params.page.toString());
     
     const query = searchParams.toString() ? `?${searchParams.toString()}` : '';
-    return apiRequest(`/puppies${query}`);
+    const result = await apiRequest(`/puppies${query}`);
+    
+    // Ensure consistent response structure
+    return {
+      puppies: result.puppies || result.data || [],
+      pagination: result.pagination || {}
+    };
   },
 
   getPuppyById: async (id: string): Promise<Puppy> => {
@@ -163,6 +169,13 @@ export const adminApi = {
   },
 
   // Puppies (Admin)
+  getAllPuppies: async () => {
+    const response = await apiRequest('/admin/puppies', {
+      headers: getAuthHeaders(),
+    });
+    return { puppies: response.data || response.puppies || [], pagination: response.pagination || {} };
+  },
+
   createPuppy: async (puppyData: any) => {
     return apiRequest('/admin/puppies', {
       method: 'POST',
@@ -187,6 +200,22 @@ export const adminApi = {
   },
 
   // Litters (Admin)
+  getAllLitters: async (filters = {}) => {
+    let query = '/admin/litters';
+    if (Object.keys(filters).length) {
+      query += '?' + new URLSearchParams(filters).toString();
+    }
+    return apiRequest(query, {
+      headers: getAuthHeaders(),
+    });
+  },
+
+  getLitterById: async (id: string) => {
+    return apiRequest(`/admin/litters/${id}`, {
+      headers: getAuthHeaders(),
+    });
+  },
+
   createLitter: async (litterData: LitterCreationData): Promise<Litter> => {
     return apiRequest('/admin/litters', {
       method: 'POST',
@@ -205,6 +234,72 @@ export const adminApi = {
 
   deleteLitter: async (id: string): Promise<{ id: string }> => {
     return apiRequest(`/admin/litters/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+  },
+
+  // Blog Posts
+  getAllPosts: async (params: { status?: string; page?: number; limit?: number } = {}) => {
+    const searchParams = new URLSearchParams();
+    if (params.status) searchParams.set('status', params.status);
+    if (params.page) searchParams.set('page', params.page.toString());
+    if (params.limit) searchParams.set('limit', params.limit.toString());
+    
+    const query = searchParams.toString() ? `?${searchParams.toString()}` : '';
+    return apiRequest(`/admin/blog-posts${query}`, {
+      headers: getAuthHeaders(),
+    });
+  },
+
+  createPost: async (postData: any) => {
+    return apiRequest('/admin/blog-posts', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(postData),
+    });
+  },
+
+  updatePost: async (id: string, postData: any) => {
+    return apiRequest(`/admin/blog-posts/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(postData),
+    });
+  },
+
+  deletePost: async (id: string) => {
+    return apiRequest(`/admin/blog-posts/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+  },
+
+  // Testimonials
+  getTestimonials: async () => {
+    return apiRequest('/admin/testimonials', {
+      headers: getAuthHeaders(),
+    });
+  },
+
+  createTestimonial: async (data: any) => {
+    return apiRequest('/admin/testimonials', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+  },
+
+  updateTestimonial: async (id: string, data: any) => {
+    return apiRequest(`/admin/testimonials/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+  },
+
+  deleteTestimonial: async (id: string) => {
+    return apiRequest(`/admin/testimonials/${id}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });
