@@ -6,7 +6,7 @@ import { listUsers, getUserByIdAdmin, updateUserAdmin, deleteUserAdmin } from '.
 import { getAllPuppies, createPuppy, updatePuppy, deletePuppy } from '../controllers/puppies';
 import { createLitter, updateLitter, deleteLitter } from '../controllers/litters';
 import { getSiteSettings as getAllSiteSettings, updateSiteSettings as updateSiteSetting } from '../controllers/settings';
-import { listEmailTemplates, getEmailTemplateById, updateEmailTemplate, updateEmailTemplate as createEmailTemplate, updateEmailTemplate as deleteEmailTemplate } from '../controllers/emailTemplates';
+import { listEmailTemplates, getEmailTemplateById, updateEmailTemplate } from '../controllers/emailTemplates';
 import { listIntegrations, updateIntegration } from '../controllers/integrations';
 import { listDataDeletionRequests, getDataDeletionRequestById, updateDataDeletionRequestStatus } from '../controllers/adminPrivacyController';
 import { createAdminTestSession, createImpersonationSession, getTestSessionLogs } from '../controllers/adminTestController';
@@ -143,7 +143,11 @@ export const adminRoutes = (router: any) => {
   router.post('/api/admin/email-templates', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
     const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
     if (authResponse) return authResponse;
-    return createEmailTemplate(request as unknown as Request, env);
+    // Since there's no createEmailTemplate function, we'll return a not implemented response
+    return new Response(JSON.stringify({ error: 'Create email template not implemented' }), {
+      status: 501,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
   });
 
   router.put('/api/admin/email-templates/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
@@ -156,8 +160,11 @@ export const adminRoutes = (router: any) => {
   router.delete('/api/admin/email-templates/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
     const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
     if (authResponse) return authResponse;
-    const params = request.params || {};
-    return deleteEmailTemplate(request as unknown as Request, env, params.id);
+    // Since there's no deleteEmailTemplate function, we'll return a not implemented response
+    return new Response(JSON.stringify({ error: 'Delete email template not implemented' }), {
+      status: 501,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
   });
 
   // Integrations (Admin)
