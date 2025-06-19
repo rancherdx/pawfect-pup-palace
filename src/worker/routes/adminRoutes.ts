@@ -1,4 +1,3 @@
-
 import { IRequest } from 'itty-router';
 import { corsHeaders } from '../utils/cors';
 import type { Env } from '../env';
@@ -62,14 +61,22 @@ export const adminRoutes = (router: any) => {
     const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
     if (authResponse) return authResponse;
     const params = request.params || {};
-    return updatePuppy(request as unknown as Request, env, params.id);
+    const authResult = await verifyJwtAuth(request as unknown as Request, env);
+    if (!authResult.decodedToken) {
+      return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
+    }
+    return updatePuppy(request as unknown as Request, env, authResult.decodedToken, params.id);
   });
 
   router.delete('/api/admin/puppies/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
     const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
     if (authResponse) return authResponse;
     const params = request.params || {};
-    return deletePuppy(request as unknown as Request, env, params.id);
+    const authResult = await verifyJwtAuth(request as unknown as Request, env);
+    if (!authResult.decodedToken) {
+      return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
+    }
+    return deletePuppy(request as unknown as Request, env, authResult.decodedToken, params.id);
   });
 
   // Litter Management (Admin)
@@ -87,7 +94,11 @@ export const adminRoutes = (router: any) => {
     const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
     if (authResponse) return authResponse;
     const params = request.params || {};
-    return updateLitter(request as unknown as Request, env, params.id);
+    const authResult = await verifyJwtAuth(request as unknown as Request, env);
+    if (!authResult.decodedToken) {
+      return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
+    }
+    return updateLitter(request as unknown as Request, env, authResult.decodedToken, params.id);
   });
 
   router.delete('/api/admin/litters/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
