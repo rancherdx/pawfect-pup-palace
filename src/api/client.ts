@@ -1,8 +1,8 @@
 
 import { fetchAPI } from "@/utils/fetchAPI";
 
-const STRAPI_API_TOKEN = process.env.NEXT_PUBLIC_STRAPI_API_TOKEN;
-const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
+const STRAPI_API_TOKEN = import.meta.env.VITE_STRAPI_API_TOKEN;
+const STRAPI_API_URL = import.meta.env.VITE_STRAPI_API_URL || '/api';
 
 export const fetchAdminAPI = async (url: string, options: any = {}) => {
   const mergedOptions = {
