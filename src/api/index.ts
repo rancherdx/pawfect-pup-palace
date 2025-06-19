@@ -8,6 +8,7 @@ export { fetchAdminAPI } from './client';
 // Export blog and testimonial APIs from adminApi
 export const blogApi = {
   getPosts: async (params: { page?: number; limit?: number; category?: string; status?: string } = {}) => {
+    const { adminApi } = await import('./unifiedApi');
     const result = await adminApi.getAllPosts(params);
     return { posts: result.posts || result.data || [] };
   },
@@ -19,6 +20,7 @@ export const blogApi = {
 
 export const testimonialApi = {
   getAllPublic: async () => {
+    const { adminApi } = await import('./unifiedApi');
     const result = await adminApi.getTestimonials();
     return result.testimonials || result.data || [];
   },

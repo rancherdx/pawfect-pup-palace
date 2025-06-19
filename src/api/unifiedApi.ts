@@ -1,4 +1,3 @@
-
 // Unified API client for all backend calls
 import type { Litter, LitterCreationData, LitterUpdateData, LitterListResponse } from '@/types/litter';
 import type { Puppy, PublicPuppyListResponse } from '@/types/puppy';
@@ -90,7 +89,7 @@ export const publicApi = {
     const query = searchParams.toString() ? `?${searchParams.toString()}` : '';
     const result = await apiRequest(`/puppies${query}`);
     
-    // Ensure consistent response structure
+    // Ensure consistent response structure with puppies property
     return {
       puppies: result.puppies || result.data || [],
       pagination: result.pagination || {}

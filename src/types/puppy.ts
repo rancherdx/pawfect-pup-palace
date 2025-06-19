@@ -1,3 +1,4 @@
+
 // src/types/puppy.ts
 import { PaginationInfo } from './common';
 
@@ -60,13 +61,10 @@ export interface AdminPuppyListResponse {
   // pagination?: { total: number; page: number; limit: number; };
 }
 
-// Specific response for the public puppies API used in Home.tsx
-// Based on Home.tsx puppiesData?.puppies, it seems it might be { puppies: Puppy[] }
-// However, client.ts defines it as { data: Puppy[], pagination: any }
-// Let's align with client.ts structure for PublicPuppyListResponse
+// Updated to use puppies instead of data to match actual usage
 export interface PublicPuppyListResponse {
-  data: Puppy[];
-  pagination?: PaginationInfo; // Updated to use PaginationInfo
+  puppies: Puppy[];
+  pagination?: PaginationInfo;
 }
 
 export interface MyPuppiesResponse {

@@ -1,11 +1,10 @@
-
 import { Router, IRequest } from 'itty-router';
 import { corsHeaders } from './utils/cors';
 import type { Env } from './env';
 import { authRoutes } from './routes/authRoutes';
 import { publicRoutes } from './routes/publicRoutes';
 import { protectedRoutes } from './routes/protectedRoutes';
-import { adminRoutes } from './routes/adminRoutes';
+import adminRoutes from './routes/adminRoutes';
 
 // Create a new router instance
 const router = Router();
@@ -25,7 +24,25 @@ router.options('*', () => {
 authRoutes(router);
 publicRoutes(router);
 protectedRoutes(router);
-adminRoutes(router);
+
+// Register admin routes with withAuth wrapper
+adminRoutes.forEach(route => {
+  const wrappedRoute = {
+    ...route,
+    handler: async (request: Request, env: any) => {
+      const authResult = await import('./utils/auth').then(auth => auth.authenticate(request, env));
+      if (!authResult?.userId) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      return route.handler(request, env, authResult);
+    },
+  };
+  
+  (router as any)[route.method.toLowerCase()](route.path, wrappedRoute.handler);
+});
 
 // Catch-all for /api/* routes not matched above
 router.all('/api/*', () => new Response(JSON.stringify({ error: 'API endpoint not found' }), {
