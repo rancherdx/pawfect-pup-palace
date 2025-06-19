@@ -87,7 +87,7 @@ export const adminRoutes = (router: any) => {
     if (!authResult.decodedToken) {
       return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
     }
-    return createLitter(request as unknown as Request, env, authResult.decodedToken);
+    return createLitter(request as unknown as Request, env);
   });
 
   router.put('/api/admin/litters/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
