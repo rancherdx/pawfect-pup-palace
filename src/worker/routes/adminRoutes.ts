@@ -66,7 +66,7 @@ export const adminRoutes = (router: any) => {
     if (!authResult.decodedToken) {
       return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
     }
-    // updatePuppy expects (request, env, params.id)
+    // updatePuppy expects (request, env, puppyId)
     return updatePuppy(request as unknown as Request, env, params.id);
   });
 
@@ -78,7 +78,7 @@ export const adminRoutes = (router: any) => {
     if (!authResult.decodedToken) {
       return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
     }
-    // deletePuppy expects (request, env, params.id)
+    // deletePuppy expects (request, env, puppyId)
     return deletePuppy(request as unknown as Request, env, params.id);
   });
 
