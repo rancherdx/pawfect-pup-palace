@@ -65,6 +65,7 @@ export const adminRoutes = (router: any) => {
     if (!authResult.decodedToken) {
       return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
     }
+    // updatePuppy expects (request, env, authResult, id)
     return updatePuppy(request as unknown as Request, env, authResult.decodedToken, params.id);
   });
 
@@ -76,6 +77,7 @@ export const adminRoutes = (router: any) => {
     if (!authResult.decodedToken) {
       return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
     }
+    // deletePuppy expects (request, env, authResult, id)
     return deletePuppy(request as unknown as Request, env, authResult.decodedToken, params.id);
   });
 
@@ -98,6 +100,7 @@ export const adminRoutes = (router: any) => {
     if (!authResult.decodedToken) {
       return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
     }
+    // updateLitter expects (request, env, authResult, id)
     return updateLitter(request as unknown as Request, env, authResult.decodedToken, params.id);
   });
 
@@ -105,6 +108,7 @@ export const adminRoutes = (router: any) => {
     const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
     if (authResponse) return authResponse;
     const params = request.params || {};
+    // deleteLitter expects (request, env, id) - no authResult needed according to the signature
     return deleteLitter(request as unknown as Request, env, params.id);
   });
 
