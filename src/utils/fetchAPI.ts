@@ -1,9 +1,9 @@
 
-// Utility for making API requests to Strapi or similar backend
-const STRAPI_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || 'http://localhost:1337';
+// Utility for making API requests to backend or similar services
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 export const fetchAPI = async (endpoint: string, options: RequestInit = {}) => {
-  const url = `${STRAPI_API_URL}${endpoint}`;
+  const url = `${API_BASE_URL}${endpoint}`;
   
   const config: RequestInit = {
     headers: {

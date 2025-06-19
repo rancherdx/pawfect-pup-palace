@@ -95,7 +95,6 @@ export const adminRoutes = (router: any) => {
     if (!authResult.decodedToken) {
       return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
     }
-    // Add the id parameter to the request object for the controller to access
     (request as any).params = { ...((request as any).params || {}), id: request.params?.id };
     return updateLitter(request as unknown as Request, env, authResult.decodedToken);
   });
@@ -107,7 +106,6 @@ export const adminRoutes = (router: any) => {
     if (!authResult.decodedToken) {
       return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
     }
-    // Add the id parameter to the request object for the controller to access
     (request as any).params = { ...((request as any).params || {}), id: request.params?.id };
     return deleteLitter(request as unknown as Request, env, authResult.decodedToken);
   });

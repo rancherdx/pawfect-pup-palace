@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, PawPrint, Search } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { adminApi, littersApi } from '@/api';
+import { adminApi } from '@/api';
 import { toast } from 'sonner';
 import { Litter, LitterCreationData, LitterUpdateData, LitterListResponse, LitterStatus } from "@/types";
 import {
@@ -44,8 +43,8 @@ const LitterManagement = () => {
   const queryClient = useQueryClient();
 
   const { data, isLoading, isError } = useQuery<LitterListResponse, Error>({
-    queryKey: ['litters'],
-    queryFn: () => littersApi.getAll({ limit: 100 }),
+    queryKey: ['admin-litters'],
+    queryFn: () => adminApi.getAllLitters({ limit: 100 }),
     staleTime: 5 * 60 * 1000,
   });
   
@@ -54,7 +53,7 @@ const LitterManagement = () => {
   const addLitterMutation = useMutation({
     mutationFn: (newData: LitterCreationData) => adminApi.createLitter(newData),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['litters'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-litters'] });
       toast.success('Litter added successfully!');
       setShowForm(false);
       setFormData(initialFormData);
@@ -67,7 +66,7 @@ const LitterManagement = () => {
   const updateLitterMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: LitterUpdateData }) => adminApi.updateLitter(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['litters'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-litters'] });
       toast.success('Litter updated successfully!');
       setShowForm(false);
       setCurrentLitter(null);
@@ -81,7 +80,7 @@ const LitterManagement = () => {
   const deleteLitterMutation = useMutation({
     mutationFn: (id: string) => adminApi.deleteLitter(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['litters'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-litters'] });
       toast.success('Litter deleted successfully!');
       setLitterToDeleteId(null);
       setShowDeleteDialog(false);
