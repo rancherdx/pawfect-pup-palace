@@ -65,8 +65,8 @@ export const adminRoutes = (router: any) => {
     if (!authResult.decodedToken) {
       return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
     }
-    // updatePuppy expects (request, env, authResult, id)
-    return updatePuppy(request as unknown as Request, env, authResult.decodedToken, params.id);
+    // updatePuppy expects (request, env, params.id)
+    return updatePuppy(request as unknown as Request, env, params.id);
   });
 
   router.delete('/api/admin/puppies/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
@@ -77,8 +77,8 @@ export const adminRoutes = (router: any) => {
     if (!authResult.decodedToken) {
       return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
     }
-    // deletePuppy expects (request, env, authResult, id)
-    return deletePuppy(request as unknown as Request, env, authResult.decodedToken, params.id);
+    // deletePuppy expects (request, env, params.id)
+    return deletePuppy(request as unknown as Request, env, params.id);
   });
 
   // Litter Management (Admin)
@@ -100,16 +100,20 @@ export const adminRoutes = (router: any) => {
     if (!authResult.decodedToken) {
       return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
     }
-    // updateLitter expects (request, env, authResult, id)
-    return updateLitter(request as unknown as Request, env, authResult.decodedToken, params.id);
+    // updateLitter expects (request, env, params.id)
+    return updateLitter(request as unknown as Request, env, params.id);
   });
 
   router.delete('/api/admin/litters/:id', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
     const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
     if (authResponse) return authResponse;
     const params = request.params || {};
-    // deleteLitter expects (request, env, id) - no authResult needed according to the signature
-    return deleteLitter(request as unknown as Request, env, params.id);
+    const authResult = await verifyJwtAuth(request as unknown as Request, env);
+    if (!authResult.decodedToken) {
+      return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 401, headers: corsHeaders });
+    }
+    // deleteLitter expects (request, env, authResult.decodedToken)
+    return deleteLitter(request as unknown as Request, env, authResult.decodedToken);
   });
 
   // Site Settings (Admin)
