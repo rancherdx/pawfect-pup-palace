@@ -1,91 +1,95 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from 'sonner';
-import { ThemeProvider } from '@/components/ThemeProvider';
-import './App.css';
 
-// Import ProtectedRoute
-import ProtectedRoute from '@/components/ProtectedRoute';
-// Assuming AuthProvider is in main.tsx, otherwise it would be imported and used here.
+import { Suspense, lazy } from "react";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
-import Index from '@/pages/Index';
-import Puppies from '@/pages/Puppies';
-import PuppyDetails from '@/pages/PuppyDetails';
-import Litters from '@/pages/Litters';
-import StudPage from '@/pages/StudPage';
-import About from '@/pages/About';
-import Contact from '@/pages/Contact';
-import Blog from '@/pages/Blog';
-import BlogPost from '@/pages/BlogPost';
-import Login from '@/pages/Login';
-import Register from '@/pages/Register';
-import Dashboard from '@/pages/Dashboard';
-import AdminDashboard from '@/pages/AdminDashboard';
-import PrivacyPolicyPage from '@/pages/PrivacyPolicyPage';
-import TermsOfServicePage from '@/pages/TermsOfServicePage';
-import SystemStatus from '@/pages/SystemStatus';
-import AdminTest from '@/pages/AdminTest';
-import { HolidayThemeProvider } from "@/contexts/HolidayThemeContext";
+// Lazy load components for better performance
+const Index = lazy(() => import("./pages/Index"));
+const Puppies = lazy(() => import("./pages/Puppies"));
+const About = lazy(() => import("./pages/About"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Adopt = lazy(() => import("./pages/Adopt"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const Setup = lazy(() => import("./pages/Setup"));
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
-    },
-  },
-});
+const queryClient = new QueryClient();
 
-function App() {
-  return (
-    <HolidayThemeProvider>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider defaultTheme="light" storageKey="gds-theme">
-          <Router>
-            <div className="min-h-screen bg-background">
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/puppies" element={<Puppies />} />
-                <Route path="/puppies/:id" element={<PuppyDetails />} />
-                <Route path="/litters" element={<Litters />} />
-                <Route path="/stud-dogs" element={<StudPage />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/blog" element={<Blog />} />
-                <Route path="/blog/:slug" element={<BlogPost />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/dashboard" element={<Dashboard />} /> {/* Public dashboard route */}
-
-                {/* Protected Admin Routes */}
-                <Route
-                  path="/admin"
-                  element={
-                    <ProtectedRoute requiredRole="admin">
-                      <AdminDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin-test"
-                  element={
-                    <ProtectedRoute requiredRole="admin">
-                      <AdminTest />
-                    </ProtectedRoute>
-                  }
-                />
-
-                <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-                <Route path="/terms-of-service" element={<TermsOfServicePage />} />
-                <Route path="/status" element={<SystemStatus />} />
-              </Routes>
-              <Toaster />
-            </div>
-          </Router>
-        </ThemeProvider>
-      </QueryClientProvider>
-    </HolidayThemeProvider>
-  );
-}
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <AuthProvider>
+          <div className="min-h-screen flex flex-col">
+            <Routes>
+              {/* Setup route (no navbar/footer) */}
+              <Route 
+                path="/setup" 
+                element={
+                  <Suspense fallback={<div>Loading...</div>}>
+                    <Setup />
+                  </Suspense>
+                } 
+              />
+              
+              {/* All other routes with navbar/footer */}
+              <Route 
+                path="/*" 
+                element={
+                  <>
+                    <Navbar />
+                    <main className="flex-1">
+                      <Suspense fallback={<div>Loading...</div>}>
+                        <Routes>
+                          <Route path="/" element={<Index />} />
+                          <Route path="/puppies" element={<Puppies />} />
+                          <Route path="/about" element={<About />} />
+                          <Route path="/contact" element={<Contact />} />
+                          <Route path="/adopt" element={<Adopt />} />
+                          <Route path="/checkout" element={<Checkout />} />
+                          <Route path="/login" element={<Login />} />
+                          <Route path="/register" element={<Register />} />
+                          <Route 
+                            path="/dashboard" 
+                            element={
+                              <ProtectedRoute>
+                                <Dashboard />
+                              </ProtectedRoute>
+                            } 
+                          />
+                          <Route 
+                            path="/admin/*" 
+                            element={
+                              <ProtectedRoute requiredRole="admin">
+                                <AdminDashboard />
+                              </ProtectedRoute>
+                            } 
+                          />
+                        </Routes>
+                      </Suspense>
+                    </main>
+                    <Footer />
+                  </>
+                } 
+              />
+            </Routes>
+          </div>
+        </AuthProvider>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
 export default App;

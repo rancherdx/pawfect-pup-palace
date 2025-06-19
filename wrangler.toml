@@ -1,10 +1,11 @@
 
-name = "puppy_breeder_app"
+name = "gdspuppies-com"
 main = "src/worker/index.ts"
 compatibility_date = "2024-01-01"
 
 [vars]
 ENV = "production"
+DOMAIN = "gdspuppies.com"
 
 [[kv_namespaces]]
 binding = "STATIC_CONTENT"
@@ -18,13 +19,13 @@ preview_id = "9b8543e32afb439880a096899d6b5005"
 
 [[d1_databases]]
 binding = "PUPPIES_DB"
-database_name = "puppy_breeder_db"
+database_name = "gdspuppies_production_db"
 database_id = "28c5ca0d-7d32-4724-9c20-aaf36410452d"
 
 [[r2_buckets]]
 binding = "PUPPY_IMAGES"
-bucket_name = "puppy-breeder-images"
-preview_bucket_name = "puppy-breeder-images-dev"
+bucket_name = "gdspuppies-images"
+preview_bucket_name = "gdspuppies-images-dev"
 
 [durable_objects]
 bindings = [
@@ -34,3 +35,14 @@ bindings = [
 [[migrations]]
 tag = "v1"
 new_classes = ["SessionDO"]
+
+# Required secrets for production (set using wrangler secret put):
+# JWT_SECRET - Strong secret for JWT signing
+# SQUARE_ACCESS_TOKEN - Square production access token
+# SQUARE_SANDBOX_ACCESS_TOKEN - Square sandbox access token  
+# SQUARE_LOCATION_ID - Square production location ID
+# SQUARE_SANDBOX_LOCATION_ID - Square sandbox location ID
+# SQUARE_WEBHOOK_SIGNATURE_KEY - Square webhook signature verification
+# SENDGRID_API_KEY - SendGrid API key for Google Workspace integration
+# ENCRYPTION_KEY_SECRET - Key for encrypting sensitive data
+# ADMIN_EMAIL - Primary admin email address
