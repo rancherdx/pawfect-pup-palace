@@ -170,14 +170,14 @@ export const adminRoutes = (router: any) => {
     const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
     if (authResponse) return authResponse;
     const params = request.params || {};
-    return getDataDeletionRequestById(request as unknown as Request, env, params as { id: string });
+    return getDataDeletionRequestById(request as unknown as Request, env, params.id);
   });
 
   router.put('/api/admin/data-deletion-requests/:id/status', async (request: IRequest, env: Env, ctx: ExecutionContext) => {
     const authResponse = await adminAuthMiddleware(request as unknown as Request, env);
     if (authResponse) return authResponse;
     const params = request.params || {};
-    return updateDataDeletionRequestStatus(request as unknown as Request, env, params as { id: string });
+    return updateDataDeletionRequestStatus(request as unknown as Request, env, params.id);
   });
 
   // Admin Test Routes
