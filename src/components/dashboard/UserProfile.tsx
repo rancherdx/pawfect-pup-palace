@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { User as UserIcon, Check, AlertCircle, Loader2 } from "lucide-react"; // Renamed User to UserIcon to avoid conflict
 import { useAuth } from "@/contexts/AuthContext";
-import { authApi } from "@/api/client";
+import { authApi } from "@/api/unifiedApi"; // Fixed import
 import { User, UserProfileUpdateData } from "@/types"; // Import User and UserProfileUpdateData
 
 const UserProfile = () => {

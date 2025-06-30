@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authApi } from '@/api/client';
+import { authApi } from '@/api/unifiedApi'; // Fixed import
 import { User, AuthResponse, UserRegistrationData, UserLoginData } from '@/types';
 
 // Local User interface is removed. Imported User will be used.
