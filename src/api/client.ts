@@ -1,9 +1,10 @@
-
+// Legacy compatibility - keeping minimal exports for backward compatibility
 import { fetchAPI } from "@/utils/fetchAPI";
 
 const STRAPI_API_TOKEN = import.meta.env.VITE_STRAPI_API_TOKEN;
 const STRAPI_API_URL = import.meta.env.VITE_STRAPI_API_URL || '/api';
 
+// Keep fetchAdminAPI for any legacy code that might still use it
 export const fetchAdminAPI = async (url: string, options: any = {}) => {
   const mergedOptions = {
     headers: {
@@ -49,46 +50,4 @@ export const getAuthHeaders = () => {
   };
 };
 
-// Auth API functions
-export const authApi = {
-  login: async (credentials: { email: string; password: string }) => {
-    return apiRequest('/api/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(credentials),
-    });
-  },
-  
-  register: async (userData: { email: string; password: string; name: string }) => {
-    return apiRequest('/api/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(userData),
-    });
-  },
-  
-  logout: async () => {
-    return apiRequest('/api/auth/logout', {
-      method: 'POST',
-    });
-  },
-  
-  getProfile: async () => {
-    return apiRequest('/api/users/me', {
-      headers: getAuthHeaders(),
-    });
-  },
-  
-  updateProfile: async (userData: any) => {
-    return apiRequest('/api/users/me/profile', {
-      method: 'PUT',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(userData),
-    });
-  },
-  
-  refreshToken: async (refreshToken: string) => {
-    return apiRequest('/api/auth/refresh', {
-      method: 'POST',
-      body: JSON.stringify({ refreshToken }),
-    });
-  },
-};
+// All auth functionality now comes from unifiedApi - removing duplicates

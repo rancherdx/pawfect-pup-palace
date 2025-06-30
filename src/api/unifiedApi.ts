@@ -32,7 +32,7 @@ function getAuthHeaders() {
   };
 }
 
-// Auth API
+// Auth API - Consolidated and consistent
 export const authApi = {
   login: async (credentials: { email: string; password: string }) => {
     return apiRequest('/auth/login', {
@@ -51,6 +51,7 @@ export const authApi = {
   logout: async () => {
     return apiRequest('/auth/logout', {
       method: 'POST',
+      headers: getAuthHeaders(),
     });
   },
   

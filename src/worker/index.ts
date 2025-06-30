@@ -1,3 +1,4 @@
+
 import { Router, IRequest } from 'itty-router';
 import { corsHeaders } from './utils/cors';
 import type { Env } from './env';
@@ -5,6 +6,7 @@ import { authRoutes } from './routes/authRoutes';
 import { publicRoutes } from './routes/publicRoutes';
 import { protectedRoutes } from './routes/protectedRoutes';
 import adminRoutes from './routes/adminRoutes';
+import { authenticate } from './utils/auth';
 
 // Create a new router instance
 const router = Router();
@@ -25,23 +27,38 @@ authRoutes(router);
 publicRoutes(router);
 protectedRoutes(router);
 
-// Register admin routes with withAuth wrapper
+// Register admin routes with proper authentication
 adminRoutes.forEach(route => {
-  const wrappedRoute = {
-    ...route,
-    handler: async (request: Request, env: any) => {
-      const authResult = await import('./utils/auth').then(auth => auth.authenticate(request, env));
+  const wrappedHandler = async (request: Request, env: Env) => {
+    try {
+      const authResult = await authenticate(request, env);
       if (!authResult?.userId) {
         return new Response(JSON.stringify({ error: 'Unauthorized' }), {
           status: 401,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
+      
+      // Check for admin role if required
+      const userRoles = authResult.roles || [];
+      if (!userRoles.includes('admin') && !userRoles.includes('super-admin')) {
+        return new Response(JSON.stringify({ error: 'Forbidden' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
       return route.handler(request, env, authResult);
-    },
+    } catch (error) {
+      console.error('Admin route error:', error);
+      return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
   };
   
-  (router as any)[route.method.toLowerCase()](route.path, wrappedRoute.handler);
+  (router as any)[route.method.toLowerCase()](route.path, wrappedHandler);
 });
 
 // Catch-all for /api/* routes not matched above
@@ -54,11 +71,15 @@ export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 
+    // Handle API routes
     if (url.pathname.startsWith('/api/')) {
       return router.handle(request, env, ctx)
         .catch((error) => {
           console.error('Router Error:', error);
-          return new Response(JSON.stringify({ error: 'Internal Server Error', details: error.message }), {
+          return new Response(JSON.stringify({ 
+            error: 'Internal Server Error', 
+            details: env.ENV === 'development' ? error.message : undefined 
+          }), {
             status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
@@ -67,6 +88,7 @@ export default {
 
     // Static Asset Serving Logic
     try {
+      // Serve index.html for root path
       if (url.pathname === '/') {
         const object = await env.STATIC_ASSETS.get('index.html');
         if (object) {
@@ -77,14 +99,10 @@ export default {
         }
       }
 
-      let assetPath = url.pathname;
-      
-      if (assetPath.startsWith('/')) {
-        assetPath = assetPath.substring(1);
-      }
-      
+      let assetPath = url.pathname.startsWith('/') ? url.pathname.substring(1) : url.pathname;
       let object = await env.STATIC_ASSETS.get(assetPath);
       
+      // Fallback to index.html for SPA routing
       if (!object && !assetPath.includes('.')) {
         object = await env.STATIC_ASSETS.get('index.html');
         assetPath = 'index.html';
@@ -93,6 +111,7 @@ export default {
       if (object) {
         const headers = new Headers(corsHeaders);
         
+        // Set proper content types
         if (assetPath.endsWith('.html')) {
           headers.set('Content-Type', 'text/html');
         } else if (assetPath.endsWith('.js')) {
@@ -111,8 +130,9 @@ export default {
           headers.set('Content-Type', 'application/json');
         }
         
+        // Set cache headers
         if (assetPath.includes('/assets/') || assetPath.endsWith('.js') || assetPath.endsWith('.css')) {
-          headers.set('Cache-Control', 'public, max-age=31536000');
+          headers.set('Cache-Control', 'public, max-age=31536000, immutable');
         } else {
           headers.set('Cache-Control', 'public, max-age=3600');
         }
@@ -120,16 +140,19 @@ export default {
         return new Response(object.body, { headers });
       }
       
+      // 404 for missing assets or API endpoints
       if (url.pathname.startsWith('/api/') || assetPath.includes('.')) {
         return new Response('Not Found', { 
           status: 404, 
           headers: corsHeaders 
         });
       } else {
+        // SPA fallback
         const indexObject = await env.STATIC_ASSETS.get('index.html');
         if (indexObject) {
           const headers = new Headers(corsHeaders);
           headers.set('Content-Type', 'text/html');
+          headers.set('Cache-Control', 'public, max-age=3600');
           return new Response(indexObject.body, { headers });
         }
       }
