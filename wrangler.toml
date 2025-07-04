@@ -1,45 +1,46 @@
-
-name = "gdspuppies-com"
+name = "puppy_breeder_app"
 main = "src/worker/index.ts"
 compatibility_date = "2024-01-01"
 
 [vars]
 ENV = "production"
-DOMAIN = "gdspuppies.com"
+DOMAIN = "new.gdspuppies.com"
 
 [[kv_namespaces]]
 binding = "STATIC_CONTENT"
-id = "2edbc59317af4bf88d30dca7f0f208f8"
-preview_id = "ec8351b2271942bdbfec48a0af56253b"
+id = "static_assets_prod"
+preview_id = "static_assets_prod"
 
 [[kv_namespaces]]
 binding = "AUTH_STORE"
-id = "6906c989494a4a4dab7dfad468d87885"
-preview_id = "9b8543e32afb439880a096899d6b5005"
+id = "puppy_breeder_AUTH_STORE"
+preview_id = "puppy_breeder_AUTH_STORE"
 
 [[d1_databases]]
 binding = "PUPPIES_DB"
-database_name = "gdspuppies_production_db"
-database_id = "28c5ca0d-7d32-4724-9c20-aaf36410452d"
+database_name = "puppy_breeder_db"
+database_id = "puppy_breeder_db"
 
 [[r2_buckets]]
 binding = "PUPPY_IMAGES"
-bucket_name = "gdspuppies-images"
-preview_bucket_name = "gdspuppies-images-dev"
+bucket_name = "puppy-breeder-images"
+preview_bucket_name = "puppy-breeder-images"
 
 [durable_objects]
 bindings = [
-  { name = "SESSIONS", class_name = "SessionDO" }
+  { name = "SESSIONS", class_name = "puppy_breeder_app_SessionDO" }
 ]
 
 [[migrations]]
 tag = "v1"
-new_classes = ["SessionDO"]
+new_classes = ["puppy_breeder_app_SessionDO"]
 
 # Required secrets for production (set using wrangler secret put):
 # JWT_SECRET - Strong secret for JWT signing
 # SQUARE_ACCESS_TOKEN - Square production access token
 # SQUARE_SANDBOX_ACCESS_TOKEN - Square sandbox access token  
+# SQUARE_APPLICATION_ID - Square application ID for OAuth
+# SQUARE_APPLICATION_SECRET - Square application secret for OAuth
 # SQUARE_LOCATION_ID - Square production location ID
 # SQUARE_SANDBOX_LOCATION_ID - Square sandbox location ID
 # SQUARE_WEBHOOK_SIGNATURE_KEY - Square webhook signature verification

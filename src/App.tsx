@@ -22,6 +22,7 @@ const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const SquareOAuthCallback = lazy(() => import("./pages/SquareOAuthCallback"));
 const Setup = lazy(() => import("./pages/Setup"));
 
 const queryClient = new QueryClient();
@@ -79,6 +80,7 @@ const App = () => (
                                 </ProtectedRoute>
                               } 
                             />
+                            <Route path="/square/oauth/callback" element={<SquareOAuthCallback />} />
                           </Routes>
                         </Suspense>
                       </main>

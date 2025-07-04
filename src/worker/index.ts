@@ -5,6 +5,7 @@ import type { Env } from './env';
 import { authRoutes } from './routes/authRoutes';
 import { publicRoutes } from './routes/publicRoutes';
 import { protectedRoutes } from './routes/protectedRoutes';
+import { squareRoutes } from './routes/squareRoutes';
 import adminRoutes from './routes/adminRoutes';
 import { authenticate } from './utils/auth';
 
@@ -26,6 +27,7 @@ router.options('*', () => {
 authRoutes(router);
 publicRoutes(router);
 protectedRoutes(router);
+squareRoutes(router);
 
 // Register admin routes with proper authentication
 adminRoutes.forEach(route => {

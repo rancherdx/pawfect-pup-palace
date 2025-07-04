@@ -21,6 +21,8 @@ export interface Env {
   // Secrets
   JWT_SECRET: string;
   SQUARE_ACCESS_TOKEN: string;
+  SQUARE_APPLICATION_ID: string;
+  SQUARE_APPLICATION_SECRET: string;
   SQUARE_LOCATION_ID: string;
   SQUARE_WEBHOOK_SIGNATURE_KEY: string;
   SENDGRID_API_KEY: string;

@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/api/client';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
+import SquareOAuthConnect from './SquareOAuthConnect';
 
 interface Integration {
   id: string;
@@ -103,6 +104,9 @@ const SquareIntegration = () => {
           Square Integration
         </h2>
       </div>
+      
+      {/* OAuth Connection Component */}
+      <SquareOAuthConnect />
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className={`shadow-md ${isConnected ? "border-green-500" : (!isConfigured ? "border-amber-500" : "border-gray-200")}`}>
