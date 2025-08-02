@@ -48,7 +48,7 @@ export async function createIntegration(request: Request, env: Env): Promise<Res
     const body = await request.json() as {
       service_name?: string;
       api_key?: string; // Plain text API key from client
-      other_config?: Record<string, any> | string; // Can be object or JSON string
+      other_config?: Record<string, unknown> | string; // Can be object or JSON string
       is_active?: boolean;
     };
 
@@ -104,7 +104,7 @@ export async function createIntegration(request: Request, env: Env): Promise<Res
     }
     // @ts-ignore
     if (error.message && error.message.includes("UNIQUE constraint failed: third_party_integrations.service_name")) {
-        return createErrorResponse("Conflict", `An integration with service name "${(error as any).values?.service_name || 'provided'}" already exists.`, 409);
+        return createErrorResponse("Conflict", `An integration with service name "${(error as { values?: { service_name?: string } })?.values?.service_name || 'provided'}" already exists.`, 409);
     }
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return createErrorResponse("Failed to create integration", errorMessage, 500);
@@ -118,7 +118,7 @@ export async function updateIntegration(request: Request, env: Env, integrationI
   try {
     const body = await request.json() as {
       api_key?: string | null; // Plain text API key, empty string or null to clear
-      other_config?: Record<string, any> | string;
+      other_config?: Record<string, unknown> | string;
       is_active?: boolean;
       // service_name cannot be updated
     };

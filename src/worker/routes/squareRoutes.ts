@@ -3,7 +3,7 @@ import type { Env } from '../env';
 import { generateAuthUrl, handleOAuthCallback, getOAuthStatus, revokeOAuth } from '../controllers/squareOAuth';
 import { handleSquareWebhook } from '../controllers/payment';
 
-export const squareRoutes = (router: any) => {
+export const squareRoutes = (router: unknown) => {
   // Square OAuth routes
   router.get('/api/square/oauth/auth-url', (request: IRequest, env: Env) => 
     generateAuthUrl(request as unknown as Request, env));

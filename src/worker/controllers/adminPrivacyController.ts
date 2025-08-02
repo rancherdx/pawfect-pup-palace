@@ -1,4 +1,3 @@
-
 import type { Env } from '../env';
 import { corsHeaders } from '../utils/cors';
 
@@ -14,8 +13,8 @@ export async function listDataDeletionRequests(request: Request, env: Env): Prom
 
     let query = `SELECT * FROM data_deletion_requests`;
     let countQuery = `SELECT COUNT(*) as total FROM data_deletion_requests`;
-    const params: any[] = [];
-    const countParams: any[] = [];
+    const params: unknown[] = [];
+    const countParams: unknown[] = [];
 
     if (status && status !== 'all') {
       query += ` WHERE status = ?`;
@@ -32,7 +31,7 @@ export async function listDataDeletionRequests(request: Request, env: Env): Prom
       env.PUPPIES_DB.prepare(countQuery).bind(...countParams).first()
     ]);
 
-    const total = (countResult as any)?.total || 0;
+    const total = (countResult as { total?: number })?.total || 0;
     const totalPages = Math.ceil(total / limit);
 
     return new Response(JSON.stringify({
@@ -145,4 +144,5 @@ export async function updateDataDeletionRequestStatus(request: Request, env: Env
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }
+}
 }

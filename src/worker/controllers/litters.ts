@@ -1,4 +1,3 @@
-
 import { corsHeaders } from '../utils/cors';
 
 interface AuthResult {
@@ -7,7 +6,7 @@ interface AuthResult {
   roles?: string[];
 }
 
-export async function getAllLitters(request: Request, env: any) {
+export async function getAllLitters(request: Request, env: Env) {
   const url = new URL(request.url);
   const breed = url.searchParams.get('breed');
   const status = url.searchParams.get('status');
@@ -15,7 +14,7 @@ export async function getAllLitters(request: Request, env: any) {
   const offset = parseInt(url.searchParams.get('offset') || '0');
   
   let query = 'SELECT * FROM litters WHERE 1=1';
-  const params: any[] = [];
+  const params: unknown[] = [];
   
   if (breed) {
     query += ' AND breed = ?';
@@ -62,7 +61,7 @@ export async function getAllLitters(request: Request, env: any) {
   }
 }
 
-export async function getLitterById(request: Request, env: any) {
+export async function getLitterById(request: Request, env: Env) {
   const { params } = request as any;
   const id = params.id;
   
@@ -112,7 +111,7 @@ export async function getLitterById(request: Request, env: any) {
   }
 }
 
-export async function createLitter(request: Request, env: any, authResult: AuthResult) {
+export async function createLitter(request: Request, env: Env, authResult: AuthResult) {
   // Ensure the user has admin privileges
   if (authResult.role !== 'admin') {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -182,7 +181,7 @@ export async function createLitter(request: Request, env: any, authResult: AuthR
   }
 }
 
-export async function updateLitter(request: Request, env: any, authResult: AuthResult) {
+export async function updateLitter(request: Request, env: Env, authResult: AuthResult) {
   // Ensure the user has admin privileges
   if (authResult.role !== 'admin') {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -250,7 +249,7 @@ export async function updateLitter(request: Request, env: any, authResult: AuthR
   }
 }
 
-export async function deleteLitter(request: Request, env: any, authResult: AuthResult) {
+export async function deleteLitter(request: Request, env: Env, authResult: AuthResult) {
   // Ensure the user has admin privileges
   if (authResult.role !== 'admin') {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -294,4 +293,5 @@ export async function deleteLitter(request: Request, env: any, authResult: AuthR
       }
     });
   }
+}
 }

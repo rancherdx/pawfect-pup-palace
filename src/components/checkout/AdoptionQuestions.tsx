@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,8 +9,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface AdoptionQuestionsProps {
-  data: any;
-  onDataChange: (data: any) => void;
+  data: Record<string, unknown>;
+  onDataChange: (data: Record<string, unknown>) => void;
   onNext: () => void;
   onPrevious: () => void;
 }
@@ -245,6 +244,7 @@ const AdoptionQuestions = ({ data, onDataChange, onNext, onPrevious }: AdoptionQ
               <Textarea 
                 id="workSchedule" 
                 name="workSchedule" 
+                value={form
                 value={formData.workSchedule} 
                 onChange={handleChange}
                 placeholder="Please describe your work hours and arrangements for pet care"

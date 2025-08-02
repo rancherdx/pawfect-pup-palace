@@ -1,4 +1,3 @@
-
 // --- Litter API STUB ----
 import { Litter, LitterListResponse, LitterStatus } from '@/types/litter';
 
@@ -18,7 +17,7 @@ const dummyLitter: Litter = {
   puppies: [],
 };
 
-export const getAll = async (_params?: any): Promise<LitterListResponse> => {
+export const getAll = async (_params?: Record<string, unknown>): Promise<LitterListResponse> => {
   return { litters: [dummyLitter], pagination: { total: 1, current_page: 1, total_pages: 1 } };
 };
 
@@ -38,4 +37,5 @@ export const updateLitter = async (_id: string, data: Partial<Litter>): Promise<
 
 export const deleteLitter = async (_id: string): Promise<{ id: string }> => {
   return { id: _id };
+};
 };

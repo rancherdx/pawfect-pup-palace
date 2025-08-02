@@ -1,10 +1,9 @@
-
 import type { Env } from '../env';
 import { corsHeaders } from '../utils/cors';
 import { createJWT, verifyJWT } from '../auth';
 
 // Generate admin test session with fresh token
-export async function createAdminTestSession(request: Request, env: Env, adminToken: any): Promise<Response> {
+export async function createAdminTestSession(request: Request, env: Env, adminToken: string): Promise<Response> {
   try {
     const body = await request.json() as { purpose?: string; userId?: string };
     const { purpose = 'endpoint_testing', userId } = body;
@@ -72,7 +71,7 @@ export async function createAdminTestSession(request: Request, env: Env, adminTo
 }
 
 // Generate impersonation token for user testing
-export async function createImpersonationSession(request: Request, env: Env, adminToken: any): Promise<Response> {
+export async function createImpersonationSession(request: Request, env: Env, adminToken: Record<string, unknown>): Promise<Response> {
   try {
     const body = await request.json() as { userId: string; purpose?: string };
     const { userId, purpose = 'user_impersonation' } = body;
@@ -188,7 +187,7 @@ export async function logTestCall(request: Request, env: Env, sessionId: string,
 }
 
 // Get test session logs
-export async function getTestSessionLogs(request: Request, env: Env, adminToken: any): Promise<Response> {
+export async function getTestSessionLogs(request: Request, env: Env, adminToken: Record<string, unknown>): Promise<Response> {
   try {
     const url = new URL(request.url);
     const sessionId = url.searchParams.get('sessionId');
@@ -226,4 +225,5 @@ export async function getTestSessionLogs(request: Request, env: Env, adminToken:
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }
+}
 }

@@ -1,5 +1,7 @@
 #!/bin/bash
 # setup_dev_env.sh
+# Usage: First run `chmod +x setup_dev_env.sh` to make this script executable.
+# Then run: `./setup_dev_env.sh`
 # Full setup script for D1 database and R2 assets for the development/testing environment.
 
 # Exit immediately if a command exits with a non-zero status.
@@ -67,12 +69,12 @@ get_r2_bucket_name_from_binding() {
         return 1
     fi
 
-    # Using awk for more robust parsing of TOML section for the binding
-    local bucket_name=$(awk -v binding="^binding\s*=\s*\"${binding_name}\"" '
+    # Use GNU awk (gawk) for compatibility on Ubuntu
+    local bucket_name=$(awk -v binding="^binding[[:space:]]*=[[:space:]]*\"${binding_name}\"" '
         $0 ~ binding {in_section=1; next}
         in_section && /\[\[r2_buckets\]\]/ {in_section=0}
-        in_section && /preview_bucket_name\s*=\s*"(.*)"/ {gsub(/"/, "", $3); print $3; found=1; exit}
-        in_section && /bucket_name\s*=\s*"(.*)"/ {if(!found){gsub(/"/, "", $3); print $3; exit}}
+        in_section && /preview_bucket_name[[:space:]]*=[[:space:]]*"(.*)"/ {gsub(/"/, "", $3); print $3; found=1; exit}
+        in_section && /bucket_name[[:space:]]*=[[:space:]]*"(.*)"/ {if(!found){gsub(/"/, "", $3); print $3; exit}}
         ' "$toml_file")
 
     if [ -z "$bucket_name" ]; then
@@ -83,6 +85,24 @@ get_r2_bucket_name_from_binding() {
     echo "$bucket_name"
 }
 
+
+# --- Prerequisite Checks ---
+REQUIRED_CMDS=("awk" "npx" "wrangler")
+for cmd in "${REQUIRED_CMDS[@]}"; do
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    echo "Error: Required command '$cmd' not found. Please install it before running this script." >&2
+    exit 1
+  fi
+done
+
+# --- Cloudflare API Token Check ---
+if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+  echo "Error: CLOUDFLARE_API_TOKEN environment variable is not set."
+  echo "Please set it with:"
+  echo "  export CLOUDFLARE_API_TOKEN=your_token_here"
+  echo "You can find your API token in the Cloudflare dashboard (see docs/DEPLOYMENT_GUIDE.md)."
+  exit 1
+fi
 
 # --- D1 Database Setup ---
 echo ""

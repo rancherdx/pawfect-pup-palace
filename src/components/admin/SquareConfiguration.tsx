@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { CreditCard, TestTube, Globe, Key, MapPin, Webhook } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -52,7 +51,7 @@ const SquareConfiguration = () => {
 
       if (response.ok) {
         const data = await response.json();
-        const squareIntegration = data.integrations?.find((int: any) => int.serviceName === 'Square');
+        const squareIntegration = data.integrations?.find((int: unknown) => (int as { serviceName: string }).serviceName === 'Square');
         
         if (squareIntegration) {
           const otherConfig = JSON.parse(squareIntegration.otherConfig || '{}');
@@ -254,6 +253,7 @@ const SquareConfiguration = () => {
               type="password"
               placeholder="Enter webhook signature key"
               value={config.webhookSignatureKey}
+              onChange={(e)
               onChange={(e) => setConfig(prev => ({ ...prev, webhookSignatureKey: e.target.value }))}
             />
           </div>

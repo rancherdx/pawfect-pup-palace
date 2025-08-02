@@ -1,13 +1,13 @@
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clipboard, Pill, Dog, PawPrint } from "lucide-react";
 import DetailsTabContent from "./DetailsTabContent";
 import HealthTabContent from "./HealthTabContent";
 import ParentsTabContent from "./ParentsTabContent";
+import { Puppy } from "@/types"; // Adjust the import path according to your project structure
 
 interface DetailsTabsProps {
-  puppy: any;
+  puppy: Puppy;
 }
 
 const DetailsTabs = ({ puppy }: DetailsTabsProps) => {

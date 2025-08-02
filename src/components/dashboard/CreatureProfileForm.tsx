@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 
 interface CreatureProfileFormProps {
-  onSubmit: (data: any) => void;
+  onSubmit: (data: Record<string, string>) => void;
   onCancel: () => void;
 }
 
@@ -151,4 +150,5 @@ const CreatureProfileForm = ({ onSubmit, onCancel }: CreatureProfileFormProps) =
   );
 };
 
+export default CreatureProfileForm;
 export default CreatureProfileForm;

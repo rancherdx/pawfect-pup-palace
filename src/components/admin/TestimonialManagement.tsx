@@ -63,8 +63,8 @@ const TestimonialManagement = () => {
   const testimonials: Testimonial[] = data?.testimonials || [];
 
   const createTestimonialMutation = useMutation({
-    mutationFn: (testimonialData: any) => adminApi.createTestimonial(testimonialData),
-    onSuccess: (response: any) => {
+    mutationFn: (testimonialData: Record<string, unknown>) => adminApi.createTestimonial(testimonialData),
+    onSuccess: (response: Record<string, unknown>) => {
       queryClient.invalidateQueries({ queryKey: ['testimonials'] });
       toast.success('Testimonial created successfully!');
       setIsModalOpen(false);

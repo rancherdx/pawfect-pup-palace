@@ -1,4 +1,3 @@
-
 import { corsHeaders } from '../utils/cors';
 import { hashPassword, createJWT } from '../auth';
 import type { Env } from '../env';
@@ -97,4 +96,5 @@ export async function createFirstAdmin(request: Request, env: Env): Promise<Resp
     console.error('Error creating first admin:', error);
     return createErrorResponse('Setup failed', error instanceof Error ? error.message : 'Unknown error', 500);
   }
+}
 }

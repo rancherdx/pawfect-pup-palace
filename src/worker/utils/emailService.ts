@@ -39,6 +39,7 @@ export async function getSendGridApiKey(env: Env): Promise<string | null> {
  * @param subject - The email subject.
  * @param htmlBody - The HTML content of the email.
  * @returns An object indicating success or failure, a message, and the API key used (if any).
+ * Use: Record<string, unknown> or define a specific interface if known.
  */
 export async function sendEmailPlaceholder(
   env: Env,
@@ -93,7 +94,7 @@ export async function sendTemplatedEmail(
   env: Env,
   to: string,
   templateName: string,
-  data: Record<string, any>
+  data: Record<string, unknown>
 ): Promise<SendTemplatedEmailResult> {
   let template: EmailTemplate | null = null;
 

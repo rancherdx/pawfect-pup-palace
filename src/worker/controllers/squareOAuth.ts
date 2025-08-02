@@ -80,7 +80,7 @@ export async function handleOAuthCallback(request: Request, env: Env): Promise<R
     if (!code) {
       return new Response(JSON.stringify({
         error: 'Missing authorization code'
-      }), {
+      ), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -137,14 +137,14 @@ export async function getOAuthStatus(request: Request, env: Env): Promise<Respon
       });
     }
     
-    const config = typeof (integration as any).other_config === 'string' 
-      ? JSON.parse((integration as any).other_config) 
-      : (integration as any).other_config || {};
+    const config = typeof (integration as { other_config: string | Record<string, unknown> }).other_config === 'string' 
+      ? JSON.parse((integration as { other_config: string }).other_config) 
+      : (integration as { other_config: Record<string, unknown> }).other_config || {};
     
     return new Response(JSON.stringify({
       connected: true,
       merchantId: config.merchant_id,
-      connectedAt: (integration as any).created_at,
+      connectedAt: (integration as { created_at?: string })?.created_at,
       permissions: config.permissions || [],
       environment: config.environment || 'production'
     }), {
@@ -186,9 +186,9 @@ export async function revokeOAuth(request: Request, env: Env): Promise<Response>
       });
     }
     
-    const config = typeof (integration as any).other_config === 'string' 
-      ? JSON.parse((integration as any).other_config) 
-      : (integration as any).other_config || {};
+    const config = typeof (integration as { other_config: string | Record<string, unknown> }).other_config === 'string' 
+      ? JSON.parse((integration as { other_config: string }).other_config) 
+      : (integration as { other_config: Record<string, unknown> }).other_config || {};
     
     // Revoke token with Square
     if (config.access_token) {

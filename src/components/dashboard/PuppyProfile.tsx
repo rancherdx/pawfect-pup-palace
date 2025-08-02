@@ -37,7 +37,7 @@ interface PuppyData {
   microchip_id?: string;
   description?: string;
   temperament_notes?: string[];
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface HealthRecord {
@@ -58,7 +58,7 @@ interface Conversation {
   last_message_preview?: string;
   last_message_at?: string;
   related_entity_id?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface Message {
@@ -243,7 +243,7 @@ const PuppyProfile = () => {
       }
       setNewMessageContent("");
     } catch (err: any) {
-      toast({ variant: "destructive", title: "Failed to send message", description: err.message });
+      toast({ variant:
     }
   };
 

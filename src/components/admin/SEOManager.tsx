@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
   Card,
@@ -82,7 +81,7 @@ const SEOManager = () => {
   const [selectedTab, setSelectedTab] = useState("pages");
   const [selectedPage, setSelectedPage] = useState<string | null>(null);
   const [pageMeta, setPageMeta] = useState(mockPageMeta);
-  const [editingMeta, setEditingMeta] = useState<any>(null);
+  const [editingMeta, setEditingMeta] = useState<Record<string, unknown> | null>(null);
   
   const handleEditPage = (pageId: string) => {
     const page = pageMeta.find(p => p.id === pageId);
@@ -233,6 +232,7 @@ const SEOManager = () => {
                   <Label htmlFor="page-description">Meta Description</Label>
                   <Textarea
                     id="page-description"
+                    value={
                     value={editingMeta?.description || ""}
                     onChange={(e) => setEditingMeta({...editingMeta, description: e.target.value})}
                     maxLength={160}

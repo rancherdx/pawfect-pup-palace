@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { CreditCard, Shield, Heart, PawPrint } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,7 @@ interface SquareCheckoutProps {
   puppyId: string;
   userId?: string;
   customerEmail?: string;
-  onSuccess: (paymentResult: any) => void;
+  onSuccess: (paymentResult: unknown) => void;
   onCancel: () => void;
 }
 
@@ -172,6 +171,7 @@ const SquareCheckout = ({
                   <Input
                     id="firstName"
                     name="firstName"
+                    value={billingInfo.first
                     value={billingInfo.firstName}
                     onChange={handleInputChange}
                     required

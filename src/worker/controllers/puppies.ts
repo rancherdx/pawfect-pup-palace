@@ -60,7 +60,7 @@ export async function getAllPuppies(request: Request, env: Env) {
   const offset = (page - 1) * limit;
   
   let queryString = 'SELECT p.*, b.name as breed_name, l.name as litter_name FROM puppies p LEFT JOIN breeds b ON p.breed_id = b.id LEFT JOIN litters l ON p.litter_id = l.id WHERE 1=1';
-  const queryParams: any[] = [];
+  const queryParams: unknown[] = [];
   
   if (breedName) {
     queryString += ' AND b.name = ?';
@@ -85,7 +85,7 @@ export async function getAllPuppies(request: Request, env: Env) {
     }));
 
     let countQueryString = 'SELECT COUNT(p.id) as total FROM puppies p LEFT JOIN breeds b ON p.breed_id = b.id WHERE 1=1';
-    const countParams: any[] = [];
+    const countParams: unknown[] = [];
     if (breedName) {
       countQueryString += ' AND b.name = ?';
       countParams.push(breedName);

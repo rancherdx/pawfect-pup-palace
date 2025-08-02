@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -50,7 +49,7 @@ const TransactionHistory = () => {
     setCurrentPage(1);
   }, [selectedFilter]);
 
-  const fetchTransactions = async ({ queryKey }: any): Promise<ApiResponse> => {
+  const fetchTransactions = async ({ queryKey }: { queryKey: [string, number, number, string, string] }): Promise<ApiResponse> => {
     const [_key, page, limit, status, search] = queryKey;
     const params = new URLSearchParams({
       page: page.toString(),
@@ -195,6 +194,7 @@ const TransactionHistory = () => {
                       </TableCell>
                       <TableCell>
                         <Badge variant={getStatusBadgeVariant(transaction.status)}>
+                         
                           {transaction.status}
                         </Badge>
                       </TableCell>

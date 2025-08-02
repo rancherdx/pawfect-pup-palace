@@ -117,7 +117,7 @@ export async function requestDataDeletion(request: Request, env: Env) {
       { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error processing data deletion request:', error);
     if (error instanceof SyntaxError) {
         return createErrorResponse('Invalid JSON payload.', null, 400);

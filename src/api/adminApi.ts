@@ -1,4 +1,3 @@
-
 import { fetchAdminAPI } from "./client";
 
 export const adminApi = {
@@ -6,7 +5,7 @@ export const adminApi = {
   getAllUsers: (params: { page?: number; limit?: number; search?: string } = {}) => 
     fetchAdminAPI('/api/admin/users', { method: 'GET' }),
   
-  updateUser: (id: string, userData: any) => 
+  updateUser: (id: string, userData: Record<string, unknown>) => 
     fetchAdminAPI(`/api/admin/users/${id}`, {
       method: 'PUT',
       body: JSON.stringify(userData),
@@ -21,13 +20,13 @@ export const adminApi = {
     return { puppies: response.data || response.puppies || [], pagination: response.pagination || {} };
   },
 
-  createPuppy: (puppyData: any) => 
+  createPuppy: (puppyData: Record<string, unknown>) => 
     fetchAdminAPI('/api/admin/puppies', {
       method: 'POST',
       body: JSON.stringify(puppyData),
     }),
 
-  updatePuppy: (id: string, puppyData: any) => 
+  updatePuppy: (id: string, puppyData: Record<string, unknown>) => 
     fetchAdminAPI(`/api/admin/puppies/${id}`, {
       method: 'PUT',
       body: JSON.stringify(puppyData),
@@ -40,13 +39,13 @@ export const adminApi = {
   getStudDogs: (params: { page?: number; limit?: number; search?: string } = {}) => 
     fetchAdminAPI('/api/admin/stud-dogs', { method: 'GET' }),
 
-  createStudDog: (studDogData: any) => 
+  createStudDog: (studDogData: Record<string, unknown>) => 
     fetchAdminAPI('/api/admin/stud-dogs', {
       method: 'POST',
       body: JSON.stringify(studDogData),
     }),
 
-  updateStudDog: (id: string, studDogData: any) => 
+  updateStudDog: (id: string, studDogData: Record<string, unknown>) => 
     fetchAdminAPI(`/api/admin/stud-dogs/${id}`, {
       method: 'PUT',
       body: JSON.stringify(studDogData),
@@ -59,13 +58,13 @@ export const adminApi = {
   getAllPosts: (params: { status?: string; page?: number; limit?: number } = {}) => 
     fetchAdminAPI('/api/admin/blog-posts', { method: 'GET' }),
 
-  createPost: (postData: any) => 
+  createPost: (postData: Record<string, unknown>) => 
     fetchAdminAPI('/api/admin/blog-posts', {
       method: 'POST',
       body: JSON.stringify(postData),
     }),
 
-  updatePost: (id: string, postData: any) => 
+  updatePost: (id: string, postData: Record<string, unknown>) => 
     fetchAdminAPI(`/api/admin/blog-posts/${id}`, {
       method: 'PUT',
       body: JSON.stringify(postData),
@@ -78,13 +77,13 @@ export const adminApi = {
   getTestimonials: async () => {
     return fetchAdminAPI('/api/testimonials');
   },
-  createTestimonial: async (data: any) => {
+  createTestimonial: async (data: Record<string, unknown>) => {
     return fetchAdminAPI('/api/testimonials', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
-  updateTestimonial: async (id: string, data: any) => {
+  updateTestimonial: async (id: string, data: Record<string, unknown>) => {
     return fetchAdminAPI(`/api/testimonials/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -100,13 +99,13 @@ export const adminApi = {
   getBreedTemplates: async () => {
     return fetchAdminAPI('/api/breed-templates');
   },
-  createBreedTemplate: async (data: any) => {
+  createBreedTemplate: async (data: Record<string, unknown>) => {
     return fetchAdminAPI('/api/breed-templates', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
-  updateBreedTemplate: async (id: string, data: any) => {
+  updateBreedTemplate: async (id: string, data: Record<string, unknown>) => {
     return fetchAdminAPI(`/api/breed-templates/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -129,13 +128,13 @@ export const adminApi = {
   getLitterById: async (id: string) => {
     return fetchAdminAPI(`/api/litters/${id}`);
   },
-  createLitter: async (data: any) => {
+  createLitter: async (data: Record<string, unknown>) => {
     return fetchAdminAPI('/api/litters', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
-  updateLitter: async (id: string, data: any) => {
+  updateLitter: async (id: string, data: Record<string, unknown>) => {
     return fetchAdminAPI(`/api/litters/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -146,4 +145,5 @@ export const adminApi = {
       method: 'DELETE',
     });
   },
+};
 };

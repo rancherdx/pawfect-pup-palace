@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { HeartHandshake, PawPrint, Dog, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,7 +18,7 @@ interface SuccessAnimationProps {
 }
 
 const boneShape = {
-  draw: (ctx: any) => {
+  draw: (ctx: CanvasRenderingContext2D) => {
     ctx.beginPath();
     // Draw bone shape
     ctx.arc(0, -6, 6, 0, Math.PI * 2);
@@ -30,7 +29,7 @@ const boneShape = {
 };
 
 const pawShape = {
-  draw: (ctx: any) => {
+  draw: (ctx: CanvasRenderingContext2D) => {
     ctx.beginPath();
     // Draw paw shape - main pad
     ctx.arc(0, 0, 5, 0, Math.PI * 2);
@@ -91,6 +90,7 @@ const SuccessAnimation = ({ puppy, returnHome, viewProfile }: SuccessAnimationPr
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.5 }}
         transition={{ duration: 0.5 }}
       >
         <div className="mb-8 flex justify-center">

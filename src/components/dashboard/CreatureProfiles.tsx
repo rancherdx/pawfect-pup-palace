@@ -20,7 +20,7 @@ export interface PuppyProfileData {
   // The mock data had more detailed fields like weightHistory, etc. which are not directly on puppy from /api/my-puppies
   // These will be fetched in PuppyProfile.tsx (the detailed view)
   // For CreatureCard, we'll pass what we have and let it adapt.
-  [key: string]: any; // Allow other properties
+  [key: string]: unknown; // Allow other properties
 }
 
 

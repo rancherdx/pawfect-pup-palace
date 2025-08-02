@@ -5,7 +5,7 @@ import type { Puppy, PublicPuppyListResponse } from '@/types/puppy';
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 // Generic API request function with proper error handling
-async function apiRequest<T = any>(endpoint: string, options: RequestInit = {}): Promise<T> {
+async function apiRequest<T = unknown>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const config: RequestInit = {
     headers: {
       'Content-Type': 'application/json',

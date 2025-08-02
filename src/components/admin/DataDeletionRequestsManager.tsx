@@ -63,11 +63,11 @@ const DataDeletionRequestsManager = () => {
       setCurrentPage(response.pagination?.currentPage || 1);
       setTotalPages(response.pagination?.totalPages || 1);
       setTotalItems(response.pagination?.totalRequests || 0);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         variant: "destructive",
         title: "Failed to fetch requests",
-        description: error.message || "An unexpected error occurred.",
+        description: error instanceof Error ? error.message : "An unexpected error occurred.",
       });
     } finally {
       setIsLoading(false);
@@ -206,7 +206,7 @@ const DataDeletionRequestsManager = () => {
           {selectedRequest && (
             <div className="space-y-3 py-4 max-h-[70vh] overflow-y-auto">
               <p><strong>Name:</strong> {selectedRequest.name || "N/A"}</p>
-              <p><strong>Email:</strong> {selectedRequest.email}</p>
+              <p><strong>Email:</strong
               <p><strong>Requested At:</strong> {format(new Date(selectedRequest.requested_at), "PPpp")}</p>
               <p><strong>Status:</strong> <Badge variant={getStatusBadgeVariant(selectedRequest.status)}>{selectedRequest.status}</Badge></p>
               <p><strong>Account Creation Timeframe:</strong> {selectedRequest.account_creation_timeframe || "N/A"}</p>

@@ -5,7 +5,7 @@ const STRAPI_API_TOKEN = import.meta.env.VITE_STRAPI_API_TOKEN;
 const STRAPI_API_URL = import.meta.env.VITE_STRAPI_API_URL || '/api';
 
 // Keep fetchAdminAPI for any legacy code that might still use it
-export const fetchAdminAPI = async (url: string, options: any = {}) => {
+export const fetchAdminAPI = async (url: string, options: Record<string, unknown> = {}) => {
   const mergedOptions = {
     headers: {
       'Content-Type': 'application/json',

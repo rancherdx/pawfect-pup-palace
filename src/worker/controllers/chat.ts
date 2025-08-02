@@ -29,7 +29,7 @@ export async function getMyConversations(request: Request, env: Env, authResult:
 
         const countStmt = db.prepare(`SELECT COUNT(*) as total FROM conversations WHERE user_id = ?`).bind(userId);
         const { results: countResult } = await countStmt.all();
-        const totalConversations = (countResult[0] as any)?.total || 0;
+        const totalConversations = (countResult[0] as Record<string, unknown>)?.total || 0;
 
         return new Response(JSON.stringify({
             data: results,

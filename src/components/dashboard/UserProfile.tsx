@@ -57,12 +57,12 @@ const UserProfile = () => {
         description: "Your profile information has been successfully updated.",
         className: "bg-green-500 text-white",
       });
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Unknown error");
       toast({
         variant: "destructive",
         title: "Error updating profile",
-        description: err.message,
+        description: err instanceof Error ? err.message : "Unknown error",
       });
     } finally {
       setIsUpdating(false);

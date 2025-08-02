@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -64,12 +63,15 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
   const { data: integrationsData, isLoading, isError, error } = useQuery({
     queryKey: ['integrations'],
     queryFn: async (): Promise<Integration[]> => {
-      const response = await apiRequest<any>('/admin/integrations');
-      const rawIntegrations = response.integrations || response;
-      return rawIntegrations.map((int: any) => ({
-        ...int,
-        other_config: typeof int.other_config === 'string' ? JSON.parse(int.other_config || '{}') : (int.other_config || {}),
-      }));
+      const response = await apiRequest<unknown>('/admin/integrations');
+      const rawIntegrations = (response as { integrations?: unknown[] }).integrations || response;
+      return (rawIntegrations as unknown[]).map((int: unknown) => {
+        const integrationObj = int as Integration;
+        return {
+          ...integrationObj,
+          other_config: typeof integrationObj.other_config === 'string' ? JSON.parse(integrationObj.other_config || '{}') : (integrationObj.other_config || {}),
+        };
+      });
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -251,9 +253,7 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
                     Go to Square Developer Dashboard <ExternalLink className="h-4 w-4 ml-1" />
                   </a>
                   <p className="text-xs text-amber-600 dark:text-amber-400 mt-2 p-2 bg-amber-50 dark:bg-amber-900/30 rounded">
-                    <strong>Important Security Note:</strong> Ensure <code>ENCRYPTION_KEY_SECRET</code> is set in your worker's environment variables. This key is crucial for securing the API keys you store. It must be a 64-character hex string.
-                  </p>
-                </div>
+                    <strong>Important Security Note:</strong> Ensure <code>ENCRYPTION_KEY_SECRET</code> is set in your worker
                 <div className="space-y-2 p-4 border rounded-lg dark:border-gray-700">
                   <h4 className="font-semibold text-lg">Setting up Email Service (e.g., SendGrid)</h4>
                   <p className="text-sm text-muted-foreground">

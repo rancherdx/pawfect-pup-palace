@@ -59,8 +59,8 @@ const TawkToWidget: React.FC = () => {
       );
 
       // Ensure Tawk_API is globally available for the script
-      (window as any).Tawk_API = (window as any).Tawk_API || {};
-      (window as any).Tawk_LoadStart = new Date();
+      (window as Record<string, unknown>).Tawk_API = (window as Record<string, unknown>).Tawk_API || {};
+      (window as Record<string, unknown>).Tawk_LoadStart = new Date();
 
       const s1 = document.createElement("script");
       const s0 = document.getElementsByTagName("script")[0];

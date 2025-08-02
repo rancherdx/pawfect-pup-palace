@@ -1,4 +1,3 @@
-
 import { fetchAPI } from "@/utils/fetchAPI";
 
 export const blogApi = {
@@ -39,14 +38,14 @@ export const littersApi = {
     const query = `/api/litters/${id}`;
     return fetchAPI(query);
   },
-  createLitter: async (data: any) => {
+  createLitter: async (data: Record<string, unknown>) => {
     const query = `/api/litters`;
     return fetchAPI(query, {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
-  updateLitter: async (id: string, data: any) => {
+  updateLitter: async (id: string, data: Record<string, unknown>) => {
     return fetchAPI(`/api/litters/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -64,4 +63,5 @@ export const testimonialApi = {
     const response = await fetchAPI('/api/testimonials');
     return response.data || response;
   },
+};
 };

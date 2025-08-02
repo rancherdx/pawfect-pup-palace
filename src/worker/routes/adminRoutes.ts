@@ -1,11 +1,12 @@
 import { getAllLitters, getLitterById, createLitter, updateLitter, deleteLitter } from '../controllers/litters';
 import { authenticate } from '../utils/auth';
+import type { Env } from '../env';
 
 // Define the structure for route handlers with authentication
 interface Route {
   method: string;
   path: string;
-  handler: (request: Request, env: any, authResult: any) => Promise<Response> | Response;
+  handler: (request: Request, env: Env, authResult: unknown) => Promise<Response> | Response;
   auth?: boolean;
 }
 
@@ -13,14 +14,14 @@ interface Route {
 interface PublicRoute {
   method: string;
   path: string;
-  handler: (request: Request, env: any) => Promise<Response> | Response;
+  handler: (request: Request, env: Env) => Promise<Response> | Response;
 }
 
 // Authentication middleware
 const withAuth = (route: Route) => {
   return {
     ...route,
-    handler: async (request: Request, env: any) => {
+    handler: async (request: Request, env: Env) => {
       const authResult = await authenticate(request, env);
       if (!authResult?.userId) {
         return new Response(JSON.stringify({ error: 'Unauthorized' }), {

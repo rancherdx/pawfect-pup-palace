@@ -1,4 +1,3 @@
-
 import { IRequest } from 'itty-router';
 import { corsHeaders } from '../utils/cors';
 import type { Env } from '../env';
@@ -8,7 +7,7 @@ import { getAllLitters, getLitterById } from '../controllers/litters';
 import { getSiteSettings as getPublicSiteSettings } from '../controllers/settings';
 import { getSystemStatus, getSystemUptime } from '../controllers/systemStatusController';
 
-export const publicRoutes = (router: any) => {
+export const publicRoutes = (router: unknown) => {
   // Privacy routes
   router.post('/api/privacy/deletion-request', (request: IRequest, env: Env, ctx: ExecutionContext) => 
     requestDataDeletion(request as unknown as Request, env));
@@ -32,4 +31,5 @@ export const publicRoutes = (router: any) => {
     getSystemStatus(request as unknown as Request, env));
   router.get('/api/system/uptime', (request: IRequest, env: Env, ctx: ExecutionContext) => 
     getSystemUptime(request as unknown as Request, env));
+};
 };

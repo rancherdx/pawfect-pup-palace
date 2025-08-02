@@ -1,4 +1,3 @@
-
 import type { Env } from '../env';
 import { corsHeaders } from '../utils/cors';
 
@@ -62,7 +61,7 @@ interface StudDogPublicDetail extends StudDogPublicListItem {
 
 // Admin: Create Stud Dog
 export async function createStudDog(request: Request, env: Env): Promise<Response> {
-  const authResult = (request as any).auth;
+  const authResult = (request as unknown).auth;
   if (!authResult || !authResult.userId) {
     return createErrorResponse("Unauthorized", "Admin authentication required.", 401);
   }
@@ -149,7 +148,7 @@ export async function listAdminStudDogs(request: Request, env: Env): Promise<Res
     const offset = (page - 1) * limit;
 
     let whereClauses: string[] = ["1 = 1"]; // Start with a truthy condition
-    let bindings: any[] = [];
+    const bindings: unknown[] = [];
 
     if (breedIdFilter) {
         whereClauses.push("sd.breed_id = ?");
@@ -432,4 +431,5 @@ export async function deleteStudDog(request: Request, env: Env, studDogId: strin
     console.error(`Error deleting stud dog ${studDogId}:`, error);
     return createErrorResponse("Failed to delete stud dog", error instanceof Error ? error.message : "Unknown error", 500);
   }
+}
 }

@@ -1,4 +1,3 @@
-
 import type { Env } from '../env';
 import { corsHeaders } from '../utils/cors';
 
@@ -32,7 +31,7 @@ interface UserTransactionListItem {
     status: string;
     created_at: string;
     puppy_id: string | null;
-    payment_method_details: any | null; // Parsed JSON
+    payment_method_details: Record<string, unknown> | null; // Parsed JSON
 }
 
 
@@ -51,7 +50,7 @@ export async function listTransactions(request: Request, env: Env): Promise<Resp
   const offset = (page - 1) * limit;
 
   let whereClauses: string[] = [];
-  let bindings: any[] = [];
+  const bindings: unknown[] = [];
 
   if (statusFilter) {
     whereClauses.push("status = ?");
@@ -197,4 +196,5 @@ export async function listUserTransactions(request: Request, env: Env): Promise<
      if (error instanceof Error) errorMessage = error.message;
     return createErrorResponse("Failed to list your transactions", errorMessage, 500);
   }
+}
 }

@@ -1,4 +1,3 @@
-
 // src/worker/controllers/users.ts
 
 // IMPORTANT SECURITY CONSIDERATIONS:
@@ -505,4 +504,5 @@ export async function deleteUserAdmin(request: Request, env: Env, userIdParam: s
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return createErrorResponse('Failed to delete user', errorMessage, 500);
   }
+}
 }

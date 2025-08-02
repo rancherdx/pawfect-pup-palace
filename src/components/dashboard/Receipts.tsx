@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -155,7 +154,7 @@ const Receipts = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
 
-  const fetchMyTransactions = async ({ queryKey }: any): Promise<TransactionsApiResponse> => {
+  const fetchMyTransactions = async ({ queryKey }: { queryKey: [string, number, number] }): Promise<TransactionsApiResponse> => {
     const [_key, page, limit] = queryKey;
     const params = new URLSearchParams({
       page: page.toString(),
@@ -203,6 +202,7 @@ const Receipts = () => {
         </h2>
         <div className="relative w-full sm:w-auto">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
           <Input
             placeholder="Search current page..."
             value={searchQuery}

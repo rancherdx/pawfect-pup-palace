@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '@/api';
@@ -28,7 +27,7 @@ const PuppyManagement = () => {
   const puppies: Puppy[] = data?.puppies || [];
 
   const createPuppyMutation = useMutation({
-    mutationFn: (puppyData: any) => adminApi.createPuppy(puppyData),
+    mutationFn: (puppyData: Record<string, unknown>) => adminApi.createPuppy(puppyData),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: ['puppies'] });
       toast.success('Puppy created successfully!');
@@ -161,4 +160,5 @@ const PuppyManagement = () => {
   );
 };
 
+export default PuppyManagement;
 export default PuppyManagement;

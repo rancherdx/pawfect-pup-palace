@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { CreditCard, CheckCircle, AlertCircle, ArrowRight, Loader2 } from "lucide-react";
@@ -22,9 +21,9 @@ const SquareIntegration = () => {
   const { data: squareIntegration, isLoading: isLoadingIntegrations, isError: isErrorIntegrations } = useQuery({
     queryKey: ['integrations'],
     queryFn: async (): Promise<Integration | undefined> => {
-      const response = await apiRequest<any>('/admin/integrations');
-      const allIntegrations = response.integrations || response;
-      return allIntegrations.find((int: any) => int.service_name?.toLowerCase() === 'square');
+      const response = await apiRequest<unknown>('/admin/integrations');
+      const allIntegrations = (response as { integrations?: unknown[] }).integrations || response;
+      return (allIntegrations as unknown[]).find((int: unknown) => (int as Integration).service_name?.toLowerCase() === 'square');
     },
     staleTime: 5 * 60 * 1000,
     select: (data: any) => data ? ({
@@ -186,6 +185,7 @@ const SquareIntegration = () => {
               </Button>
             </div>
           </CardContent>
+        </Card>
         </Card>
         
         {/* Sync Settings Card - styling updated based on isConnected */}

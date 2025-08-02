@@ -13,7 +13,7 @@ interface PaymentMethodsProps {
   selectedMethod: string;
   totalAmount: number;
   isProcessing: boolean; // This prop might be controlled by parent, or we use a local one
-  onComplete: (paymentResult?: any) => void; // Modified to potentially pass payment result
+  onComplete: (paymentResult?: unknown) => void; // Modified to potentially pass payment result
   onPrevious: () => void;
   // Optional props that might come from a broader checkout context
   userId?: string;
@@ -230,7 +230,7 @@ const PaymentMethods = ({
                               className="pl-10"
                               value={cardNumber}
                               onChange={(e) => setCardNumber(e.target.value)}
-                            />
+                           
                             <CreditCard className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                           </div>
                         </div>

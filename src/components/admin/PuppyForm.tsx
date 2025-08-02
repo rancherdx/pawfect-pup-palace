@@ -67,7 +67,7 @@ const PuppyForm: React.FC<PuppyFormProps> = ({ puppy, onClose, isEditMode }) => 
   const [isLoading, setIsLoading] = useState(false);
   const queryClient = useQueryClient();
 
-  const mutation = useMutation<any, Error, { id?: string; data: PuppyFormData }>({
+  const mutation = useMutation<unknown, Error, { id?: string; data: PuppyFormData }>({
     mutationFn: ({ id, data }) => {
       setIsLoading(true);
       if (isEditMode && id) {

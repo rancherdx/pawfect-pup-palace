@@ -1,4 +1,3 @@
-
 import { Router, IRequest } from 'itty-router';
 import { corsHeaders } from './utils/cors';
 import type { Env } from './env';
@@ -60,7 +59,7 @@ adminRoutes.forEach(route => {
     }
   };
   
-  (router as any)[route.method.toLowerCase()](route.path, wrappedHandler);
+  (router as unknown)[route.method.toLowerCase()](route.path, wrappedHandler);
 });
 
 // Catch-all for /api/* routes not matched above
@@ -168,4 +167,5 @@ export default {
       headers: corsHeaders 
     });
   },
+};
 };

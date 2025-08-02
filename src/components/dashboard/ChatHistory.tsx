@@ -37,7 +37,7 @@ interface Message {
 }
 
 // API Fetcher (similar to one in UserProfile)
-const makeChatApiRequest = async (url: string, method: string, token: string | null, body?: any) => {
+const makeChatApiRequest = async (url: string, method: string, token: string | null, body?: unknown) => {
   if (!token) throw new Error("Authentication token is required.");
   const response = await fetch(url, {
     method,
@@ -195,7 +195,7 @@ const ChatHistory = () => {
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Chat List */}
-        <div className="lg:col-span-1 space-y-3 h-[600px] overflow-y-auto pr-2">
+        <div className="lg:col-span-1
           <h3 className="font-medium text-muted-foreground sticky top-0 bg-background py-1">Conversations</h3>
           {conversations.length === 0 && !isLoadingConvos && (
             <p className="text-sm text-muted-foreground text-center py-4">No conversations yet.</p>

@@ -64,7 +64,7 @@ export async function createJWT(payload: object, env: Env, expiresInDays: number
   return `${encodedHeader}.${encodedPayload}.${signature}`;
 }
 
-export async function verifyJWT(token: string, env: Env): Promise<any | null> {
+export async function verifyJWT(token: string, env: Env): Promise<Record<string, unknown> | null> {
   if (!env.JWT_SECRET) {
     console.error("JWT_SECRET is not defined in environment variables for verification.");
     return null;
@@ -146,7 +146,7 @@ export async function adminAuthMiddleware(request: Request, env: Env): Promise<R
 
   // If execution reaches here, user is an admin.
   // Attach decoded token to request for use in subsequent handlers (optional, but good practice)
-  (request as any).auth = authResult.decodedToken;
+  (request as Record<string, unknown>).auth = authResult.decodedToken;
 }
 
 // Removed generateToken (simple string generator) as it's no longer needed.

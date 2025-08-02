@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -60,7 +59,7 @@ const AdminUserManager: React.FC = () => {
     return () => clearTimeout(handler);
   }, [searchUserQuery]);
 
-  const fetchUsers = async ({ queryKey }: any): Promise<UsersApiResponse> => {
+  const fetchUsers = async ({ queryKey }: { queryKey: [string, number, number, string] }): Promise<UsersApiResponse> => {
     const [_key, page, limit, search] = queryKey;
     const params = new URLSearchParams({
       page: page.toString(),
@@ -213,6 +212,7 @@ const AdminUserManager: React.FC = () => {
           <div className="flex items-center space-x-2">
             <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={data.currentPage <= 1 || isLoading || isPlaceholderData}><ArrowLeft className="mr-2 h-4 w-4" />Previous</Button>
             <span>Page {data.currentPage} of {data.totalPages}</span>
+            <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => prev + 1)} disabled={data.currentPage >= data.totalPages || isLoading || isPlaceholderData}><ArrowRight className="ml-2 h-4 w-4" />Next
             <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => prev + 1)} disabled={data.currentPage >= data.totalPages || isLoading || isPlaceholderData}><ArrowRight className="ml-2 h-4 w-4" />Next</Button>
           </div>
         </div>
