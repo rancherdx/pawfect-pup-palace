@@ -88,12 +88,12 @@ export const publicApi = {
     if (params?.page) searchParams.set('page', params.page.toString());
     
     const query = searchParams.toString() ? `?${searchParams.toString()}` : '';
-    const result = await apiRequest(`/puppies${query}`);
+    const result = await apiRequest(`/puppies${query}`) as any;
     
     // Ensure consistent response structure with puppies property
     return {
-      puppies: result.puppies || result.data || [],
-      pagination: result.pagination || {}
+      puppies: result?.puppies || result?.data || [],
+      pagination: result?.pagination || {}
     };
   },
 
@@ -172,8 +172,8 @@ export const adminApi = {
   getAllPuppies: async () => {
     const response = await apiRequest('/admin/puppies', {
       headers: getAuthHeaders(),
-    });
-    return { puppies: response.data || response.puppies || [], pagination: response.pagination || {} };
+    }) as any;
+    return { puppies: response?.data || response?.puppies || [], pagination: response?.pagination || {} };
   },
 
   createPuppy: async (puppyData: any) => {

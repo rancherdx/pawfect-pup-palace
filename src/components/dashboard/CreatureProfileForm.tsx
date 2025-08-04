@@ -150,5 +150,3 @@ const CreatureProfileForm = ({ onSubmit, onCancel }: CreatureProfileFormProps) =
   );
 };
 
-export default CreatureProfileForm;
-export default CreatureProfileForm;
