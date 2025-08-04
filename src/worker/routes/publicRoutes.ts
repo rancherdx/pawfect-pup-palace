@@ -32,4 +32,3 @@ export const publicRoutes = (router: unknown) => {
   router.get('/api/system/uptime', (request: IRequest, env: Env, ctx: ExecutionContext) => 
     getSystemUptime(request as unknown as Request, env));
 };
-};

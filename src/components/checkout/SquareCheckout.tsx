@@ -171,7 +171,6 @@ const SquareCheckout = ({
                   <Input
                     id="firstName"
                     name="firstName"
-                    value={billingInfo.first
                     value={billingInfo.firstName}
                     onChange={handleInputChange}
                     required

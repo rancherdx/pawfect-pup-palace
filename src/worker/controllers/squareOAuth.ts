@@ -80,7 +80,7 @@ export async function handleOAuthCallback(request: Request, env: Env): Promise<R
     if (!code) {
       return new Response(JSON.stringify({
         error: 'Missing authorization code'
-      ), {
+      }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });

@@ -174,7 +174,6 @@ const AdminStudDogManager: React.FC = () => {
                   <TableCell>{dog.owner_name || dog.owner_user_id?.substring(0,8) || 'N/A'}</TableCell>
                   <TableCell>${dog.stud_fee.toFixed(2)}</TableCell>
                   <TableCell><Badge variant={dog.is_available ? "default" : "outline"}>{dog.is_available ? "Yes" : "No"}</Badge></TableCell>
-                  <TableCell className="text-xs">{
                   <TableCell className="text-xs">{formatDate(dog.updated_at)}</TableCell>
                   <TableCell className="text-right space-x-1">
                     <Button variant="outline" size="icon" title="Edit" onClick={() => handleEditClick(dog)}><Edit2 className="h-4 w-4" /></Button>

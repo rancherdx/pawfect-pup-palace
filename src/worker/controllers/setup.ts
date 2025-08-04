@@ -97,4 +97,3 @@ export async function createFirstAdmin(request: Request, env: Env): Promise<Resp
     return createErrorResponse('Setup failed', error instanceof Error ? error.message : 'Unknown error', 500);
   }
 }
-}

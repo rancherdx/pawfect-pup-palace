@@ -47,4 +47,3 @@ export function verifyToken(token: string, secret: string): Record<string, unkno
   // This function is now handled by verifyJWT in ../auth.ts
   throw new Error('Use verifyJWT from ../auth.ts instead');
 }
-}

@@ -197,4 +197,3 @@ export async function listUserTransactions(request: Request, env: Env): Promise<
     return createErrorResponse("Failed to list your transactions", errorMessage, 500);
   }
 }
-}

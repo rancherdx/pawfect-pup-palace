@@ -232,7 +232,6 @@ const SEOManager = () => {
                   <Label htmlFor="page-description">Meta Description</Label>
                   <Textarea
                     id="page-description"
-                    value={
                     value={editingMeta?.description || ""}
                     onChange={(e) => setEditingMeta({...editingMeta, description: e.target.value})}
                     maxLength={160}

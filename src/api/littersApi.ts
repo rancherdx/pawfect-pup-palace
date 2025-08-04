@@ -38,4 +38,3 @@ export const updateLitter = async (_id: string, data: Partial<Litter>): Promise<
 export const deleteLitter = async (_id: string): Promise<{ id: string }> => {
   return { id: _id };
 };
-};

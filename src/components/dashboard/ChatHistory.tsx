@@ -195,7 +195,7 @@ const ChatHistory = () => {
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Chat List */}
-        <div className="lg:col-span-1
+        <div className="lg:col-span-1">
           <h3 className="font-medium text-muted-foreground sticky top-0 bg-background py-1">Conversations</h3>
           {conversations.length === 0 && !isLoadingConvos && (
             <p className="text-sm text-muted-foreground text-center py-4">No conversations yet.</p>

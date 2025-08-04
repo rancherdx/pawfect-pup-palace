@@ -432,4 +432,3 @@ export async function deleteStudDog(request: Request, env: Env, studDogId: strin
     return createErrorResponse("Failed to delete stud dog", error instanceof Error ? error.message : "Unknown error", 500);
   }
 }
-}

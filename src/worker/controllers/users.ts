@@ -505,4 +505,3 @@ export async function deleteUserAdmin(request: Request, env: Env, userIdParam: s
     return createErrorResponse('Failed to delete user', errorMessage, 500);
   }
 }
-}

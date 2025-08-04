@@ -254,6 +254,8 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
                   </a>
                   <p className="text-xs text-amber-600 dark:text-amber-400 mt-2 p-2 bg-amber-50 dark:bg-amber-900/30 rounded">
                     <strong>Important Security Note:</strong> Ensure <code>ENCRYPTION_KEY_SECRET</code> is set in your worker
+                  </p>
+                </div>
                 <div className="space-y-2 p-4 border rounded-lg dark:border-gray-700">
                   <h4 className="font-semibold text-lg">Setting up Email Service (e.g., SendGrid)</h4>
                   <p className="text-sm text-muted-foreground">

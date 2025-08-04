@@ -14,4 +14,3 @@ export const setupRoutes = (router: unknown) => {
     return createFirstAdmin(request as unknown as Request, env);
   });
 };
-};

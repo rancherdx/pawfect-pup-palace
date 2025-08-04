@@ -243,7 +243,11 @@ const PuppyProfile = () => {
       }
       setNewMessageContent("");
     } catch (err: any) {
-      toast({ variant:
+      toast({ 
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to save profile. Please try again."
+      });
     }
   };
 

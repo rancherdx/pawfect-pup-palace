@@ -230,7 +230,7 @@ const PaymentMethods = ({
                               className="pl-10"
                               value={cardNumber}
                               onChange={(e) => setCardNumber(e.target.value)}
-                           
+                            />
                             <CreditCard className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                           </div>
                         </div>

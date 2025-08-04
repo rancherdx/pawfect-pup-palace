@@ -23,4 +23,3 @@ export const getAllPuppies = async (_params?: Record<string, unknown>): Promise<
 export const getPuppyById = async (id: string): Promise<Puppy> => {
   return { ...dummyPuppy, id };
 };
-};

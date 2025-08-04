@@ -294,4 +294,3 @@ export async function deleteLitter(request: Request, env: Env, authResult: AuthR
     });
   }
 }
-}

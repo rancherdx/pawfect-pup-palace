@@ -84,4 +84,3 @@ export const protectedRoutes = (router: unknown) => {
     return sendMessage(request as unknown as Request, env, authResult.decodedToken, params.conversationId);
   });
 };
-};

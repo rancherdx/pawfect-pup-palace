@@ -145,4 +145,3 @@ export async function updateDataDeletionRequestStatus(request: Request, env: Env
     });
   }
 }
-}

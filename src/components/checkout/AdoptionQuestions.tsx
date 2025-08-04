@@ -244,8 +244,7 @@ const AdoptionQuestions = ({ data, onDataChange, onNext, onPrevious }: AdoptionQ
               <Textarea 
                 id="workSchedule" 
                 name="workSchedule" 
-                value={form
-                value={formData.workSchedule} 
+                value={formData.workSchedule}
                 onChange={handleChange}
                 placeholder="Please describe your work hours and arrangements for pet care"
                 rows={2}

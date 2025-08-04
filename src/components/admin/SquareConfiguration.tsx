@@ -253,7 +253,6 @@ const SquareConfiguration = () => {
               type="password"
               placeholder="Enter webhook signature key"
               value={config.webhookSignatureKey}
-              onChange={(e)
               onChange={(e) => setConfig(prev => ({ ...prev, webhookSignatureKey: e.target.value }))}
             />
           </div>

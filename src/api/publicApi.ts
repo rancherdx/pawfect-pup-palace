@@ -64,4 +64,3 @@ export const testimonialApi = {
     return response.data || response;
   },
 };
-};

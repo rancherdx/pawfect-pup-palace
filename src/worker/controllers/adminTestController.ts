@@ -226,4 +226,3 @@ export async function getTestSessionLogs(request: Request, env: Env, adminToken:
     });
   }
 }
-}

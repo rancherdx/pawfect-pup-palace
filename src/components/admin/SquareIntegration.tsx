@@ -186,7 +186,6 @@ const SquareIntegration = () => {
             </div>
           </CardContent>
         </Card>
-        </Card>
         
         {/* Sync Settings Card - styling updated based on isConnected */}
         <Card className="shadow-md">

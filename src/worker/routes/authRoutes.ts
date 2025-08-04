@@ -12,4 +12,3 @@ export const authRoutes = (router: unknown) => {
   router.post('/api/auth/logout', (request: IRequest, env: Env, ctx: ExecutionContext) => 
     logout(request as unknown as Request, env));
 };
-};
