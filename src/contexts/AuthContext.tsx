@@ -49,7 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           console.log('Attempting to fetch profile with stored token.');
           const userProfile = await authApi.getProfile(); // authApi.getProfile uses getAuthHeaders which reads currentToken from localStorage
-          setUser(userProfile);
+          setUser(userProfile as User);
         } catch (initialError) {
           console.error('Initial profile fetch failed:', initialError);
           // Check if it was a 401 type error (though error structure from apiRequest might just be Error object)
@@ -57,7 +57,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (currentRefreshToken) { // Check currentRefreshToken from closure, not a new localStorage.getItem call
             console.log('Attempting token refresh during init due to profile fetch failure.');
             try {
-              const refreshResponse = await authApi.refreshToken(currentRefreshToken);
+              const refreshResponse = await authApi.refreshToken(currentRefreshToken) as any;
 
               currentToken = refreshResponse.token; // Update currentToken for retry
               localStorage.setItem('jwtToken', currentToken);
@@ -72,7 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               console.log('Token refreshed during init. Retrying profile fetch.');
               // Retry getProfile with the new token (getAuthHeaders will pick it up)
               const userProfileAfterRefresh = await authApi.getProfile();
-              setUser(userProfileAfterRefresh);
+              setUser(userProfileAfterRefresh as User);
               console.log('Profile fetched successfully after refresh.');
 
             } catch (refreshError) {
@@ -103,7 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (credentials: UserLoginData) => {
     try {
-      const response: AuthResponse = await authApi.login(credentials);
+      const response = await authApi.login(credentials) as AuthResponse;
       const { token: newAccessToken, user: userData, refreshToken: newRefreshToken } = response;
       
       localStorage.setItem('jwtToken', newAccessToken);
@@ -131,7 +131,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const register = async (registrationData: UserRegistrationData) => {
     try {
-      const response: AuthResponse = await authApi.register(registrationData);
+      const response = await authApi.register(registrationData) as AuthResponse;
       const { token: newAccessToken, user: newUser, refreshToken: newRefreshToken } = response;
       
       localStorage.setItem('jwtToken', newAccessToken);
