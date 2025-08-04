@@ -146,7 +146,7 @@ export async function adminAuthMiddleware(request: Request, env: Env): Promise<R
 
   // If execution reaches here, user is an admin.
   // Attach decoded token to request for use in subsequent handlers (optional, but good practice)
-  (request as Record<string, unknown>).auth = authResult.decodedToken;
+  (request as any).auth = authResult.decodedToken;
 }
 
 // Removed generateToken (simple string generator) as it's no longer needed.

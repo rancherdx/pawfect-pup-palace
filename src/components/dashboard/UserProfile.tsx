@@ -49,7 +49,7 @@ const UserProfile = () => {
     setIsUpdating(true);
     setError(null);
     try {
-      const updatedUserFromApi: User = await authApi.updateProfile(formData);
+      const updatedUserFromApi: User = (await authApi.updateProfile(formData)) as User;
       updateUser(updatedUserFromApi); // Update context with the full user object from API
       setIsEditing(false);
       toast({

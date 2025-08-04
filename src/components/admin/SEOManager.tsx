@@ -81,7 +81,7 @@ const SEOManager = () => {
   const [selectedTab, setSelectedTab] = useState("pages");
   const [selectedPage, setSelectedPage] = useState<string | null>(null);
   const [pageMeta, setPageMeta] = useState(mockPageMeta);
-  const [editingMeta, setEditingMeta] = useState<Record<string, unknown> | null>(null);
+  const [editingMeta, setEditingMeta] = useState<typeof mockPageMeta[0] | null>(null);
   
   const handleEditPage = (pageId: string) => {
     const page = pageMeta.find(p => p.id === pageId);
@@ -95,7 +95,7 @@ const SEOManager = () => {
     if (!editingMeta) return;
     
     setPageMeta(pageMeta.map(p => 
-      p.id === editingMeta.id ? { ...editingMeta } : p
+      p.id === editingMeta!.id ? { ...editingMeta } as typeof p : p
     ));
     
     setSelectedPage(null);
@@ -220,32 +220,32 @@ const SEOManager = () => {
                   <Label htmlFor="page-title">Page Title</Label>
                   <Input
                     id="page-title"
-                    value={editingMeta?.title || ""}
-                    onChange={(e) => setEditingMeta({...editingMeta, title: e.target.value})}
+                    value={(editingMeta?.title as string) || ""}
+                    onChange={(e) => setEditingMeta({...editingMeta!, title: e.target.value})}
                     maxLength={60}
                   />
                   <p className="text-xs text-muted-foreground text-right">
-                    {editingMeta?.title?.length || 0}/60 characters
+                    {((editingMeta?.title as string) || "").length}/60 characters
                   </p>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="page-description">Meta Description</Label>
                   <Textarea
                     id="page-description"
-                    value={editingMeta?.description || ""}
-                    onChange={(e) => setEditingMeta({...editingMeta, description: e.target.value})}
+                    value={(editingMeta?.description as string) || ""}
+                    onChange={(e) => setEditingMeta({...editingMeta!, description: e.target.value})}
                     maxLength={160}
                   />
                   <p className="text-xs text-muted-foreground text-right">
-                    {editingMeta?.description?.length || 0}/160 characters
+                    {((editingMeta?.description as string) || "").length}/160 characters
                   </p>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="page-keywords">Keywords (comma separated)</Label>
                   <Input
                     id="page-keywords"
-                    value={editingMeta?.keywords || ""}
-                    onChange={(e) => setEditingMeta({...editingMeta, keywords: e.target.value})}
+                    value={(editingMeta?.keywords as string) || ""}
+                    onChange={(e) => setEditingMeta({...editingMeta!, keywords: e.target.value})}
                     placeholder="puppies, breeding, adoption"
                   />
                 </div>
@@ -253,8 +253,8 @@ const SEOManager = () => {
                   <Label htmlFor="page-og-image">Open Graph Image URL</Label>
                   <Input
                     id="page-og-image"
-                    value={editingMeta?.ogImage || ""}
-                    onChange={(e) => setEditingMeta({...editingMeta, ogImage: e.target.value})}
+                    value={(editingMeta?.ogImage as string) || ""}
+                    onChange={(e) => setEditingMeta({...editingMeta!, ogImage: e.target.value})}
                     placeholder="https://example.com/og-image.jpg"
                   />
                 </div>

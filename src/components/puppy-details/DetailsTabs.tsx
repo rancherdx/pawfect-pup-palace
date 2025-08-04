@@ -29,15 +29,15 @@ const DetailsTabs = ({ puppy }: DetailsTabsProps) => {
       </TabsList>
 
       <TabsContent value="details" className="mt-4 animate-fade-in">
-        <DetailsTabContent puppy={puppy} />
+        <DetailsTabContent puppy={{...puppy, age: 'Unknown', gender: puppy.gender || 'Unknown', weight: String(puppy.weight || 'Unknown'), color: puppy.color || 'Unknown', birthDate: puppy.birthDate}} />
       </TabsContent>
 
       <TabsContent value="health" className="mt-4 animate-fade-in">
-        <HealthTabContent puppy={puppy} />
+        <HealthTabContent puppy={{...puppy, vaccinations: 'None on record'}} />
       </TabsContent>
 
       <TabsContent value="parents" className="mt-4 animate-fade-in">
-        <ParentsTabContent parents={puppy.parents} />
+        <ParentsTabContent parents={undefined} />
       </TabsContent>
     </Tabs>
   );

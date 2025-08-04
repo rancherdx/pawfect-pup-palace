@@ -96,7 +96,7 @@ const CreatureCard = ({ puppy }: CreatureCardProps) => {
             {/* Simplified content for the card. More details in PuppyProfile.tsx */}
             {puppy.description && (
                 <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                    {puppy.description}
+                    {String(puppy.description)}
                 </p>
             )}
              {puppy.litter_name && (

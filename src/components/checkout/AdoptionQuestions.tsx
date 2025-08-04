@@ -17,18 +17,18 @@ interface AdoptionQuestionsProps {
 
 const AdoptionQuestions = ({ data, onDataChange, onNext, onPrevious }: AdoptionQuestionsProps) => {
   const [formData, setFormData] = useState({
-    firstName: data.firstName || "",
-    lastName: data.lastName || "",
-    email: data.email || "",
-    phone: data.phone || "",
-    housingType: data.housingType || "",
-    hasYard: data.hasYard || "no",
-    hasChildren: data.hasChildren || "no",
-    childrenAges: data.childrenAges || "",
-    hasPets: data.hasPets || "no",
-    existingPets: data.existingPets || "",
-    workSchedule: data.workSchedule || "",
-    experience: data.experience || "",
+    firstName: (data.firstName as string) || "",
+    lastName: (data.lastName as string) || "",
+    email: (data.email as string) || "",
+    phone: (data.phone as string) || "",
+    housingType: (data.housingType as string) || "",
+    hasYard: (data.hasYard as string) || "no",
+    hasChildren: (data.hasChildren as string) || "no",
+    childrenAges: (data.childrenAges as string) || "",
+    hasPets: (data.hasPets as string) || "no",
+    existingPets: (data.existingPets as string) || "",
+    workSchedule: (data.workSchedule as string) || "",
+    experience: (data.experience as string) || "",
   });
   
   const [errors, setErrors] = useState<Record<string, string>>({});

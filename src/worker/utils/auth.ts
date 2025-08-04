@@ -28,9 +28,9 @@ export async function authenticate(request: Request, env: Env): Promise<AuthResu
     }
 
     return {
-      userId: decoded.userId,
-      role: decoded.role || 'user',
-      roles: decoded.roles || []
+      userId: decoded.userId as string,
+      role: (decoded.role as string) || 'user',
+      roles: (decoded.roles as string[]) || []
     };
   } catch (error) {
     console.error('Authentication error:', error);

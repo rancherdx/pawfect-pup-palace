@@ -23,7 +23,7 @@ const SquareIntegration = () => {
     queryFn: async (): Promise<Integration | undefined> => {
       const response = await apiRequest<unknown>('/admin/integrations');
       const allIntegrations = (response as { integrations?: unknown[] }).integrations || response;
-      return (allIntegrations as unknown[]).find((int: unknown) => (int as Integration).service_name?.toLowerCase() === 'square');
+      return (allIntegrations as unknown[]).find((int: unknown) => (int as Integration).service_name?.toLowerCase() === 'square') as Integration | undefined;
     },
     staleTime: 5 * 60 * 1000,
     select: (data: any) => data ? ({
