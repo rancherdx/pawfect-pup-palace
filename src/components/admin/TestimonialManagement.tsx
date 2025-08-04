@@ -60,7 +60,7 @@ const TestimonialManagement = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const testimonials: Testimonial[] = data?.testimonials || [];
+  const testimonials: Testimonial[] = (data as any)?.testimonials || [];
 
   const createTestimonialMutation = useMutation({
     mutationFn: (testimonialData: Record<string, unknown>) => adminApi.createTestimonial(testimonialData),

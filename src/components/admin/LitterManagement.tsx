@@ -42,9 +42,12 @@ const LitterManagement = () => {
 
   const queryClient = useQueryClient();
 
-  const { data, isLoading, isError } = useQuery<LitterListResponse, Error>({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['admin-litters'],
-    queryFn: () => adminApi.getAllLitters({ limit: 100 }),
+    queryFn: async () => {
+      const result = await adminApi.getAllLitters({ limit: 100 });
+      return result as LitterListResponse;
+    },
     staleTime: 5 * 60 * 1000,
   });
   

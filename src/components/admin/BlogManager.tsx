@@ -60,7 +60,7 @@ const BlogManager = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const posts: BlogPost[] = data?.posts || [];
+  const posts: BlogPost[] = (data as any)?.posts || [];
 
   const addPostMutation = useMutation({
     mutationFn: (newData: BlogPostCreateData) => adminApi.createPost(newData),
