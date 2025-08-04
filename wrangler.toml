@@ -16,6 +16,12 @@ binding = "AUTH_STORE"
 id = "puppy_breeder_AUTH_STORE"
 preview_id = "puppy_breeder_AUTH_STORE"
 
+# Redis-like cache using KV
+[[kv_namespaces]]
+binding = "REDIS_CACHE"
+id = "puppy_breeder_redis_cache"
+preview_id = "puppy_breeder_redis_cache"
+
 [[d1_databases]]
 binding = "PUPPIES_DB"
 database_name = "puppy_breeder_db"

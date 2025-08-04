@@ -1,9 +1,9 @@
-import { IRequest } from 'itty-router';
+import { IRequest, Router } from 'itty-router';
 import { corsHeaders } from '../utils/cors';
 import type { Env } from '../env';
 import { login, register, logout } from '../controllers/users';
 
-export const authRoutes = (router: unknown) => {
+export const authRoutes = (router: Router) => {
   // Auth routes
   router.post('/api/auth/login', (request: IRequest, env: Env, ctx: ExecutionContext) => 
     login(request as unknown as Request, env));

@@ -7,6 +7,8 @@ import { protectedRoutes } from './routes/protectedRoutes';
 import { squareRoutes } from './routes/squareRoutes';
 import adminRoutes from './routes/adminRoutes';
 import { authenticate } from './utils/auth';
+import { serveSwaggerUI, serveSwaggerSpec } from './swagger/ui';
+import { RedisClient, RedisUtils } from './redis/client';
 
 // Create a new router instance
 const router = Router();
@@ -21,6 +23,10 @@ router.options('*', () => {
     }
   });
 });
+
+// Swagger documentation routes
+router.get('/api/docs', () => serveSwaggerUI());
+router.get('/api/swagger.json', () => serveSwaggerSpec());
 
 // Register all route modules
 authRoutes(router);
@@ -71,6 +77,14 @@ router.all('/api/*', () => new Response(JSON.stringify({ error: 'API endpoint no
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
+    
+    // Initialize Redis client for this request
+    const redis = new RedisClient(env);
+    const redisUtils = new RedisUtils(redis);
+    
+    // Add Redis instances to env for use in controllers
+    (env as any).redis = redis;
+    (env as any).redisUtils = redisUtils;
 
     // Handle API routes
     if (url.pathname.startsWith('/api/')) {

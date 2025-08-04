@@ -1,4 +1,5 @@
 import { corsHeaders } from '../utils/cors';
+import type { Env } from '../env';
 
 interface AuthResult {
   userId: string;

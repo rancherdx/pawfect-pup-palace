@@ -23,7 +23,7 @@ interface EmailTemplateDetail extends EmailTemplateListItem {
 }
 
 // Strips html_body for list views
-function toEmailTemplateListItem(template: unknown): EmailTemplateListItem {
+function toEmailTemplateListItem(template: any): EmailTemplateListItem {
     return {
         id: template.id,
         name: template.name,
