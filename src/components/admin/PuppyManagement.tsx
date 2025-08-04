@@ -161,4 +161,3 @@ const PuppyManagement = () => {
 };
 
 export default PuppyManagement;
-export default PuppyManagement;
