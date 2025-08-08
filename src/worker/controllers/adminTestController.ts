@@ -205,7 +205,7 @@ export async function getTestSessionLogs(request: Request, env: Env, adminToken:
       JOIN admin_test_sessions ats ON atl.session_id = ats.id
       WHERE ats.admin_user_id = ?
     `;
-    const params = [adminToken.userId];
+    const params: (string | number)[] = [adminToken.userId];
 
     if (sessionId) {
       query += ` AND atl.session_id = ?`;

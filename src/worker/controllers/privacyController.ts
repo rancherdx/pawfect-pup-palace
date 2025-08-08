@@ -122,6 +122,6 @@ export async function requestDataDeletion(request: Request, env: Env) {
     if (error instanceof SyntaxError) {
         return createErrorResponse('Invalid JSON payload.', null, 400);
     }
-    return createErrorResponse('Failed to submit data deletion request.', error.message || 'An internal error occurred.', 500);
+    return createErrorResponse('Failed to submit data deletion request.', error instanceof Error ? error.message : 'An internal error occurred.', 500);
   }
 }

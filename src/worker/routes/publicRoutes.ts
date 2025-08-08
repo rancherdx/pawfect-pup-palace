@@ -7,7 +7,10 @@ import { getAllLitters, getLitterById } from '../controllers/litters';
 import { getSiteSettings as getPublicSiteSettings } from '../controllers/settings';
 import { getSystemStatus, getSystemUptime } from '../controllers/systemStatusController';
 
-export const publicRoutes = (router: unknown) => {
+// Minimal router interface compatible with itty-router instance
+type AppRouter = { get: (...args: any[]) => any; post: (...args: any[]) => any };
+
+export const publicRoutes = (router: AppRouter) => {
   // Privacy routes
   router.post('/api/privacy/deletion-request', (request: IRequest, env: Env, ctx: ExecutionContext) => 
     requestDataDeletion(request as unknown as Request, env));

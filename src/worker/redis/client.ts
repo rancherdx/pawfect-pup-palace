@@ -12,7 +12,7 @@ export class RedisClient {
   // Set a key-value pair with optional TTL
   async set(key: string, value: string, ttlSeconds?: number): Promise<boolean> {
     try {
-      const options: KVNamespacePutOptions = {};
+      const options: { expirationTtl?: number } = {};
       if (ttlSeconds) {
         options.expirationTtl = ttlSeconds;
       }

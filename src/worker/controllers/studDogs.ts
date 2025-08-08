@@ -61,7 +61,7 @@ interface StudDogPublicDetail extends StudDogPublicListItem {
 
 // Admin: Create Stud Dog
 export async function createStudDog(request: Request, env: Env): Promise<Response> {
-  const authResult = (request as unknown).auth;
+  const authResult = (request as any).auth;
   if (!authResult || !authResult.userId) {
     return createErrorResponse("Unauthorized", "Admin authentication required.", 401);
   }

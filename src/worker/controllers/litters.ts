@@ -34,8 +34,8 @@ export async function getAllLitters(request: Request, env: Env) {
     const { results } = await env.PUPPIES_DB.prepare(query).bind(...params).all();
     
     // Count total for pagination
-    const countResult = await env.PUPPIES_DB.prepare('SELECT COUNT(*) as total FROM litters').all();
-    const total = countResult.results[0].total;
+    const countRow = await env.PUPPIES_DB.prepare('SELECT COUNT(*) as total FROM litters').first<{ total: number }>();
+    const total = countRow?.total ?? 0;
     
     return new Response(JSON.stringify({
       litters: results,
@@ -71,7 +71,7 @@ export async function getLitterById(request: Request, env: Env) {
     const litterResult = await env.PUPPIES_DB
       .prepare('SELECT * FROM litters WHERE id = ?')
       .bind(id)
-      .first();
+      .first<Record<string, any>>();
       
     if (!litterResult) {
       return new Response(JSON.stringify({ error: 'Litter not found' }), {
@@ -87,7 +87,7 @@ export async function getLitterById(request: Request, env: Env) {
     const puppiesResult = await env.PUPPIES_DB
       .prepare('SELECT * FROM puppies WHERE litter_id = ?')
       .bind(id)
-      .all();
+      .all<Record<string, any>>();
     
     const litter = {
       ...litterResult,
@@ -155,7 +155,7 @@ export async function createLitter(request: Request, env: Env, authResult: AuthR
       )
       .run();
     
-    const litterId = result.meta.last_row_id;
+    const litterId = (result as any).meta.last_row_id;
     
     // Get the newly created litter
     const newLitter = await env.PUPPIES_DB
