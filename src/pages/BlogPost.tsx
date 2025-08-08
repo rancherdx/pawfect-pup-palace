@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { blogApi } from "@/api";
 import { BlogPost as BlogPostType, BlogPostAuthor } from "@/types";
+import DOMPurify from 'dompurify';
 
 // Helper to display author information
 const getAuthorDisplay = (author?: BlogPostAuthor | string): string => {
@@ -124,7 +125,7 @@ const BlogPostPage = () => {
         
         <div 
           className="prose prose-lg dark:prose-invert prose-headings:font-bold prose-a:text-primary max-w-none prose-img:rounded-md"
-          dangerouslySetInnerHTML={{ __html: post.content }}
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content || '') }}
         />
         
         <div className="flex items-center justify-between border-t border-b py-6 my-8">

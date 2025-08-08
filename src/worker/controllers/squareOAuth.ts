@@ -1,5 +1,7 @@
 import type { Env } from '../env';
 import { corsHeaders } from '../utils/cors';
+import { authenticate } from '../utils/auth';
+import { encryptApiKey, decryptApiKey } from '../utils/encryption';
 
 interface SquareOAuthConfig {
   clientId: string;
@@ -24,18 +26,43 @@ interface SquareTokenResponse {
 export async function generateAuthUrl(request: Request, env: Env): Promise<Response> {
   try {
     const url = new URL(request.url);
-    const state = url.searchParams.get('state') || generateRandomState();
     const scopes = url.searchParams.get('scopes') || 'MERCHANT_PROFILE_READ PAYMENTS_READ PAYMENTS_WRITE';
-    
-    const config = getSquareConfig(env);
-    
-    const authUrl = new URL('https://connect.squareup.com/oauth2/authorize');
+
+    const auth = await authenticate(request, env);
+    if (!auth?.userId) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    const state = generateRandomState();
+    const config = getSquareConfig(env, request);
+
+    // Persist state with TTL 10 minutes
+    const redisUtils = (env as any).redisUtils;
+    try {
+      if (redisUtils?.setCache) {
+        await redisUtils.setCache(`square_oauth_state:${state}`, { userId: auth.userId, scopes, createdAt: Date.now() }, 600);
+      } else if ((env as any).AUTH_STORE) {
+        await (env as any).AUTH_STORE.put(
+          `square_oauth_state:${state}`,
+          JSON.stringify({ userId: auth.userId, scopes, createdAt: Date.now() }),
+          { expirationTtl: 600 }
+        );
+      }
+    } catch (e) {
+      console.warn('Failed to persist OAuth state:', e);
+    }
+
+    const base = config.environment === 'sandbox' ? 'https://connect.squareupsandbox.com' : 'https://connect.squareup.com';
+    const authUrl = new URL(base + '/oauth2/authorize');
     authUrl.searchParams.set('client_id', config.clientId);
     authUrl.searchParams.set('scope', scopes);
     authUrl.searchParams.set('session', 'false');
     authUrl.searchParams.set('state', state);
     authUrl.searchParams.set('redirect_uri', config.redirectUri);
-    
+
     return new Response(JSON.stringify({
       authUrl: authUrl.toString(),
       state: state,
@@ -77,21 +104,36 @@ export async function handleOAuthCallback(request: Request, env: Env): Promise<R
       });
     }
     
-    if (!code) {
+    if (!code || !state) {
       return new Response(JSON.stringify({
-        error: 'Missing authorization code'
+        error: 'Missing authorization code or state'
       }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
+
+    // Validate and consume state
+    const redisUtils = (env as any).redisUtils;
+    let stateRecord: any = null;
+    if (redisUtils?.getCache) {
+      stateRecord = await redisUtils.getCache(`square_oauth_state:${state}`);
+      await redisUtils.delCache?.(`square_oauth_state:${state}`);
+    } else if ((env as any).AUTH_STORE) {
+      const raw = await (env as any).AUTH_STORE.get(`square_oauth_state:${state}`);
+      if (raw) stateRecord = JSON.parse(raw);
+      await (env as any).AUTH_STORE.delete(`square_oauth_state:${state}`);
+    }
+    if (!stateRecord) {
+      return new Response(JSON.stringify({ error: 'Invalid or expired state' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
     
-    const config = getSquareConfig(env);
+    const config = getSquareConfig(env, request);
     
     // Exchange authorization code for access token
     const tokenResponse = await exchangeCodeForToken(code, config);
     
-    // Store the access token and merchant info in database
+    // Store the access token and merchant info in database (encrypted)
     await storeSquareIntegration(tokenResponse, env);
     
     return new Response(JSON.stringify({
@@ -190,9 +232,12 @@ export async function revokeOAuth(request: Request, env: Env): Promise<Response>
       ? JSON.parse((integration as { other_config: string }).other_config) 
       : (integration as { other_config: Record<string, unknown> }).other_config || {};
     
-    // Revoke token with Square
-    if (config.access_token) {
-      await revokeSquareToken(config.access_token, env);
+    // Revoke token with Square (decrypt first)
+    if ((config as any).encrypted_access_token) {
+      const decrypted = await decryptApiKey((config as any).encrypted_access_token as string, env);
+      if (decrypted) {
+        await revokeSquareToken(decrypted, env);
+      }
     }
     
     // Deactivate integration in database
@@ -225,19 +270,22 @@ export async function revokeOAuth(request: Request, env: Env): Promise<Response>
 
 // Helper functions
 
-function getSquareConfig(env: Env): SquareOAuthConfig {
+function getSquareConfig(env: Env, request: Request): SquareOAuthConfig {
   const environment = env.ENV === 'development' ? 'sandbox' : 'production';
+  const origin = new URL(request.url).origin;
   
   return {
     clientId: (env as any).SQUARE_APPLICATION_ID,
     clientSecret: (env as any).SQUARE_APPLICATION_SECRET,
-    redirectUri: `https://new.gdspuppies.com/api/square/oauth/callback`,
+    redirectUri: `${origin}/api/square/oauth/callback`,
     environment
   };
 }
 
 async function exchangeCodeForToken(code: string, config: SquareOAuthConfig): Promise<SquareTokenResponse> {
-  const tokenUrl = 'https://connect.squareup.com/oauth2/token';
+  const tokenUrl = config.environment === 'sandbox'
+    ? 'https://connect.squareupsandbox.com/oauth2/token'
+    : 'https://connect.squareup.com/oauth2/token';
   
   const response = await fetch(tokenUrl, {
     method: 'POST',
@@ -271,22 +319,26 @@ async function storeSquareIntegration(tokenResponse: SquareTokenResponse, env: E
   `);
   await deactivateStmt.run();
   
+  // Encrypt tokens before storing
+  const encAccess = await encryptApiKey(tokenResponse.access_token, env);
+  const encRefresh = tokenResponse.refresh_token ? await encryptApiKey(tokenResponse.refresh_token, env) : null;
+  
+  const integrationConfig = {
+    encrypted_access_token: encAccess ? `${encAccess.iv}:${encAccess.encryptedKey}` : null,
+    encrypted_refresh_token: encRefresh ? `${encRefresh.iv}:${encRefresh.encryptedKey}` : null,
+    merchant_id: tokenResponse.merchant_id,
+    token_type: tokenResponse.token_type,
+    expires_at: tokenResponse.expires_at,
+    environment: env.ENV === 'development' ? 'sandbox' : 'production',
+    connected_at: new Date().toISOString()
+  };
+  
   // Store new integration
   const stmt = env.PUPPIES_DB.prepare(`
     INSERT INTO integrations (
       id, service_name, api_key_set, is_active, other_config, created_at, updated_at
     ) VALUES (?, ?, ?, ?, ?, ?, ?)
   `);
-  
-  const integrationConfig = {
-    access_token: tokenResponse.access_token,
-    merchant_id: tokenResponse.merchant_id,
-    token_type: tokenResponse.token_type,
-    expires_at: tokenResponse.expires_at,
-    refresh_token: tokenResponse.refresh_token,
-    environment: env.ENV === 'development' ? 'sandbox' : 'production',
-    connected_at: new Date().toISOString()
-  };
   
   await stmt.bind(
     generateId(),
@@ -300,9 +352,11 @@ async function storeSquareIntegration(tokenResponse: SquareTokenResponse, env: E
 }
 
 async function revokeSquareToken(accessToken: string, env: Env): Promise<void> {
-  const revokeUrl = 'https://connect.squareup.com/oauth2/revoke';
-  
-  const config = getSquareConfig(env);
+  const environment = env.ENV === 'development' ? 'sandbox' : 'production';
+  const revokeUrl = environment === 'sandbox'
+    ? 'https://connect.squareupsandbox.com/oauth2/revoke'
+    : 'https://connect.squareup.com/oauth2/revoke';
+  const clientId = (env as any).SQUARE_APPLICATION_ID;
   
   const response = await fetch(revokeUrl, {
     method: 'POST',
@@ -311,13 +365,13 @@ async function revokeSquareToken(accessToken: string, env: Env): Promise<void> {
       'Square-Version': '2024-06-04'
     },
     body: JSON.stringify({
-      client_id: config.clientId,
+      client_id: clientId,
       access_token: accessToken
     })
   });
   
   if (!response.ok) {
-    const error = await response.json();
+    const error = await response.json().catch(() => ({}));
     console.error('Failed to revoke token with Square:', error);
     // Continue anyway - we'll deactivate locally
   }
