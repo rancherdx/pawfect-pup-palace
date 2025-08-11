@@ -28,6 +28,7 @@ import AdminStudDogManager from "@/components/admin/AdminStudDogManager";
 import AdvancedSecurityFeatures from "@/components/admin/AdvancedSecurityFeatures";
 import DataDeletionRequestsManager from "@/components/admin/DataDeletionRequestsManager"; // Import the new component
 import TestimonialManagement from '@/components/admin/TestimonialManagement'; // Import TestimonialManagement
+import SecureIntegrations from '@/components/admin/SecureIntegrations';
 
 const allAdminTabs = [
   { value: "puppies", label: "Puppies", icon: Dog, component: <PuppyManagement /> },
@@ -40,6 +41,7 @@ const allAdminTabs = [
   { value: "square", label: "Square", icon: CreditCard, component: <SquareIntegration /> },
   { value: "settings", label: "Settings", icon: Settings, component: <SettingsPanel /> },
   { value: "integrations", label: "Integrations", icon: PlugZap, component: <ThirdPartyIntegrationsManager /> },
+  { value: "secure_integrations", label: "Secure Integrations", icon: ShieldCheck, component: <SecureIntegrations /> },
   { value: "email_templates", label: "Email Templates", icon: Mail, component: <EmailTemplatesManager /> },
   { value: "users_admin", label: "Users", icon: Users, component: <AdminUserManager /> }, // Users icon repeated, but context is different
   { value: "stud_dogs_admin", label: "Stud Dogs", icon: Dog, component: <AdminStudDogManager /> }, // Dog icon repeated
