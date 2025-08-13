@@ -8,21 +8,29 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Heart, Star, Users, Award, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import { puppiesApi, testimonialApi } from "@/api";
+import { supabase } from "@/integrations/supabase/client";
 import { calculateAge } from "@/utils/dateUtils";
 
 const Home = () => {
   const { data: puppiesData, isLoading: puppiesLoading } = useQuery({
     queryKey: ['featured-puppies'],
-    queryFn: () => puppiesApi.getAllPuppies(),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('puppies' as any).select('*').limit(3);
+      if (error) throw error;
+      return data || [];
+    },
   });
 
   const { data: testimonialsData, isLoading: testimonialsLoading } = useQuery({
     queryKey: ['testimonials'],
-    queryFn: () => testimonialApi.getAllPublic(),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('testimonials' as any).select('*').limit(3);
+      if (error) throw error;
+      return data || [];
+    },
   });
 
-  const featuredPuppies = puppiesData?.puppies?.slice(0, 3) || [];
+  const featuredPuppies = puppiesData?.slice(0, 3) || [];
   const testimonials = Array.isArray(testimonialsData) ? testimonialsData.slice(0, 3) : [];
 
   
@@ -105,15 +113,15 @@ const Home = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {featuredPuppies.map((puppy) => (
+            {featuredPuppies.map((puppy: any) => (
               <PuppyCard
                 key={puppy.id}
                 id={puppy.id}
                 name={puppy.name}
                 breed={puppy.breed}
-                age={calculateAge(puppy.birthDate)}
+                age={calculateAge(puppy.birth_date)}
                 gender={puppy.gender}
-                imageSrc={puppy.photoUrl || "https://images.unsplash.com/photo-1591160690555-5debfba289f0?ixlib=rb-4.0.3"}
+                imageSrc={puppy.photo_url || "https://images.unsplash.com/photo-1591160690555-5debfba289f0?ixlib=rb-4.0.3"}
                 price={puppy.price}
                 status={puppy.status}
               />
@@ -151,8 +159,8 @@ const Home = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {testimonials.map((testimonial) => (
-              <TestimonialCard key={testimonial.id} {...testimonial} />
+            {testimonials.map((testimonial: any) => (
+              <TestimonialCard key={testimonial.id} name={testimonial.name} location={""} testimonial={testimonial.content} rating={5} />
             ))}
           </div>
         )}

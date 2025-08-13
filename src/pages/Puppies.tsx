@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { puppiesApi } from "@/api";
+import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { calculateAge } from "@/utils/dateUtils";
 
@@ -21,30 +21,34 @@ const Puppies = () => {
   
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['puppies'],
-    queryFn: () => puppiesApi.getAllPuppies(),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('puppies' as any).select('*');
+      if (error) throw error;
+      return data || [];
+    },
   });
 
   const [filteredPuppies, setFilteredPuppies] = useState<any[]>([]);
 
   useEffect(() => {
-    if (data?.puppies) {
+    if (data) {
       const uniqueBreeds = Array.from(new Set(
-        data.puppies
+        data
           .map((puppy: any) => {
-            const breed = puppy.breed || puppy.breed_name;
+            const breed = puppy.breed;
             return typeof breed === 'string' ? breed : '';
           })
           .filter((breed: string) => breed.length > 0)
       )) as string[];
       setBreeds(["All Breeds", ...uniqueBreeds]);
-      setFilteredPuppies(data.puppies);
+      setFilteredPuppies(data);
     }
   }, [data]);
 
   const handleFilter = () => {
-    if (!data?.puppies) return;
+    if (!data) return;
     
-    let filtered = data.puppies;
+    let filtered = data;
     
     if (selectedBreed !== "All Breeds") {
       filtered = filtered.filter((puppy: any) => {
@@ -72,8 +76,8 @@ const Puppies = () => {
     setSelectedBreed("All Breeds");
     setSearchTerm("");
     setShowOnlyAvailable(false);
-    if (data?.puppies) {
-      setFilteredPuppies(data.puppies);
+    if (data) {
+      setFilteredPuppies(data);
     }
   };
 
@@ -173,9 +177,9 @@ const Puppies = () => {
                     id={puppy.id.toString()}
                     name={puppy.name}
                     breed={typeof puppy.breed === 'string' ? puppy.breed : ''}
-                    age={calculateAge(puppy.birthDate)}
+                    age={calculateAge(puppy.birth_date)}
                     gender={puppy.gender}
-                    imageSrc={puppy.photoUrl || "https://images.unsplash.com/photo-1591160690555-5debfba289f0?ixlib=rb-4.0.3"}
+                    imageSrc={puppy.photo_url || "https://images.unsplash.com/photo-1591160690555-5debfba289f0?ixlib=rb-4.0.3"}
                     price={puppy.price}
                     status={puppy.status || 'Available'}
                   />
