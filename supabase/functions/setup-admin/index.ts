@@ -1,0 +1,156 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+Deno.serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  if (req.method !== 'POST') {
+    return new Response(
+      JSON.stringify({ error: 'Method not allowed' }),
+      { 
+        status: 405, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
+  }
+
+  try {
+    const { name, email, password } = await req.json()
+
+    // Validate input
+    if (!name || !email || !password) {
+      return new Response(
+        JSON.stringify({ error: 'Name, email, and password are required' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    if (password.length < 8) {
+      return new Response(
+        JSON.stringify({ error: 'Password must be at least 8 characters long' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    // Create Supabase client with service role key
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
+    // First check if admin already exists
+    const { data: adminExists, error: checkError } = await supabase.rpc('check_admin_exists')
+
+    if (checkError) {
+      console.error('Error checking admin status:', checkError)
+      return new Response(
+        JSON.stringify({ error: 'Failed to check setup status' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    if (adminExists) {
+      return new Response(
+        JSON.stringify({ error: 'Setup already completed. Administrator account already exists.' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    // Create the user via Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      user_metadata: { name },
+      email_confirm: true // Auto-confirm email for admin setup
+    })
+
+    if (authError) {
+      console.error('Error creating admin user:', authError)
+      return new Response(
+        JSON.stringify({ 
+          error: authError.message.includes('already registered') 
+            ? 'Email already in use' 
+            : 'Failed to create admin user'
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    if (!authData.user) {
+      return new Response(
+        JSON.stringify({ error: 'Failed to create user' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    // Promote user to admin role
+    const { error: promoteError } = await supabase.rpc('promote_user_to_admin', {
+      target_user_id: authData.user.id
+    })
+
+    if (promoteError) {
+      console.error('Error promoting user to admin:', promoteError)
+      // Try to delete the user if we can't make them admin
+      await supabase.auth.admin.deleteUser(authData.user.id)
+      return new Response(
+        JSON.stringify({ error: 'Failed to assign admin privileges' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    // Return success response
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: 'Administrator account created successfully',
+        user: {
+          id: authData.user.id,
+          email: authData.user.email,
+          name
+        }
+      }),
+      { 
+        status: 201,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
+
+  } catch (error) {
+    console.error('Setup admin error:', error)
+    return new Response(
+      JSON.stringify({ error: 'Internal server error' }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
+  }
+})

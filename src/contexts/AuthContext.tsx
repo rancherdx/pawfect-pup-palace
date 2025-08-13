@@ -34,76 +34,71 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [refreshToken, setRefreshToken] = useState<string | null>(null); // New state for refresh token
   const [isLoading, setIsLoading] = useState(true);
 
+  // Fetch user profile and roles from database
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      // Fetch profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('name')
+        .eq('id', userId)
+        .single();
+
+      // Fetch roles
+      const { data: userRoles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId);
+
+      const roles = userRoles ? userRoles.map(ur => ur.role) : [];
+      
+      return { profile, roles };
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      return { profile: null, roles: [] };
+    }
+  };
+
   useEffect(() => {
-    const initializeAuth = async () => {
-      setIsLoading(true);
-      
-      try {
-        // Get current session from Supabase
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Error getting session:', error);
-          setUser(null);
-          setToken(null);
-          setRefreshToken(null);
-        } else if (session) {
-          // Set tokens from Supabase session
-          setToken(session.access_token);
-          setRefreshToken(session.refresh_token);
-          
-          // Note: Profiles table will be available after migration
-          
-          // Create user object combining auth and profile data
-          const userData: User = {
-            id: session.user.id,
-            email: session.user.email!,
-            name: session.user.user_metadata?.name || '',
-            roles: [session.user.user_metadata?.role || 'customer'],
-            createdAt: session.user.created_at
-          };
-          
-          setUser(userData);
-        } else {
-          setUser(null);
-          setToken(null);
-          setRefreshToken(null);
-        }
-      } catch (error) {
-        console.error('Auth initialization error:', error);
-        setUser(null);
-        setToken(null);
-        setRefreshToken(null);
-      }
-      
-      setIsLoading(false);
-    };
-
-    initializeAuth();
-
-    // Listen for auth changes
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (session) {
+        if (session?.user) {
+          // Defer additional data fetching to avoid deadlocks
+          setTimeout(async () => {
+            const { profile, roles } = await fetchUserProfile(session.user.id);
+            
+            setUser({
+              id: session.user.id,
+              email: session.user.email!,
+              name: profile?.name || session.user.user_metadata?.name || '',
+              roles,
+              createdAt: session.user.created_at
+            });
+          }, 0);
+
           setToken(session.access_token);
           setRefreshToken(session.refresh_token);
-          
-          const userData: User = {
-            id: session.user.id,
-            email: session.user.email!,
-            name: session.user.user_metadata?.name || '',
-            roles: [session.user.user_metadata?.role || 'customer'],
-            createdAt: session.user.created_at
-          };
-          
-          setUser(userData);
         } else {
           setUser(null);
           setToken(null);
           setRefreshToken(null);
         }
+        setIsLoading(false);
       }
     );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      // This will trigger the onAuthStateChange listener above
+      if (session) {
+        // The listener will handle setting the user state
+        setToken(session.access_token);
+        setRefreshToken(session.refresh_token);
+      } else {
+        setIsLoading(false);
+      }
+    });
 
     return () => {
       subscription.unsubscribe();
@@ -121,37 +116,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error(error.message);
       }
 
-      if (data.session) {
-        setToken(data.session.access_token);
-        setRefreshToken(data.session.refresh_token);
-
-        const userData: User = {
-          id: data.user.id,
-          email: data.user.email!,
-          name: data.user.user_metadata?.name || '',
-          roles: [data.user.user_metadata?.role || 'customer'],
-          createdAt: data.user.created_at
-        };
-
-        setUser(userData);
-      }
+      // The onAuthStateChange listener will handle setting user state with profile data
     } catch (error) {
-      setToken(null);
-      setRefreshToken(null);
-      setUser(null);
       throw error;
     }
   };
 
   const register = async (registrationData: UserRegistrationData) => {
     try {
+      const redirectUrl = `${window.location.origin}/`;
+      
       const { data, error } = await supabase.auth.signUp({
         email: registrationData.email,
         password: registrationData.password,
         options: {
+          emailRedirectTo: redirectUrl,
           data: {
-            name: registrationData.name,
-            role: 'customer'
+            name: registrationData.name
           }
         }
       });
@@ -160,24 +141,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error(error.message);
       }
 
-      if (data.session) {
-        setToken(data.session.access_token);
-        setRefreshToken(data.session.refresh_token);
-
-        const userData: User = {
-          id: data.user!.id,
-          email: data.user!.email!,
-          name: registrationData.name,
-          roles: ['customer'],
-          createdAt: data.user!.created_at
-        };
-
-        setUser(userData);
-      }
+      // Note: User profile and roles will be created automatically by the trigger
+      // The onAuthStateChange listener will handle updating the user state
     } catch (error) {
-      setToken(null);
-      setRefreshToken(null);
-      setUser(null);
       throw error;
     }
   };

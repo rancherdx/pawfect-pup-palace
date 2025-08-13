@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from '@/integrations/supabase/client';
 import { motion } from "framer-motion";
 
 const Setup = () => {
@@ -29,8 +30,11 @@ const Setup = () => {
 
   const checkSetupStatus = async () => {
     try {
-      const response = await fetch('/api/setup/status');
-      const data = await response.json();
+      const { data, error } = await supabase.functions.invoke('setup-status');
+      
+      if (error) {
+        throw error;
+      }
       
       if (data.setupRequired) {
         setNeedsSetup(true);
@@ -69,38 +73,32 @@ const Setup = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/setup/admin', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('setup-admin', {
+        body: {
           name: formData.name,
           email: formData.email,
           password: formData.password
-        })
+        }
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        toast({
-          title: "Setup Complete!",
-          description: "Admin account created successfully. You can now log in."
-        });
-        navigate('/login');
-      } else {
-        toast({
-          title: "Setup Failed",
-          description: data.error || "Failed to create admin account",
-          variant: "destructive"
-        });
+      if (error) {
+        throw new Error(error.message || 'Setup failed');
       }
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      toast({
+        title: "Setup Complete!",
+        description: "Admin account created successfully. You can now log in."
+      });
+      navigate('/login');
     } catch (error) {
       console.error('Setup failed:', error);
       toast({
-        title: "Setup Error",
-        description: "An error occurred during setup. Please try again.",
+        title: "Setup Failed",
+        description: error instanceof Error ? error.message : "An error occurred during setup. Please try again.",
         variant: "destructive"
       });
     } finally {
