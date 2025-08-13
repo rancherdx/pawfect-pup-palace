@@ -8,12 +8,7 @@ export interface User {
   email: string;
   name: string;
   roles: string[]; // e.g., ['user', 'admin']
-  // Add any other user-specific fields that might come from the API
-  // Example:
-  // createdAt?: string;
-  // lastLogin?: string;
-  // avatarUrl?: string;
-  // preferences?: Record<string, any>;
+  createdAt?: string;
 }
 
 /**

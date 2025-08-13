@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authApi } from '@/api/unifiedApi'; // Fixed import
+import { supabase } from '@/integrations/supabase/client';
 import { User, AuthResponse, UserRegistrationData, UserLoginData } from '@/types';
 
 // Local User interface is removed. Imported User will be used.
@@ -37,91 +37,105 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const initializeAuth = async () => {
       setIsLoading(true);
-      let currentToken = localStorage.getItem('jwtToken');
-      let currentRefreshToken = localStorage.getItem('jwtRefreshToken');
-
-      if (currentToken) {
-        setToken(currentToken); // Set initial token for getAuthHeaders
-        if (currentRefreshToken) {
-          setRefreshToken(currentRefreshToken);
+      
+      try {
+        // Get current session from Supabase
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          setUser(null);
+          setToken(null);
+          setRefreshToken(null);
+        } else if (session) {
+          // Set tokens from Supabase session
+          setToken(session.access_token);
+          setRefreshToken(session.refresh_token);
+          
+          // Note: Profiles table will be available after migration
+          
+          // Create user object combining auth and profile data
+          const userData: User = {
+            id: session.user.id,
+            email: session.user.email!,
+            name: session.user.user_metadata?.name || '',
+            roles: [session.user.user_metadata?.role || 'customer'],
+            createdAt: session.user.created_at
+          };
+          
+          setUser(userData);
+        } else {
+          setUser(null);
+          setToken(null);
+          setRefreshToken(null);
         }
-
-        try {
-          console.log('Attempting to fetch profile with stored token.');
-          const userProfile = await authApi.getProfile(); // authApi.getProfile uses getAuthHeaders which reads currentToken from localStorage
-          setUser(userProfile as User);
-        } catch (initialError) {
-          console.error('Initial profile fetch failed:', initialError);
-          // Check if it was a 401 type error (though error structure from apiRequest might just be Error object)
-          // and if a refresh token exists
-          if (currentRefreshToken) { // Check currentRefreshToken from closure, not a new localStorage.getItem call
-            console.log('Attempting token refresh during init due to profile fetch failure.');
-            try {
-              const refreshResponse = await authApi.refreshToken(currentRefreshToken) as any;
-
-              currentToken = refreshResponse.token; // Update currentToken for retry
-              localStorage.setItem('jwtToken', currentToken);
-              setToken(currentToken);
-
-              if (refreshResponse.refreshToken) {
-                currentRefreshToken = refreshResponse.refreshToken;
-                localStorage.setItem('jwtRefreshToken', currentRefreshToken);
-                setRefreshToken(currentRefreshToken);
-              }
-
-              console.log('Token refreshed during init. Retrying profile fetch.');
-              // Retry getProfile with the new token (getAuthHeaders will pick it up)
-              const userProfileAfterRefresh = await authApi.getProfile();
-              setUser(userProfileAfterRefresh as User);
-              console.log('Profile fetched successfully after refresh.');
-
-            } catch (refreshError) {
-              console.error('Token refresh attempt during init also failed:', refreshError);
-              // If refresh fails, clear all tokens and user
-              localStorage.removeItem('jwtToken');
-              localStorage.removeItem('jwtRefreshToken');
-              setToken(null);
-              setRefreshToken(null);
-              setUser(null);
-            }
-          } else {
-            // No refresh token to attempt with, so clear tokens as before
-            console.log('No refresh token available during init profile fetch failure.');
-            localStorage.removeItem('jwtToken');
-            // No need to remove jwtRefreshToken again if it was null
-            setToken(null);
-            // setRefreshToken(null); // Already null if currentRefreshToken was null
-            setUser(null);
-          }
-        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        setUser(null);
+        setToken(null);
+        setRefreshToken(null);
       }
+      
       setIsLoading(false);
     };
 
     initializeAuth();
-  }, []); // Empty dependency array means this runs once on mount
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session) {
+          setToken(session.access_token);
+          setRefreshToken(session.refresh_token);
+          
+          const userData: User = {
+            id: session.user.id,
+            email: session.user.email!,
+            name: session.user.user_metadata?.name || '',
+            roles: [session.user.user_metadata?.role || 'customer'],
+            createdAt: session.user.created_at
+          };
+          
+          setUser(userData);
+        } else {
+          setUser(null);
+          setToken(null);
+          setRefreshToken(null);
+        }
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const login = async (credentials: UserLoginData) => {
     try {
-      const response = await authApi.login(credentials) as AuthResponse;
-      const { token: newAccessToken, user: userData, refreshToken: newRefreshToken } = response;
-      
-      localStorage.setItem('jwtToken', newAccessToken);
-      setToken(newAccessToken);
-      setUser(userData);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: credentials.email,
+        password: credentials.password,
+      });
 
-      if (newRefreshToken) {
-        localStorage.setItem('jwtRefreshToken', newRefreshToken);
-        setRefreshToken(newRefreshToken);
-      } else {
-        // Clear any old refresh token if login doesn't provide a new one
-        localStorage.removeItem('jwtRefreshToken');
-        setRefreshToken(null);
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (data.session) {
+        setToken(data.session.access_token);
+        setRefreshToken(data.session.refresh_token);
+
+        const userData: User = {
+          id: data.user.id,
+          email: data.user.email!,
+          name: data.user.user_metadata?.name || '',
+          roles: [data.user.user_metadata?.role || 'customer'],
+          createdAt: data.user.created_at
+        };
+
+        setUser(userData);
       }
     } catch (error) {
-      // Clear tokens on login failure to be safe
-      localStorage.removeItem('jwtToken');
-      localStorage.removeItem('jwtRefreshToken');
       setToken(null);
       setRefreshToken(null);
       setUser(null);
@@ -131,23 +145,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const register = async (registrationData: UserRegistrationData) => {
     try {
-      const response = await authApi.register(registrationData) as AuthResponse;
-      const { token: newAccessToken, user: newUser, refreshToken: newRefreshToken } = response;
-      
-      localStorage.setItem('jwtToken', newAccessToken);
-      setToken(newAccessToken);
-      setUser(newUser);
+      const { data, error } = await supabase.auth.signUp({
+        email: registrationData.email,
+        password: registrationData.password,
+        options: {
+          data: {
+            name: registrationData.name,
+            role: 'customer'
+          }
+        }
+      });
 
-      if (newRefreshToken) {
-        localStorage.setItem('jwtRefreshToken', newRefreshToken);
-        setRefreshToken(newRefreshToken);
-      } else {
-        localStorage.removeItem('jwtRefreshToken');
-        setRefreshToken(null);
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (data.session) {
+        setToken(data.session.access_token);
+        setRefreshToken(data.session.refresh_token);
+
+        const userData: User = {
+          id: data.user!.id,
+          email: data.user!.email!,
+          name: registrationData.name,
+          roles: ['customer'],
+          createdAt: data.user!.created_at
+        };
+
+        setUser(userData);
       }
     } catch (error) {
-      localStorage.removeItem('jwtToken');
-      localStorage.removeItem('jwtRefreshToken');
       setToken(null);
       setRefreshToken(null);
       setUser(null);
@@ -157,30 +184,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      // Optional: Call API endpoint to invalidate refresh token on server-side if it exists
-      // if (refreshToken) await authApi.logoutServerSide(refreshToken);
-      await authApi.logout(); // This likely just invalidates the access token server-side
+      await supabase.auth.signOut();
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      localStorage.removeItem('jwtToken');
-      localStorage.removeItem('jwtRefreshToken'); // Remove refresh token
       setToken(null);
-      setRefreshToken(null); // Clear refresh token state
+      setRefreshToken(null);
       setUser(null);
     }
   };
 
   const setNewTokens = (newAccessToken: string, newRefreshTokenValue?: string) => {
-    localStorage.setItem('jwtToken', newAccessToken);
     setToken(newAccessToken);
-
     if (newRefreshTokenValue) {
-      localStorage.setItem('jwtRefreshToken', newRefreshTokenValue);
       setRefreshToken(newRefreshTokenValue);
     }
-    // If newRefreshTokenValue is undefined, it means the refresh token was not rotated,
-    // so we keep the existing one in state and localStorage.
   };
 
   const updateUser = (userData: Partial<User>) => {
