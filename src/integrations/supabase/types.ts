@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      blog_posts: {
+        Row: {
+          author_name: string | null
+          category: string | null
+          content: string
+          created_at: string
+          excerpt: string | null
+          featured_image_url: string | null
+          id: string
+          published_at: string | null
+          slug: string
+          status: Database["public"]["Enums"]["blog_status"]
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_name?: string | null
+          category?: string | null
+          content: string
+          created_at?: string
+          excerpt?: string | null
+          featured_image_url?: string | null
+          id?: string
+          published_at?: string | null
+          slug: string
+          status?: Database["public"]["Enums"]["blog_status"]
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_name?: string | null
+          category?: string | null
+          content?: string
+          created_at?: string
+          excerpt?: string | null
+          featured_image_url?: string | null
+          id?: string
+          published_at?: string | null
+          slug?: string
+          status?: Database["public"]["Enums"]["blog_status"]
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       change_logs: {
         Row: {
           action: string
@@ -41,6 +89,302 @@ export type Database = {
         }
         Relationships: []
       }
+      data_deletion_requests: {
+        Row: {
+          account_creation_timeframe: string | null
+          additional_details: string | null
+          admin_notes: string | null
+          email: string | null
+          id: string
+          name: string | null
+          processed_at: string | null
+          puppy_ids: string | null
+          requested_at: string
+          status: Database["public"]["Enums"]["deletion_status"]
+        }
+        Insert: {
+          account_creation_timeframe?: string | null
+          additional_details?: string | null
+          admin_notes?: string | null
+          email?: string | null
+          id?: string
+          name?: string | null
+          processed_at?: string | null
+          puppy_ids?: string | null
+          requested_at?: string
+          status?: Database["public"]["Enums"]["deletion_status"]
+        }
+        Update: {
+          account_creation_timeframe?: string | null
+          additional_details?: string | null
+          admin_notes?: string | null
+          email?: string | null
+          id?: string
+          name?: string | null
+          processed_at?: string | null
+          puppy_ids?: string | null
+          requested_at?: string
+          status?: Database["public"]["Enums"]["deletion_status"]
+        }
+        Relationships: []
+      }
+      email_templates: {
+        Row: {
+          created_at: string
+          html_body: string
+          id: string
+          is_system_template: boolean
+          name: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          html_body: string
+          id?: string
+          is_system_template?: boolean
+          name: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          html_body?: string
+          id?: string
+          is_system_template?: boolean
+          name?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      litters: {
+        Row: {
+          breed: string
+          cover_image_url: string | null
+          created_at: string
+          dam_name: string | null
+          date_of_birth: string | null
+          description: string | null
+          expected_date: string | null
+          id: string
+          name: string
+          puppy_count: number | null
+          sire_name: string | null
+          status: Database["public"]["Enums"]["litter_status"]
+          updated_at: string
+        }
+        Insert: {
+          breed: string
+          cover_image_url?: string | null
+          created_at?: string
+          dam_name?: string | null
+          date_of_birth?: string | null
+          description?: string | null
+          expected_date?: string | null
+          id?: string
+          name: string
+          puppy_count?: number | null
+          sire_name?: string | null
+          status?: Database["public"]["Enums"]["litter_status"]
+          updated_at?: string
+        }
+        Update: {
+          breed?: string
+          cover_image_url?: string | null
+          created_at?: string
+          dam_name?: string | null
+          date_of_birth?: string | null
+          description?: string | null
+          expected_date?: string | null
+          id?: string
+          name?: string
+          puppy_count?: number | null
+          sire_name?: string | null
+          status?: Database["public"]["Enums"]["litter_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          name: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      puppies: {
+        Row: {
+          birth_date: string | null
+          breed: string
+          color: string | null
+          created_at: string
+          description: string | null
+          gender: string | null
+          id: string
+          litter_id: string | null
+          name: string
+          photo_url: string | null
+          price: number | null
+          status: Database["public"]["Enums"]["puppy_status"]
+          temperament: string[] | null
+          updated_at: string
+          weight: number | null
+        }
+        Insert: {
+          birth_date?: string | null
+          breed: string
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          gender?: string | null
+          id?: string
+          litter_id?: string | null
+          name: string
+          photo_url?: string | null
+          price?: number | null
+          status?: Database["public"]["Enums"]["puppy_status"]
+          temperament?: string[] | null
+          updated_at?: string
+          weight?: number | null
+        }
+        Update: {
+          birth_date?: string | null
+          breed?: string
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          gender?: string | null
+          id?: string
+          litter_id?: string | null
+          name?: string
+          photo_url?: string | null
+          price?: number | null
+          status?: Database["public"]["Enums"]["puppy_status"]
+          temperament?: string[] | null
+          updated_at?: string
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "puppies_litter_fk"
+            columns: ["litter_id"]
+            isOneToOne: false
+            referencedRelation: "litters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      site_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value?: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
+      stud_dogs: {
+        Row: {
+          age: number | null
+          breed_id: string
+          certifications: string[] | null
+          created_at: string
+          description: string | null
+          id: string
+          image_urls: string[] | null
+          is_available: boolean
+          name: string
+          owner_user_id: string | null
+          stud_fee: number
+          temperament: string | null
+          updated_at: string
+        }
+        Insert: {
+          age?: number | null
+          breed_id: string
+          certifications?: string[] | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_urls?: string[] | null
+          is_available?: boolean
+          name: string
+          owner_user_id?: string | null
+          stud_fee: number
+          temperament?: string | null
+          updated_at?: string
+        }
+        Update: {
+          age?: number | null
+          breed_id?: string
+          certifications?: string[] | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_urls?: string[] | null
+          is_available?: boolean
+          name?: string
+          owner_user_id?: string | null
+          stud_fee?: number
+          temperament?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      testimonials: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          image: string | null
+          name: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          image?: string | null
+          name: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          image?: string | null
+          name?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       third_party_integrations: {
         Row: {
           created_at: string
@@ -48,7 +392,9 @@ export type Database = {
           data_ciphertext: string
           environment: string
           id: string
+          is_active: boolean
           name: string | null
+          other_config: Json
           service: string
           updated_at: string
         }
@@ -58,7 +404,9 @@ export type Database = {
           data_ciphertext: string
           environment: string
           id?: string
+          is_active?: boolean
           name?: string | null
+          other_config?: Json
           service: string
           updated_at?: string
         }
@@ -68,9 +416,47 @@ export type Database = {
           data_ciphertext?: string
           environment?: string
           id?: string
+          is_active?: boolean
           name?: string | null
+          other_config?: Json
           service?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          payment_method_details: Json | null
+          puppy_id: string | null
+          square_payment_id: string | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          id?: string
+          payment_method_details?: Json | null
+          puppy_id?: string | null
+          square_payment_id?: string | null
+          status: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          payment_method_details?: Json | null
+          puppy_id?: string | null
+          square_payment_id?: string | null
+          status?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -97,6 +483,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_admin_exists: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      create_first_admin: {
+        Args: { user_email: string; user_password: string; user_name: string }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _user_id: string
@@ -104,9 +498,22 @@ export type Database = {
         }
         Returns: boolean
       }
+      promote_user_to_admin: {
+        Args: { target_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      blog_status: "draft" | "published" | "archived"
+      deletion_status: "pending" | "processing" | "completed" | "rejected"
+      litter_status:
+        | "Active"
+        | "Available Soon"
+        | "All Reserved"
+        | "All Sold"
+        | "Archived"
+      puppy_status: "Available" | "Reserved" | "Sold" | "Not For Sale"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -235,6 +642,16 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      blog_status: ["draft", "published", "archived"],
+      deletion_status: ["pending", "processing", "completed", "rejected"],
+      litter_status: [
+        "Active",
+        "Available Soon",
+        "All Reserved",
+        "All Sold",
+        "Archived",
+      ],
+      puppy_status: ["Available", "Reserved", "Sold", "Not For Sale"],
     },
   },
 } as const
