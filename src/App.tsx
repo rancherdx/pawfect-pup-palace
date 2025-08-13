@@ -25,9 +25,10 @@ const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const SquareOAuthCallback = lazy(() => import("./pages/SquareOAuthCallback"));
 const Setup = lazy(() => import("./pages/Setup"));
 
-function App() {
-  const queryClient = new QueryClient();
+// Create QueryClient outside component to prevent recreation
+const queryClient = new QueryClient();
 
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
