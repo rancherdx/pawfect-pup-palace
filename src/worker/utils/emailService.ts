@@ -12,6 +12,10 @@ interface MailChannelsRequestBody {
     email: string;
     name: string;
   };
+  reply_to?: {
+    email: string;
+    name: string;
+  };
   subject: string;
   content: {
     type: 'text/html' | 'text/plain';
@@ -26,13 +30,15 @@ interface MailChannelsRequestBody {
  * @param to - The recipient's email address.
  * @param subject - The email subject.
  * @param htmlBody - The HTML content of the email.
+ * @param replyTo - Optional "reply-to" email address.
  * @returns An object indicating success or failure and a message.
  */
 export async function sendEmail(
   env: Env,
   to: string,
   subject: string,
-  htmlBody: string
+  htmlBody: string,
+  replyTo?: string,
 ): Promise<{ success: boolean; message: string }> {
   if (!env.MAILCHANNELS_API_KEY) {
     console.error('MAILCHANNELS_API_KEY is not set.');
@@ -61,8 +67,14 @@ export async function sendEmail(
     ],
   };
 
+  if (replyTo) {
+    requestBody.reply_to = {
+      email: replyTo,
+      name: 'GDS Puppies Support', // Or a more specific name
+    };
+  }
+
   // Add DKIM signing if the private key is available.
-  // The user mentioned they will add it to Supabase secrets.
   if (env.DKIM_PRIVATE_KEY && env.DKIM_DOMAIN) {
     requestBody.personalizations[0].dkim_domain = env.DKIM_DOMAIN;
     requestBody.personalizations[0].dkim_selector = "mailchannels";
@@ -99,9 +111,7 @@ export async function sendEmail(
 
 
 interface EmailTemplate {
-    // The subject from the DB is a template itself
     subject_template: string;
-    // The html_body from the DB is a template itself
     html_body_template: string;
 }
 
@@ -119,18 +129,19 @@ interface SendTemplatedEmailResult {
  * @param to - The recipient's email address.
  * @param templateName - The name of the email template to use.
  * @param data - An object containing data to populate placeholders in the template.
+ * @param replyTo - Optional "reply-to" email address.
  * @returns An object indicating the outcome of the process.
  */
 export async function sendTemplatedEmail(
   env: Env,
   to: string,
   templateName: string,
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
+  replyTo?: string,
 ): Promise<SendTemplatedEmailResult> {
   let template: EmailTemplate | null = null;
 
   try {
-    // Corrected column names to match the seed data: subject_template and html_body_template
     const stmt = env.PUPPIES_DB.prepare(
       "SELECT subject_template, html_body_template FROM email_templates WHERE template_name = ?"
     );
@@ -164,7 +175,7 @@ export async function sendTemplatedEmail(
     }
   }
 
-  const emailSentResult = await sendEmail(env, to, populatedSubject, populatedHtmlBody);
+  const emailSentResult = await sendEmail(env, to, populatedSubject, populatedHtmlBody, replyTo);
 
   return {
     success: emailSentResult.success,

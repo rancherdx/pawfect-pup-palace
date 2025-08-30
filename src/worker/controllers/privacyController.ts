@@ -100,7 +100,7 @@ export async function requestDataDeletion(request: Request, env: Env) {
     };
 
     // Use the new template 'admin_data_deletion_notification'
-    sendTemplatedEmail(env, adminEmail, 'admin_data_deletion_notification', emailPayload)
+    sendTemplatedEmail(env, adminEmail, 'admin_data_deletion_notification', emailPayload, 'privacy@gdspuppies.com')
       .then(emailResult => {
         if (emailResult.success) {
           console.log(`Admin notification email sent successfully for data deletion request ${id}`);

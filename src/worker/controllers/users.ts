@@ -160,7 +160,7 @@ export async function register(request: Request, env: Env) {
       .run();
 
     // Send welcome email (fire and forget, don't block response)
-    sendTemplatedEmail(env, email, 'welcome_email', { name: name })
+    sendTemplatedEmail(env, email, 'welcome_email', { name: name }, 'support@gdspuppies.com')
       .then(emailResult => {
         console.log(`Welcome email sending attempt for ${email}:`, emailResult.success, emailResult.message);
       })
