@@ -50,6 +50,5 @@ new_classes = ["puppy_breeder_app_SessionDO"]
 # SQUARE_LOCATION_ID - Square production location ID
 # SQUARE_SANDBOX_LOCATION_ID - Square sandbox location ID
 # SQUARE_WEBHOOK_SIGNATURE_KEY - Square webhook signature verification
-# SENDGRID_API_KEY - SendGrid API key for Google Workspace integration
 # ENCRYPTION_KEY_SECRET - Key for encrypting sensitive data
 # ADMIN_EMAIL - Primary admin email address

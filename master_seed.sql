@@ -120,7 +120,6 @@ VALUES
 INSERT OR IGNORE INTO third_party_integrations (id, service_name, encrypted_api_key, other_config, is_active, created_at, updated_at)
 VALUES
   ('integ-square', 'Square', NULL, '{"location_id": "YOUR_SQUARE_LOCATION_ID_HERE", "webhook_signature_key_env": "SQUARE_WEBHOOK_SIGNATURE_KEY"}', FALSE, STRFTIME('%Y-%m-%d %H:%M:%f', 'now'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now')),
-  ('integ-sendgrid', 'SendGrid', NULL, '{"from_email": "noreply@gdspuppiesdeluxe.com"}', FALSE, STRFTIME('%Y-%m-%d %H:%M:%f', 'now'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now')),
   ('integ-tawkto', 'TawkTo', NULL, '{"property_id": "YOUR_TAWKTO_PROPERTY_ID", "widget_id": "default"}', FALSE, STRFTIME('%Y-%m-%d %H:%M:%f', 'now'), STRFTIME('%Y-%m-%d %H:%M:%f', 'now'));
 
 -- Seed data for stud_dogs
