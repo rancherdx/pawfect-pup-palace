@@ -1,88 +1,119 @@
 import type { Env } from '../env';
 
-/**
- * Retrieves the SendGrid API key from the database.
- * In a real application, this function would also handle decryption of the API key.
- *
- * @param env - The worker environment containing the database binding.
- * @returns The SendGrid API key as a string, or null if not found, not active, or an error occurs.
- */
-export async function getSendGridApiKey(env: Env): Promise<string | null> {
-  try {
-    const stmt = env.PUPPIES_DB.prepare(
-      "SELECT api_key FROM third_party_integrations WHERE service_name = 'SendGrid' AND is_active = 1"
-    );
-    const result = await stmt.first<{ api_key: string | null }>();
-
-    if (result && result.api_key) {
-      console.log("SendGrid configuration found and active. Simulating API key retrieval.");
-      return 'dummy-sendgrid-api-key-from-db';
-    } else if (result && !result.api_key) {
-      console.warn("SendGrid integration is active, but API key is missing in the database.");
-      return null;
-    } else {
-      console.warn("SendGrid API key is not configured or is inactive in the database.");
-      return null;
-    }
-  } catch (error) {
-    console.error("Database error while trying to retrieve SendGrid API key:", error);
-    return null;
-  }
+// Define the structure for the MailChannels API request
+interface MailChannelsRequestBody {
+  personalizations: {
+    to: { email: string; name?: string }[];
+    dkim_domain?: string;
+    dkim_selector?: string;
+    dkim_private_key?: string;
+  }[];
+  from: {
+    email: string;
+    name: string;
+  };
+  subject: string;
+  content: {
+    type: 'text/html' | 'text/plain';
+    value: string;
+  }[];
 }
 
 /**
- * Simulates sending an email.
- * In a real application, this function would make an HTTP request to the SendGrid API.
+ * Sends an email using the MailChannels API.
  *
- * @param env - The worker environment.
+ * @param env - The worker environment containing secrets.
  * @param to - The recipient's email address.
  * @param subject - The email subject.
  * @param htmlBody - The HTML content of the email.
- * @returns An object indicating success or failure, a message, and the API key used (if any).
- * Use: Record<string, unknown> or define a specific interface if known.
+ * @returns An object indicating success or failure and a message.
  */
-export async function sendEmailPlaceholder(
+export async function sendEmail(
   env: Env,
   to: string,
   subject: string,
   htmlBody: string
-): Promise<{ success: boolean; message: string; apiKeyUsed: string | null }> {
-  const apiKey = await getSendGridApiKey(env);
-
-  if (!apiKey) {
+): Promise<{ success: boolean; message: string }> {
+  if (!env.MAILCHANNELS_API_KEY) {
+    console.error('MAILCHANNELS_API_KEY is not set.');
     return {
       success: false,
-      message: "Email sending failed: SendGrid API key not configured or inactive.",
-      apiKeyUsed: null,
+      message: 'Email sending failed: MailChannels API key not configured.',
     };
   }
 
-  console.log(`Simulating email send to: ${to}`);
-  console.log(`Subject: ${subject}`);
-  console.log(`Using SendGrid API key: ${apiKey}`);
-  console.log(`Email HTML Body (first 100 chars): ${htmlBody.substring(0, 100)}...`);
-
-  return {
-    success: true,
-    message: "Email sent successfully (simulated).",
-    apiKeyUsed: apiKey,
+  const requestBody: MailChannelsRequestBody = {
+    personalizations: [
+      {
+        to: [{ email: to }],
+      },
+    ],
+    from: {
+      email: 'noreply@gdspuppiesdeluxe.com', // This should be a domain you are allowed to send from
+      name: 'GDS Puppies',
+    },
+    subject: subject,
+    content: [
+      {
+        type: 'text/html',
+        value: htmlBody,
+      },
+    ],
   };
+
+  // Add DKIM signing if the private key is available.
+  // The user mentioned they will add it to Supabase secrets.
+  if (env.DKIM_PRIVATE_KEY && env.DKIM_DOMAIN) {
+    requestBody.personalizations[0].dkim_domain = env.DKIM_DOMAIN;
+    requestBody.personalizations[0].dkim_selector = "mailchannels";
+    requestBody.personalizations[0].dkim_private_key = env.DKIM_PRIVATE_KEY;
+  }
+
+
+  try {
+    const response = await fetch('https://api.mailchannels.net/tx/v1/send', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Api-Key': env.MAILCHANNELS_API_KEY,
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (response.status === 202) {
+      console.log(`Email sent successfully to: ${to}`);
+      return { success: true, message: 'Email sent successfully.' };
+    } else {
+      const errorBody = await response.text();
+      console.error(`Failed to send email. Status: ${response.status}, Body: ${errorBody}`);
+      return {
+        success: false,
+        message: `Failed to send email. Status: ${response.status}`,
+      };
+    }
+  } catch (error) {
+    console.error('Error sending email:', error);
+    return { success: false, message: 'An unexpected error occurred while sending the email.' };
+  }
 }
 
+
 interface EmailTemplate {
-  subject: string;
-  html_body: string;
+    // The subject from the DB is a template itself
+    subject_template: string;
+    // The html_body from the DB is a template itself
+    html_body_template: string;
 }
 
 interface SendTemplatedEmailResult {
   success: boolean;
   message: string;
   templateFound: boolean;
-  emailSentResult?: { success: boolean; message: string; apiKeyUsed: string | null };
+  emailSentResult?: { success: boolean; message: string };
 }
 
 /**
- * Fetches an email template, populates it with data, and "sends" it using sendEmailPlaceholder.
+ * Fetches an email template, populates it with data, and sends it using the sendEmail function.
  *
  * @param env - The worker environment.
  * @param to - The recipient's email address.
@@ -99,8 +130,9 @@ export async function sendTemplatedEmail(
   let template: EmailTemplate | null = null;
 
   try {
+    // Corrected column names to match the seed data: subject_template and html_body_template
     const stmt = env.PUPPIES_DB.prepare(
-      "SELECT subject, html_body FROM email_templates WHERE name = ?"
+      "SELECT subject_template, html_body_template FROM email_templates WHERE template_name = ?"
     );
     template = await stmt.bind(templateName).first<EmailTemplate>();
   } catch (dbError) {
@@ -121,8 +153,8 @@ export async function sendTemplatedEmail(
     };
   }
 
-  let populatedSubject = template.subject;
-  let populatedHtmlBody = template.html_body;
+  let populatedSubject = template.subject_template;
+  let populatedHtmlBody = template.html_body_template;
 
   for (const key in data) {
     if (Object.prototype.hasOwnProperty.call(data, key)) {
@@ -132,12 +164,12 @@ export async function sendTemplatedEmail(
     }
   }
 
-  const emailSentResult = await sendEmailPlaceholder(env, to, populatedSubject, populatedHtmlBody);
+  const emailSentResult = await sendEmail(env, to, populatedSubject, populatedHtmlBody);
 
   return {
     success: emailSentResult.success,
     message: emailSentResult.success
-      ? `Templated email "${templateName}" sent successfully to ${to} (simulated).`
+      ? `Templated email "${templateName}" sent successfully to ${to}.`
       : `Failed to send templated email "${templateName}" to ${to}. Reason: ${emailSentResult.message}`,
     templateFound: true,
     emailSentResult: emailSentResult,

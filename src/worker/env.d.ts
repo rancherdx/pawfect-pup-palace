@@ -24,7 +24,9 @@ export interface Env {
   SQUARE_APPLICATION_SECRET: string;
   SQUARE_LOCATION_ID: string;
   SQUARE_WEBHOOK_SIGNATURE_KEY: string;
-  SENDGRID_API_KEY: string;
+  MAILCHANNELS_API_KEY: string;
+  DKIM_PRIVATE_KEY?: string;
+  DKIM_DOMAIN?: string;
   INTERNAL_WEBHOOK_SECRET: string;
   STRIPE_SECRET_KEY: string;
   ENCRYPTION_KEY_SECRET: string;
