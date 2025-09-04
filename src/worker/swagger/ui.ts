@@ -10,6 +10,11 @@ export function generateSwaggerUI(): string {
   <title>GDS Puppies API Documentation</title>
   <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui.css" />
   <style>
+    .topbar-wrapper .link {
+      color: white;
+      text-decoration: none;
+      margin-left: 10px;
+    }
     html {
       box-sizing: border-box;
       overflow: -moz-scrollbars-vertical;
@@ -60,6 +65,16 @@ export function generateSwaggerUI(): string {
       requestInterceptor: function(req) {
         // Add any auth headers or modifications here
         return req;
+      },
+      onComplete: function() {
+        var topbar = document.querySelector('.topbar-wrapper');
+        if (topbar) {
+          var redocLink = document.createElement('a');
+          redocLink.href = '/api/redoc';
+          redocLink.innerText = 'ReDoc';
+          redocLink.className = 'link';
+          topbar.appendChild(redocLink);
+        }
       }
     });
   };

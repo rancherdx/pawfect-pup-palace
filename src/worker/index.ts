@@ -8,6 +8,7 @@ import { squareRoutes } from './routes/squareRoutes';
 import adminRoutes from './routes/adminRoutes';
 import { authenticate } from './utils/auth';
 import { serveSwaggerUI, serveSwaggerSpec } from './swagger/ui';
+import { serveRedocUI } from './swagger/redoc';
 import { RedisClient, RedisUtils } from './redis/client';
 
 // Create a new router instance
@@ -26,6 +27,7 @@ router.options('*', () => {
 
 // Swagger documentation routes
 router.get('/api/docs', () => serveSwaggerUI());
+router.get('/api/redoc', () => serveRedocUI());
 router.get('/api/swagger.json', () => serveSwaggerSpec());
 
 // Register all route modules
