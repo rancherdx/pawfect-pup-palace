@@ -25,7 +25,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/api/client';
+import { adminApi } from '@/api/adminApi';
 import { toast } from 'sonner';
 
 interface Integration {
@@ -38,7 +38,7 @@ interface Integration {
   updated_at?: string;
 }
 
-interface IntegrationApiPayload {
+interface IntegrationApiPayload extends Record<string, unknown> {
     service_name: string;
     api_key?: string;
     other_config: object;
@@ -63,7 +63,7 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
   const { data: integrationsData, isLoading, isError, error } = useQuery({
     queryKey: ['integrations'],
     queryFn: async (): Promise<Integration[]> => {
-      const response = await apiRequest<unknown>('/admin/integrations');
+      const response = await adminApi.getIntegrations();
       const rawIntegrations = (response as { integrations?: unknown[] }).integrations || response;
       return (rawIntegrations as unknown[]).map((int: unknown) => {
         const integrationObj = int as Integration;
@@ -87,10 +87,7 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
   };
 
   const addIntegrationMutation = useMutation({
-    mutationFn: (newData: IntegrationApiPayload) => apiRequest<Integration>('/admin/integrations', {
-      method: 'POST',
-      body: JSON.stringify(newData),
-    }),
+    mutationFn: (newData: IntegrationApiPayload) => adminApi.createIntegration(newData),
     ...commonMutationOptions,
     onSuccess: () => {
       commonMutationOptions.onSuccess();
@@ -102,10 +99,7 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
   });
 
   const updateIntegrationMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<IntegrationApiPayload> }) => apiRequest<Integration>(`/admin/integrations/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    }),
+    mutationFn: ({ id, data }: { id: string; data: Partial<IntegrationApiPayload> }) => adminApi.updateIntegration(id, data),
     ...commonMutationOptions,
     onSuccess: () => {
       commonMutationOptions.onSuccess();
@@ -117,7 +111,7 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
   });
 
   const deleteIntegrationMutation = useMutation({
-    mutationFn: (id: string) => apiRequest(`/admin/integrations/${id}`, { method: 'DELETE' }),
+    mutationFn: (id: string) => adminApi.deleteIntegration(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['integrations'] });
       toast.success('Integration deleted successfully!');
@@ -241,9 +235,31 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
                 <div className="space-y-2 p-4 border rounded-lg dark:border-gray-700">
                   <h4 className="font-semibold text-lg">Setting up Square Integration</h4>
                   <p className="text-sm text-muted-foreground">
-                    To connect Square for payment processing, you'll need your Square Access Token and optionally your Location ID.
-                    For webhook signature verification, you must also configure a Webhook Signing Secret in your Square Developer Dashboard and set it in your worker's environment variables.
+                    Square integration enables payment processing with sandbox/production modes, Apple Pay support, and comprehensive webhook handling.
                   </p>
+                  <div className="space-y-2 text-xs">
+                    <div><strong>Required Information:</strong></div>
+                    <ul className="list-disc list-inside space-y-1 ml-2">
+                      <li>Application ID (from Square Developer Dashboard)</li>
+                      <li>Access Token (sandbox & production)</li>
+                      <li>Location ID (optional, for specific locations)</li>
+                      <li>Webhook Signature Key (for payment verification)</li>
+                    </ul>
+                    <div><strong>Features Supported:</strong></div>
+                    <ul className="list-disc list-inside space-y-1 ml-2">
+                      <li>Sandbox/Production toggle for testing</li>
+                      <li>Square Web Payments SDK integration</li>
+                      <li>Apple Pay domain verification</li>
+                      <li>Payment webhooks for real-time updates</li>
+                      <li>OAuth flow for secure connection</li>
+                    </ul>
+                    <div><strong>URLs Needed for Square Dashboard:</strong></div>
+                    <ul className="list-disc list-inside space-y-1 ml-2">
+                      <li>Webhook URL: https://yourdomain.com/api/webhooks/square/payment</li>
+                      <li>OAuth Redirect: https://yourdomain.com/api/square/oauth/callback</li>
+                      <li>Apple Pay Domain: https://yourdomain.com/.well-known/apple-developer-merchantid-domain-association</li>
+                    </ul>
+                  </div>
                   <a
                     href="https://developer.squareup.com/apps"
                     target="_blank"
@@ -252,33 +268,62 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
                   >
                     Go to Square Developer Dashboard <ExternalLink className="h-4 w-4 ml-1" />
                   </a>
-                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-2 p-2 bg-amber-50 dark:bg-amber-900/30 rounded">
-                    <strong>Important Security Note:</strong> Ensure <code>ENCRYPTION_KEY_SECRET</code> is set in your worker
-                  </p>
                 </div>
+
                 <div className="space-y-2 p-4 border rounded-lg dark:border-gray-700">
-                  <h4 className="font-semibold text-lg">Setting up Email Service (e.g., SendGrid)</h4>
+                  <h4 className="font-semibold text-lg">Setting up MailChannels Integration</h4>
                   <p className="text-sm text-muted-foreground">
-                    To enable automated email sending (like welcome emails or receipts), you'll need an API Key from your chosen email provider (e.g., SendGrid).
-                    This API key should be stored securely.
+                    MailChannels provides reliable transactional email delivery with DKIM signing and multiple reply-to addresses.
                   </p>
+                  <div className="space-y-2 text-xs">
+                    <div><strong>Required Information:</strong></div>
+                    <ul className="list-disc list-inside space-y-1 ml-2">
+                      <li>MailChannels API Key</li>
+                      <li>From Email Address (must match your domain)</li>
+                      <li>DKIM Domain and Selector</li>
+                      <li>DKIM Private Key (2048-bit RSA)</li>
+                    </ul>
+                    <div><strong>DNS Records Required:</strong></div>
+                    <ul className="list-disc list-inside space-y-1 ml-2">
+                      <li>SPF: v=spf1 a mx include:relay.mailchannels.net ~all</li>
+                      <li>DKIM: [selector]._domainkey TXT record with public key</li>
+                      <li>DMARC: _dmarc TXT record (recommended)</li>
+                    </ul>
+                    <div><strong>Reply-To Categories:</strong></div>
+                    <ul className="list-disc list-inside space-y-1 ml-2">
+                      <li>Support: for customer service emails</li>
+                      <li>Billing: for payment and invoice emails</li>
+                      <li>Notifications: for system alerts</li>
+                      <li>Marketing: for promotional emails</li>
+                    </ul>
+                  </div>
                   <a
-                    href="https://docs.sendgrid.com/ui/account-and-settings/api-keys"
+                    href="https://www.mailchannels.com/email-api/"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 inline-flex items-center"
                   >
-                    Find SendGrid API Keys Documentation <ExternalLink className="h-4 w-4 ml-1" />
+                    MailChannels API Documentation <ExternalLink className="h-4 w-4 ml-1" />
                   </a>
-                   <p className="text-xs text-muted-foreground mt-1">
-                    Remember to add the chosen service (e.g., "SendGrid") via the "Add New Integration" form and configure its API key.
-                  </p>
                 </div>
+
                 <div className="space-y-2 p-4 border rounded-lg dark:border-gray-700">
                   <h4 className="font-semibold text-lg">Setting up Tawk.to Live Chat</h4>
                   <p className="text-sm text-muted-foreground">
-                    Tawk.to is a free live chat service. To integrate, you'll need your Property ID and Widget ID (often 'default' or a specific string). These are used to form the embed script URL.
+                    Tawk.to provides free live chat functionality with customer management features.
                   </p>
+                  <div className="space-y-2 text-xs">
+                    <div><strong>Required Information:</strong></div>
+                    <ul className="list-disc list-inside space-y-1 ml-2">
+                      <li>Property ID (from Tawk.to dashboard)</li>
+                      <li>Widget ID (usually 'default' or custom string)</li>
+                    </ul>
+                    <div><strong>Configuration:</strong></div>
+                    <ul className="list-disc list-inside space-y-1 ml-2">
+                      <li>API Key field: Enter your Property ID</li>
+                      <li>Other Config field: {"{"}"widgetId": "default"{"}"}</li>
+                    </ul>
+                  </div>
                   <a
                     href="https://dashboard.tawk.to/"
                     target="_blank"
@@ -287,9 +332,24 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
                   >
                     Go to Tawk.to Dashboard <ExternalLink className="h-4 w-4 ml-1" />
                   </a>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Once you have your Property ID and Widget ID, you can add them via the "Add New Integration" form (use service name e.g., "Tawkto"). Store the Property ID in the API Key field and Widget ID in the 'Other Configuration' field as JSON (e.g., <code>{"{"}"widgetId": "default"{"}"}</code>). The application will then use these to load the chat widget. Alternatively, some platforms allow direct script embedding.
-                  </p>
+                </div>
+
+                <div className="space-y-2 p-4 border rounded-lg dark:border-gray-700">
+                  <h4 className="font-semibold text-lg">General Integration Notes</h4>
+                  <div className="space-y-2 text-xs">
+                    <div><strong>Security:</strong></div>
+                    <ul className="list-disc list-inside space-y-1 ml-2">
+                      <li>All API keys are encrypted using AES-256-GCM</li>
+                      <li>Keys are stored securely in the database</li>
+                      <li>Never expose sensitive credentials in frontend code</li>
+                    </ul>
+                    <div><strong>Testing:</strong></div>
+                    <ul className="list-disc list-inside space-y-1 ml-2">
+                      <li>Use sandbox/test modes when available</li>
+                      <li>Test all integrations thoroughly before production</li>
+                      <li>Monitor logs for integration errors</li>
+                    </ul>
+                  </div>
                 </div>
               </div>
               <DialogFooter>

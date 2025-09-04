@@ -1,4 +1,5 @@
 import { getAllLitters, getLitterById, createLitter, updateLitter, deleteLitter } from '../controllers/litters';
+import { listIntegrations, createIntegration, updateIntegration, deleteIntegration } from '../controllers/integrations';
 import { authenticate } from '../utils/auth';
 import type { Env } from '../env';
 
@@ -84,6 +85,40 @@ const adminRoutes = [
     path: '/admin/litters/:id',
     handler: async (request, env, authResult) => {
       return deleteLitter(request, env, authResult);
+    },
+  },
+  
+  // Third-Party Integrations
+  {
+    method: 'GET',
+    path: '/admin/integrations',
+    handler: async (request, env, authResult) => {
+      return listIntegrations(request, env);
+    },
+  },
+  {
+    method: 'POST',
+    path: '/admin/integrations',
+    handler: async (request, env, authResult) => {
+      return createIntegration(request, env);
+    },
+  },
+  {
+    method: 'PUT',
+    path: '/admin/integrations/:id',
+    handler: async (request, env, authResult) => {
+      const url = new URL(request.url);
+      const integrationId = url.pathname.split('/').pop();
+      return updateIntegration(request, env, integrationId);
+    },
+  },
+  {
+    method: 'DELETE',
+    path: '/admin/integrations/:id',
+    handler: async (request, env, authResult) => {
+      const url = new URL(request.url);
+      const integrationId = url.pathname.split('/').pop();
+      return deleteIntegration(request, env, integrationId);
     },
   },
 ];

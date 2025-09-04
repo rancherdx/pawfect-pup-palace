@@ -1,45 +1,5 @@
-// Legacy compatibility - keeping minimal exports for backward compatibility
-import { fetchAPI } from "@/utils/fetchAPI";
-
-const STRAPI_API_TOKEN = import.meta.env.VITE_STRAPI_API_TOKEN;
-const STRAPI_API_URL = import.meta.env.VITE_STRAPI_API_URL || '/api';
-
-// Keep fetchAdminAPI for any legacy code that might still use it
-export const fetchAdminAPI = async (url: string, options: Record<string, unknown> = {}) => {
-  const mergedOptions = {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${STRAPI_API_TOKEN}`,
-    },
-    ...options,
-  };
-
-  const response = await fetch(`${STRAPI_API_URL}${url}`, mergedOptions);
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Failed to fetch data');
-  }
-  return await response.json();
-};
-
-// Generic API request function
-export const apiRequest = async <T = any>(endpoint: string, options: RequestInit = {}): Promise<T> => {
-  const config: RequestInit = {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    ...options,
-  };
-
-  const response = await fetch(`${STRAPI_API_URL}${endpoint}`, config);
-  
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Failed to fetch data' }));
-    throw new Error(error.message || 'API request failed');
-  }
-
-  return response.json();
-};
+// Worker API client for admin and public endpoints
+const API_BASE_URL = '/api';
 
 // Helper function to get auth headers
 export const getAuthHeaders = () => {
@@ -50,4 +10,38 @@ export const getAuthHeaders = () => {
   };
 };
 
-// All auth functionality now comes from unifiedApi - removing duplicates
+// Admin API client with authentication
+export const fetchAdminAPI = async (url: string, options: RequestInit = {}) => {
+  const mergedOptions: RequestInit = {
+    headers: {
+      ...getAuthHeaders(),
+    },
+    ...options,
+  };
+
+  const response = await fetch(`${API_BASE_URL}${url}`, mergedOptions);
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: 'Failed to fetch data' }));
+    throw new Error(error.message || 'Failed to fetch data');
+  }
+  return await response.json();
+};
+
+// Generic API request function
+export const apiRequest = async <T = any>(endpoint: string, options: RequestInit = {}): Promise<T> => {
+  const config: RequestInit = {
+    headers: {
+      ...getAuthHeaders(),
+    },
+    ...options,
+  };
+
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: 'Failed to fetch data' }));
+    throw new Error(error.message || 'API request failed');
+  }
+
+  return response.json();
+};

@@ -145,4 +145,26 @@ export const adminApi = {
       method: 'DELETE',
     });
   },
+
+  // Third-Party Integrations
+  getIntegrations: async () => {
+    return fetchAdminAPI('/admin/integrations');
+  },
+  createIntegration: async (data: Record<string, unknown>) => {
+    return fetchAdminAPI('/admin/integrations', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+  updateIntegration: async (id: string, data: Record<string, unknown>) => {
+    return fetchAdminAPI(`/admin/integrations/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+  deleteIntegration: async (id: string) => {
+    return fetchAdminAPI(`/admin/integrations/${id}`, {
+      method: 'DELETE',
+    });
+  },
 };
