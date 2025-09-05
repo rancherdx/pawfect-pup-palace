@@ -9,6 +9,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import Setup from "./pages/Setup";
 
 // Lazy load components for better performance
 const Index = lazy(() => import("./pages/Index"));
@@ -22,8 +23,6 @@ const Register = lazy(() => import("./pages/Register"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const SquareOAuthCallback = lazy(() => import("./pages/SquareOAuthCallback"));
-// Import Setup directly instead of lazy loading to avoid hook context issues
-import Setup from "./pages/Setup";
 
 // Create QueryClient outside component to prevent recreation
 const queryClient = new QueryClient();
