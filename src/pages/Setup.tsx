@@ -95,7 +95,7 @@ const Setup: React.FC = () => {
 
       toast({
         title: "Setup Complete!",
-        description: "Admin account created successfully. You can now log in."
+        description: "Super admin account created successfully. You can now log in."
       });
       navigate('/login');
     } catch (error) {
@@ -147,7 +147,7 @@ const Setup: React.FC = () => {
               GDS Puppies Setup
             </CardTitle>
             <p className="text-muted-foreground mt-2">
-              Create your administrator account to get started
+              Create your super administrator account to get started
             </p>
           </CardHeader>
 
@@ -155,7 +155,7 @@ const Setup: React.FC = () => {
             <Alert className="mb-6 border-amber-200 bg-amber-50">
               <AlertCircle className="h-4 w-4 text-amber-600" />
               <AlertDescription className="text-amber-800">
-                This will create the first administrator account for your GDS Puppies website.
+                This will create the first super administrator account for your GDS Puppies website.
               </AlertDescription>
             </Alert>
 
@@ -237,7 +237,7 @@ const Setup: React.FC = () => {
                 ) : (
                   <>
                     <Shield className="mr-2 h-4 w-4" />
-                    Create Administrator Account
+                    Create Super Administrator Account
                   </>
                 )}
               </Button>

@@ -11,10 +11,10 @@ function createErrorResponse(message: string, details: string | null = null, sta
 
 export async function checkSetupStatus(request: Request, env: Env): Promise<Response> {
   try {
-    // Check if any admin users exist
+    // Check if any super admin users exist
     const adminUsers = await env.PUPPIES_DB
       .prepare('SELECT COUNT(*) as count FROM users WHERE roles LIKE ?')
-      .bind('%"admin"%')
+      .bind('%"super-admin"%')
       .first<{ count: number }>();
 
     const setupRequired = !adminUsers || adminUsers.count === 0;
@@ -33,11 +33,11 @@ export async function createFirstAdmin(request: Request, env: Env): Promise<Resp
     // First check if setup is still needed
     const adminUsers = await env.PUPPIES_DB
       .prepare('SELECT COUNT(*) as count FROM users WHERE roles LIKE ?')
-      .bind('%"admin"%')
+      .bind('%"super-admin"%')
       .first<{ count: number }>();
 
     if (adminUsers && adminUsers.count > 0) {
-      return createErrorResponse('Setup already completed', 'Administrator account already exists', 400);
+      return createErrorResponse('Setup already completed', 'Super administrator account already exists', 400);
     }
 
     const { name, email, password } = await request.json() as { name?: string, email?: string, password?: string };
@@ -68,25 +68,25 @@ export async function createFirstAdmin(request: Request, env: Env): Promise<Resp
       return createErrorResponse('Email already in use', null, 400);
     }
 
-    // Create admin user
+    // Create super admin user
     const hashedPassword = await hashPassword(password);
-    const adminRoles = JSON.stringify(['admin', 'user']); // Admin has both admin and user roles
+    const superAdminRoles = JSON.stringify(['super-admin', 'admin', 'user']); // Super admin has all roles
     const userId = crypto.randomUUID();
     const now = new Date().toISOString();
 
     await env.PUPPIES_DB
       .prepare('INSERT INTO users (id, email, password_hash, name, roles, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
-      .bind(userId, email, hashedPassword, name, adminRoles, now, now)
+      .bind(userId, email, hashedPassword, name, superAdminRoles, now, now)
       .run();
 
     // Create JWT for immediate login
-    const jwt = await createJWT({ userId, email, roles: ['admin', 'user'] }, env);
+    const jwt = await createJWT({ userId, email, roles: ['super-admin', 'admin', 'user'] }, env);
 
     return new Response(JSON.stringify({
       success: true,
-      message: 'Administrator account created successfully',
+      message: 'Super administrator account created successfully',
       jwt,
-      user: { id: userId, email, name, roles: ['admin', 'user'] }
+      user: { id: userId, email, name, roles: ['super-admin', 'admin', 'user'] }
     }), {
       status: 201,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

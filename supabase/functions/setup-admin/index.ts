@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
 
     if (adminExists) {
       return new Response(
-        JSON.stringify({ error: 'Setup already completed. Administrator account already exists.' }),
+        JSON.stringify({ error: 'Setup already completed. Super administrator account already exists.' }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -117,8 +117,8 @@ Deno.serve(async (req) => {
       console.error('Error promoting user to admin:', promoteError)
       // Try to delete the user if we can't make them admin
       await supabase.auth.admin.deleteUser(authData.user.id)
-      return new Response(
-        JSON.stringify({ error: 'Failed to assign admin privileges' }),
+        return new Response(
+          JSON.stringify({ error: 'Failed to assign super admin privileges' }),
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -130,7 +130,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Administrator account created successfully',
+        message: 'Super administrator account created successfully',
         user: {
           id: authData.user.id,
           email: authData.user.email,
