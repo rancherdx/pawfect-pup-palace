@@ -37,7 +37,34 @@ export const blogApi = {
   },
   
   getBySlug: async (slug: string) => {
-    console.warn('getBySlug not yet implemented');
-    return null;
+    const { adminApi } = await import('./adminApi');
+    try {
+      const result = await adminApi.getAllPosts({ status: 'published' });
+      const posts = result?.data || [];
+      const foundPost = posts.find((post: any) => post.slug === slug);
+      
+      if (!foundPost) {
+        throw new Error('Post not found');
+      }
+      
+      return {
+        id: foundPost.id,
+        title: foundPost.title,
+        slug: foundPost.slug,
+        content: foundPost.content,
+        excerpt: foundPost.excerpt,
+        status: foundPost.status,
+        createdAt: foundPost.created_at,
+        updatedAt: foundPost.updated_at,
+        publishedAt: foundPost.published_at,
+        author: foundPost.author_name,
+        category: foundPost.category,
+        tags: foundPost.tags || [],
+        featuredImageUrl: foundPost.featured_image_url
+      };
+    } catch (error) {
+      console.error('Error fetching blog post:', error);
+      throw error;
+    }
   },
 };

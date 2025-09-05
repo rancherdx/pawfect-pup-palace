@@ -49,18 +49,17 @@ const TransactionHistory = () => {
     setCurrentPage(1);
   }, [selectedFilter]);
 
-  const fetchTransactions = async ({ queryKey }: { queryKey: [string, number, number, string, string] }): Promise<ApiResponse> => {
+  const fetchTransactions = async ({ queryKey }: { queryKey: [string, number, number, string, string] }) => {
     const [_key, page, limit, status, search] = queryKey;
-    const params = new URLSearchParams({
-      page: page.toString(),
-      limit: limit.toString(),
-    });
+    const params: any = { page, limit };
+    
     if (status && status !== "All") {
-      params.append('status', status);
+      params.status = status;
     }
     if (search) {
-      params.append('searchQuery', search);
+      params.searchQuery = search;
     }
+    
     return adminApi.getTransactions(params);
   };
 

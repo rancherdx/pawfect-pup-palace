@@ -69,7 +69,7 @@ const AdminTestSupabase = () => {
       category: "Public", 
       requiresAuth: false, 
       adminOnly: false,
-      method: () => supabase.from('puppies').select('*').limit(5)
+      method: async () => await supabase.from('puppies').select('*').limit(5)
     },
     { 
       name: "Get Litters", 
@@ -77,7 +77,7 @@ const AdminTestSupabase = () => {
       category: "Public", 
       requiresAuth: false, 
       adminOnly: false,
-      method: () => supabase.from('litters').select('*').limit(5)
+      method: async () => await supabase.from('litters').select('*').limit(5)
     },
     { 
       name: "Get Testimonials", 
@@ -85,7 +85,7 @@ const AdminTestSupabase = () => {
       category: "Public", 
       requiresAuth: false, 
       adminOnly: false,
-      method: () => supabase.from('testimonials').select('*').limit(5)
+      method: async () => await supabase.from('testimonials').select('*').limit(5)
     },
     { 
       name: "Get Blog Posts", 
@@ -93,7 +93,7 @@ const AdminTestSupabase = () => {
       category: "Public", 
       requiresAuth: false, 
       adminOnly: false,
-      method: () => supabase.from('blog_posts').select('*').eq('status', 'published').limit(5)
+      method: async () => await supabase.from('blog_posts').select('*').eq('status', 'published').limit(5)
     },
     
     // Admin operations
@@ -169,7 +169,7 @@ const AdminTestSupabase = () => {
       category: "Database", 
       requiresAuth: false, 
       adminOnly: false,
-      method: () => supabase.from('puppies').select('count', { count: 'exact', head: true })
+      method: async () => await supabase.from('puppies').select('count', { count: 'exact', head: true })
     }
   ];
 
