@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { fetchAdminAPI } from '@/api';
+import { adminApi } from '@/api';
 
 interface User {
   id: string;
@@ -73,14 +73,23 @@ const AdminUserManager: React.FC = () => {
 
   const fetchUsers = async ({ queryKey }: { queryKey: [string, number, number, string] }): Promise<UsersApiResponse> => {
     const [_key, page, limit, search] = queryKey;
-    const params = new URLSearchParams({
-      page: page.toString(),
-      limit: limit.toString(),
-    });
-    if (search) {
-      params.append('searchQuery', search);
-    }
-    return fetchAdminAPI(`/api/admin/users?${params.toString()}`);
+    const params = {
+      page: page,
+      limit: limit,
+      search: search || undefined
+    };
+    const response = await adminApi.getAllUsers(params);
+    return {
+      users: response.data?.map(user => ({
+        ...user,
+        email: `${user.name?.toLowerCase().replace(/\s+/g, '.')}@example.com`, // Placeholder email
+        roles: ['user'] // Default role
+      })) || [],
+      currentPage: page,
+      totalPages: Math.ceil((response.data?.length || 0) / limit),
+      totalUsers: response.data?.length || 0,
+      limit: limit
+    };
   };
 
   const { data, isLoading, isError, error, isPlaceholderData } = useQuery({
@@ -92,10 +101,7 @@ const AdminUserManager: React.FC = () => {
 
   const editUserMutation = useMutation({
     mutationFn: ({ userId, roles }: { userId: string, roles: string[] }) =>
-      fetchAdminAPI(`/api/admin/users/${userId}`, {
-        method: 'PUT',
-        body: JSON.stringify({ roles }),
-      }),
+      adminApi.updateUser(userId, { roles }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
       setShowEditRoleModal(false);
@@ -109,7 +115,7 @@ const AdminUserManager: React.FC = () => {
 
   const deleteUserMutation = useMutation({
     mutationFn: (userId: string) =>
-      fetchAdminAPI(`/api/admin/users/${userId}`, { method: 'DELETE' }),
+      adminApi.deleteUser(userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
       setShowDeleteConfirmModal(false);

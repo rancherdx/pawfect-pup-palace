@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { CreditCard, CheckCircle, AlertCircle, ArrowRight, Loader2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/api/client';
+import { adminApi } from '@/api';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import SquareOAuthConnect from './SquareOAuthConnect';
@@ -24,8 +24,8 @@ const SquareIntegration = () => {
   const { data: squareIntegration, isLoading: isLoadingIntegrations, isError: isErrorIntegrations } = useQuery({
     queryKey: ['integrations'],
     queryFn: async (): Promise<Integration | undefined> => {
-      const response = await apiRequest<unknown>('/admin/integrations');
-      const allIntegrations = (response as { integrations?: unknown[] }).integrations || response;
+      const response = await adminApi.getIntegrations();
+      const allIntegrations = response.data || [];
       return (allIntegrations as unknown[]).find((int: unknown) => (int as Integration).service_name?.toLowerCase() === 'square') as Integration | undefined;
     },
     staleTime: 5 * 60 * 1000,
@@ -43,10 +43,7 @@ const SquareIntegration = () => {
 
   const updateIntegrationMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: { is_active: boolean; service_name: string; other_config: object; } }) => 
-      apiRequest<Integration>(`/admin/integrations/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(data),
-      }),
+      adminApi.updateIntegration(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['integrations'] });
       toast.success('Square connection status updated!');

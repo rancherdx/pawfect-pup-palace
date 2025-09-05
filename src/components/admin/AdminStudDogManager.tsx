@@ -15,7 +15,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { fetchAdminAPI } from '@/api';
+import { adminApi } from '@/api';
 
 interface AdminStudDog extends StudDogApiPayload {
   id: string;
@@ -61,11 +61,21 @@ const AdminStudDogManager: React.FC = () => {
 
   const fetchAdminStudDogs = async ({ queryKey }: { queryKey: [string, number, number, string, string, string] }): Promise<AdminStudDogsApiResponse> => {
     const [_key, page, limit, search, availability, breedId] = queryKey;
-    const params = new URLSearchParams({ page: page.toString(), limit: limit.toString() });
-    if (search) params.append('searchQuery', search);
-    if (availability !== "all") params.append('is_available', availability);
-    if (breedId) params.append('breed_id', breedId);
-    return fetchAdminAPI(`/api/admin/stud-dogs?${params.toString()}`);
+    const params = {
+      page: page,
+      limit: limit,
+      search: search || undefined,
+      is_available: availability !== "all" ? availability : undefined,
+      breed_id: breedId || undefined
+    };
+    const response = await adminApi.getStudDogs(params);
+    return {
+      studDogs: response.data || [],
+      currentPage: page,
+      totalPages: Math.ceil((response.data?.length || 0) / limit),
+      totalStudDogs: response.data?.length || 0,
+      limit: limit
+    };
   };
 
   const { data, isLoading, isError, error, isPlaceholderData } = useQuery({
@@ -76,7 +86,7 @@ const AdminStudDogManager: React.FC = () => {
   });
 
   const addStudDogMutation = useMutation({
-    mutationFn: (newData: StudDogApiPayload) => fetchAdminAPI('/api/admin/stud-dogs', { method: 'POST', body: JSON.stringify(newData) }),
+    mutationFn: (newData: StudDogApiPayload) => adminApi.createStudDog(newData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminStudDogs'] });
       setShowFormModal(false);
@@ -89,7 +99,7 @@ const AdminStudDogManager: React.FC = () => {
 
   const updateStudDogMutation = useMutation({
     mutationFn: ({ id, data: updateData }: { id: string, data: StudDogApiPayload }) => 
-      fetchAdminAPI(`/api/admin/stud-dogs/${id}`, { method: 'PUT', body: JSON.stringify(updateData) }),
+      adminApi.updateStudDog(id, updateData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminStudDogs'] });
       setShowFormModal(false);
@@ -102,7 +112,7 @@ const AdminStudDogManager: React.FC = () => {
   });
 
   const deleteStudDogMutation = useMutation({
-    mutationFn: (id: string) => fetchAdminAPI(`/api/admin/stud-dogs/${id}`, { method: 'DELETE' }),
+    mutationFn: (id: string) => adminApi.deleteStudDog(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminStudDogs'] });
       setShowDeleteConfirmModal(false);

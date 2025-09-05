@@ -6,7 +6,7 @@ import { Receipt, Search, Download, ArrowLeft, ArrowRight, Loader2 } from "lucid
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Badge } from "@/components/ui/badge";
-import { apiRequest } from '@/api/client';
+import { adminApi } from '@/api';
 
 interface Transaction {
   id: string;
@@ -61,7 +61,7 @@ const TransactionHistory = () => {
     if (search) {
       params.append('searchQuery', search);
     }
-    return apiRequest<ApiResponse>(`/admin/transactions?${params.toString()}`);
+    return adminApi.getTransactions(params);
   };
 
   const { data, isLoading, isError, error, isFetching } = useQuery({

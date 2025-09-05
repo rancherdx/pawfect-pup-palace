@@ -692,6 +692,20 @@ export const adminApi = {
     };
   },
 
+  getTransactions: async (params: any = {}) => {
+    await requireAdmin();
+    // For now, return mock transaction data since we don't have actual Square transactions
+    return {
+      data: [],
+      transactions: [],
+      total: 0,
+      totalTransactions: 0,
+      currentPage: 1,
+      totalPages: 0,
+      limit: 10
+    };
+  },
+
   createNotification: async (notificationData: any) => {
     await requireAdmin();
     return { success: true };

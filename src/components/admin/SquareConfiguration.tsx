@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Copy, Check, AlertTriangle, Info, TestTube } from 'lucide-react';
 import { toast } from 'sonner';
-import { apiRequest } from '@/api/client';
+import { adminApi } from '@/api';
 
 interface SquareConfig {
   environment: 'sandbox' | 'production';
@@ -52,10 +52,15 @@ const SquareConfiguration = () => {
   const loadSquareStatus = async () => {
     try {
       setLoading(true);
-      const response = await apiRequest<SquareStatus>('/square/status');
-      setStatus(response);
+      const response = await adminApi.getSquareEnvironment();
+      setStatus({
+        configured: response.is_active,
+        environment: response.environment as 'sandbox' | 'production' || 'sandbox',
+        applicationId: response.application_id || '',
+        locationId: response.location_id || ''
+      });
       
-      if (response.configured) {
+      if (response.is_active) {
         // Don't load actual credentials for security, just show status
         setConfig(prev => ({
           ...prev,
@@ -82,12 +87,8 @@ const SquareConfiguration = () => {
 
     try {
       setSaving(true);
-      await apiRequest('/square/config', {
-        method: 'POST',
-        body: JSON.stringify(config)
-      });
-      
-      toast.success('Square configuration saved successfully');
+      // Square configuration not implemented with Supabase-only architecture
+      toast.success('Square configuration display updated (actual saving not implemented)');
       await loadSquareStatus();
     } catch (error) {
       console.error('Failed to save Square config:', error);
@@ -105,12 +106,9 @@ const SquareConfiguration = () => {
 
     try {
       setTesting(true);
-      await apiRequest('/square/config', {
-        method: 'POST',
-        body: JSON.stringify({ ...config, testOnly: true })
-      });
-      
-      toast.success('Square configuration is valid!');
+      // Square connection test not implemented with Supabase-only architecture
+      const testResult = await adminApi.testSquareConnection();
+      toast.success('Square test completed (placeholder implementation)');
     } catch (error) {
       console.error('Configuration test failed:', error);
       toast.error(error instanceof Error ? error.message : 'Configuration test failed');

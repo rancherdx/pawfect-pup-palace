@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { apiRequest } from "@/api/client";
+import { adminApi } from '@/api';
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -58,11 +58,11 @@ const DataDeletionRequestsManager = () => {
       if (status) {
         url += `&status=${status}`;
       }
-      const response = await apiRequest(url) as ApiResponse;
-      setRequests(response.requests || []);
-      setCurrentPage(response.pagination?.currentPage || 1);
-      setTotalPages(response.pagination?.totalPages || 1);
-      setTotalItems(response.pagination?.totalRequests || 0);
+      const response = await adminApi.getDataDeletionRequests();
+      setRequests(response.data || []);
+      setCurrentPage(1);
+      setTotalPages(1);
+      setTotalItems(response.data?.length || 0);
     } catch (error: unknown) {
       toast({
         variant: "destructive",
@@ -94,14 +94,8 @@ const DataDeletionRequestsManager = () => {
     if (!selectedRequest) return;
     setIsLoading(true);
     try {
-      const updatedRequest = await apiRequest(
-        `/admin/data-deletion-requests/${selectedRequest.id}/status`,
-        {
-          method: "PUT",
-          body: JSON.stringify({ status: editStatus, admin_notes: editAdminNotes }),
-        }
-      ) as { request: DeletionRequest };
-      setRequests(prev => prev.map(r => (r.id === updatedRequest.request.id ? updatedRequest.request : r)));
+      const updatedRequest = await adminApi.updateDataDeletionRequestStatus(selectedRequest.id, editStatus);
+      setRequests(prev => prev.map(r => (r.id === updatedRequest.id ? updatedRequest : r)));
       setIsEditModalOpen(false);
       toast({ title: "Status Updated", description: `Request ${selectedRequest.id} status updated to ${editStatus}.`, className: "bg-green-500 text-white" });
       fetchRequests(currentPage, filterStatus);

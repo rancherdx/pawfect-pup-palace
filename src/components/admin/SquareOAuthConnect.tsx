@@ -1,25 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { AlertTriangle, CheckCircle, ExternalLink, Loader2, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Link as LinkIcon, 
-  Unlink, 
-  CheckCircle, 
-  AlertCircle, 
-  Loader2,
-  ExternalLink,
-  Shield
-} from 'lucide-react';
-import { apiRequest } from '@/api/client';
+import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { adminApi } from '@/api';
 
 interface SquareOAuthStatus {
   connected: boolean;
   merchantId?: string;
-  connectedAt?: string;
-  permissions?: string[];
+  applicationId?: string;
   environment?: string;
+  permissions?: string[];
   message?: string;
 }
 
@@ -37,7 +31,7 @@ const SquareOAuthConnect = () => {
   const checkOAuthStatus = async () => {
     try {
       setLoading(true);
-      const response = await apiRequest<SquareOAuthStatus>('/square/oauth/status');
+      const response = { connected: false, message: 'Square OAuth not implemented with Supabase' };
       setStatus(response);
     } catch (error) {
       console.error('Error checking OAuth status:', error);
@@ -51,58 +45,12 @@ const SquareOAuthConnect = () => {
     try {
       setConnecting(true);
       
-      // Request OAuth URL from backend
-      const response = await apiRequest<{authUrl: string, state: string}>('/square/oauth/auth-url');
-      
-      // Open Square OAuth in a popup
-      const popup = window.open(
-        response.authUrl, 
-        'square-oauth',
-        'width=600,height=700,scrollbars=yes,resizable=yes'
-      );
-
-      if (!popup) {
-        throw new Error('Popup blocked. Please allow popups for this site.');
-      }
-
-      // Listen for OAuth completion
-      const handleMessage = (event: MessageEvent) => {
-        if (event.origin !== window.location.origin) return;
-        
-        if (event.data.type === 'SQUARE_OAUTH_SUCCESS') {
-          popup.close();
-          window.removeEventListener('message', handleMessage);
-          
-          toast({
-            title: "Square Connected!",
-            description: "Your Square account has been successfully connected.",
-            className: "bg-green-500 text-white",
-          });
-          
-          checkOAuthStatus();
-        } else if (event.data.type === 'SQUARE_OAUTH_ERROR') {
-          popup.close();
-          window.removeEventListener('message', handleMessage);
-          
-          toast({
-            variant: "destructive",
-            title: "Connection Failed",
-            description: event.data.error || "Failed to connect Square account.",
-          });
-        }
-      };
-
-      window.addEventListener('message', handleMessage);
-      
-      // Check if popup was closed manually
-      const checkClosed = setInterval(() => {
-        if (popup.closed) {
-          clearInterval(checkClosed);
-          window.removeEventListener('message', handleMessage);
-          setConnecting(false);
-        }
-      }, 1000);
-
+      // Square OAuth not implemented with Supabase architecture
+      toast({
+        title: "OAuth Not Available",
+        description: "Square OAuth integration is not available in this Supabase-only setup",
+        variant: "default"
+      });
     } catch (error) {
       console.error('OAuth initiation error:', error);
       toast({
@@ -118,20 +66,19 @@ const SquareOAuthConnect = () => {
   const revokeOAuth = async () => {
     try {
       setRevoking(true);
-      await apiRequest('/square/oauth/revoke', { method: 'POST' });
-      
+      // Square OAuth revoke not implemented with Supabase architecture
       toast({
-        title: "Square Disconnected",
-        description: "Your Square account has been disconnected.",
-        className: "bg-orange-500 text-white",
+        title: "Revoke Not Available", 
+        description: "Square OAuth revoke is not available in this Supabase-only setup",
+        variant: "default"
       });
       
-      checkOAuthStatus();
+      setStatus({ connected: false, message: 'Disconnected (placeholder)' });
     } catch (error) {
       console.error('OAuth revocation error:', error);
       toast({
         variant: "destructive",
-        title: "Disconnection Failed",
+        title: "Disconnection Error",
         description: error instanceof Error ? error.message : "Failed to disconnect Square account.",
       });
     } finally {
@@ -142,163 +89,131 @@ const SquareOAuthConnect = () => {
   if (loading) {
     return (
       <Card>
-        <CardContent className="flex items-center justify-center p-8">
-          <Loader2 className="h-8 w-8 animate-spin text-brand-red mr-3" />
-          <span>Checking Square connection status...</span>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            Square OAuth Connection
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>Checking connection status...</p>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <Card className={status?.connected ? "border-green-500" : "border-gray-200"}>
-        <CardHeader className={status?.connected ? "bg-green-50 dark:bg-green-900/20" : "bg-gray-50 dark:bg-gray-800/20"}>
-          <CardTitle className="flex items-center">
-            {status?.connected ? (
-              <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-            ) : (
-              <AlertCircle className="h-5 w-5 text-amber-500 mr-2" />
-            )}
-            Square OAuth Connection
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          Square OAuth Connection
           {status?.connected ? (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
+            <Badge variant="default" className="bg-green-500 hover:bg-green-600">
+              <CheckCircle className="h-3 w-3 mr-1" />
+              Connected
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="border-red-500 text-red-500">
+              <X className="h-3 w-3 mr-1" />
+              Not Connected
+            </Badge>
+          )}
+        </CardTitle>
+        <CardDescription>
+          Connect your Square account for seamless payment processing
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <Alert>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Square OAuth integration is not available in this Supabase-only configuration. 
+            This is a placeholder interface for demonstration purposes.
+          </AlertDescription>
+        </Alert>
+
+        {status?.message && (
+          <Alert>
+            <AlertDescription>{status.message}</AlertDescription>
+          </Alert>
+        )}
+
+        <div className="flex gap-2">
+          {!status?.connected ? (
+            <Button 
+              onClick={initiateOAuth} 
+              disabled={connecting}
+              className="flex items-center gap-2"
+            >
+              {connecting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <ExternalLink className="h-4 w-4" />
+              )}
+              Connect Square Account
+            </Button>
+          ) : (
+            <Button 
+              variant="destructive"
+              onClick={revokeOAuth} 
+              disabled={revoking}
+              className="flex items-center gap-2"
+            >
+              {revoking ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <X className="h-4 w-4" />
+              )}
+              Disconnect Account
+            </Button>
+          )}
+        </div>
+
+        {status?.connected && (
+          <>
+            <Separator />
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              {status.merchantId && (
                 <div>
-                  <p className="text-lg font-medium text-green-600 dark:text-green-400">
-                    Connected to Square
+                  <strong>Merchant ID:</strong>
+                  <p className="font-mono text-xs bg-gray-100 p-1 rounded mt-1">
+                    {status.merchantId}
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Merchant ID: {status.merchantId}
-                  </p>
-                  {status.connectedAt && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Connected: {new Date(status.connectedAt).toLocaleDateString()}
-                    </p>
-                  )}
                 </div>
-                <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                  {status.environment === 'sandbox' ? 'Sandbox' : 'Production'}
-                </Badge>
-              </div>
-              
-              {status.permissions && status.permissions.length > 0 && (
+              )}
+              {status.applicationId && (
                 <div>
-                  <h4 className="text-sm font-medium mb-2">Granted Permissions:</h4>
-                  <div className="flex flex-wrap gap-2">
+                  <strong>Application ID:</strong>
+                  <p className="font-mono text-xs bg-gray-100 p-1 rounded mt-1">
+                    {status.applicationId}
+                  </p>
+                </div>
+              )}
+              {status.environment && (
+                <div>
+                  <strong>Environment:</strong>
+                  <Badge variant={status.environment === 'production' ? 'default' : 'secondary'}>
+                    {status.environment.toUpperCase()}
+                  </Badge>
+                </div>
+              )}
+              {status.permissions && status.permissions.length > 0 && (
+                <div className="col-span-2">
+                  <strong>Permissions:</strong>
+                  <div className="flex flex-wrap gap-1 mt-1">
                     {status.permissions.map((permission, index) => (
-                      <Badge key={index} variant="outline">
-                        <Shield className="h-3 w-3 mr-1" />
+                      <Badge key={index} variant="outline" className="text-xs">
                         {permission}
                       </Badge>
                     ))}
                   </div>
                 </div>
               )}
-              
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => window.open('https://squareup.com/dashboard', '_blank')}
-                  className="flex items-center"
-                >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Open Square Dashboard
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={revokeOAuth}
-                  disabled={revoking}
-                  className="border-red-300 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-500 dark:hover:bg-red-900/30"
-                >
-                  {revoking ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Disconnecting...
-                    </>
-                  ) : (
-                    <>
-                      <Unlink className="h-4 w-4 mr-2" />
-                      Disconnect Square
-                    </>
-                  )}
-                </Button>
-              </div>
             </div>
-          ) : (
-            <div className="space-y-4">
-              <div>
-                <p className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-2">
-                  Connect Your Square Account
-                </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                  Connect your Square account to enable payment processing, inventory sync, and sales management.
-                </p>
-                {status?.message && (
-                  <p className="text-sm text-red-600 dark:text-red-400 mb-4">
-                    {status.message}
-                  </p>
-                )}
-              </div>
-              
-              <Button
-                onClick={initiateOAuth}
-                disabled={connecting}
-                className="bg-brand-red hover:bg-red-700 text-white"
-              >
-                {connecting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Connecting to Square...
-                  </>
-                ) : (
-                  <>
-                    <LinkIcon className="h-4 w-4 mr-2" />
-                    Connect Square Account
-                  </>
-                )}
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Information Card */}
-      <Card>
-        <CardHeader className="bg-blue-50 dark:bg-blue-900/20">
-          <CardTitle className="text-blue-900 dark:text-blue-100">
-            What happens when you connect?
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          <ul className="space-y-2 text-sm">
-            <li className="flex items-start">
-              <CheckCircle className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-              Securely connect to your Square account using OAuth 2.0
-            </li>
-            <li className="flex items-start">
-              <CheckCircle className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-              Enable payment processing for puppy sales
-            </li>
-            <li className="flex items-start">
-              <CheckCircle className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-              Sync inventory and sales data automatically
-            </li>
-            <li className="flex items-start">
-              <CheckCircle className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-              Access comprehensive transaction history and reporting
-            </li>
-            <li className="flex items-start">
-              <CheckCircle className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-              Manage customer data and payment methods
-            </li>
-          </ul>
-        </CardContent>
-      </Card>
-    </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

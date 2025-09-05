@@ -10,7 +10,7 @@ import {
   DialogContent,
 } from "@/components/ui/dialog";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/api/client';
+import { adminApi } from '@/api';
 import { toast } from 'sonner';
 
 interface EmailTemplate {
@@ -32,21 +32,21 @@ const EmailTemplatesManager: React.FC = () => {
   const { data: templatesData, isLoading, isError, error } = useQuery({
     queryKey: ['emailTemplates'],
     queryFn: async () => {
-      const response = await apiRequest<{ templates?: EmailTemplate[] }>('/admin/email-templates');
-      return response.templates || [];
+      const response = await adminApi.getEmailTemplates();
+      return response.data?.map(t => ({ 
+        ...t, 
+        is_editable_in_admin: !t.is_system_template 
+      })) || [];
     },
     staleTime: 5 * 60 * 1000,
-    select: (data: EmailTemplate[]) => data.map(t => ({ ...t, is_editable_in_admin: !t.is_system_template })),
+    select: (data: any[]) => data.map(t => ({ ...t, is_editable_in_admin: !t.is_system_template })),
   });
 
   const templates = templatesData || [];
 
   const updateTemplateMutation = useMutation({
     mutationFn: (templateData: { id: string; subject: string; html_body: string }) => 
-      apiRequest<EmailTemplate>(`/admin/email-templates/${templateData.id}`, {
-        method: 'PUT',
-        body: JSON.stringify({ subject: templateData.subject, html_body: templateData.html_body }),
-      }),
+      adminApi.updateEmailTemplate(templateData.id, { subject: templateData.subject, html_body: templateData.html_body }),
     onSuccess: (updatedTemplate) => {
       queryClient.invalidateQueries({ queryKey: ['emailTemplates'] });
       toast.success(`Template "${updatedTemplate.name}" updated successfully!`);
