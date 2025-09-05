@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings, Save, RefreshCw, Globe, Mail, Shield, Palette } from "lucide-react";
 import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { adminApi } from '@/api';
+import { adminApi } from '@/api/adminApi';
 
 interface SiteSettings {
   siteName: string;
@@ -86,7 +86,7 @@ const SettingsPanel = () => {
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (newSettings: SiteSettings) => {
-      return adminApi.updateSiteSettings(newSettings);
+      return adminApi.updateSiteSettings(newSettings as unknown as Record<string, unknown>);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['siteSettings'] });
