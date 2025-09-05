@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { apiRequest } from "@/api/client";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle, AlertTriangle } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -50,10 +50,12 @@ const DataDeletionRequestPage = () => {
     }
 
     try {
-      await apiRequest("/privacy/deletion-request", {
-        method: "POST",
-        body: JSON.stringify(formData),
+      // Use Supabase edge function for secure data deletion requests
+      const { error } = await supabase.functions.invoke('secure-data-deletion-request', {
+        body: formData
       });
+      
+      if (error) throw error;
       setIsSuccess(true);
       toast({
         title: "Request Submitted",

@@ -2,12 +2,13 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea"; // For new conversation modal
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog"; // For new conversation
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { MessageCircle, Send, PawPrint, ChevronDown, ChevronUp, AlertCircle, Loader2, PlusCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 // Interfaces (consistent with PuppyProfile.tsx)
 interface Conversation {
@@ -36,27 +37,107 @@ interface Message {
   read_at?: string | null;
 }
 
-// API Fetcher (similar to one in UserProfile)
-const makeChatApiRequest = async (url: string, method: string, token: string | null, body?: unknown) => {
-  if (!token) throw new Error("Authentication token is required.");
-  const response = await fetch(url, {
-    method,
-    headers: {
-      "Authorization": `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || `API request failed: ${response.statusText}`);
-  }
-  return response.json();
+// Supabase API functions
+const fetchConversationsFromSupabase = async () => {
+  const { data, error } = await supabase
+    .from('conversations')
+    .select('*')
+    .order('last_message_at', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false });
+  
+  if (error) throw error;
+  return data || [];
+};
+
+const fetchMessagesFromSupabase = async (conversationId: string) => {
+  const { data, error } = await supabase
+    .from('messages')
+    .select('*')
+    .eq('conversation_id', conversationId)
+    .order('sent_at', { ascending: true });
+  
+  if (error) throw error;
+  return (data || []).map(msg => ({
+    ...msg,
+    sender_type: msg.sender_type as 'user' | 'admin' | 'system' | 'breeder'
+  }));
+};
+
+const createConversationWithMessage = async (title: string, firstMessageContent: string) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  // Create conversation
+  const { data: conversation, error: convError } = await supabase
+    .from('conversations')
+    .insert({
+      title,
+      user_id: user.id,
+      last_message_preview: firstMessageContent.substring(0, 50),
+      last_message_at: new Date().toISOString()
+    })
+    .select()
+    .single();
+
+  if (convError) throw convError;
+
+  // Create first message
+  const { data: message, error: msgError } = await supabase
+    .from('messages')
+    .insert({
+      conversation_id: conversation.id,
+      sender_id: user.id,
+      sender_type: 'user',
+      content: firstMessageContent
+    })
+    .select()
+    .single();
+
+  if (msgError) throw msgError;
+
+  return { conversation, message: {
+    ...message,
+    sender_type: message.sender_type as 'user' | 'admin' | 'system' | 'breeder'
+  } };
+};
+
+const sendMessageToSupabase = async (conversationId: string, content: string) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  const { data: message, error: msgError } = await supabase
+    .from('messages')
+    .insert({
+      conversation_id: conversationId,
+      sender_id: user.id,
+      sender_type: 'user',
+      content
+    })
+    .select()
+    .single();
+
+  if (msgError) throw msgError;
+
+  // Update conversation's last message info
+  const { error: updateError } = await supabase
+    .from('conversations')
+    .update({
+      last_message_preview: content.substring(0, 50),
+      last_message_at: new Date().toISOString()
+    })
+    .eq('id', conversationId);
+
+  if (updateError) throw updateError;
+
+  return {
+    ...message,
+    sender_type: message.sender_type as 'user' | 'admin' | 'system' | 'breeder'
+  };
 };
 
 
 const ChatHistory = () => {
-  const { token, user } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -81,18 +162,16 @@ const ChatHistory = () => {
   useEffect(scrollToBottom, [messages]);
 
   const fetchConversations = useCallback(async () => {
-    if (!token) {
+    if (!user) {
       setError("Not authenticated."); setIsLoadingConvos(false); return;
     }
     setIsLoadingConvos(true); setError(null);
     try {
-      const data = await makeChatApiRequest("/api/my-conversations", "GET", token);
-      setConversations(data.data || []);
-      // Optionally, auto-select the first or most recent conversation
-      if (data.data && data.data.length > 0) {
-        // Sort by last_message_at to get the most recent
-        const sortedConvos = [...data.data].sort((a,b) => new Date(b.last_message_at || 0).getTime() - new Date(a.last_message_at || 0).getTime());
-        setActiveConversation(sortedConvos[0]);
+      const conversations = await fetchConversationsFromSupabase();
+      setConversations(conversations);
+      // Auto-select the first conversation if available
+      if (conversations.length > 0) {
+        setActiveConversation(conversations[0]);
       }
     } catch (err: any) {
       setError(err.message);
@@ -100,24 +179,24 @@ const ChatHistory = () => {
     } finally {
       setIsLoadingConvos(false);
     }
-  }, [token, toast]);
+  }, [user, toast]);
 
   useEffect(() => {
     fetchConversations();
   }, [fetchConversations]);
 
   const fetchMessages = useCallback(async (conversationId: string) => {
-    if (!token) return;
+    if (!user) return;
     setIsLoadingMessages(true);
     try {
-      const data = await makeChatApiRequest(`/api/conversations/${conversationId}/messages`, "GET", token);
-      setMessages(data.data || []);
+      const messages = await fetchMessagesFromSupabase(conversationId);
+      setMessages(messages);
     } catch (err: any) {
       toast({ variant: "destructive", title: "Failed to load messages", description: err.message });
     } finally {
       setIsLoadingMessages(false);
     }
-  }, [token, toast]);
+  }, [user, toast]);
 
   useEffect(() => {
     if (activeConversation?.id) {
@@ -129,10 +208,10 @@ const ChatHistory = () => {
 
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!messageInput.trim() || !activeConversation?.id || !token) return;
+    if (!messageInput.trim() || !activeConversation?.id || !user) return;
 
     try {
-      const sentMessage = await makeChatApiRequest(`/api/conversations/${activeConversation.id}/messages`, "POST", token, { content: messageInput });
+      const sentMessage = await sendMessageToSupabase(activeConversation.id, messageInput);
       setMessages(prev => [...prev, sentMessage]);
       setMessageInput("");
       // Optimistically update conversation preview
@@ -144,20 +223,16 @@ const ChatHistory = () => {
   };
 
   const handleStartNewChat = async () => {
-    if (!newChatMessage.trim() || !newChatTitle.trim() || !token ) return;
+    if (!newChatMessage.trim() || !newChatTitle.trim() || !user) return;
     try {
-      const { conversation: newConv, message: firstMessage } = await makeChatApiRequest("/api/conversations", "POST", token, {
-        title: newChatTitle,
-        first_message_content: newChatMessage,
-        // related_entity_id and type can be null for general support chats
-      });
-      setConversations(prev => [newConv, ...prev]); // Add to top
+      const { conversation: newConv, message: firstMessage } = await createConversationWithMessage(newChatTitle, newChatMessage);
+      setConversations(prev => [newConv, ...prev]);
       setActiveConversation(newConv);
       setMessages([firstMessage]);
       setIsNewChatModalOpen(false);
       setNewChatTitle("Support Inquiry");
       setNewChatMessage("");
-      toast({ title: "Chat Started", description: `Conversation "${newConv.title}" created.`, className: "bg-green-500 text-white" });
+      toast({ title: "Chat Started", description: `Conversation "${newConv.title}" created.` });
     } catch (err: any) {
       toast({ variant: "destructive", title: "Failed to start new chat", description: err.message });
     }

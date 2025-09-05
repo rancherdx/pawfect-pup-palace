@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, PawPrint, AlertCircle, Loader2 } from "lucide-react";
-// import CreatureProfileForm from "./CreatureProfileForm"; // Disabled for now
 import CreatureCard from "./creature/CreatureCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Link } from "react-router-dom"; // For "Adopt a Puppy" button
+import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 // Define Puppy interface based on expected API response and CreatureCard needs
 export interface PuppyProfileData {
@@ -24,25 +24,23 @@ export interface PuppyProfileData {
 }
 
 
-async function fetchMyPuppiesAPI(token: string | null): Promise<PuppyProfileData[]> {
-  if (!token) throw new Error("Authentication token not found.");
-  const response = await fetch("/api/my-puppies?limit=20&page=1", { // Added pagination params
-    headers: {
-      "Authorization": `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || "Failed to fetch your puppies.");
-  }
-  const result = await response.json();
-  return result.data as PuppyProfileData[]; // Assuming API returns { data: [], ...pagination }
+async function fetchMyPuppiesFromSupabase(): Promise<PuppyProfileData[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("User not authenticated");
+
+  const { data, error } = await supabase
+    .from('puppies')
+    .select('*')
+    .eq('owner_user_id', user.id)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data || []) as PuppyProfileData[];
 }
 
 
 const CreatureProfiles = () => {
-  const { token } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [creatures, setCreatures] = useState<PuppyProfileData[]>([]);
   // const [showAddForm, setShowAddForm] = useState(false); // Disabled as per instructions
@@ -51,7 +49,7 @@ const CreatureProfiles = () => {
 
   useEffect(() => {
     const loadCreatures = async () => {
-      if (!token) {
+      if (!user) {
         setError("Not authenticated. Please log in.");
         setIsLoading(false);
         toast({ variant: "destructive", title: "Authentication Error", description: "Please log in to see your pets." });
@@ -60,7 +58,7 @@ const CreatureProfiles = () => {
       setIsLoading(true);
       setError(null);
       try {
-        const fetchedPuppies = await fetchMyPuppiesAPI(token);
+        const fetchedPuppies = await fetchMyPuppiesFromSupabase();
         setCreatures(fetchedPuppies);
       } catch (err: any) {
         setError(err.message);
@@ -74,7 +72,7 @@ const CreatureProfiles = () => {
       }
     };
     loadCreatures();
-  }, [token, toast]);
+  }, [user, toast]);
 
   // Add Creature functionality is disabled for now as per instructions.
   // const handleAddCreature = (newCreature: any) => {

@@ -6,24 +6,37 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
-const fetchUserAPI = async (endpoint: string, options: RequestInit = {}) => {
-  const jwtToken = localStorage.getItem('jwt');
-  const defaultHeaders = {
-    'Content-Type': 'application/json',
-    ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {})
+const fetchMyTransactionsFromSupabase = async (page: number, limit: number) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  const offset = (page - 1) * limit;
+  
+  const { data, error, count } = await supabase
+    .from('transactions')
+    .select('*', { count: 'exact' })
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (error) throw error;
+
+  const totalTransactions = count || 0;
+  const totalPages = Math.ceil(totalTransactions / limit);
+
+  return {
+    transactions: (data || []).map(transaction => ({
+      ...transaction,
+      payment_method_details: transaction.payment_method_details as { brand?: string; last4?: string; type?: string } | null
+    })),
+    currentPage: page,
+    totalPages,
+    totalTransactions,
+    limit
   };
-
-  const response = await fetch(endpoint, {
-    ...options,
-    headers: { ...defaultHeaders, ...options.headers },
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ message: "Request failed with status " + response.status }));
-    throw new Error(errorData.details || errorData.error || errorData.message || "API request failed");
-  }
-  return response.json();
 };
 
 interface TransactionItem {
@@ -149,6 +162,7 @@ const ReceiptDetail = ({ transaction, onClose }: { transaction: Transaction, onC
 };
 
 const Receipts = () => {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedReceipt, setSelectedReceipt] = useState<Transaction | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -156,17 +170,14 @@ const Receipts = () => {
 
   const fetchMyTransactions = async ({ queryKey }: { queryKey: [string, number, number] }): Promise<TransactionsApiResponse> => {
     const [_key, page, limit] = queryKey;
-    const params = new URLSearchParams({
-      page: page.toString(),
-      limit: limit.toString(),
-    });
-    return fetchUserAPI(`/api/my-transactions?${params.toString()}`);
+    return fetchMyTransactionsFromSupabase(page, limit);
   };
 
   const { data, isLoading, isError, error, isFetching, refetch } = useQuery({
     queryKey: ['myTransactions', currentPage, rowsPerPage],
     queryFn: fetchMyTransactions,
     staleTime: 5 * 60 * 1000,
+    enabled: !!user, // Only run query if user is authenticated
   });
 
   const filteredReceipts = useMemo(() => {

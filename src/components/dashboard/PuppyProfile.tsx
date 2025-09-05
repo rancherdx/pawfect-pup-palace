@@ -20,7 +20,7 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/api/client";
+import { supabase } from "@/integrations/supabase/client";
 
 // Interfaces for API data
 
@@ -112,7 +112,14 @@ const PuppyProfile = () => {
     if (!puppyId) return;
     setIsLoadingPuppy(true);
     try {
-      const data = await apiRequest(`/puppies/${puppyId}`) as PuppyData;
+      const { data, error } = await supabase
+        .from('puppies')
+        .select('*')
+        .eq('id', puppyId)
+        .single();
+        
+      if (error) throw error;
+      
       setPuppy({ 
         ...data, 
         image_urls: Array.isArray(data.image_urls) ? data.image_urls : JSON.parse(data.image_urls || "[]") 
@@ -125,12 +132,13 @@ const PuppyProfile = () => {
     }
   }, [puppyId, toast]);
 
+  // Temporarily disabled - health records feature coming soon
   const fetchHealthRecords = useCallback(async () => {
     if (!puppyId) return;
     setIsLoadingHealth(true);
     try {
-      const response = await apiRequest(`/puppies/${puppyId}/health-records`) as { data: HealthRecord[] };
-      setHealthRecords(response.data || []);
+      setHealthRecords([]);
+      toast({ title: "Info", description: "Health records feature coming soon!" });
     } catch (err: any) {
       toast({ variant: "destructive", title: "Failed to load health records", description: err.message });
     } finally {
@@ -138,15 +146,13 @@ const PuppyProfile = () => {
     }
   }, [puppyId, toast]);
   
+  // Temporarily disabled - conversations feature coming soon  
   const fetchConversations = useCallback(async () => {
     if (!puppyId) return;
     setIsLoadingConvos(true);
     try {
-      const convosResponse = await apiRequest(`/my-conversations?related_entity_id=${puppyId}&related_entity_type=puppy`) as { data: Conversation[] };
-      setConversations(convosResponse.data || []);
-      if (convosResponse.data && convosResponse.data.length > 0) {
-        setActiveConversation(convosResponse.data[0]);
-      }
+      setConversations([]);
+      toast({ title: "Info", description: "Puppy conversations feature coming soon!" });
     } catch (err: any) {
        toast({ variant: "destructive", title: "Failed to load conversations", description: err.message });
     } finally {
@@ -154,17 +160,10 @@ const PuppyProfile = () => {
     }
   }, [puppyId, toast]);
 
+  // Temporarily disabled
   const fetchMessagesForConversation = useCallback(async (conversationId: string) => {
-    if (!conversationId) return;
-    setIsLoadingMessages(true);
-    try {
-      const messagesResponse = await apiRequest(`/conversations/${conversationId}/messages`) as { data: Message[] };
-      setMessages(messagesResponse.data || []);
-    } catch (err: any) {
-      toast({ variant: "destructive", title: "Failed to load messages", description: err.message });
-    } finally {
-      setIsLoadingMessages(false);
-    }
+    setMessages([]);
+    toast({ title: "Info", description: "Messages feature coming soon!" });
   }, [toast]);
 
   useEffect(() => {
@@ -181,74 +180,17 @@ const PuppyProfile = () => {
     }
   }, [activeConversation, fetchMessagesForConversation]);
 
+  // Temporarily disabled
   const handleAddHealthRecordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!puppyId) return;
-    try {
-      const payload: any = {
-        record_type: newHealthRecord.record_type,
-        date: newHealthRecord.date,
-        details: newHealthRecord.details,
-      };
-      if (newHealthRecord.record_type === 'weight_log' || newHealthRecord.record_type === 'height_log') {
-        if (newHealthRecord.value) payload.value = parseFloat(newHealthRecord.value);
-        if (newHealthRecord.unit) payload.unit = newHealthRecord.unit;
-      }
-      await apiRequest(`/puppies/${puppyId}/health-records`, {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
-      toast({ title: "Health Record Added", description: "Successfully added new health record.", className: "bg-green-500 text-white" });
-      setShowAddHealthForm(false);
-      fetchHealthRecords();
-      setNewHealthRecord({ record_type: 'note', date: new Date().toISOString().split('T')[0], details: "", value: "", unit: "" });
-    } catch (err: any) {
-      toast({ variant: "destructive", title: "Failed to add record", description: err.message });
-    }
+    toast({ title: "Info", description: "Health records feature coming soon!" });
+    setShowAddHealthForm(false);
   };
   
+  // Temporarily disabled  
   const handleStartOrSendMessage = async () => {
-    if (!newMessageContent.trim() || !puppyId || !user) return;
-
-    try {
-      if (activeConversation?.id) {
-        const sentMessage = await apiRequest(`/conversations/${activeConversation.id}/messages`, {
-          method: "POST",
-          body: JSON.stringify({ content: newMessageContent }),
-        }) as Message;
-        setMessages(prev => [...prev, sentMessage]);
-      } else {
-        const newConvPayload = {
-          title: `Chat about ${puppy?.name || 'your puppy'}`,
-          first_message_content: newMessageContent,
-          related_entity_id: puppyId,
-          related_entity_type: 'puppy'
-        };
-        const response = await apiRequest(`/conversations`, {
-          method: "POST",
-          body: JSON.stringify(newConvPayload),
-        }) as { conversation: Conversation; message: Message };
-        const newConv = response.conversation;
-        const firstMessage = response.message;
-
-        if (newConv && firstMessage) {
-            setConversations(prev => [newConv, ...prev]);
-            setActiveConversation(newConv);
-            setMessages([firstMessage]);
-        } else {
-            setConversations(prev => [response as any, ...prev]);
-            setActiveConversation(response as any);
-            if((response as any).id) fetchMessagesForConversation((response as any).id);
-        }
-      }
-      setNewMessageContent("");
-    } catch (err: any) {
-      toast({ 
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to save profile. Please try again."
-      });
-    }
+    toast({ title: "Info", description: "Messaging feature coming soon!" });
+    setNewMessageContent("");
   };
 
   const age = puppy ? calculateAgeMonths(puppy.birth_date) : 0;

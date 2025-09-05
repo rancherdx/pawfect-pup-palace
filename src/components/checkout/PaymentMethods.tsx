@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { motion } from "framer-motion";
-import { toast } from 'sonner'; // Import toast
+import { toast } from 'sonner';
+import { supabase } from "@/integrations/supabase/client";
 
 interface PaymentMethodsProps {
   onDataChange: (method: string) => void;
@@ -103,24 +104,19 @@ const PaymentMethods = ({
 
 
       try {
-      const jwtToken = localStorage.getItem('jwtToken');
-      const response = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {})
-        },
-        body: JSON.stringify(payload)
-      });
+        // Use Supabase edge function instead of old API
+        const { data, error } = await supabase.functions.invoke('square-checkout', {
+          body: payload
+        });
 
-        const data = await response.json();
-        console.log('Backend /api/checkout response:', data);
+        if (error) throw error;
+        console.log('Square checkout response:', data);
 
-        if (response.ok) {
+        if (data && !error) {
           onComplete(data);
         } else {
           console.error('Payment failed:', data);
-          toast.error(`Payment failed: ${data.details || data.error || 'Please try again.'}`);
+          toast.error(`Payment failed: ${data?.details || data?.error || error?.message || 'Please try again.'}`);
         }
       } catch (error) {
         console.error('Network or unexpected error during payment:', error);

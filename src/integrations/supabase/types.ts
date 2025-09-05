@@ -227,6 +227,45 @@ export type Database = {
         }
         Relationships: []
       }
+      conversations: {
+        Row: {
+          created_at: string
+          id: string
+          is_archived: boolean
+          last_message_at: string | null
+          last_message_preview: string | null
+          related_entity_id: string | null
+          related_entity_type: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_archived?: boolean
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_archived?: boolean
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       data_deletion_requests: {
         Row: {
           account_creation_timeframe: string | null
@@ -457,6 +496,47 @@ export type Database = {
           },
         ]
       }
+      messages: {
+        Row: {
+          attachments: string | null
+          content: string
+          conversation_id: string
+          id: string
+          read_at: string | null
+          sender_id: string
+          sender_type: string
+          sent_at: string
+        }
+        Insert: {
+          attachments?: string | null
+          content: string
+          conversation_id: string
+          id?: string
+          read_at?: string | null
+          sender_id: string
+          sender_type?: string
+          sent_at?: string
+        }
+        Update: {
+          attachments?: string | null
+          content?: string
+          conversation_id?: string
+          id?: string
+          read_at?: string | null
+          sender_id?: string
+          sender_type?: string
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -494,6 +574,7 @@ export type Database = {
           is_featured: boolean | null
           litter_id: string | null
           name: string
+          owner_user_id: string | null
           photo_url: string | null
           price: number | null
           status: Database["public"]["Enums"]["puppy_status"]
@@ -517,6 +598,7 @@ export type Database = {
           is_featured?: boolean | null
           litter_id?: string | null
           name: string
+          owner_user_id?: string | null
           photo_url?: string | null
           price?: number | null
           status?: Database["public"]["Enums"]["puppy_status"]
@@ -540,6 +622,7 @@ export type Database = {
           is_featured?: boolean | null
           litter_id?: string | null
           name?: string
+          owner_user_id?: string | null
           photo_url?: string | null
           price?: number | null
           status?: Database["public"]["Enums"]["puppy_status"]
