@@ -232,7 +232,11 @@ export const adminApi = {
 
   // Security & Monitoring
   getSecurityMetrics: () => fetchAdminAPI('/admin/security/metrics'),
-  getSecurityEvents: () => fetchAdminAPI('/admin/security/events'),
+  getSecurityEvents: (params: { limit?: number } = {}) => {
+    const query = params.limit ? `?limit=${params.limit}` : '';
+    return fetchAdminAPI(`/functions/v1/admin-security-api/events${query}`);
+  },
+  getSecurityStats: () => fetchAdminAPI('/functions/v1/admin-security-api/stats'),
   getSecuritySettings: () => fetchAdminAPI('/admin/security/settings'),
   updateSecuritySettings: (settings: Record<string, unknown>) => fetchAdminAPI('/admin/security/settings', { method: 'PUT', body: JSON.stringify(settings) }),
   blockIP: (ipAddress: string) => fetchAdminAPI('/admin/security/block-ip', { method: 'POST', body: JSON.stringify({ ip_address: ipAddress }) }),

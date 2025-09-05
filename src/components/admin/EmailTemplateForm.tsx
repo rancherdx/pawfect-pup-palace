@@ -4,7 +4,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react'; // Added Loader2
+import { Loader2, Shield } from 'lucide-react';
+import DOMPurify from 'dompurify';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export interface EmailTemplateData {
   id: string;
@@ -38,10 +40,18 @@ const EmailTemplateForm: React.FC<EmailTemplateFormProps> = ({ template, onSave,
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Sanitize HTML content to prevent XSS attacks
+    const sanitizedHtmlBody = DOMPurify.sanitize(htmlBody, {
+      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'img', 'div', 'span'],
+      ALLOWED_ATTR: ['href', 'src', 'alt', 'style', 'class'],
+      ALLOW_DATA_ATTR: false,
+    });
+    
     onSave({
       id: template.id,
       subject,
-      html_body: htmlBody,
+      html_body: sanitizedHtmlBody,
     });
   };
 
@@ -84,11 +94,12 @@ const EmailTemplateForm: React.FC<EmailTemplateFormProps> = ({ template, onSave,
 
           <div className="space-y-2">
             <Label htmlFor="htmlBody">HTML Body</Label>
-            {/*
-              Ideally, this would be a Rich Text Editor (e.g., TipTap, Quill, TinyMCE).
-              For simplicity in this project setup, a plain textarea is used.
-              Ensure output is sanitized if rendered directly, or use a safe HTML rendering library.
-            */}
+            <Alert className="mb-2">
+              <Shield className="h-4 w-4" />
+              <AlertDescription>
+                HTML content is automatically sanitized to prevent security vulnerabilities. Only safe tags and attributes are allowed.
+              </AlertDescription>
+            </Alert>
             <Textarea
               id="htmlBody"
               value={htmlBody}
@@ -100,6 +111,8 @@ const EmailTemplateForm: React.FC<EmailTemplateFormProps> = ({ template, onSave,
             />
             <p className="text-xs text-muted-foreground">
               Use HTML for formatting. Placeholders like <code>{'{{name}}'}</code> or <code>{'{{order_id}}'}</code> will be replaced with actual data.
+              <br />
+              Allowed tags: p, br, strong, em, u, h1-h6, ul, ol, li, a, img, div, span
             </p>
           </div>
         </CardContent>

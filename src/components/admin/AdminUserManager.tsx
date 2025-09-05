@@ -38,6 +38,18 @@ interface UsersApiResponse {
 
 const AVAILABLE_ROLES = ['user', 'admin', 'editor', 'super-admin'];
 
+// Security: Define role hierarchy for privilege escalation prevention
+const ROLE_HIERARCHY = {
+  'user': 1,
+  'editor': 2, 
+  'admin': 3,
+  'super-admin': 4
+};
+
+const getCurrentUserMaxRole = (userRoles: string[]): number => {
+  return Math.max(...userRoles.map(role => ROLE_HIERARCHY[role as keyof typeof ROLE_HIERARCHY] || 0));
+};
+
 const AdminUserManager: React.FC = () => {
   const [searchUserQuery, setSearchUserQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
@@ -128,6 +140,23 @@ const AdminUserManager: React.FC = () => {
 
   const handleSaveRoles = () => {
     if (selectedUser) {
+      // Security: Prevent privilege escalation attempts
+      const currentUserMaxRole = getCurrentUserMaxRole(['admin']); // TODO: Get actual current user roles from auth context
+      const targetMaxRole = getCurrentUserMaxRole(editingRoles);
+      
+      if (targetMaxRole > currentUserMaxRole) {
+        toast.error('Security Error: Cannot assign roles higher than your own privilege level');
+        return;
+      }
+      
+      // Audit log the role change
+      console.log('Role change attempt:', {
+        targetUser: selectedUser.id,
+        oldRoles: selectedUser.roles,
+        newRoles: editingRoles,
+        timestamp: new Date().toISOString()
+      });
+      
       editUserMutation.mutate({ userId: selectedUser.id, roles: editingRoles });
     }
   };

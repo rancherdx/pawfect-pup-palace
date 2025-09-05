@@ -9,7 +9,8 @@ import {
   CreditCard,
   Shield,
   Trash2,
-  Image
+  Image,
+  Eye
 } from "lucide-react";
 import SettingsPanel from "./SettingsPanel";
 import EmailTemplatesManager from "./EmailTemplatesManager";
@@ -20,6 +21,7 @@ import ApplePaySetup from "./ApplePaySetup";
 import AdvancedSecurityFeatures from "./AdvancedSecurityFeatures";
 import DataDeletionRequestsManager from "./DataDeletionRequestsManager";
 import BrandAssetManager from "./BrandAssetManager";
+import SecurityMonitoring from "./SecurityMonitoring";
 
 const SettingsHub = () => {
   const [activeTab, setActiveTab] = useState("general");
@@ -72,6 +74,12 @@ const SettingsHub = () => {
       label: "Security", 
       icon: Shield, 
       component: <AdvancedSecurityFeatures /> 
+    },
+    { 
+      value: "security_monitoring", 
+      label: "Security Monitor", 
+      icon: Eye, 
+      component: <SecurityMonitoring /> 
     },
     { 
       value: "data_deletion", 
