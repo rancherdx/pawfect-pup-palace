@@ -1,25 +1,64 @@
-// --- Puppy API STUB ----
+import { supabase } from "@/integrations/supabase/client";
 import { Puppy, PublicPuppyListResponse } from '@/types/puppy';
 
-const dummyPuppy: Puppy = {
-  id: 'puppy-1',
-  name: 'Buddy',
-  breed: 'Golden Retriever',
-  birthDate: '2024-01-10',
-  price: 1500,
-  description: 'A playful golden retriever puppy.',
-  status: 'Available',
-  gender: 'Male',
+export const getAll = async (params?: Record<string, unknown>): Promise<Puppy[]> => {
+  const { data, error } = await supabase
+    .from('puppies')
+    .select('*')
+    .eq('status', 'Available')
+    .order('created_at', { ascending: false });
+    
+  if (error) throw error;
+  
+  // Transform the data to match the expected Puppy interface
+  return data?.map(item => ({
+    id: item.id,
+    name: item.name,
+    breed: item.breed,
+    birthDate: item.birth_date,
+    price: item.price,
+    description: item.description,
+    status: item.status as any,
+    gender: item.gender as any,
+    image_urls: item.image_urls || [],
+    color: item.color,
+    weight: item.weight
+  })) || [];
 };
 
-export const getAll = async (_params?: Record<string, unknown>): Promise<Puppy[]> => {
-  return [dummyPuppy];
-};
-
-export const getAllPuppies = async (_params?: Record<string, unknown>): Promise<{ puppies: Puppy[]; pagination: Record<string, unknown> }> => {
-  return { puppies: [dummyPuppy], pagination: { currentPage: 1, totalPages: 1, totalPuppies: 1 } };
+export const getAllPuppies = async (params?: Record<string, unknown>): Promise<PublicPuppyListResponse> => {
+  const puppies = await getAll(params);
+  return { 
+    puppies, 
+    pagination: { 
+      current_page: 1, 
+      total_pages: 1, 
+      total: puppies.length 
+    } 
+  };
 };
 
 export const getPuppyById = async (id: string): Promise<Puppy> => {
-  return { ...dummyPuppy, id };
+  const { data, error } = await supabase
+    .from('puppies')
+    .select('*')
+    .eq('id', id)
+    .single();
+    
+  if (error) throw error;
+  
+  // Transform the data to match the expected Puppy interface
+  return {
+    id: data.id,
+    name: data.name,
+    breed: data.breed,
+    birthDate: data.birth_date,
+    price: data.price,
+    description: data.description,
+    status: data.status as any,
+    gender: data.gender as any,
+    image_urls: data.image_urls || [],
+    color: data.color,
+    weight: data.weight
+  };
 };

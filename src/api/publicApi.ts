@@ -1,66 +1,63 @@
-import { fetchAPI } from "@/utils/fetchAPI";
-
-export const blogApi = {
-  getPosts: async (params: { page?: number; limit?: number; category?: string }) => {
-    let query = '/api/posts?populate=*';
-    if (params.page) query += `&pagination[page]=${params.page}`;
-    if (params.limit) query += `&pagination[pageSize]=${params.limit}`;
-    if (params.category) query += `&filters[category][$eq]=${params.category}`;
-    return fetchAPI(query);
-  },
-  getBySlug: async (slug: string) => {
-    const query = `/api/posts?filters[slug][$eq]=${slug}&populate=*`;
-    const result = await fetchAPI(query);
-    return result?.data?.[0]?.attributes;
-  },
-};
+import { supabase } from "@/integrations/supabase/client";
 
 export const puppiesApi = {
   getAllPuppies: async () => {
-    const response = await fetchAPI('/api/puppies');
-    return { puppies: response.data || response.puppies || [] };
+    const { data, error } = await supabase
+      .from('puppies')
+      .select('*')
+      .eq('status', 'Available')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return { puppies: data || [] };
   },
+  
   getPuppyById: async (id: string) => {
-    const response = await fetchAPI(`/api/puppies/${id}`);
-    return response.data || response;
+    const { data, error } = await supabase
+      .from('puppies')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) throw error;
+    return data;
   },
 };
 
 export const littersApi = {
   getAll: async (filters = {}) => {
-    let query = '/api/litters';
-    if (Object.keys(filters).length) {
-      query += '?' + new URLSearchParams(filters).toString();
-    }
-    return fetchAPI(query);
+    let query = supabase
+      .from('litters')
+      .select('*')
+      .eq('status', 'Active')
+      .order('created_at', { ascending: false });
+    
+    const { data, error } = await query;
+    if (error) throw error;
+    return { litters: data || [] };
   },
+  
   getLitterById: async (id: string) => {
-    const query = `/api/litters/${id}`;
-    return fetchAPI(query);
-  },
-  createLitter: async (data: Record<string, unknown>) => {
-    const query = `/api/litters`;
-    return fetchAPI(query, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  },
-  updateLitter: async (id: string, data: Record<string, unknown>) => {
-    return fetchAPI(`/api/litters/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
-  },
-  deleteLitter: async (id: string) => {
-    return fetchAPI(`/api/litters/${id}`, {
-      method: 'DELETE',
-    });
-  },
+    const { data, error } = await supabase
+      .from('litters')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) throw error;
+    return data;
+  }
 };
 
 export const testimonialApi = {
   getAllPublic: async () => {
-    const response = await fetchAPI('/api/testimonials');
-    return response.data || response;
+    const { data, error } = await supabase
+      .from('testimonials')
+      .select('*')
+      .eq('approved', true)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data;
   },
 };
