@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -32,8 +33,9 @@ const App: React.FC = () => {
       <ThemeProvider defaultTheme="system" storageKey="gds-theme">
         <Toaster />
         <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
+        <ErrorBoundary>
+          <BrowserRouter>
+            <AuthProvider>
             <div className="min-h-screen flex flex-col">
               <Routes>
                 {/* Setup route (no navbar/footer) */}
@@ -89,8 +91,9 @@ const App: React.FC = () => {
                 />
               </Routes>
             </div>
-          </AuthProvider>
-        </BrowserRouter>
+            </AuthProvider>
+          </BrowserRouter>
+        </ErrorBoundary>
       </ThemeProvider>
     </QueryClientProvider>
   );
