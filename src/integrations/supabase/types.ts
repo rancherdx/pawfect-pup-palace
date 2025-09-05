@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.4"
@@ -59,6 +59,84 @@ export type Database = {
           tags?: string[] | null
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      breed_templates: {
+        Row: {
+          akc_group: string | null
+          average_weight_max: number | null
+          average_weight_min: number | null
+          breed_name: string
+          care_instructions: string | null
+          common_traits: string[] | null
+          created_at: string | null
+          description: string | null
+          exercise_needs: string | null
+          gallery_urls: string[] | null
+          good_with_kids: boolean | null
+          good_with_pets: boolean | null
+          grooming_needs: string | null
+          health_considerations: string[] | null
+          hypoallergenic: boolean | null
+          id: string
+          life_expectancy_max: number | null
+          life_expectancy_min: number | null
+          origin_country: string | null
+          photo_url: string | null
+          size: string | null
+          temperament: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          akc_group?: string | null
+          average_weight_max?: number | null
+          average_weight_min?: number | null
+          breed_name: string
+          care_instructions?: string | null
+          common_traits?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          exercise_needs?: string | null
+          gallery_urls?: string[] | null
+          good_with_kids?: boolean | null
+          good_with_pets?: boolean | null
+          grooming_needs?: string | null
+          health_considerations?: string[] | null
+          hypoallergenic?: boolean | null
+          id?: string
+          life_expectancy_max?: number | null
+          life_expectancy_min?: number | null
+          origin_country?: string | null
+          photo_url?: string | null
+          size?: string | null
+          temperament?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          akc_group?: string | null
+          average_weight_max?: number | null
+          average_weight_min?: number | null
+          breed_name?: string
+          care_instructions?: string | null
+          common_traits?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          exercise_needs?: string | null
+          gallery_urls?: string[] | null
+          good_with_kids?: boolean | null
+          good_with_pets?: boolean | null
+          grooming_needs?: string | null
+          health_considerations?: string[] | null
+          hypoallergenic?: boolean | null
+          id?: string
+          life_expectancy_max?: number | null
+          life_expectancy_min?: number | null
+          origin_country?: string | null
+          photo_url?: string | null
+          size?: string | null
+          temperament?: string[] | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -158,9 +236,106 @@ export type Database = {
         }
         Relationships: []
       }
+      google_business_config: {
+        Row: {
+          access_token_encrypted: string | null
+          account_id: string | null
+          business_name: string
+          created_at: string | null
+          id: string
+          last_sync: string | null
+          location_id: string | null
+          place_id: string
+          refresh_token_encrypted: string | null
+          sync_enabled: boolean | null
+          sync_frequency_hours: number | null
+          token_expires_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          access_token_encrypted?: string | null
+          account_id?: string | null
+          business_name: string
+          created_at?: string | null
+          id?: string
+          last_sync?: string | null
+          location_id?: string | null
+          place_id: string
+          refresh_token_encrypted?: string | null
+          sync_enabled?: boolean | null
+          sync_frequency_hours?: number | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          access_token_encrypted?: string | null
+          account_id?: string | null
+          business_name?: string
+          created_at?: string | null
+          id?: string
+          last_sync?: string | null
+          location_id?: string | null
+          place_id?: string
+          refresh_token_encrypted?: string | null
+          sync_enabled?: boolean | null
+          sync_frequency_hours?: number | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      google_reviews_cache: {
+        Row: {
+          created_at: string | null
+          google_review_id: string
+          id: string
+          last_synced: string | null
+          rating: number
+          relative_time_description: string | null
+          reply_text: string | null
+          reply_time_created: string | null
+          reviewer_name: string
+          reviewer_photo_url: string | null
+          text: string
+          time_created: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          google_review_id: string
+          id?: string
+          last_synced?: string | null
+          rating: number
+          relative_time_description?: string | null
+          reply_text?: string | null
+          reply_time_created?: string | null
+          reviewer_name: string
+          reviewer_photo_url?: string | null
+          text: string
+          time_created: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          google_review_id?: string
+          id?: string
+          last_synced?: string | null
+          rating?: number
+          relative_time_description?: string | null
+          reply_text?: string | null
+          reply_time_created?: string | null
+          reviewer_name?: string
+          reviewer_photo_url?: string | null
+          text?: string
+          time_created?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       litters: {
         Row: {
           breed: string
+          breed_template_id: string | null
           cover_image_url: string | null
           created_at: string
           dam_name: string | null
@@ -176,6 +351,7 @@ export type Database = {
         }
         Insert: {
           breed: string
+          breed_template_id?: string | null
           cover_image_url?: string | null
           created_at?: string
           dam_name?: string | null
@@ -191,6 +367,7 @@ export type Database = {
         }
         Update: {
           breed?: string
+          breed_template_id?: string | null
           cover_image_url?: string | null
           created_at?: string
           dam_name?: string | null
@@ -204,7 +381,15 @@ export type Database = {
           status?: Database["public"]["Enums"]["litter_status"]
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "litters_breed_template_id_fkey"
+            columns: ["breed_template_id"]
+            isOneToOne: false
+            referencedRelation: "breed_templates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -231,6 +416,7 @@ export type Database = {
         Row: {
           birth_date: string | null
           breed: string
+          breed_template_id: string | null
           color: string | null
           created_at: string
           description: string | null
@@ -248,6 +434,7 @@ export type Database = {
         Insert: {
           birth_date?: string | null
           breed: string
+          breed_template_id?: string | null
           color?: string | null
           created_at?: string
           description?: string | null
@@ -265,6 +452,7 @@ export type Database = {
         Update: {
           birth_date?: string | null
           breed?: string
+          breed_template_id?: string | null
           color?: string | null
           created_at?: string
           description?: string | null
@@ -281,6 +469,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "puppies_breed_template_id_fkey"
+            columns: ["breed_template_id"]
+            isOneToOne: false
+            referencedRelation: "breed_templates"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "puppies_litter_fk"
             columns: ["litter_id"]
             isOneToOne: false
@@ -288,6 +483,75 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      seo_meta: {
+        Row: {
+          canonical_url: string | null
+          created_at: string | null
+          id: string
+          meta_description: string | null
+          meta_keywords: string[] | null
+          meta_title: string | null
+          og_description: string | null
+          og_image: string | null
+          og_title: string | null
+          og_type: string | null
+          page_id: string | null
+          page_slug: string | null
+          page_type: string
+          robots: string | null
+          schema_markup: Json | null
+          twitter_card: string | null
+          twitter_description: string | null
+          twitter_image: string | null
+          twitter_title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          canonical_url?: string | null
+          created_at?: string | null
+          id?: string
+          meta_description?: string | null
+          meta_keywords?: string[] | null
+          meta_title?: string | null
+          og_description?: string | null
+          og_image?: string | null
+          og_title?: string | null
+          og_type?: string | null
+          page_id?: string | null
+          page_slug?: string | null
+          page_type: string
+          robots?: string | null
+          schema_markup?: Json | null
+          twitter_card?: string | null
+          twitter_description?: string | null
+          twitter_image?: string | null
+          twitter_title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          canonical_url?: string | null
+          created_at?: string | null
+          id?: string
+          meta_description?: string | null
+          meta_keywords?: string[] | null
+          meta_title?: string | null
+          og_description?: string | null
+          og_image?: string | null
+          og_title?: string | null
+          og_type?: string | null
+          page_id?: string | null
+          page_slug?: string | null
+          page_type?: string
+          robots?: string | null
+          schema_markup?: Json | null
+          twitter_card?: string | null
+          twitter_description?: string | null
+          twitter_image?: string | null
+          twitter_title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       site_settings: {
         Row: {
@@ -357,29 +621,65 @@ export type Database = {
       }
       testimonials: {
         Row: {
+          admin_approved: boolean | null
           content: string
           created_at: string
+          google_review_id: string | null
           id: string
           image: string | null
+          is_featured: boolean | null
+          location: string | null
           name: string
+          puppy_name: string | null
+          rating: number | null
+          response_date: string | null
+          response_text: string | null
+          review_date: string | null
+          reviewer_avatar: string | null
+          source: string | null
+          testimonial_text: string | null
           title: string | null
           updated_at: string
         }
         Insert: {
+          admin_approved?: boolean | null
           content: string
           created_at?: string
+          google_review_id?: string | null
           id?: string
           image?: string | null
+          is_featured?: boolean | null
+          location?: string | null
           name: string
+          puppy_name?: string | null
+          rating?: number | null
+          response_date?: string | null
+          response_text?: string | null
+          review_date?: string | null
+          reviewer_avatar?: string | null
+          source?: string | null
+          testimonial_text?: string | null
           title?: string | null
           updated_at?: string
         }
         Update: {
+          admin_approved?: boolean | null
           content?: string
           created_at?: string
+          google_review_id?: string | null
           id?: string
           image?: string | null
+          is_featured?: boolean | null
+          location?: string | null
           name?: string
+          puppy_name?: string | null
+          rating?: number | null
+          response_date?: string | null
+          response_text?: string | null
+          review_date?: string | null
+          reviewer_avatar?: string | null
+          source?: string | null
+          testimonial_text?: string | null
           title?: string | null
           updated_at?: string
         }
@@ -488,13 +788,13 @@ export type Database = {
         Returns: boolean
       }
       create_first_admin: {
-        Args: { user_email: string; user_password: string; user_name: string }
+        Args: { user_email: string; user_name: string; user_password: string }
         Returns: Json
       }
       has_role: {
         Args: {
-          _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
         }
         Returns: boolean
       }
