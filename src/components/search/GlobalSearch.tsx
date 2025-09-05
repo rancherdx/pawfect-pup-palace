@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dog, File, X, Loader2 } from "lucide-react";
 import SearchResult from "./SearchResult";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SearchResult {
   id: string;
@@ -59,61 +60,84 @@ const GlobalSearch = ({ isOpen, onClose }: GlobalSearchProps) => {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
   
-  // Mock search function - in real app this would call an API
+  // Real search function using Supabase
   const performSearch = async (term: string) => {
+    if (!term.trim()) {
+      setResults([]);
+      return;
+    }
+
     setIsSearching(true);
     
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Mock results
-    const mockResults: SearchResult[] = [
-      {
-        id: "p1",
-        title: "Buddy - Labrador Retriever",
-        excerpt: "Playful and energetic yellow lab puppy",
-        type: "puppy",
-        url: "/puppies/1"
-      },
-      {
-        id: "p2",
-        title: "Lucy - Labrador Retriever",
-        excerpt: "Sweet and calm black lab puppy",
-        type: "puppy",
-        url: "/puppies/2"
-      },
-      {
-        id: "l1",
-        title: "Summer 2023 Labrador Litter",
-        excerpt: "A wonderful litter of 6 puppies born on June 15, 2023",
-        type: "litter",
-        url: "/litters/1"
-      },
-      {
-        id: "b1",
-        title: "Top 10 Tips for New Puppy Owners",
-        excerpt: "Essential advice for welcoming your new furry friend home",
-        type: "blog",
-        url: "/blog/top-10-tips-for-new-puppy-owners"
-      },
-      {
-        id: "b2",
-        title: "Puppy Vaccination Schedule",
-        excerpt: "Everything you need to know about keeping your puppy healthy with vaccinations",
-        type: "blog",
-        url: "/blog/puppy-vaccination-schedule"
-      },
-    ];
-    
-    // Filter based on search term
-    const filtered = term.length > 0
-      ? mockResults.filter(result => 
-          result.title.toLowerCase().includes(term.toLowerCase()) || 
-          result.excerpt.toLowerCase().includes(term.toLowerCase()))
-      : [];
-    
-    setResults(filtered);
-    setIsSearching(false);
+    try {
+      const searchTerm = term.toLowerCase();
+      const allResults: SearchResult[] = [];
+
+      // Search puppies
+      const { data: puppies, error: puppiesError } = await supabase
+        .from('puppies')
+        .select('id, name, breed, description, status')
+        .or(`name.ilike.%${searchTerm}%,breed.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
+        .limit(10);
+
+      if (!puppiesError && puppies) {
+        puppies.forEach(puppy => {
+          allResults.push({
+            id: puppy.id,
+            title: `${puppy.name} - ${puppy.breed}`,
+            excerpt: puppy.description || `${puppy.status} ${puppy.breed} puppy`,
+            type: "puppy",
+            url: `/puppies/${puppy.id}`
+          });
+        });
+      }
+
+      // Search litters
+      const { data: litters, error: littersError } = await supabase
+        .from('litters')
+        .select('id, name, breed, description')
+        .or(`name.ilike.%${searchTerm}%,breed.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
+        .limit(10);
+
+      if (!littersError && litters) {
+        litters.forEach(litter => {
+          allResults.push({
+            id: litter.id,
+            title: litter.name,
+            excerpt: litter.description || `${litter.breed} litter`,
+            type: "litter",
+            url: `/litters/${litter.id}`
+          });
+        });
+      }
+
+      // Search blog posts
+      const { data: blogPosts, error: blogError } = await supabase
+        .from('blog_posts')
+        .select('id, title, excerpt, slug')
+        .eq('status', 'published')
+        .or(`title.ilike.%${searchTerm}%,excerpt.ilike.%${searchTerm}%`)
+        .limit(10);
+
+      if (!blogError && blogPosts) {
+        blogPosts.forEach(post => {
+          allResults.push({
+            id: post.id,
+            title: post.title,
+            excerpt: post.excerpt || 'Blog post',
+            type: "blog",
+            url: `/blog/${post.slug}`
+          });
+        });
+      }
+
+      setResults(allResults);
+    } catch (error) {
+      console.error('Search error:', error);
+      setResults([]);
+    } finally {
+      setIsSearching(false);
+    }
   };
   
   const handleSearch = () => {

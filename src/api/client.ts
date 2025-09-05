@@ -41,9 +41,9 @@ export const requireAdmin = async () => {
   return user;
 };
 
-// Legacy API request function for compatibility
+// Legacy API request function - replaced with Supabase direct calls
 export const apiRequest = async <T = any>(endpoint: string, options: RequestInit = {}): Promise<T> => {
-  throw new Error('Use Supabase client directly instead of apiRequest');
+  throw new Error('Use Supabase client directly. Legacy API endpoints have been migrated to Supabase.');
 };
 
 // Legacy fetch admin API for compatibility

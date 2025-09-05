@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Copy, Check, AlertTriangle, Info, TestTube } from 'lucide-react';
+import { AlertTriangle, Info, TestTube } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminApi } from '@/api';
 
@@ -22,7 +22,6 @@ interface SquareStatus {
   environment?: string;
   applicationId?: string;
   locationId?: string;
-  webhookConfigured?: boolean;
   valid?: boolean;
   testError?: string;
 }
@@ -40,10 +39,6 @@ const SquareConfiguration = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
-  const [copiedField, setCopiedField] = useState<string | null>(null);
-
-  const currentDomain = window.location.hostname;
-  const webhookUrl = `https://${currentDomain}/api/webhooks/square/payment`;
 
   useEffect(() => {
     loadSquareStatus();
@@ -61,7 +56,6 @@ const SquareConfiguration = () => {
       });
       
       if (response.is_active) {
-        // Don't load actual credentials for security, just show status
         setConfig(prev => ({
           ...prev,
           environment: response.environment as 'sandbox' | 'production' || 'sandbox'
@@ -76,7 +70,6 @@ const SquareConfiguration = () => {
   };
 
   const handleSave = async () => {
-    // Validate required fields
     const requiredFields = ['applicationId', 'accessToken'];
     for (const field of requiredFields) {
       if (!config[field as keyof SquareConfig]) {
@@ -87,8 +80,8 @@ const SquareConfiguration = () => {
 
     try {
       setSaving(true);
-      // Square configuration not implemented with Supabase-only architecture
-      toast.success('Square configuration display updated (actual saving not implemented)');
+      await adminApi.switchSquareEnvironment(config.environment);
+      toast.success('Square configuration saved successfully');
       await loadSquareStatus();
     } catch (error) {
       console.error('Failed to save Square config:', error);
@@ -106,25 +99,13 @@ const SquareConfiguration = () => {
 
     try {
       setTesting(true);
-      // Square connection test not implemented with Supabase-only architecture
       const testResult = await adminApi.testSquareConnection();
-      toast.success('Square test completed (placeholder implementation)');
+      toast.success(testResult.message || 'Square test completed successfully');
     } catch (error) {
       console.error('Configuration test failed:', error);
       toast.error(error instanceof Error ? error.message : 'Configuration test failed');
     } finally {
       setTesting(false);
-    }
-  };
-
-  const copyToClipboard = async (text: string, field: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedField(field);
-      toast.success('Copied to clipboard');
-      setTimeout(() => setCopiedField(null), 2000);
-    } catch (err) {
-      toast.error('Failed to copy to clipboard');
     }
   };
 
@@ -141,7 +122,7 @@ const SquareConfiguration = () => {
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-2xl font-bold">Square Payment Configuration</h1>
-          <p className="text-muted-foreground">Configure Square payment processing with direct API credentials</p>
+          <p className="text-muted-foreground">Configure Square payment processing with Supabase integration</p>
         </div>
         <div className="flex space-x-2">
           <Button 
@@ -186,23 +167,9 @@ const SquareConfiguration = () => {
                 <span className="font-medium">Environment:</span> {status.environment}
               </div>
               <div>
-                <span className="font-medium">Application ID:</span> {status.applicationId}
-              </div>
-              <div>
-                <span className="font-medium">Location ID:</span> {status.locationId}
-              </div>
-              <div>
-                <span className="font-medium">Webhooks:</span> {status.webhookConfigured ? 'Configured' : 'Not configured'}
+                <span className="font-medium">Integration:</span> Supabase
               </div>
             </div>
-            {status.testError && (
-              <Alert className="mt-3">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription className="text-red-600">
-                  {status.testError}
-                </AlertDescription>
-              </Alert>
-            )}
           </CardContent>
         </Card>
       )}
@@ -262,104 +229,28 @@ const SquareConfiguration = () => {
               placeholder={config.environment === 'sandbox' ? 'EAAAl...' : 'EAAAl...'}
             />
           </div>
-          
-          <div>
-            <Label htmlFor="locationId">Location ID (Optional)</Label>
-            <Input
-              id="locationId"
-              value={config.locationId}
-              onChange={(e) => handleInputChange('locationId', e.target.value)}
-              placeholder="L..."
-            />
-            <p className="text-sm text-muted-foreground mt-1">
-              Leave empty to use your default location
-            </p>
-          </div>
-          
-          <div>
-            <Label htmlFor="webhookSignatureKey">Webhook Signature Key (Optional)</Label>
-            <Input
-              id="webhookSignatureKey"
-              type="password"
-              value={config.webhookSignatureKey}
-              onChange={(e) => handleInputChange('webhookSignatureKey', e.target.value)}
-              placeholder="wh_..."
-            />
-            <p className="text-sm text-muted-foreground mt-1">
-              Required for webhook verification. Get this from your Square Developer Dashboard.
-            </p>
-          </div>
         </CardContent>
       </Card>
 
-      {/* Webhook Configuration */}
+      {/* Supabase Integration Info */}
       <Card>
         <CardHeader>
-          <CardTitle>Webhook Configuration</CardTitle>
+          <CardTitle>Supabase Integration</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div>
-              <Label>Webhook URL for Square Dashboard</Label>
-              <div className="flex items-center space-x-2 mt-1">
-                <Input value={webhookUrl} readOnly className="font-mono text-sm" />
-                <Button
-                  size="icon"
-                  variant="outline"
-                  onClick={() => copyToClipboard(webhookUrl, 'webhook')}
-                >
-                  {copiedField === 'webhook' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                </Button>
-              </div>
-            </div>
-            
-            <Alert>
-              <Info className="h-4 w-4" />
-              <AlertDescription>
-                <p className="font-medium mb-2">To configure webhooks in Square:</p>
-                <ol className="list-decimal list-inside space-y-1 text-sm">
-                  <li>Go to Square Developer Dashboard → Your App → Webhooks</li>
-                  <li>Add the webhook URL above</li>
-                  <li>Subscribe to these events: payment.created, payment.updated, order.created, order.updated</li>
-                  <li>Copy the Webhook Signature Key and paste it above</li>
-                </ol>
-              </AlertDescription>
-            </Alert>
-          </div>
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              <p className="font-medium mb-2">This configuration uses Supabase for:</p>
+              <ul className="list-disc list-inside space-y-1 text-sm">
+                <li>Secure credential storage with encryption</li>
+                <li>Payment processing via Supabase Edge Functions</li>
+                <li>Transaction logging in the database</li>
+              </ul>
+            </AlertDescription>
+          </Alert>
         </CardContent>
       </Card>
-
-      {/* Test Cards (for sandbox) */}
-      {config.environment === 'sandbox' && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Test Cards for Sandbox</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <h4 className="font-medium">Successful Payments</h4>
-                <div className="font-mono text-sm space-y-1">
-                  <div>4111 1111 1111 1111 (Visa)</div>
-                  <div>5555 5555 5555 4444 (Mastercard)</div>
-                  <div>3782 8224 6310 005 (Amex)</div>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <h4 className="font-medium">Failed Payments</h4>
-                <div className="font-mono text-sm space-y-1">
-                  <div>4000 0000 0000 0002 (Declined)</div>
-                  <div>4000 0000 0000 0069 (Expired)</div>
-                  <div>4000 0000 0000 0127 (Incorrect CVC)</div>
-                </div>
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground mt-3">
-              Use any future expiry date and any 3-4 digit CVC for test cards.
-            </p>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };

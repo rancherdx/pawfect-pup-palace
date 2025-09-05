@@ -709,5 +709,35 @@ export const adminApi = {
   createNotification: async (notificationData: any) => {
     await requireAdmin();
     return { success: true };
+  },
+
+  // Dashboard Stats
+  getDashboardStats: async () => {
+    await requireAdmin();
+    
+    // Get basic stats from multiple tables
+    const [puppiesResult, littersResult, transactionsResult] = await Promise.all([
+      supabase.from('puppies').select('status', { count: 'exact' }),
+      supabase.from('litters').select('status', { count: 'exact' }),
+      supabase.from('transactions').select('amount', { count: 'exact' })
+    ]);
+    
+    const puppiesCount = puppiesResult.count || 0;
+    const littersCount = littersResult.count || 0;
+    const transactionsCount = transactionsResult.count || 0;
+    
+    return {
+      puppies: {
+        total: puppiesCount,
+        available: puppiesResult.data?.filter(p => p.status === 'Available').length || 0
+      },
+      litters: {
+        total: littersCount,
+        active: littersResult.data?.filter(l => l.status === 'Active').length || 0
+      },
+      transactions: {
+        total: transactionsCount
+      }
+    };
   }
 };
