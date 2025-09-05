@@ -22,7 +22,8 @@ const Register = lazy(() => import("./pages/Register"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const SquareOAuthCallback = lazy(() => import("./pages/SquareOAuthCallback"));
-const Setup = lazy(() => import("./pages/Setup"));
+// Import Setup directly instead of lazy loading to avoid hook context issues
+import Setup from "./pages/Setup";
 
 // Create QueryClient outside component to prevent recreation
 const queryClient = new QueryClient();
@@ -41,11 +42,7 @@ const App: React.FC = () => {
                 {/* Setup route (no navbar/footer) */}
                 <Route 
                   path="/setup" 
-                  element={
-                    <Suspense fallback={<div>Loading...</div>}>
-                      <Setup />
-                    </Suspense>
-                  } 
+                  element={<Setup />} 
                 />
                 
                 {/* All other routes with navbar/footer */}

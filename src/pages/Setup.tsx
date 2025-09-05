@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PawPrint, Shield, User, Mail, Lock, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { motion } from "framer-motion";
 
-const Setup = () => {
+const Setup: React.FC = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
