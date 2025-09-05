@@ -27,7 +27,8 @@ import AdminUserManager from "@/components/admin/AdminUserManager";
 import AdminStudDogManager from "@/components/admin/AdminStudDogManager";
 import AdvancedSecurityFeatures from "@/components/admin/AdvancedSecurityFeatures";
 import DataDeletionRequestsManager from "@/components/admin/DataDeletionRequestsManager"; // Import the new component
-import TestimonialManagement from '@/components/admin/TestimonialManagement'; // Import TestimonialManagement
+import EnhancedTestimonialManagement from '@/components/admin/EnhancedTestimonialManagement'; // Import Enhanced TestimonialManagement
+import SEOManagement from '@/components/admin/SEOManagement'; // Import SEO Management
 import SecureIntegrations from '@/components/admin/SecureIntegrations';
 
 const allAdminTabs = [
@@ -35,7 +36,7 @@ const allAdminTabs = [
   { value: "litters", label: "Litters", icon: PawPrint, component: <LitterManagement /> },
   { value: "breeds", label: "Breeds", icon: Layers, component: <BreedTemplateManager /> },
   { value: "blog", label: "Blog", icon: FileText, component: <BlogManager /> },
-  { value: "seo", label: "SEO", icon: Globe, component: <SEOManager /> },
+  { value: "seo", label: "SEO", icon: Globe, component: <SEOManagement /> },
   { value: "marketing", label: "Marketing", icon: Users, component: <AffiliateManager /> }, // Assuming AffiliateManager is Marketing
   { value: "transactions", label: "Transactions", icon: Receipt, component: <TransactionHistory /> },
   { value: "square", label: "Square", icon: CreditCard, component: <SquareIntegration /> },
@@ -47,7 +48,7 @@ const allAdminTabs = [
   { value: "stud_dogs_admin", label: "Stud Dogs", icon: Dog, component: <AdminStudDogManager /> }, // Dog icon repeated
   { value: "adv_security", label: "Adv. Security", icon: ShieldCheck, component: <AdvancedSecurityFeatures /> },
   { value: "data_deletion", label: "Data Deletion", icon: ShieldCheck, component: <DataDeletionRequestsManager /> }, // ShieldCheck repeated
-  { value: "testimonials", label: "Testimonials", icon: MessageSquare, component: <TestimonialManagement /> },
+  { value: "testimonials", label: "Testimonials", icon: MessageSquare, component: <EnhancedTestimonialManagement /> },
 ];
 
 const AdminDashboard = () => {

@@ -182,4 +182,18 @@ export const adminApi = {
   updateSeoMeta: (id: string, data: Record<string, unknown>) => fetchAdminAPI(`/admin/seo/meta/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteSeoMeta: (id: string) => fetchAdminAPI(`/admin/seo/meta/${id}`, { method: 'DELETE' }),
   generateSeoMeta: (data: Record<string, unknown>) => fetchAdminAPI('/admin/seo/generate', { method: 'POST', body: JSON.stringify(data) }),
+  getSeoAnalytics: () => fetchAdminAPI('/admin/seo/analytics'),
+
+  // Data Deletion Requests
+  getDataDeletionRequests: (params: { status?: string; page?: number; limit?: number } = {}) => {
+    const query = new URLSearchParams();
+    if (params.status) query.set('status', params.status);
+    if (params.page) query.set('page', params.page.toString());
+    if (params.limit) query.set('limit', params.limit.toString());
+    return fetchAdminAPI(`/admin/data-deletion-requests?${query.toString()}`);
+  },
+  updateDataDeletionRequestStatus: (id: string, status: string) => fetchAdminAPI(`/admin/data-deletion-requests/${id}/status`, { 
+    method: 'PUT', 
+    body: JSON.stringify({ status }) 
+  }),
 };
