@@ -40,3 +40,27 @@ verify_jwt = false
 
 [functions.setup-admin]
 verify_jwt = false
+
+[functions.admin-security-api]
+verify_jwt = false
+
+[functions.applepay-upload]
+verify_jwt = false
+
+[functions.google-reviews-sync]
+verify_jwt = false
+
+[functions.integrations-upsert]
+verify_jwt = false
+
+[functions.secure-data-deletion-request]
+verify_jwt = false
+
+[functions.send-email]
+verify_jwt = false
+
+[functions.square-checkout]
+verify_jwt = false
+
+[functions.square-webhook]
+verify_jwt = false

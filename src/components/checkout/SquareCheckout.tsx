@@ -75,48 +75,47 @@ const SquareCheckout = ({
     if (!validateForm()) return;
 
     setIsProcessing(true);
-
+    
     try {
-      const jwtToken = localStorage.getItem('jwt');
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
-
-      if (jwtToken) {
-        headers['Authorization'] = `Bearer ${jwtToken}`;
-      }
-
-      const payload = {
-        amount: Math.round(amount * 100), // Convert to cents
-        currency: 'USD',
+      const paymentPayload = {
+        amount,
+        puppyName,
         puppyId,
         userId,
         customerEmail: billingInfo.email,
-        billingInfo,
-        puppyName,
-        redirectUrl: `${window.location.origin}/adoption-success`
+        billingInfo
       };
 
-      const response = await fetch('/api/square/checkout', {
+      console.log('Processing payment with Square:', paymentPayload);
+      
+      // Call the Square checkout edge function
+      const response = await fetch('https://dpmyursjpbscrfbljtha.functions.supabase.co/square-checkout', {
         method: 'POST',
-        headers,
-        body: JSON.stringify(payload)
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(paymentPayload),
       });
 
-      const data = await response.json();
+      const result = await response.json();
 
-      if (response.ok && data.checkoutUrl) {
-        // Redirect to Square checkout
-        window.location.href = data.checkoutUrl;
-      } else {
-        throw new Error(data.error || 'Payment processing failed');
+      if (!response.ok) {
+        throw new Error(result.error || 'Payment processing failed');
       }
+
+      // Redirect to Square checkout
+      if (result.checkoutUrl) {
+        window.location.href = result.checkoutUrl;
+      } else {
+        throw new Error('No checkout URL received');
+      }
+      
     } catch (error) {
       console.error('Payment processing error:', error);
       toast({
-        title: "Payment Error",
-        description: error instanceof Error ? error.message : "Payment processing failed. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
+        title: "Payment Processing Failed",
+        description: error instanceof Error ? error.message : "Unable to process payment. Please try again."
       });
     } finally {
       setIsProcessing(false);
