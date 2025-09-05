@@ -15,7 +15,9 @@ export interface Litter {
   puppyCount?: number; // Made optional as it might not be known initially
   status: LitterStatus;
   description?: string;
-  coverImageUrl?: string; // Matches page's coverImage if API sends this
+  coverImageUrl?: string; // Legacy field
+  image_urls?: string[]; // New multi-image field
+  video_urls?: string[]; // New video field
   puppies?: Puppy[]; // Added for nested puppy data
   // Timestamps, if available from API
   createdAt?: string;

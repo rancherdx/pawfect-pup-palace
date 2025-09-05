@@ -62,6 +62,33 @@ export type Database = {
         }
         Relationships: []
       }
+      brand_assets: {
+        Row: {
+          asset_type: string
+          asset_url: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          asset_type: string
+          asset_url: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          asset_type?: string
+          asset_url?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       breed_templates: {
         Row: {
           akc_group: string | null
@@ -343,11 +370,13 @@ export type Database = {
           description: string | null
           expected_date: string | null
           id: string
+          image_urls: string[] | null
           name: string
           puppy_count: number | null
           sire_name: string | null
           status: Database["public"]["Enums"]["litter_status"]
           updated_at: string
+          video_urls: string[] | null
         }
         Insert: {
           breed: string
@@ -359,11 +388,13 @@ export type Database = {
           description?: string | null
           expected_date?: string | null
           id?: string
+          image_urls?: string[] | null
           name: string
           puppy_count?: number | null
           sire_name?: string | null
           status?: Database["public"]["Enums"]["litter_status"]
           updated_at?: string
+          video_urls?: string[] | null
         }
         Update: {
           breed?: string
@@ -375,11 +406,13 @@ export type Database = {
           description?: string | null
           expected_date?: string | null
           id?: string
+          image_urls?: string[] | null
           name?: string
           puppy_count?: number | null
           sire_name?: string | null
           status?: Database["public"]["Enums"]["litter_status"]
           updated_at?: string
+          video_urls?: string[] | null
         }
         Relationships: [
           {
@@ -414,6 +447,8 @@ export type Database = {
       }
       puppies: {
         Row: {
+          banner_color: string | null
+          banner_text: string | null
           birth_date: string | null
           breed: string
           breed_template_id: string | null
@@ -422,6 +457,8 @@ export type Database = {
           description: string | null
           gender: string | null
           id: string
+          image_urls: string[] | null
+          is_featured: boolean | null
           litter_id: string | null
           name: string
           photo_url: string | null
@@ -429,9 +466,12 @@ export type Database = {
           status: Database["public"]["Enums"]["puppy_status"]
           temperament: string[] | null
           updated_at: string
+          video_urls: string[] | null
           weight: number | null
         }
         Insert: {
+          banner_color?: string | null
+          banner_text?: string | null
           birth_date?: string | null
           breed: string
           breed_template_id?: string | null
@@ -440,6 +480,8 @@ export type Database = {
           description?: string | null
           gender?: string | null
           id?: string
+          image_urls?: string[] | null
+          is_featured?: boolean | null
           litter_id?: string | null
           name: string
           photo_url?: string | null
@@ -447,9 +489,12 @@ export type Database = {
           status?: Database["public"]["Enums"]["puppy_status"]
           temperament?: string[] | null
           updated_at?: string
+          video_urls?: string[] | null
           weight?: number | null
         }
         Update: {
+          banner_color?: string | null
+          banner_text?: string | null
           birth_date?: string | null
           breed?: string
           breed_template_id?: string | null
@@ -458,6 +503,8 @@ export type Database = {
           description?: string | null
           gender?: string | null
           id?: string
+          image_urls?: string[] | null
+          is_featured?: boolean | null
           litter_id?: string | null
           name?: string
           photo_url?: string | null
@@ -465,6 +512,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["puppy_status"]
           temperament?: string[] | null
           updated_at?: string
+          video_urls?: string[] | null
           weight?: number | null
         }
         Relationships: [

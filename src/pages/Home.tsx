@@ -3,6 +3,7 @@ import HeroSection from "@/components/HeroSection";
 import Section from "@/components/Section";
 import TestimonialCard from "@/components/TestimonialCard";
 import PuppyCard from "@/components/PuppyCard";
+import FeaturedPuppyBanner from "@/components/FeaturedPuppyBanner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +44,9 @@ const Home = () => {
         ctaText="View Available Puppies"
         ctaLink="/puppies"
       />
+
+      {/* Featured Puppies Banner */}
+      <FeaturedPuppyBanner />
 
       {/* Why Choose Us Section */}
       <Section>

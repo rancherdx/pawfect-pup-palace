@@ -13,7 +13,9 @@ export interface Puppy {
   price: number;
   description: string;
   status: PuppyStatus;
-  photoUrl?: string; // Standardize to photoUrl
+  photoUrl?: string; // Standardize to photoUrl (legacy field)
+  image_urls?: string[]; // New multi-image field
+  video_urls?: string[]; // New video field
   weight?: number;
   size?: PuppySize;
   temperament?: string;
@@ -25,6 +27,10 @@ export interface Puppy {
   squareItemId?: string;
   gender?: string;
   color?: string; // Added for page display consistency
+  // Featured puppy fields
+  is_featured?: boolean;
+  banner_text?: string;
+  banner_color?: string;
   // Timestamps, if available from API
   createdAt?: string;
   updatedAt?: string;

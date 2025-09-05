@@ -8,7 +8,8 @@ import {
   Users, 
   CreditCard,
   Shield,
-  Trash2
+  Trash2,
+  Image
 } from "lucide-react";
 import SettingsPanel from "./SettingsPanel";
 import EmailTemplatesManager from "./EmailTemplatesManager";
@@ -18,6 +19,7 @@ import AdminUserManager from "./AdminUserManager";
 import ApplePaySetup from "./ApplePaySetup";
 import AdvancedSecurityFeatures from "./AdvancedSecurityFeatures";
 import DataDeletionRequestsManager from "./DataDeletionRequestsManager";
+import BrandAssetManager from "./BrandAssetManager";
 
 const SettingsHub = () => {
   const [activeTab, setActiveTab] = useState("general");
@@ -28,6 +30,12 @@ const SettingsHub = () => {
       label: "General", 
       icon: Settings, 
       component: <SettingsPanel /> 
+    },
+    { 
+      value: "branding", 
+      label: "Brand Assets", 
+      icon: Image, 
+      component: <BrandAssetManager /> 
     },
     { 
       value: "users", 
