@@ -75,96 +75,84 @@ export const adminApi = {
 
   // Testimonials
   getTestimonials: async () => {
-    return fetchAdminAPI('/api/testimonials');
+    return fetchAdminAPI('/admin/testimonials');
   },
   createTestimonial: async (data: Record<string, unknown>) => {
-    return fetchAdminAPI('/api/testimonials', {
+    return fetchAdminAPI('/admin/testimonials', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
   updateTestimonial: async (id: string, data: Record<string, unknown>) => {
-    return fetchAdminAPI(`/api/testimonials/${id}`, {
+    return fetchAdminAPI(`/admin/testimonials/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   },
   deleteTestimonial: async (id: string) => {
-    return fetchAdminAPI(`/api/testimonials/${id}`, {
+    return fetchAdminAPI(`/admin/testimonials/${id}`, {
       method: 'DELETE',
     });
   },
 
   // Breeds
   getBreedTemplates: async () => {
-    return fetchAdminAPI('/api/breed-templates');
+    return fetchAdminAPI('/admin/breed-templates');
   },
   createBreedTemplate: async (data: Record<string, unknown>) => {
-    return fetchAdminAPI('/api/breed-templates', {
+    return fetchAdminAPI('/admin/breed-templates', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
   updateBreedTemplate: async (id: string, data: Record<string, unknown>) => {
-    return fetchAdminAPI(`/api/breed-templates/${id}`, {
+    return fetchAdminAPI(`/admin/breed-templates/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   },
   deleteBreedTemplate: async (id: string) => {
-    return fetchAdminAPI(`/api/breed-templates/${id}`, {
+    return fetchAdminAPI(`/admin/breed-templates/${id}`, {
       method: 'DELETE',
     });
   },
 
   // Litters
   getAllLitters: async (filters = {}) => {
-    let query = '/api/litters';
+    let query = '/admin/litters';
     if (Object.keys(filters).length) {
       query += '?' + new URLSearchParams(filters).toString();
     }
     return fetchAdminAPI(query);
   },
   getLitterById: async (id: string) => {
-    return fetchAdminAPI(`/api/litters/${id}`);
+    return fetchAdminAPI(`/admin/litters/${id}`);
   },
   createLitter: async (data: Record<string, unknown>) => {
-    return fetchAdminAPI('/api/litters', {
+    return fetchAdminAPI('/admin/litters', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
   updateLitter: async (id: string, data: Record<string, unknown>) => {
-    return fetchAdminAPI(`/api/litters/${id}`, {
+    return fetchAdminAPI(`/admin/litters/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   },
   deleteLitter: async (id: string) => {
-    return fetchAdminAPI(`/api/litters/${id}`, {
+    return fetchAdminAPI(`/admin/litters/${id}`, {
       method: 'DELETE',
     });
   },
 
-  // Third-Party Integrations
-  getIntegrations: async () => {
-    return fetchAdminAPI('/admin/integrations');
-  },
-  createIntegration: async (data: Record<string, unknown>) => {
-    return fetchAdminAPI('/admin/integrations', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  },
-  updateIntegration: async (id: string, data: Record<string, unknown>) => {
-    return fetchAdminAPI(`/admin/integrations/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
-  },
-  deleteIntegration: async (id: string) => {
-    return fetchAdminAPI(`/admin/integrations/${id}`, {
-      method: 'DELETE',
-    });
-  },
+  // Third-party integration management
+  getIntegrations: () => fetchAdminAPI('/admin/integrations'),
+  createIntegration: (data: Record<string, unknown>) => fetchAdminAPI('/admin/integrations', { method: 'POST', body: JSON.stringify(data) }),
+  updateIntegration: (id: string, data: Record<string, unknown>) => fetchAdminAPI(`/admin/integrations/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteIntegration: (id: string) => fetchAdminAPI(`/admin/integrations/${id}`, { method: 'DELETE' }),
+
+  // Site settings management
+  getSiteSettings: () => fetchAdminAPI('/admin/settings'),
+  updateSiteSettings: (data: Record<string, unknown>) => fetchAdminAPI('/admin/settings', { method: 'PUT', body: JSON.stringify(data) }),
 };

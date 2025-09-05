@@ -26,28 +26,23 @@ function createErrorResponse(message: string, details: string | null = null, sta
 //    from the authentication functions to these controller functions.
 // The `authResult` parameter in these functions expects the decoded JWT payload.
 
-// Define a basic Puppy type based on master_schema.sql
-// This should be expanded and moved to a shared types file eventually
+// Define a basic Puppy type based on actual database schema
 interface Puppy {
     id: string;
     name: string;
     litter_id: string | null;
-    breed_id: string | null; // Changed from 'breed'
-    gender: string;
+    breed: string; // Using breed instead of breed_id to match actual schema
+    gender: string | null;
     color: string | null;
     birth_date: string; // YYYY-MM-DD
     weight: number | null;
     price: number | null;
     status: string; // e.g., available, reserved, adopted
-    microchip_id: string | null;
     description: string | null;
-    temperament_notes: string | null;
-    health_notes: string | null;
-    image_urls: string; // JSON string array
+    temperament: string | null; // JSON string array
+    photo_url: string | null;
     created_at: string;
     updated_at: string;
-    breed_name?: string; // For joined data
-    litter_name?: string; // For joined data
 }
 
 
@@ -55,21 +50,27 @@ export async function getAllPuppies(request: Request, env: Env) {
   const url = new URL(request.url);
   const breedName = url.searchParams.get('breed');
   const status = url.searchParams.get('status');
-  const limit = parseInt(url.searchParams.get('limit') || '10', 10);
+  const searchQuery = url.searchParams.get('searchQuery');
+  const limit = parseInt(url.searchParams.get('limit') || '50', 10);
   const page = parseInt(url.searchParams.get('page') || '1', 10);
   const offset = (page - 1) * limit;
   
-  let queryString = 'SELECT p.*, b.name as breed_name, l.name as litter_name FROM puppies p LEFT JOIN breeds b ON p.breed_id = b.id LEFT JOIN litters l ON p.litter_id = l.id WHERE 1=1';
+  let queryString = 'SELECT p.id, p.name, p.breed, p.gender, p.birth_date, p.price, p.status, p.photo_url, p.color, p.temperament, p.description, p.litter_id, p.weight, p.created_at, p.updated_at FROM puppies p WHERE 1=1';
   const queryParams: unknown[] = [];
   
   if (breedName) {
-    queryString += ' AND b.name = ?';
+    queryString += ' AND p.breed = ?';
     queryParams.push(breedName);
   }
   
   if (status) {
     queryString += ' AND p.status = ?';
     queryParams.push(status);
+  }
+  
+  if (searchQuery) {
+    queryString += ' AND (p.name LIKE ? OR p.breed LIKE ?)';
+    queryParams.push(`%${searchQuery}%`, `%${searchQuery}%`);
   }
   
   queryString += ' ORDER BY p.created_at DESC LIMIT ? OFFSET ?';
@@ -79,31 +80,39 @@ export async function getAllPuppies(request: Request, env: Env) {
     const db = getDB(env);
     const { results } = await db.prepare(queryString).bind(...queryParams).all<Puppy>();
     
-    const puppies = results.map(p => ({
+    const puppies = results.map((p: any) => ({
         ...p,
-        image_urls: JSON.parse(p.image_urls || "[]") // Parse image_urls
+        birthDate: p.birth_date,
+        photoUrl: p.photo_url,
+        createdAt: p.created_at,
+        updatedAt: p.updated_at,
+        litterId: p.litter_id
     }));
 
-    let countQueryString = 'SELECT COUNT(p.id) as total FROM puppies p LEFT JOIN breeds b ON p.breed_id = b.id WHERE 1=1';
+    let countQueryString = 'SELECT COUNT(p.id) as total FROM puppies p WHERE 1=1';
     const countParams: unknown[] = [];
     if (breedName) {
-      countQueryString += ' AND b.name = ?';
+      countQueryString += ' AND p.breed = ?';
       countParams.push(breedName);
     }
     if (status) {
       countQueryString += ' AND p.status = ?';
       countParams.push(status);
     }
+    if (searchQuery) {
+      countQueryString += ' AND (p.name LIKE ? OR p.breed LIKE ?)';
+      countParams.push(`%${searchQuery}%`, `%${searchQuery}%`);
+    }
 
     const countResult = await db.prepare(countQueryString).bind(...countParams).first<{total: number}>();
     const totalItems = countResult?.total || 0;
     
     return new Response(JSON.stringify({
-      data: puppies,
-      page,
-      limit,
+      puppies,
+      currentPage: page,
       totalPages: Math.ceil(totalItems / limit),
-      totalItems
+      totalPuppies: totalItems,
+      limit
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }});
   } catch (error: any) {
     console.error('Error fetching puppies:', error);
@@ -118,7 +127,7 @@ export async function getPuppyById(request: Request, env: Env) {
   try {
     const db = getDB(env);
     const puppyResult = await db
-      .prepare('SELECT p.*, b.name as breed_name, l.name as litter_name FROM puppies p LEFT JOIN breeds b ON p.breed_id = b.id LEFT JOIN litters l ON p.litter_id = l.id WHERE p.id = ?')
+      .prepare('SELECT * FROM puppies WHERE id = ?')
       .bind(id)
       .first<Puppy>();
       
@@ -126,12 +135,16 @@ export async function getPuppyById(request: Request, env: Env) {
       return createErrorResponse('Puppy not found', `No puppy found with ID: ${id}`, 404);
     }
     
-    const puppyWithParsedImages = {
+    const puppyWithFormattedFields = {
         ...puppyResult,
-        image_urls: JSON.parse(puppyResult.image_urls || "[]")
+        birthDate: puppyResult.birth_date,
+        photoUrl: puppyResult.photo_url,
+        createdAt: puppyResult.created_at,
+        updatedAt: puppyResult.updated_at,
+        litterId: puppyResult.litter_id
     };
     
-    return new Response(JSON.stringify(puppyWithParsedImages), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }});
+    return new Response(JSON.stringify(puppyWithFormattedFields), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }});
   } catch (error: any) {
     console.error(`Error fetching puppy ${id}:`, error);
     return createErrorResponse('Failed to fetch puppy details', error.message, 500);
@@ -148,11 +161,11 @@ export async function createPuppy(request: Request, env: Env, authResult: AuthRe
   }
   
   try {
-    const puppyData = await request.json() as Partial<Puppy>;
+    const puppyData = await request.json() as any;
     const db = getDB(env);
     
-    if (!puppyData.name || !puppyData.gender || !puppyData.birth_date || !puppyData.litter_id || !puppyData.breed_id) {
-      return createErrorResponse('Validation Error', 'Missing required fields: name, gender, birth_date, litter_id, breed_id.', 400);
+    if (!puppyData.name || !puppyData.breed) {
+      return createErrorResponse('Validation Error', 'Missing required fields: name, breed.', 400);
     }
     // TODO: Add more specific validation (e.g., breed_id exists, litter_id exists) by querying the respective tables.
 
@@ -162,40 +175,45 @@ export async function createPuppy(request: Request, env: Env, authResult: AuthRe
     await db
       .prepare(`
         INSERT INTO puppies (
-          id, name, litter_id, breed_id, gender, color, birth_date,
-          weight, price, status, microchip_id, description,
-          temperament_notes, health_notes, image_urls, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          id, name, breed, gender, color, birth_date,
+          weight, price, status, description,
+          temperament, photo_url, litter_id, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `)
       .bind(
         puppyId,
         puppyData.name,
-        puppyData.litter_id,
-        puppyData.breed_id,
-        puppyData.gender,
+        puppyData.breed,
+        puppyData.gender || null,
         puppyData.color || null,
-        puppyData.birth_date,
-        puppyData.weight === undefined ? null : puppyData.weight,
-        puppyData.price === undefined ? null : puppyData.price,
-        puppyData.status || 'available',
-        puppyData.microchip_id || null,
+        puppyData.birthDate || puppyData.birth_date || new Date().toISOString().split('T')[0],
+        puppyData.weight || null,
+        puppyData.price || null,
+        puppyData.status || 'Available',
         puppyData.description || null,
-        puppyData.temperament_notes || null,
-        puppyData.health_notes || null,
-        JSON.stringify(puppyData.image_urls || []),
+        Array.isArray(puppyData.temperament) ? JSON.stringify(puppyData.temperament) : puppyData.temperament || null,
+        puppyData.photoUrl || puppyData.photo_url || null,
+        puppyData.litterId || puppyData.litter_id || null,
         now,
         now
       )
       .run();
     
     const newPuppy = await db
-      .prepare('SELECT p.*, b.name as breed_name, l.name as litter_name FROM puppies p LEFT JOIN breeds b ON p.breed_id = b.id LEFT JOIN litters l ON p.litter_id = l.id WHERE p.id = ?')
+      .prepare('SELECT * FROM puppies WHERE id = ?')
       .bind(puppyId)
       .first<Puppy>();
 
     if (newPuppy) {
-        const newPuppyWithParsedImages = {...newPuppy, image_urls: JSON.parse(newPuppy.image_urls || "[]")};
-        return new Response(JSON.stringify(newPuppyWithParsedImages), { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' }});
+        const formattedPuppy = {
+          ...newPuppy,
+          birthDate: newPuppy.birth_date,
+          photoUrl: newPuppy.photo_url,
+          createdAt: newPuppy.created_at,
+          updatedAt: newPuppy.updated_at,
+          litterId: newPuppy.litter_id
+        };
+        return new Response(JSON.stringify(formattedPuppy), { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' }});
     } else {
         return createErrorResponse('Failed to retrieve created puppy', null, 500);
     }
@@ -252,13 +270,20 @@ export async function updatePuppy(request: Request, env: Env, authResult: AuthRe
     await db.prepare(`UPDATE puppies SET ${setClauses} WHERE id = ?`).bind(...values).run();
     
     const updatedPuppy = await db
-      .prepare('SELECT p.*, b.name as breed_name, l.name as litter_name FROM puppies p LEFT JOIN breeds b ON p.breed_id = b.id LEFT JOIN litters l ON p.litter_id = l.id WHERE p.id = ?')
+      .prepare('SELECT * FROM puppies WHERE id = ?')
       .bind(id)
       .first<Puppy>();
 
     if (updatedPuppy) {
-        const updatedPuppyWithParsedImages = {...updatedPuppy, image_urls: JSON.parse(updatedPuppy.image_urls || "[]")};
-        return new Response(JSON.stringify(updatedPuppyWithParsedImages), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }});
+        const formattedPuppy = {
+          ...updatedPuppy,
+          birthDate: updatedPuppy.birth_date,
+          photoUrl: updatedPuppy.photo_url,
+          createdAt: updatedPuppy.created_at,
+          updatedAt: updatedPuppy.updated_at,
+          litterId: updatedPuppy.litter_id
+        };
+        return new Response(JSON.stringify(formattedPuppy), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }});
     } else {
         return createErrorResponse('Failed to retrieve updated puppy', null, 500);
     }
@@ -325,9 +350,13 @@ export async function getMyPuppies(request: Request, env: Env, authResult: AuthR
         `).bind(userId, limit, offset);
         const { results } = await puppiesStmt.all<Puppy>();
 
-        const puppies = results.map(p => ({
+        const puppies = results.map((p: any) => ({
             ...p,
-            image_urls: JSON.parse(p.image_urls || "[]")
+            birthDate: p.birth_date,
+            photoUrl: p.photo_url,
+            createdAt: p.created_at,
+            updatedAt: p.updated_at,
+            litterId: p.litter_id
         }));
 
         const countStmt = db.prepare(`
