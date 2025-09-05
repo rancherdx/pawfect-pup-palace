@@ -30,25 +30,36 @@ import DataDeletionRequestsManager from "@/components/admin/DataDeletionRequests
 import EnhancedTestimonialManagement from '@/components/admin/EnhancedTestimonialManagement'; // Import Enhanced TestimonialManagement
 import SEOManagement from '@/components/admin/SEOManagement'; // Import SEO Management
 import SecureIntegrations from '@/components/admin/SecureIntegrations';
+import NotificationCenter from '@/components/admin/NotificationCenter';
 
 const allAdminTabs = [
+  // Core Management
   { value: "puppies", label: "Puppies", icon: Dog, component: <PuppyManagement /> },
   { value: "litters", label: "Litters", icon: PawPrint, component: <LitterManagement /> },
   { value: "breeds", label: "Breeds", icon: Layers, component: <BreedTemplateManager /> },
+  { value: "stud_dogs_admin", label: "Stud Dogs", icon: Dog, component: <AdminStudDogManager /> },
+  
+  // Content & Marketing
   { value: "blog", label: "Blog", icon: FileText, component: <BlogManager /> },
   { value: "seo", label: "SEO", icon: Globe, component: <SEOManagement /> },
-  { value: "marketing", label: "Marketing", icon: Users, component: <AffiliateManager /> }, // Assuming AffiliateManager is Marketing
+  { value: "testimonials", label: "Testimonials", icon: MessageSquare, component: <EnhancedTestimonialManagement /> },
+  { value: "marketing", label: "Marketing", icon: Users, component: <AffiliateManager /> },
+  
+  // Business Operations
   { value: "transactions", label: "Transactions", icon: Receipt, component: <TransactionHistory /> },
   { value: "square", label: "Square", icon: CreditCard, component: <SquareIntegration /> },
+  
+  // System & Communication
+  { value: "notifications", label: "Notifications", icon: MessageSquare, component: <NotificationCenter /> },
+  { value: "users_admin", label: "Users", icon: Users, component: <AdminUserManager /> },
+  
+  // Settings & Configuration
   { value: "settings", label: "Settings", icon: Settings, component: <SettingsPanel /> },
+  { value: "email_templates", label: "Email Templates", icon: Mail, component: <EmailTemplatesManager /> },
   { value: "integrations", label: "Integrations", icon: PlugZap, component: <ThirdPartyIntegrationsManager /> },
   { value: "secure_integrations", label: "Secure Integrations", icon: ShieldCheck, component: <SecureIntegrations /> },
-  { value: "email_templates", label: "Email Templates", icon: Mail, component: <EmailTemplatesManager /> },
-  { value: "users_admin", label: "Users", icon: Users, component: <AdminUserManager /> }, // Users icon repeated, but context is different
-  { value: "stud_dogs_admin", label: "Stud Dogs", icon: Dog, component: <AdminStudDogManager /> }, // Dog icon repeated
-  { value: "adv_security", label: "Adv. Security", icon: ShieldCheck, component: <AdvancedSecurityFeatures /> },
-  { value: "data_deletion", label: "Data Deletion", icon: ShieldCheck, component: <DataDeletionRequestsManager /> }, // ShieldCheck repeated
-  { value: "testimonials", label: "Testimonials", icon: MessageSquare, component: <EnhancedTestimonialManagement /> },
+  { value: "adv_security", label: "Advanced Security", icon: ShieldCheck, component: <AdvancedSecurityFeatures /> },
+  { value: "data_deletion", label: "Data Deletion", icon: ShieldCheck, component: <DataDeletionRequestsManager /> },
 ];
 
 const AdminDashboard = () => {

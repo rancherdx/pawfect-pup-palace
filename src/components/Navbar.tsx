@@ -8,6 +8,7 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import { useTheme } from "@/components/ThemeProvider";
 import { motion } from "framer-motion";
 import GlobalSearch from "@/components/search/GlobalSearch";
+import NotificationDropdown from "@/components/NotificationDropdown";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -70,7 +71,7 @@ const Navbar = () => {
               ))}
             </div>
 
-            {/* Search, Theme Toggle and Mobile Menu */}
+            {/* Search, Notifications, Theme Toggle and Mobile Menu */}
             <div className="flex items-center space-x-2">
               <Button 
                 variant="ghost" 
@@ -81,6 +82,8 @@ const Navbar = () => {
               >
                 <Search className="h-5 w-5" />
               </Button>
+
+              <NotificationDropdown />
               
               <Button 
                 variant="ghost" 

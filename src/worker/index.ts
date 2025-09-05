@@ -5,6 +5,7 @@ import { authRoutes } from './routes/authRoutes';
 import { publicRoutes } from './routes/publicRoutes';
 import { protectedRoutes } from './routes/protectedRoutes';
 import { squareRoutes } from './routes/squareRoutes';
+import { setupRoutes } from './routes/setupRoutes';
 import adminRoutes from './routes/adminRoutes';
 import { authenticate } from './utils/auth';
 import { serveSwaggerUI, serveSwaggerSpec } from './swagger/ui';
@@ -33,6 +34,7 @@ authRoutes(router);
 publicRoutes(router);
 protectedRoutes(router);
 squareRoutes(router);
+setupRoutes(router);
 
 // Register admin routes with proper authentication
 adminRoutes.forEach(route => {
