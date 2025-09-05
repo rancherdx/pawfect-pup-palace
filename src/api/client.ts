@@ -40,3 +40,13 @@ export const requireAdmin = async () => {
   }
   return user;
 };
+
+// Legacy API request function for compatibility
+export const apiRequest = async <T = any>(endpoint: string, options: RequestInit = {}): Promise<T> => {
+  throw new Error('Use Supabase client directly instead of apiRequest');
+};
+
+// Legacy fetch admin API for compatibility
+export const fetchAdminAPI = async (url: string, options: RequestInit = {}) => {
+  throw new Error('Use adminApi methods directly instead of fetchAdminAPI');
+};
