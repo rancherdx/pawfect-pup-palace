@@ -902,6 +902,10 @@ export type Database = {
         Args: { user_email: string; user_name: string; user_password: string }
         Returns: Json
       }
+      encrypt_payment_details: {
+        Args: { details: Json; user_id: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -918,6 +922,10 @@ export type Database = {
           p_user_id: string
         }
         Returns: string
+      }
+      mask_payment_method: {
+        Args: { details: Json }
+        Returns: Json
       }
       promote_user_to_admin: {
         Args: { target_user_id: string }
