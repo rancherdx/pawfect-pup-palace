@@ -2,8 +2,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  PawPrint, Dog, Receipt, Settings, CreditCard, Layers, FileText, Globe, Users, PlugZap, Mail, ShieldCheck, MessageSquare, MoreHorizontal
-} from "lucide-react"; // Added MoreHorizontal
+  PawPrint, Dog, Receipt, Settings, CreditCard, Layers, FileText, Globe, Users, PlugZap, Mail, ShieldCheck, MessageSquare, MoreHorizontal, Bell
+} from "lucide-react"; // Added MoreHorizontal and Bell
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -29,15 +29,15 @@ import AdvancedSecurityFeatures from "@/components/admin/AdvancedSecurityFeature
 import DataDeletionRequestsManager from "@/components/admin/DataDeletionRequestsManager"; // Import the new component
 import EnhancedTestimonialManagement from '@/components/admin/EnhancedTestimonialManagement'; // Import Enhanced TestimonialManagement
 import SEOManagement from '@/components/admin/SEOManagement'; // Import SEO Management
-import SecureIntegrations from '@/components/admin/SecureIntegrations';
 import NotificationCenter from '@/components/admin/NotificationCenter';
+import SettingsHub from '@/components/admin/SettingsHub';
 
 const allAdminTabs = [
   // Core Management
   { value: "puppies", label: "Puppies", icon: Dog, component: <PuppyManagement /> },
   { value: "litters", label: "Litters", icon: PawPrint, component: <LitterManagement /> },
   { value: "breeds", label: "Breeds", icon: Layers, component: <BreedTemplateManager /> },
-  { value: "stud_dogs_admin", label: "Stud Dogs", icon: Dog, component: <AdminStudDogManager /> },
+  { value: "stud_dogs", label: "Stud Dogs", icon: Dog, component: <AdminStudDogManager /> },
   
   // Content & Marketing
   { value: "blog", label: "Blog", icon: FileText, component: <BlogManager /> },
@@ -49,17 +49,11 @@ const allAdminTabs = [
   { value: "transactions", label: "Transactions", icon: Receipt, component: <TransactionHistory /> },
   { value: "square", label: "Square", icon: CreditCard, component: <SquareIntegration /> },
   
-  // System & Communication
-  { value: "notifications", label: "Notifications", icon: MessageSquare, component: <NotificationCenter /> },
-  { value: "users_admin", label: "Users", icon: Users, component: <AdminUserManager /> },
+  // System & Communication  
+  { value: "notifications", label: "Notifications", icon: Bell, component: <NotificationCenter /> },
   
-  // Settings & Configuration
-  { value: "settings", label: "Settings", icon: Settings, component: <SettingsPanel /> },
-  { value: "email_templates", label: "Email Templates", icon: Mail, component: <EmailTemplatesManager /> },
-  { value: "integrations", label: "Integrations", icon: PlugZap, component: <ThirdPartyIntegrationsManager /> },
-  { value: "secure_integrations", label: "Secure Integrations", icon: ShieldCheck, component: <SecureIntegrations /> },
-  { value: "adv_security", label: "Advanced Security", icon: ShieldCheck, component: <AdvancedSecurityFeatures /> },
-  { value: "data_deletion", label: "Data Deletion", icon: ShieldCheck, component: <DataDeletionRequestsManager /> },
+  // Settings Hub (Consolidated)
+  { value: "settings", label: "Settings", icon: Settings, component: <SettingsHub /> },
 ];
 
 const AdminDashboard = () => {

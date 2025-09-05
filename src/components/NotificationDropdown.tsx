@@ -86,12 +86,12 @@ const NotificationDropdown = () => {
       
       <DropdownMenuContent 
         align="end" 
-        className="w-80 p-0"
+        className="w-80 p-0 bg-background border border-border shadow-lg z-50"
         sideOffset={5}
       >
-        <div className="p-4 border-b">
+        <div className="p-4 border-b bg-background">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold">Notifications</h3>
+            <h3 className="font-semibold text-foreground">Notifications</h3>
             {unreadCount > 0 && (
               <Button
                 variant="ghost"
@@ -110,13 +110,13 @@ const NotificationDropdown = () => {
           )}
         </div>
 
-        <div className="max-h-96 overflow-y-auto">
+        <div className="max-h-96 overflow-y-auto bg-background">
           {isLoading ? (
-            <div className="p-4 text-center text-muted-foreground">
+            <div className="p-4 text-center text-muted-foreground bg-background">
               Loading notifications...
             </div>
           ) : recentNotifications.length === 0 ? (
-            <div className="p-8 text-center">
+            <div className="p-8 text-center bg-background">
               <Bell className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
               <p className="text-sm text-muted-foreground">No notifications yet</p>
             </div>
@@ -125,7 +125,7 @@ const NotificationDropdown = () => {
               {recentNotifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`p-4 hover:bg-muted/50 transition-colors cursor-pointer ${
+                  className={`p-4 hover:bg-muted/50 transition-colors cursor-pointer bg-background ${
                     !notification.read ? 'bg-primary/5 border-l-2 border-l-primary' : ''
                   }`}
                   onClick={() => {
@@ -172,7 +172,7 @@ const NotificationDropdown = () => {
         </div>
 
         {notifications.length > 5 && (
-          <div className="p-2 border-t">
+          <div className="p-2 border-t bg-background">
             <Link to="/dashboard" onClick={() => setIsOpen(false)}>
               <Button variant="ghost" className="w-full text-sm" size="sm">
                 <Eye className="h-4 w-4 mr-2" />
