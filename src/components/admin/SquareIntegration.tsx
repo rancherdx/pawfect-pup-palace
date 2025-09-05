@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '@/api';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
-import SquareOAuthConnect from './SquareOAuthConnect';
+import SquareAPISetup from './SquareAPISetup';
 
 interface Integration {
   id: string;
@@ -104,8 +104,8 @@ const SquareIntegration = () => {
         </h2>
       </div>
       
-      {/* OAuth Connection Component */}
-      <SquareOAuthConnect />
+      {/* Square API Configuration */}
+      <SquareAPISetup />
       
       {/* Environment Toggle */}
       <SquareEnvironmentToggle />

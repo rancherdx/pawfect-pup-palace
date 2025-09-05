@@ -22,7 +22,6 @@ const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
-const SquareOAuthCallback = lazy(() => import("./pages/SquareOAuthCallback"));
 
 // Create QueryClient outside component to prevent recreation
 const queryClient = new QueryClient();
@@ -77,7 +76,6 @@ const App: React.FC = () => {
                                 </ProtectedRoute>
                               } 
                             />
-                            <Route path="/square/oauth/callback" element={<SquareOAuthCallback />} />
                           </Routes>
                         </Suspense>
                       </main>

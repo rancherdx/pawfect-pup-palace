@@ -250,13 +250,13 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
                       <li>Sandbox/Production toggle for testing</li>
                       <li>Square Web Payments SDK integration</li>
                       <li>Apple Pay domain verification</li>
-                      <li>Payment webhooks for real-time updates</li>
-                      <li>OAuth flow for secure connection</li>
+                      <li>Direct API integration with Square SDK</li>
+                      <li>Secure credential storage in Supabase</li>
                     </ul>
                     <div><strong>URLs Needed for Square Dashboard:</strong></div>
                     <ul className="list-disc list-inside space-y-1 ml-2">
                       <li>Webhook URL: https://yourdomain.com/api/webhooks/square/payment</li>
-                      <li>OAuth Redirect: https://yourdomain.com/api/square/oauth/callback</li>
+                      <li>API Configuration: Use Square API Setup in integrations</li>
                       <li>Apple Pay Domain: https://yourdomain.com/.well-known/apple-developer-merchantid-domain-association</li>
                     </ul>
                   </div>
