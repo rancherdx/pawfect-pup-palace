@@ -30,11 +30,13 @@ const Setup = () => {
 
   const checkSetupStatus = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('setup-status');
+      const response = await fetch('/api/setup/status');
       
-      if (error) {
-        throw error;
+      if (!response.ok) {
+        throw new Error('Failed to check setup status');
       }
+      
+      const data = await response.json();
       
       if (data.setupRequired) {
         setNeedsSetup(true);
@@ -73,20 +75,22 @@ const Setup = () => {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('setup-admin', {
-        body: {
+      const response = await fetch('/api/setup/admin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           name: formData.name,
           email: formData.email,
           password: formData.password
-        }
+        })
       });
 
-      if (error) {
-        throw new Error(error.message || 'Setup failed');
-      }
+      const data = await response.json();
 
-      if (data.error) {
-        throw new Error(data.error);
+      if (!response.ok || data.error) {
+        throw new Error(data.error || data.details || 'Setup failed');
       }
 
       toast({

@@ -132,6 +132,14 @@ const Navbar = () => {
                     <span>{link.name}</span>
                   </Link>
                 ))}
+                <Link
+                  to="/admin"
+                  className="px-4 py-2 rounded-md hover:bg-accent transition-colors flex items-center space-x-2 text-primary font-medium"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <PawPrint className="h-4 w-4 text-brand-red" />
+                  <span>Admin</span>
+                </Link>
               </div>
             </motion.div>
           )}
