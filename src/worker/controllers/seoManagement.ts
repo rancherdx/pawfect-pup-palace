@@ -161,7 +161,7 @@ export async function upsertSEOMeta(request: Request, env: Env, authResult: any)
       existingParams.push(seoData.page_slug);
     }
 
-    const existing = await env.PUPPIES_DB.prepare(existingQuery).bind(...existingParams).first();
+    const existing = await env.PUPPIES_DB.prepare(existingQuery).bind(...existingParams).first<{ id: string }>();
 
     const now = new Date().toISOString();
 
@@ -185,11 +185,11 @@ export async function upsertSEOMeta(request: Request, env: Env, authResult: any)
       updates.updated_at = now;
 
       const setClauses = Object.keys(updates).map(key => `${key} = ?`).join(', ');
-      const values = [...Object.values(updates), existing.id];
+      const values = [...Object.values(updates), (existing as { id: string }).id];
 
       await env.PUPPIES_DB.prepare(`UPDATE seo_meta SET ${setClauses} WHERE id = ?`).bind(...values).run();
 
-      const updated = await env.PUPPIES_DB.prepare('SELECT * FROM seo_meta WHERE id = ?').bind(existing.id).first<SEOMeta>();
+      const updated = await env.PUPPIES_DB.prepare('SELECT * FROM seo_meta WHERE id = ?').bind((existing as { id: string }).id).first<SEOMeta>();
       
       return new Response(JSON.stringify({
         ...updated,
@@ -338,9 +338,9 @@ export async function getPublicSEOMeta(request: Request, env: Env): Promise<Resp
 export async function generateSitemap(request: Request, env: Env): Promise<Response> {
   try {
     const [puppies, litters, blogPosts] = await Promise.all([
-      env.PUPPIES_DB.prepare('SELECT id, updated_at FROM puppies').all(),
-      env.PUPPIES_DB.prepare('SELECT id, updated_at FROM litters').all(),
-      env.PUPPIES_DB.prepare('SELECT slug, updated_at FROM blog_posts WHERE status = ?').bind('published').all()
+      env.PUPPIES_DB.prepare('SELECT id, updated_at FROM puppies').all<{ id: string; updated_at: string }>(),
+      env.PUPPIES_DB.prepare('SELECT id, updated_at FROM litters').all<{ id: string; updated_at: string }>(),
+      env.PUPPIES_DB.prepare('SELECT slug, updated_at FROM blog_posts WHERE status = ?').bind('published').all<{ slug: string; updated_at: string }>()
     ]);
 
     const baseUrl = new URL(request.url).origin;
@@ -354,7 +354,7 @@ export async function generateSitemap(request: Request, env: Env): Promise<Respo
         { url: `${baseUrl}/health`, lastmod: new Date().toISOString(), priority: 0.6 },
         { url: `${baseUrl}/reviews`, lastmod: new Date().toISOString(), priority: 0.6 }
       ],
-      puppies: (puppies.results || []).map(puppy => ({
+      puppies: (puppies.results || []).map((puppy: any) => ({
         url: `${baseUrl}/puppies/${puppy.id}`,
         lastmod: puppy.updated_at,
         priority: 0.8

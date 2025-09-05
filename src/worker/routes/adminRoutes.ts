@@ -8,6 +8,8 @@ import { getSiteSettings, updateSiteSettings } from '../controllers/settings';
 import { listAllBlogPosts, getBlogPostById, createBlogPost, updateBlogPost, deleteBlogPost } from '../controllers/blogPosts';
 import { listAllTestimonials, getTestimonialById, createTestimonial, updateTestimonial, deleteTestimonial } from '../controllers/testimonials';
 import { listAllBreedTemplates, getBreedTemplateById, createBreedTemplate, updateBreedTemplate, deleteBreedTemplate } from '../controllers/breedTemplates';
+import { listAllTestimonials as listEnhancedTestimonials, createTestimonial as createEnhancedTestimonial, updateTestimonial as updateEnhancedTestimonial, deleteTestimonial as deleteEnhancedTestimonial, getTestimonialAnalytics } from '../controllers/enhancedTestimonials';
+import { listSEOMeta, getSEOMeta, upsertSEOMeta, deleteSEOMeta, generateSitemap } from '../controllers/seoManagement';
 import { authenticate } from '../utils/auth';
 import type { Env } from '../env';
 
@@ -406,6 +408,99 @@ const adminRoutes = [
       const url = new URL(request.url);
       const breedId = url.pathname.split('/').pop();
       return deleteBreedTemplate(request, env, breedId, authResult);
+    },
+  },
+
+  // Enhanced Testimonials Management
+  {
+    method: 'GET',
+    path: '/admin/testimonials/enhanced',
+    handler: async (request, env, authResult) => {
+      return listEnhancedTestimonials(request, env);
+    },
+  },
+  {
+    method: 'GET',
+    path: '/admin/testimonials/analytics',
+    handler: async (request, env, authResult) => {
+      return getTestimonialAnalytics(request, env);
+    },
+  },
+  {
+    method: 'POST',
+    path: '/admin/testimonials/enhanced',
+    handler: async (request, env, authResult) => {
+      return createEnhancedTestimonial(request, env, authResult);
+    },
+  },
+  {
+    method: 'PUT',
+    path: '/admin/testimonials/enhanced/:id',
+    handler: async (request, env, authResult) => {
+      const url = new URL(request.url);
+      const testimonialId = url.pathname.split('/').pop();
+      return updateEnhancedTestimonial(request, env, testimonialId, authResult);
+    },
+  },
+  {
+    method: 'DELETE',
+    path: '/admin/testimonials/enhanced/:id',
+    handler: async (request, env, authResult) => {
+      const url = new URL(request.url);
+      const testimonialId = url.pathname.split('/').pop();
+      return deleteEnhancedTestimonial(request, env, testimonialId, authResult);
+    },
+  },
+  {
+    method: 'POST',
+    path: '/admin/testimonials/sync-google',
+    handler: async (request, env, authResult) => {
+      // Sync Google Reviews by calling the edge function
+      const response = await env.SUPABASE_CLIENT.functions.invoke('google-reviews-sync');
+      return new Response(JSON.stringify(response.data || {}), {
+        headers: { 'Content-Type': 'application/json' }
+      });
+    },
+  },
+
+  // SEO Management
+  {
+    method: 'GET',
+    path: '/admin/seo/meta',
+    handler: async (request, env, authResult) => {
+      return listSEOMeta(request, env);
+    },
+  },
+  {
+    method: 'POST',
+    path: '/admin/seo/meta',
+    handler: async (request, env, authResult) => {
+      return upsertSEOMeta(request, env, authResult);
+    },
+  },
+  {
+    method: 'PUT',
+    path: '/admin/seo/meta/:id',
+    handler: async (request, env, authResult) => {
+      const url = new URL(request.url);
+      const seoId = url.pathname.split('/').pop();
+      return upsertSEOMeta(request, env, authResult);
+    },
+  },
+  {
+    method: 'DELETE',
+    path: '/admin/seo/meta/:id',
+    handler: async (request, env, authResult) => {
+      const url = new URL(request.url);
+      const seoId = url.pathname.split('/').pop();
+      return deleteSEOMeta(request, env, seoId, authResult);
+    },
+  },
+  {
+    method: 'GET',
+    path: '/admin/seo/sitemap',
+    handler: async (request, env, authResult) => {
+      return generateSitemap(request, env);
     },
   },
 ];

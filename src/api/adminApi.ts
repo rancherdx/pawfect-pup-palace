@@ -155,4 +155,31 @@ export const adminApi = {
   // Site settings management
   getSiteSettings: () => fetchAdminAPI('/admin/settings'),
   updateSiteSettings: (data: Record<string, unknown>) => fetchAdminAPI('/admin/settings', { method: 'PUT', body: JSON.stringify(data) }),
+
+  // Enhanced testimonials
+  getEnhancedTestimonials: (params: { page?: number; limit?: number; source?: string; approved?: string; featured?: string } = {}) => {
+    const query = new URLSearchParams();
+    if (params.page) query.set('page', params.page.toString());
+    if (params.limit) query.set('limit', params.limit.toString());
+    if (params.source) query.set('source', params.source);
+    if (params.approved !== undefined) query.set('approved', params.approved);
+    if (params.featured !== undefined) query.set('featured', params.featured);
+    return fetchAdminAPI(`/admin/testimonials/enhanced?${query.toString()}`);
+  },
+  getTestimonialAnalytics: () => fetchAdminAPI('/admin/testimonials/analytics'),
+  createEnhancedTestimonial: (data: Record<string, unknown>) => fetchAdminAPI('/admin/testimonials/enhanced', { method: 'POST', body: JSON.stringify(data) }),
+  updateEnhancedTestimonial: (id: string, data: Record<string, unknown>) => fetchAdminAPI(`/admin/testimonials/enhanced/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  syncGoogleReviews: () => fetchAdminAPI('/admin/testimonials/sync-google', { method: 'POST' }),
+
+  // SEO Management
+  getSeoMeta: (params: { page?: number; limit?: number } = {}) => {
+    const query = new URLSearchParams();
+    if (params.page) query.set('page', params.page.toString());
+    if (params.limit) query.set('limit', params.limit.toString());
+    return fetchAdminAPI(`/admin/seo/meta?${query.toString()}`);
+  },
+  createSeoMeta: (data: Record<string, unknown>) => fetchAdminAPI('/admin/seo/meta', { method: 'POST', body: JSON.stringify(data) }),
+  updateSeoMeta: (id: string, data: Record<string, unknown>) => fetchAdminAPI(`/admin/seo/meta/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteSeoMeta: (id: string) => fetchAdminAPI(`/admin/seo/meta/${id}`, { method: 'DELETE' }),
+  generateSeoMeta: (data: Record<string, unknown>) => fetchAdminAPI('/admin/seo/generate', { method: 'POST', body: JSON.stringify(data) }),
 };
