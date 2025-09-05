@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      auth_rate_limits: {
+        Row: {
+          attempt_type: string
+          attempts: number | null
+          blocked_until: string | null
+          created_at: string | null
+          first_attempt: string | null
+          id: string
+          identifier: string
+          last_attempt: string | null
+        }
+        Insert: {
+          attempt_type: string
+          attempts?: number | null
+          blocked_until?: string | null
+          created_at?: string | null
+          first_attempt?: string | null
+          id?: string
+          identifier: string
+          last_attempt?: string | null
+        }
+        Update: {
+          attempt_type?: string
+          attempts?: number | null
+          blocked_until?: string | null
+          created_at?: string | null
+          first_attempt?: string | null
+          id?: string
+          identifier?: string
+          last_attempt?: string | null
+        }
+        Relationships: []
+      }
       blog_posts: {
         Row: {
           author_name: string | null
@@ -532,6 +565,36 @@ export type Database = {
           },
         ]
       }
+      security_audit_log: {
+        Row: {
+          created_at: string | null
+          event_data: Json | null
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       seo_meta: {
         Row: {
           canonical_url: string | null
@@ -846,13 +909,23 @@ export type Database = {
         }
         Returns: boolean
       }
+      log_security_event: {
+        Args: {
+          p_event_data?: Json
+          p_event_type: string
+          p_ip_address?: string
+          p_user_agent?: string
+          p_user_id: string
+        }
+        Returns: string
+      }
       promote_user_to_admin: {
         Args: { target_user_id: string }
         Returns: boolean
       }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
+      app_role: "admin" | "moderator" | "user" | "super-admin"
       blog_status: "draft" | "published" | "archived"
       deletion_status: "pending" | "processing" | "completed" | "rejected"
       litter_status:
@@ -989,7 +1062,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user"],
+      app_role: ["admin", "moderator", "user", "super-admin"],
       blog_status: ["draft", "published", "archived"],
       deletion_status: ["pending", "processing", "completed", "rejected"],
       litter_status: [
