@@ -115,15 +115,15 @@ Deno.serve(async (req) => {
 
     if (promoteError) {
       console.error('Error promoting user to admin:', promoteError)
-      // Try to delete the user if we can't make them admin
-      await supabase.auth.admin.deleteUser(authData.user.id)
-        return new Response(
-          JSON.stringify({ error: 'Failed to assign super admin privileges' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+    // Try to delete the user if we can't make them admin
+    await supabase.auth.admin.deleteUser(authData.user.id)
+    return new Response(
+      JSON.stringify({ error: 'Failed to assign super admin privileges' }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
     }
 
     // Return success response

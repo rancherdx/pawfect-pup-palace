@@ -30,15 +30,13 @@ const Setup: React.FC = () => {
 
   const checkSetupStatus = async () => {
     try {
-      const response = await fetch('/api/setup/status');
+      const { data, error } = await supabase.functions.invoke('setup-status');
       
-      if (!response.ok) {
+      if (error) {
         throw new Error('Failed to check setup status');
       }
       
-      const data = await response.json();
-      
-      if (data.setupRequired) {
+      if (data?.setupRequired) {
         setNeedsSetup(true);
       } else {
         navigate('/login');
@@ -75,22 +73,16 @@ const Setup: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/setup/admin', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('setup-admin', {
+        body: {
           name: formData.name,
           email: formData.email,
           password: formData.password
-        })
+        }
       });
 
-      const data = await response.json();
-
-      if (!response.ok || data.error) {
-        throw new Error(data.error || data.details || 'Setup failed');
+      if (error || data?.error) {
+        throw new Error(data?.error || error?.message || 'Setup failed');
       }
 
       toast({
