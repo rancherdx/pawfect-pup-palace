@@ -196,4 +196,52 @@ export const adminApi = {
     method: 'PUT', 
     body: JSON.stringify({ status }) 
   }),
+
+  // Apple Pay Configuration
+  getApplePayConfig: () => fetchAdminAPI('/admin/apple-pay/config'),
+  updateApplePayConfig: (config: Record<string, unknown>) => fetchAdminAPI('/admin/apple-pay/config', { 
+    method: 'PUT', 
+    body: JSON.stringify(config) 
+  }),
+  uploadApplePayCertificate: (formData: FormData) => {
+    return fetch(`/api/admin/apple-pay/certificate`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+      },
+      body: formData,
+    }).then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    });
+  },
+  verifyApplePayDomain: (domain: string) => fetchAdminAPI('/admin/apple-pay/verify-domain', { 
+    method: 'POST', 
+    body: JSON.stringify({ domain }) 
+  }),
+
+  // Square Environment Management
+  getSquareEnvironment: () => fetchAdminAPI('/admin/square/environment'),
+  switchSquareEnvironment: (environment: 'sandbox' | 'production') => fetchAdminAPI('/admin/square/environment', { 
+    method: 'PUT', 
+    body: JSON.stringify({ environment }) 
+  }),
+  testSquareConnection: () => fetchAdminAPI('/admin/square/test-connection', { method: 'POST' }),
+
+  // Security & Monitoring
+  getSecurityMetrics: () => fetchAdminAPI('/admin/security/metrics'),
+  getSecurityEvents: () => fetchAdminAPI('/admin/security/events'),
+  getSecuritySettings: () => fetchAdminAPI('/admin/security/settings'),
+  updateSecuritySettings: (settings: Record<string, unknown>) => fetchAdminAPI('/admin/security/settings', { method: 'PUT', body: JSON.stringify(settings) }),
+  blockIP: (ipAddress: string) => fetchAdminAPI('/admin/security/block-ip', { method: 'POST', body: JSON.stringify({ ip_address: ipAddress }) }),
+  exportSecurityLogs: (dateRange: Record<string, string>) => fetchAdminAPI('/admin/security/export-logs', { method: 'POST', body: JSON.stringify(dateRange) }),
+
+  // Notifications
+  getNotifications: () => fetchAdminAPI('/admin/notifications'),
+  getNotificationSettings: () => fetchAdminAPI('/admin/notifications/settings'),
+  markNotificationsAsRead: (notificationIds: string[]) => fetchAdminAPI('/admin/notifications/mark-read', { method: 'POST', body: JSON.stringify({ notification_ids: notificationIds }) }),
+  updateNotificationSettings: (settings: Record<string, unknown>) => fetchAdminAPI('/admin/notifications/settings', { method: 'PUT', body: JSON.stringify(settings) }),
+  createNotification: (data: Record<string, unknown>) => fetchAdminAPI('/admin/notifications', { method: 'POST', body: JSON.stringify(data) }),
 };

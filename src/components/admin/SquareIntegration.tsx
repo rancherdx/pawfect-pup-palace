@@ -15,6 +15,9 @@ interface Integration {
   other_config?: object;
 }
 
+import SquareEnvironmentToggle from './SquareEnvironmentToggle';
+import ApplePaySetup from './ApplePaySetup';
+
 const SquareIntegration = () => {
   const queryClient = useQueryClient();
 
@@ -106,6 +109,12 @@ const SquareIntegration = () => {
       
       {/* OAuth Connection Component */}
       <SquareOAuthConnect />
+      
+      {/* Environment Toggle */}
+      <SquareEnvironmentToggle />
+      
+      {/* Apple Pay Setup */}
+      <ApplePaySetup />
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className={`shadow-md ${isConnected ? "border-green-500" : (!isConfigured ? "border-amber-500" : "border-gray-200")}`}>
