@@ -88,8 +88,13 @@ const SEOManagement = () => {
     staleTime: 10 * 60 * 1000,
   });
 
-  const seoRecords: SEOMetadata[] = seoData?.metadata || [];
-  const analytics = seoAnalytics?.analytics || {};
+  const seoRecords = seoData?.metadata || [];
+  const analytics = seoAnalytics?.analytics || {
+    total_pages: 0,
+    optimized_pages: 0,
+    missing_meta: 0,
+    avg_title_length: 0
+  };
 
   const createSEOMutation = useMutation({
     mutationFn: (seoData: Record<string, unknown>) => adminApi.createSeoMeta(seoData),

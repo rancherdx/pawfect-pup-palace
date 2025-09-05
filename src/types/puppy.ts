@@ -18,7 +18,7 @@ export interface Puppy {
   video_urls?: string[]; // New video field
   weight?: number;
   size?: PuppySize;
-  temperament?: string;
+  temperament?: string[];
   careNotes?: string;
   motherName?: string;
   fatherName?: string;

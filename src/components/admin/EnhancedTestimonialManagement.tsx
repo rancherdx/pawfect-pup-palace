@@ -95,7 +95,12 @@ const EnhancedTestimonialManagement = () => {
   });
 
   const testimonials: EnhancedTestimonial[] = data?.testimonials || [];
-  const stats = analytics?.stats || {};
+  const stats = analytics || {
+    total: 0,
+    average_rating: 0,
+    google_count: 0,
+    pending_approval: 0
+  };
 
   const createTestimonialMutation = useMutation({
     mutationFn: (testimonialData: Record<string, unknown>) => adminApi.createEnhancedTestimonial(testimonialData),

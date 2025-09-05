@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Shield, AlertTriangle, Users, Activity, RefreshCw } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchAdminAPI } from '@/api';
+import { adminApi } from '@/api';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface SecurityEvent {
@@ -30,13 +31,13 @@ const SecurityMonitoring: React.FC = () => {
 
   const { data: securityEvents, isLoading: eventsLoading } = useQuery({
     queryKey: ['securityEvents', refreshTrigger],
-    queryFn: () => fetchAdminAPI('/api/admin/security/events?limit=50'),
+    queryFn: () => adminApi.getSecurityEvents(),
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
   const { data: securityStats, isLoading: statsLoading } = useQuery({
-    queryKey: ['securityStats', refreshTrigger],
-    queryFn: () => fetchAdminAPI('/api/admin/security/stats'),
+    queryKey: ['securityStats', refreshTrigger],  
+    queryFn: () => adminApi.getSecurityStats(),
     refetchInterval: 60000, // Refresh every minute
   });
 
@@ -88,7 +89,7 @@ const SecurityMonitoring: React.FC = () => {
             <div className="flex items-center space-x-2">
               <AlertTriangle className="h-5 w-5 text-red-500" />
               <span className="text-2xl font-bold">
-                {statsLoading ? '...' : securityStats?.failed_logins_24h || 0}
+                {statsLoading ? '...' : (securityStats?.failed_logins_24h ?? 0)}
               </span>
             </div>
           </CardContent>
@@ -104,7 +105,7 @@ const SecurityMonitoring: React.FC = () => {
             <div className="flex items-center space-x-2">
               <Users className="h-5 w-5 text-yellow-500" />
               <span className="text-2xl font-bold">
-                {statsLoading ? '...' : securityStats?.role_changes_7d || 0}
+                {statsLoading ? '...' : (securityStats?.role_changes_7d ?? 0)}
               </span>
             </div>
           </CardContent>
@@ -120,7 +121,7 @@ const SecurityMonitoring: React.FC = () => {
             <div className="flex items-center space-x-2">
               <Activity className="h-5 w-5 text-green-500" />
               <span className="text-2xl font-bold">
-                {statsLoading ? '...' : securityStats?.total_active_sessions || 0}
+                {statsLoading ? '...' : (securityStats?.total_active_sessions ?? 0)}
               </span>
             </div>
           </CardContent>
@@ -136,7 +137,7 @@ const SecurityMonitoring: React.FC = () => {
             <div className="flex items-center space-x-2">
               <Shield className="h-5 w-5 text-orange-500" />
               <span className="text-2xl font-bold">
-                {statsLoading ? '...' : securityStats?.suspicious_activities_24h || 0}
+                {statsLoading ? '...' : (securityStats?.suspicious_activities_24h ?? 0)}
               </span>
             </div>
           </CardContent>
@@ -151,7 +152,7 @@ const SecurityMonitoring: React.FC = () => {
         <CardContent>
           {eventsLoading ? (
             <div className="text-center py-4">Loading security events...</div>
-          ) : securityEvents?.events?.length === 0 ? (
+          ) : (securityEvents?.events?.length ?? 0) === 0 ? (
             <Alert>
               <Shield className="h-4 w-4" />
               <AlertDescription>

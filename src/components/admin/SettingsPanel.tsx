@@ -86,7 +86,7 @@ const SettingsPanel = () => {
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (newSettings: SiteSettings) => {
-      return adminApi.updateSiteSettings(newSettings as unknown as Record<string, unknown>);
+      return adminApi.updateSiteSettings('site_config', newSettings as unknown as Record<string, unknown>);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['siteSettings'] });
