@@ -103,15 +103,15 @@ const PaymentMethods = ({
 
 
       try {
-        const jwtToken = localStorage.getItem('jwt');
-        const response = await fetch('/api/checkout', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {})
-          },
-          body: JSON.stringify(payload)
-        });
+      const jwtToken = localStorage.getItem('jwtToken');
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {})
+        },
+        body: JSON.stringify(payload)
+      });
 
         const data = await response.json();
         console.log('Backend /api/checkout response:', data);

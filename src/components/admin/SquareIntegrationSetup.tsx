@@ -50,7 +50,7 @@ const SquareIntegrationSetup: React.FC<SquareIntegrationSetupProps> = ({
 
   const requiredUrls = {
     webhookUrl: `https://${currentDomain}/api/webhooks/square/payment`,
-    oauthRedirectUrl: `https://${currentDomain}/api/square/oauth/callback`,
+    checkoutUrl: `https://${currentDomain}/api/checkout`,
     applePayVerificationUrl: `https://${currentDomain}/.well-known/apple-developer-merchantid-domain-association`,
   };
 
@@ -231,7 +231,7 @@ const SquareIntegrationSetup: React.FC<SquareIntegrationSetupProps> = ({
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertDescription>
-                  Configure these URLs in your Square Developer Dashboard under OAuth settings and Webhooks.
+                  Configure the webhook URL in your Square Developer Dashboard. The checkout URL is used internally for payment processing.
                 </AlertDescription>
               </Alert>
             </CardContent>
@@ -312,9 +312,9 @@ const SquareIntegrationSetup: React.FC<SquareIntegrationSetupProps> = ({
                 </div>
                 
                 <div className="border-l-4 border-blue-500 pl-4">
-                  <h3 className="font-semibold">Step 3: Configure OAuth</h3>
+                  <h3 className="font-semibold">Step 3: Get API Credentials</h3>
                   <p className="text-sm text-muted-foreground">
-                    Add the OAuth Redirect URL from the "URLs & Webhooks" tab to your Square app settings.
+                    Get your Application ID and Access Token from your Square app's credentials page.
                   </p>
                 </div>
                 

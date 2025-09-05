@@ -1,7 +1,7 @@
 import { IRequest } from 'itty-router';
 import type { Env } from '../env';
-import { generateAuthUrl, handleOAuthCallback, getOAuthStatus, revokeOAuth } from '../controllers/squareOAuth';
-import { handleSquareWebhook } from '../controllers/payment';
+import { processPayment, handleSquareWebhook } from '../controllers/payment';
+import { upsertSquareConfig, getSquareStatus } from '../controllers/squarePayment';
 import { authenticate } from '../utils/auth';
 import { corsHeaders } from '../utils/cors';
 
@@ -18,32 +18,40 @@ export const squareRoutes = (router: { get: (...args: any[]) => any; post: (...a
     }
   };
 
-  // Square OAuth routes (admin only)
-  router.get('/api/square/oauth/auth-url', async (request: IRequest, env: Env) => {
+  // Square configuration routes (admin only)
+  router.post('/api/square/config', async (request: IRequest, env: Env) => {
     const guard = await requireAdmin(request as unknown as Request, env);
     if (guard) return guard;
-    return generateAuthUrl(request as unknown as Request, env);
+    return upsertSquareConfig(request as unknown as Request, env);
   });
   
-  router.get('/api/square/oauth/callback', async (request: IRequest, env: Env) => {
+  router.get('/api/square/status', async (request: IRequest, env: Env) => {
     const guard = await requireAdmin(request as unknown as Request, env);
     if (guard) return guard;
-    return handleOAuthCallback(request as unknown as Request, env);
+    return getSquareStatus(request as unknown as Request, env);
   });
   
-  router.get('/api/square/oauth/status', async (request: IRequest, env: Env) => {
-    const guard = await requireAdmin(request as unknown as Request, env);
-    if (guard) return guard;
-    return getOAuthStatus(request as unknown as Request, env);
-  });
-  
-  router.post('/api/square/oauth/revoke', async (request: IRequest, env: Env) => {
-    const guard = await requireAdmin(request as unknown as Request, env);
-    if (guard) return guard;
-    return revokeOAuth(request as unknown as Request, env);
-  });
+  // Payment processing routes
+  router.post('/api/checkout', (request: IRequest, env: Env) => 
+    processPayment(request as unknown as Request, env));
   
   // Square webhook routes (do not require auth, verified by signature)
   router.post('/api/webhooks/square/payment', (request: IRequest, env: Env) => 
     handleSquareWebhook(request as unknown as Request, env));
+
+  // Apple Pay domain verification
+  router.get('/.well-known/apple-developer-merchantid-domain-association', async (request: IRequest, env: Env) => {
+    // Serve Apple Pay verification file from storage or return 404
+    try {
+      const object = await env.STATIC_ASSETS.get('.well-known/apple-developer-merchantid-domain-association');
+      if (object) {
+        return new Response(object.body, {
+          headers: { 'Content-Type': 'text/plain' }
+        });
+      }
+    } catch (error) {
+      console.error('Error serving Apple Pay verification file:', error);
+    }
+    return new Response('Not Found', { status: 404 });
+  });
 };
