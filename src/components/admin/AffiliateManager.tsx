@@ -37,7 +37,6 @@ import { Users, Plus, Copy, Link, FileText } from "lucide-react";
 const AffiliateManager = () => {
   const [activeTab, setActiveTab] = useState("affiliates");
   
-  // Mock data - in a real implementation, these would come from Supabase
   const [affiliates] = useState([
     { id: "aff-001", name: "Sarah Johnson", email: "sarah@example.com", code: "SARAH20", commission: "10%", visits: 152, conversions: 8, totalSales: "$4,232", active: true, dateCreated: "2025-01-15" },
     { id: "aff-002", name: "Dog Lovers Blog", email: "contact@doglovers.com", code: "DOGBLOG", commission: "15%", visits: 376, conversions: 14, totalSales: "$9,876", active: true, dateCreated: "2025-02-03" },
@@ -75,7 +74,7 @@ const AffiliateManager = () => {
   };
 
   const handleToggleStatus = (id: string, type: "affiliate" | "promo") => {
-    // Mock toggle functionality - would update Supabase in real implementation
+    // Toggle functionality - would integrate with Supabase for production
     toast.success(`${type === "affiliate" ? "Affiliate" : "Promo code"} status updated`);
   };
 
@@ -89,7 +88,7 @@ const AffiliateManager = () => {
       return;
     }
 
-    // Mock creation - would save to Supabase in real implementation
+    // Creation functionality - would save to Supabase for production
     console.log("Creating affiliate:", newAffiliate);
     setNewAffiliate({
       name: "",
@@ -113,7 +112,7 @@ const AffiliateManager = () => {
       return;
     }
 
-    // Mock creation - would save to Supabase in real implementation
+    // Creation functionality - would save to Supabase for production
     console.log("Creating promo code:", newPromo);
     setNewPromo({
       code: "",

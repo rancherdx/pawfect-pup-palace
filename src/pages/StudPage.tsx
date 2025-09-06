@@ -1,5 +1,7 @@
 
 import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import HeroSection from "@/components/HeroSection";
 import Section from "@/components/Section";
 import StudServiceCard from "@/components/financing/StudServiceCard";
@@ -7,68 +9,40 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
 import { Loader2, CalendarClock, PawPrint, Award, HeartHandshake } from "lucide-react";
-
-const STUD_DOGS = [
-  {
-    id: "stud1",
-    name: "Zeus",
-    breed: "German Shepherd",
-    age: 4,
-    certifications: ["AKC Certified", "OFA Hip Good", "OFA Elbow Normal"],
-    temperament: "Confident, alert and fearless with a strong territorial instinct",
-    price: 1800,
-    image: "https://images.unsplash.com/photo-1552053831-71594a27632d?ixlib=rb-4.0.3"
-  },
-  {
-    id: "stud2",
-    name: "Apollo",
-    breed: "Golden Retriever",
-    age: 3,
-    certifications: ["AKC Certified", "OFA Heart Clear", "CERF Clear"],
-    temperament: "Friendly, reliable, and trustworthy with an eager-to-please attitude",
-    price: 1600,
-    image: "https://images.unsplash.com/photo-1561298169-9db0d83ab716?ixlib=rb-4.0.3"
-  },
-  {
-    id: "stud3",
-    name: "Thor",
-    breed: "Labrador Retriever",
-    age: 4,
-    certifications: ["AKC Certified", "OFA Hip Excellent", "OFA Elbows Normal", "EIC Clear"],
-    temperament: "Kind, outgoing, and eager to please with strong retrieving instincts",
-    price: 1700,
-    image: "https://images.unsplash.com/photo-1600804340584-c7db2eacf0bf?ixlib=rb-4.0.3"
-  },
-  {
-    id: "stud4",
-    name: "Rocky",
-    breed: "French Bulldog",
-    age: 3,
-    certifications: ["AKC Certified", "BAER Hearing Test", "Cardiac Clear"],
-    temperament: "Playful, alert, adaptable with a sweet and affectionate nature",
-    price: 2200,
-    image: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?ixlib=rb-4.0.3"
-  }
-];
+import { Skeleton } from "@/components/ui/skeleton";
 
 const StudPage = () => {
   const [selectedBreed, setSelectedBreed] = useState<string | undefined>();
   const [searchTerm, setSearchTerm] = useState("");
   
-  // Simulate fetching stud dogs from API
-  const { data: studDogs, isLoading } = useQuery({
+  // Fetch stud dogs from Supabase
+  const { data: studDogs, isLoading, isError } = useQuery({
     queryKey: ["stud-dogs"],
     queryFn: async () => {
-      // In a real app, this would fetch from an API
-      // For now, just return the mock data with a slight delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return STUD_DOGS;
+      const { data, error } = await supabase
+        .from('stud_dogs')
+        .select('*')
+        .eq('is_available', true)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      // Transform to match expected format
+      return data?.map(dog => ({
+        id: dog.id,
+        name: dog.name,
+        breed: dog.breed_id, // This might need adjustment based on actual data structure
+        age: dog.age,
+        certifications: dog.certifications || [],
+        temperament: dog.temperament || "",
+        price: dog.stud_fee,
+        image: dog.image_urls?.[0] || '/placeholder.svg'
+      })) || [];
     }
   });
   
-  const breeds = Array.from(new Set(STUD_DOGS.map(dog => dog.breed)));
+  const breeds = studDogs ? Array.from(new Set(studDogs.map(dog => dog.breed))) : [];
   
   // Filter stud dogs based on selected filters
   const filteredDogs = studDogs?.filter(dog => {
@@ -78,6 +52,57 @@ const StudPage = () => {
       dog.breed.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesBreed && matchesSearch;
   });
+
+  if (isLoading) {
+    return (
+      <div>
+        <HeroSection
+          title="Stud Service"
+          subtitle="Premium quality stud dogs with excellent genetics and temperament"
+          imageSrc="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?ixlib=rb-4.0.3"
+          ctaText="Contact Us"
+          ctaLink="/contact"
+        />
+        <Section>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, index) => (
+              <div key={index} className="space-y-4">
+                <Skeleton className="h-48 w-full rounded-lg" />
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ))}
+          </div>
+        </Section>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div>
+        <HeroSection
+          title="Stud Service"
+          subtitle="Premium quality stud dogs with excellent genetics and temperament"
+          imageSrc="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?ixlib=rb-4.0.3"
+          ctaText="Contact Us"
+          ctaLink="/contact"
+        />
+        <Section>
+          <div className="text-center py-16">
+            <h3 className="text-xl font-semibold mb-4">Unable to load stud dogs</h3>
+            <p className="text-muted-foreground mb-6">
+              There was an error loading our stud dogs. Please try again later.
+            </p>
+            <Button asChild>
+              <a href="/contact">Contact Us</a>
+            </Button>
+          </div>
+        </Section>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -121,11 +146,7 @@ const StudPage = () => {
           </div>
         </div>
         
-        {isLoading ? (
-          <div className="flex justify-center items-center py-16">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : filteredDogs && filteredDogs.length > 0 ? (
+        {filteredDogs && filteredDogs.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredDogs.map(dog => (
               <StudServiceCard key={dog.id} dog={dog} />
@@ -133,8 +154,14 @@ const StudPage = () => {
           </div>
         ) : (
           <div className="text-center py-16">
+            <PawPrint className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
             <h3 className="text-xl font-semibold mb-2">No stud dogs found</h3>
-            <p className="text-muted-foreground mb-4">Try adjusting your filters</p>
+            <p className="text-muted-foreground mb-4">
+              {studDogs?.length === 0 
+                ? "No stud dogs are currently available. Check back soon!" 
+                : "Try adjusting your filters"
+              }
+            </p>
             <Button onClick={() => { setSelectedBreed(undefined); setSearchTerm(""); }}>
               Reset Filters
             </Button>
