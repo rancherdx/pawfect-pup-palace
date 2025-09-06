@@ -131,9 +131,9 @@ const Reviews = () => {
                 key={testimonial.id}
                 name={testimonial.name}
                 location={testimonial.location || ""}
-                review={testimonial.content}
+                testimonial={testimonial.content}
                 rating={testimonial.rating || 5}
-                image={testimonial.reviewer_avatar || testimonial.image}
+                imageSrc={testimonial.reviewer_avatar || testimonial.image}
                 puppyName={testimonial.puppy_name || ""}
               />
             ))}
@@ -149,7 +149,6 @@ const Reviews = () => {
 
       {/* Review Form */}
       <Section 
-        id="review-form"
         title="Share Your Experience" 
         subtitle="Help other families by sharing your story"
       >

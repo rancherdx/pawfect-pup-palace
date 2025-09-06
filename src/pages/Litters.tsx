@@ -80,6 +80,9 @@ const Litters = () => {
         <HeroSection
           title="Our Litters"
           subtitle="Discover our current and upcoming litters of beautiful, healthy puppies"
+          imageSrc="https://images.unsplash.com/photo-1583337130417-3346a1be7dee"
+          ctaText="View Puppies"
+          ctaLink="/puppies"
         />
         <Section>
           <div className="text-center py-12">
@@ -96,6 +99,7 @@ const Litters = () => {
       <HeroSection
         title="Our Litters"
         subtitle="Discover our current and upcoming litters of beautiful, healthy puppies"
+        imageSrc="https://images.unsplash.com/photo-1583337130417-3346a1be7dee"
         ctaText="View Available Puppies"
         ctaLink="/puppies"
       />

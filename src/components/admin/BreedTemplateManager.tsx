@@ -1,10 +1,10 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Plus, Edit, Trash, Search, Dog, Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { BreedTemplate } from "@/types/breedTemplate";
+import { supabase } from "@/integrations/supabase/client";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,20 +17,26 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const BreedTemplateManager = () => {
-  // Mock data for now - would use Supabase in full implementation
-  const templates = [
-    {
-      id: "1",
-      breed_name: "Golden Retriever", 
-      size: "Large",
-      description: "Friendly family dogs",
-      temperament: ["Friendly", "Loyal"],
-      average_weight_min: 55,
-      average_weight_max: 75
-    }
-  ];
+  // State for managing templates
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const setTemplates = () => {}; // Mock function
+  // Transform database data to component format
+  const transformTemplate = (dbTemplate: any): BreedTemplate => ({
+    id: dbTemplate.id,
+    breedName: dbTemplate.breed_name,
+    description: dbTemplate.description || "",
+    size: dbTemplate.size || "Medium",
+    temperament: dbTemplate.temperament?.join(", ") || "",
+    careInstructions: dbTemplate.care_instructions || "",
+    commonTraits: dbTemplate.common_traits || [],
+    averageWeight: {
+      min: dbTemplate.average_weight_min || 0,
+      max: dbTemplate.average_weight_max || 0
+    },
+    photo: dbTemplate.photo_url || ""
+  });
+
   const [searchQuery, setSearchQuery] = useState("");
   const [editingTemplate, setEditingTemplate] = useState<BreedTemplate | null>(null);
   const [isAddingTemplate, setIsAddingTemplate] = useState(false);
@@ -50,6 +56,29 @@ const BreedTemplateManager = () => {
       max: 0
     }
   });
+
+  // Load templates from Supabase
+  useEffect(() => {
+    loadTemplates();
+  }, []);
+
+  const loadTemplates = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('breed_templates')
+        .select('*')
+        .order('breed_name');
+      
+      if (error) throw error;
+      setTemplates(data || []);
+    } catch (error) {
+      console.error('Error loading breed templates:', error);
+      toast.error("Failed to load breed templates");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -106,42 +135,88 @@ const BreedTemplateManager = () => {
     setShowDeleteDialog(true);
   };
 
-  const confirmDeleteTemplate = () => {
+  const confirmDeleteTemplate = async () => {
     if (templateToDeleteId) {
-      setTemplates(prevTemplates => prevTemplates.filter(template => template.id !== templateToDeleteId));
-      toast.success("Breed template deleted successfully");
-      setTemplateToDeleteId(null);
+      try {
+        const { error } = await supabase
+          .from('breed_templates')
+          .delete()
+          .eq('id', templateToDeleteId);
+        
+        if (error) throw error;
+        
+        setTemplates(prevTemplates => prevTemplates.filter(template => template.id !== templateToDeleteId));
+        toast.success("Breed template deleted successfully");
+        setTemplateToDeleteId(null);
+      } catch (error) {
+        console.error('Error deleting template:', error);
+        toast.error("Failed to delete breed template");
+      }
     }
     setShowDeleteDialog(false);
   };
 
-  const handleSaveTemplate = (e: React.FormEvent) => {
+  const handleSaveTemplate = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (editingTemplate) {
-      // Update existing template
-      setTemplates(templates.map(template => 
-        template.id === editingTemplate.id ? { ...formData, id: editingTemplate.id } : template
-      ));
-      toast.success("Breed template updated successfully");
-    } else {
-      // Add new template
-      const newTemplate = {
-        ...formData,
-        id: String(Date.now())
+    try {
+      const templateData = {
+        breed_name: formData.breedName,
+        description: formData.description,
+        size: formData.size,
+        temperament: formData.temperament.split(',').map(t => t.trim()).filter(t => t),
+        care_instructions: formData.careInstructions,
+        common_traits: formData.commonTraits,
+        average_weight_min: formData.averageWeight.min,
+        average_weight_max: formData.averageWeight.max,
+        photo_url: formData.photo
       };
-      setTemplates([...templates, newTemplate]);
-      toast.success("Breed template added successfully");
+
+      if (editingTemplate) {
+        // Update existing template
+        const { error } = await supabase
+          .from('breed_templates')
+          .update(templateData)
+          .eq('id', editingTemplate.id);
+        
+        if (error) throw error;
+        toast.success("Breed template updated successfully");
+      } else {
+        // Add new template
+        const { error } = await supabase
+          .from('breed_templates')
+          .insert(templateData);
+        
+        if (error) throw error;
+        toast.success("Breed template added successfully");
+      }
+      
+      // Reload templates
+      await loadTemplates();
+      
+      // Reset form
+      setEditingTemplate(null);
+      setIsAddingTemplate(false);
+    } catch (error) {
+      console.error('Error saving template:', error);
+      toast.error("Failed to save breed template");
     }
-    
-    // Reset form
-    setEditingTemplate(null);
-    setIsAddingTemplate(false);
   };
 
-  const filteredTemplates = templates.filter(template => 
+  const filteredTemplates = templates.map(transformTemplate).filter(template => 
     template.breedName.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <span className="ml-2">Loading breed templates...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

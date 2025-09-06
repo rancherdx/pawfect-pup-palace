@@ -92,7 +92,7 @@ const PuppyDetails = () => {
             <div className="space-y-4">
               <PuppyImageCarousel 
                 images={imageUrls}
-                puppyName={puppy.name}
+                name={puppy.name}
               />
             </div>
 
@@ -100,11 +100,20 @@ const PuppyDetails = () => {
             <div className="space-y-6">
               <PuppyInfoSection 
                 puppy={{
-                  ...puppy,
-                  age,
-                  formattedWeight,
-                  displayColor
+                  id: puppy.id,
+                  name: puppy.name,
+                  breed: puppy.breed,
+                  gender: puppy.gender || "Not specified",
+                  status: puppy.status,
+                  price: puppy.price || 0,
+                  description: puppy.description || "",
+                  growthProgress: 75,
+                  age: age || "Unknown",
+                  weight: formattedWeight || "Not specified",
+                  color: displayColor,
+                  available: puppy.status === 'Available'
                 }}
+                puppyAge={age || "Unknown"}
               />
             </div>
           </div>
@@ -113,16 +122,16 @@ const PuppyDetails = () => {
           {puppy.temperament && (
             <div className="mb-8">
               <TemperamentTraitsCard 
-                temperament={puppy.temperament}
-                breed={puppy.breed}
+                temperament={puppy.temperament || []}
+                trainability={80}
+                activityLevel={70}
               />
             </div>
           )}
 
           {/* Detailed Information Tabs */}
           <DetailsTabs 
-            puppy={puppy}
-            age={age}
+            puppy={{...puppy, birthDate: puppy.birth_date}}
           />
         </div>
       </div>
