@@ -1,109 +1,131 @@
-
+import React from "react";
 import { useParams, Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { calculateAge } from "@/utils/dateUtils";
 import { Button } from "@/components/ui/button";
-import Section from "@/components/Section";
+import { Skeleton } from "@/components/ui/skeleton";
 import PuppyImageCarousel from "@/components/puppy-details/PuppyImageCarousel";
 import PuppyInfoSection from "@/components/puppy-details/PuppyInfoSection";
 import TemperamentTraitsCard from "@/components/puppy-details/TemperamentTraitsCard";
 import DetailsTabs from "@/components/puppy-details/DetailsTabs";
-import usePuppyDetails from "@/hooks/usePuppyDetails";
-import { Skeleton } from "@/components/ui/skeleton";
 
 const PuppyDetails = () => {
-  const { id } = useParams();
-  const { puppy, puppyAge, isLoading, error } = usePuppyDetails(id);
-  
-  // If loading, show skeleton
+  const { id } = useParams<{ id: string }>();
+
+  const { data: puppy, isLoading, isError } = useQuery({
+    queryKey: ['puppy', id],
+    queryFn: async () => {
+      if (!id) throw new Error('No puppy ID provided');
+      
+      const { data, error } = await supabase
+        .from('puppies')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id
+  });
+
   if (isLoading) {
     return (
-      <Section>
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="h-[400px] bg-muted rounded-xl animate-pulse"></div>
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+        <div className="container mx-auto px-4 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <Skeleton className="aspect-square rounded-xl" />
             <div className="space-y-4">
-              <Skeleton className="h-10 w-3/4" />
-              <Skeleton className="h-6 w-1/2" />
+              <Skeleton className="h-8 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
               <Skeleton className="h-6 w-1/3" />
-              <Skeleton className="h-24 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <div className="grid grid-cols-3 gap-4">
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <Skeleton className="h-12 w-full" />
-                <div className="grid grid-cols-2 gap-2">
-                  <Skeleton className="h-12 w-full" />
-                  <Skeleton className="h-12 w-full" />
-                </div>
-              </div>
+              <Skeleton className="h-20 w-full" />
             </div>
           </div>
         </div>
-      </Section>
+      </div>
     );
   }
 
-  // If error, show error message
-  if (error || !puppy) {
+  if (isError || !puppy) {
     return (
-      <Section>
-        <div className="text-center py-12">
-          <h1 className="text-3xl font-bold mb-4">Puppy Not Found</h1>
-          <p className="mb-6">Sorry, we couldn't find the puppy you're looking for.</p>
-          <Button asChild>
-            <Link to="/puppies">View All Puppies</Link>
-          </Button>
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Puppy Not Found</h1>
+          <p className="text-muted-foreground mb-6">
+            The puppy you're looking for could not be found.
+          </p>
+          <Link to="/puppies">
+            <Button>View All Puppies</Button>
+          </Link>
         </div>
-      </Section>
+      </div>
     );
   }
+
+  const age = puppy.birth_date ? calculateAge(puppy.birth_date) : null;
+  const formattedWeight = puppy.weight ? `${puppy.weight} lbs` : null;
+  const displayColor = puppy.color || "Not specified";
+
+  const imageUrls = puppy.image_urls && puppy.image_urls.length > 0 
+    ? puppy.image_urls 
+    : puppy.photo_url 
+    ? [puppy.photo_url] 
+    : ['/placeholder.svg'];
 
   return (
-    <div className="bg-background/50 relative">
-      <div className="absolute inset-0 paw-print-bg opacity-5 pointer-events-none"></div>
-      
-      <Section>
-        <div className="max-w-7xl mx-auto">
-          {/* Puppy Hero Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Puppy Images Carousel */}
-            <PuppyImageCarousel 
-              images={puppy.photoUrl ? [puppy.photoUrl] : []} 
-              name={puppy.name} 
-            />
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      {/* Hero Section with Background Pattern */}
+      <div 
+        className="relative bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: "url('https://images.unsplash.com/photo-1601758228041-f3b2795255f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80')",
+          backgroundAttachment: 'fixed'
+        }}
+      >
+        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm"></div>
+        <div className="relative container mx-auto px-4 py-12">
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            {/* Image Carousel */}
+            <div className="space-y-4">
+              <PuppyImageCarousel 
+                images={imageUrls}
+                puppyName={puppy.name}
+              />
+            </div>
 
-            {/* Puppy Info */}
-            <PuppyInfoSection 
-              puppy={{
-                ...puppy,
-                growthProgress: 75, // Default value
-                age: puppyAge,
-                weight: puppy.weight?.toString() || 'N/A',
-                color: puppy.color || 'N/A',
-                available: puppy.status === 'Available',
-                gender: puppy.gender || 'Unknown'
-              }} 
-              puppyAge={puppyAge} 
-            />
+            {/* Puppy Information */}
+            <div className="space-y-6">
+              <PuppyInfoSection 
+                puppy={{
+                  ...puppy,
+                  age,
+                  formattedWeight,
+                  displayColor
+                }}
+              />
+            </div>
           </div>
 
           {/* Temperament & Traits Card */}
-          <div className="mt-8 mb-12">
-            <TemperamentTraitsCard 
-              temperament={Array.isArray(puppy.temperament) ? puppy.temperament : puppy.temperament ? [puppy.temperament] : ['Friendly']}
-              trainability={75} // Default value since not in puppy type
-              activityLevel={75} // Default value since not in puppy type
-            />
-          </div>
+          {puppy.temperament && (
+            <div className="mb-8">
+              <TemperamentTraitsCard 
+                temperament={puppy.temperament}
+                breed={puppy.breed}
+              />
+            </div>
+          )}
 
-          {/* Tabs for Additional Information */}
-          <div className="mt-8">
-            <DetailsTabs puppy={puppy} />
-          </div>
+          {/* Detailed Information Tabs */}
+          <DetailsTabs 
+            puppy={puppy}
+            age={age}
+          />
         </div>
-      </Section>
+      </div>
     </div>
   );
 };

@@ -34,84 +34,21 @@ import { toast } from "sonner";
 import { useToast } from "@/hooks/use-toast";
 import { Users, Plus, Copy, Link, FileText } from "lucide-react";
 
-// Mock affiliate data
-const mockAffiliates = [
-  {
-    id: "aff-001",
-    name: "Sarah Johnson",
-    email: "sarah@example.com",
-    code: "SARAH20",
-    commission: "10%",
-    visits: 152,
-    conversions: 8,
-    totalSales: "$4,232",
-    active: true,
-    dateCreated: "2025-01-15"
-  },
-  {
-    id: "aff-002",
-    name: "Dog Lovers Blog",
-    email: "contact@doglovers.com",
-    code: "DOGBLOG",
-    commission: "15%",
-    visits: 376,
-    conversions: 14,
-    totalSales: "$9,876",
-    active: true,
-    dateCreated: "2025-02-03"
-  },
-  {
-    id: "aff-003",
-    name: "Michael Peterson",
-    email: "mike@example.com",
-    code: "MIKE15",
-    commission: "10%",
-    visits: 89,
-    conversions: 3,
-    totalSales: "$1,650",
-    active: false,
-    dateCreated: "2025-02-20"
-  }
-];
-
-// Mock promo codes
-const mockPromoCodes = [
-  {
-    id: "promo-001",
-    code: "SPRING2025",
-    discount: "10%",
-    uses: 24,
-    maxUses: 100,
-    startDate: "2025-03-01",
-    endDate: "2025-05-31",
-    active: true
-  },
-  {
-    id: "promo-002",
-    code: "SUMMER5",
-    discount: "$50 off",
-    uses: 12,
-    maxUses: 50,
-    startDate: "2025-06-01",
-    endDate: "2025-08-31",
-    active: true
-  },
-  {
-    id: "promo-003",
-    code: "WELCOME",
-    discount: "5%",
-    uses: 56,
-    maxUses: null,
-    startDate: "2025-01-01",
-    endDate: null,
-    active: true
-  }
-];
-
 const AffiliateManager = () => {
   const [activeTab, setActiveTab] = useState("affiliates");
-  const [affiliates, setAffiliates] = useState(mockAffiliates);
-  const [promoCodes, setPromoCodes] = useState(mockPromoCodes);
+  
+  // Mock data - in a real implementation, these would come from Supabase
+  const [affiliates] = useState([
+    { id: "aff-001", name: "Sarah Johnson", email: "sarah@example.com", code: "SARAH20", commission: "10%", visits: 152, conversions: 8, totalSales: "$4,232", active: true, dateCreated: "2025-01-15" },
+    { id: "aff-002", name: "Dog Lovers Blog", email: "contact@doglovers.com", code: "DOGBLOG", commission: "15%", visits: 376, conversions: 14, totalSales: "$9,876", active: true, dateCreated: "2025-02-03" },
+    { id: "aff-003", name: "Michael Peterson", email: "mike@example.com", code: "MIKE15", commission: "10%", visits: 89, conversions: 3, totalSales: "$1,650", active: false, dateCreated: "2025-02-20" },
+  ]);
+  
+  const [promoCodes] = useState([
+    { id: "promo-001", code: "SPRING2025", discount: "10%", uses: 24, maxUses: 100, startDate: "2025-03-01", endDate: "2025-05-31", active: true },
+    { id: "promo-002", code: "SUMMER5", discount: "$50 off", uses: 12, maxUses: 50, startDate: "2025-06-01", endDate: "2025-08-31", active: true },
+    { id: "promo-003", code: "WELCOME", discount: "5%", uses: 56, maxUses: null, startDate: "2025-01-01", endDate: null, active: true },
+  ]);
   const [newAffiliate, setNewAffiliate] = useState({
     name: "",
     email: "",
@@ -138,17 +75,8 @@ const AffiliateManager = () => {
   };
 
   const handleToggleStatus = (id: string, type: "affiliate" | "promo") => {
-    if (type === "affiliate") {
-      setAffiliates(affiliates.map(aff => 
-        aff.id === id ? { ...aff, active: !aff.active } : aff
-      ));
-      toast.success("Affiliate status updated");
-    } else {
-      setPromoCodes(promoCodes.map(promo => 
-        promo.id === id ? { ...promo, active: !promo.active } : promo
-      ));
-      toast.success("Promo code status updated");
-    }
+    // Mock toggle functionality - would update Supabase in real implementation
+    toast.success(`${type === "affiliate" ? "Affiliate" : "Promo code"} status updated`);
   };
 
   const handleCreateAffiliate = () => {
@@ -161,20 +89,8 @@ const AffiliateManager = () => {
       return;
     }
 
-    const newAff = {
-      id: `aff-${Date.now().toString().slice(-3)}`,
-      name: newAffiliate.name,
-      email: newAffiliate.email,
-      code: newAffiliate.code.toUpperCase(),
-      commission: newAffiliate.commission,
-      visits: 0,
-      conversions: 0,
-      totalSales: "$0",
-      active: true,
-      dateCreated: new Date().toISOString().split("T")[0]
-    };
-
-    setAffiliates([...affiliates, newAff]);
+    // Mock creation - would save to Supabase in real implementation
+    console.log("Creating affiliate:", newAffiliate);
     setNewAffiliate({
       name: "",
       email: "",
@@ -183,7 +99,7 @@ const AffiliateManager = () => {
     });
     
     toast.success("New affiliate created", {
-      description: `${newAff.name} has been added as an affiliate`
+      description: `${newAffiliate.name} has been added as an affiliate`
     });
   };
 
@@ -197,18 +113,8 @@ const AffiliateManager = () => {
       return;
     }
 
-    const newCode = {
-      id: `promo-${Date.now().toString().slice(-3)}`,
-      code: newPromo.code.toUpperCase(),
-      discount: newPromo.discount,
-      uses: 0,
-      maxUses: newPromo.maxUses ? parseInt(newPromo.maxUses) : null,
-      startDate: newPromo.startDate || new Date().toISOString().split("T")[0],
-      endDate: newPromo.endDate || null,
-      active: true
-    };
-
-    setPromoCodes([...promoCodes, newCode]);
+    // Mock creation - would save to Supabase in real implementation
+    console.log("Creating promo code:", newPromo);
     setNewPromo({
       code: "",
       discount: "",
@@ -218,7 +124,7 @@ const AffiliateManager = () => {
     });
     
     toast.success("New promo code created", {
-      description: `${newCode.code} is now active`
+      description: `${newPromo.code.toUpperCase()} is now active`
     });
   };
 

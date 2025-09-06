@@ -1,213 +1,258 @@
-
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
-import { Label } from "@/components/ui/label";
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import HeroSection from "@/components/HeroSection";
 import Section from "@/components/Section";
 import TestimonialCard from "@/components/TestimonialCard";
-
-// Mock testimonials data
-const testimonials = [
-  {
-    id: 1,
-    name: "Sarah Johnson",
-    location: "New York, NY",
-    testimonial: "We adopted Bella three months ago and she has brought so much joy to our family. GDS Puppies was professional and caring throughout the entire process.",
-    rating: 5,
-    imageSrc: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=688&q=80",
-    puppyName: "Bella (Golden Retriever)",
-  },
-  {
-    id: 2,
-    name: "Mark Wilson",
-    location: "Austin, TX",
-    testimonial: "Max is healthy, well-socialized, and everything we could have hoped for. The health guarantee gave us peace of mind with our new addition.",
-    rating: 5,
-    imageSrc: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
-    puppyName: "Max (German Shepherd)",
-  },
-  {
-    id: 3,
-    name: "Jennifer Lopez",
-    location: "Miami, FL",
-    testimonial: "The process was smooth from start to finish. Luna is a wonderful addition to our family and the ongoing support from GDS has been amazing.",
-    rating: 4,
-    imageSrc: "https://images.unsplash.com/photo-1586297135537-94bc9ba060aa?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=880&q=80",
-    puppyName: "Luna (Labrador Retriever)",
-  },
-  {
-    id: 4,
-    name: "Michael Brown",
-    location: "Chicago, IL",
-    testimonial: "We couldn't be happier with our decision to adopt from GDS Puppies. Charlie was already well-adjusted and it was clear he had been raised in a loving environment.",
-    rating: 5,
-    imageSrc: "https://images.unsplash.com/photo-1566492031773-4f4e44671857?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80",
-    puppyName: "Charlie (Beagle)",
-  },
-  {
-    id: 5,
-    name: "Emma Davis",
-    location: "Seattle, WA",
-    testimonial: "The personalized attention we received from GDS Puppies was exceptional. They matched us perfectly with our puppy based on our lifestyle and preferences.",
-    rating: 5,
-    imageSrc: "https://images.unsplash.com/photo-1548142813-c348350df52b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=689&q=80",
-    puppyName: "Daisy (Poodle)",
-  },
-  {
-    id: 6,
-    name: "Robert Thompson",
-    location: "Denver, CO",
-    testimonial: "As first-time dog owners, we had a lot of questions. The team at GDS was patient and informative, making the whole experience stress-free.",
-    rating: 4,
-    imageSrc: "https://images.unsplash.com/photo-1552058544-f2b08422138a?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=699&q=80",
-    puppyName: "Rocky (Boxer)",
-  },
-];
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Star, Heart } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Reviews = () => {
-  const { toast } = useToast();
-  const [reviewForm, setReviewForm] = useState({
+  const [formData, setFormData] = useState({
     name: "",
     email: "",
     puppyName: "",
-    rating: 5,
+    puppyBreed: "",
     review: "",
+    rating: 5,
+  });
+  
+  const { toast } = useToast();
+
+  const { data: testimonials, isLoading } = useQuery({
+    queryKey: ['testimonials'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('testimonials')
+        .select('*')
+        .eq('admin_approved', true)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setReviewForm(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleRatingChange = (rating: number) => {
-    setReviewForm(prev => ({ ...prev, rating }));
+    setFormData(prev => ({
+      ...prev,
+      rating,
+    }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Review submitted:", reviewForm);
     
-    // Show success toast
-    toast({
-      title: "Review Submitted!",
-      description: "Thank you for sharing your experience with GDS Puppies!",
-    });
-    
-    // Reset form
-    setReviewForm({
-      name: "",
-      email: "",
-      puppyName: "",
-      rating: 5,
-      review: "",
-    });
+    try {
+      const { error } = await supabase
+        .from('testimonials')
+        .insert({
+          name: formData.name,
+          content: formData.review,
+          puppy_name: formData.puppyName,
+          rating: formData.rating,
+          admin_approved: false, // Requires admin approval
+          source: 'local'
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Review Submitted!",
+        description: "Thank you for your review! It will be published after approval.",
+      });
+
+      // Reset form
+      setFormData({
+        name: "",
+        email: "",
+        puppyName: "",
+        puppyBreed: "",
+        review: "",
+        rating: 5,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to submit review. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
-    <div>
+    <>
       <HeroSection
-        title="Customer Reviews"
-        subtitle="Hear from families who have welcomed GDS puppies into their homes"
-        imageSrc="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1064&q=80"
-        ctaText="Adopt a Puppy"
-        ctaLink="/adopt"
+        title="Happy Families"
+        subtitle="See what our wonderful families have to say about their new furry friends"
+        imageSrc="https://images.unsplash.com/photo-1583337130417-3346a1be7dee"
+        ctaText="Share Your Story"
+        ctaLink="#review-form"
       />
 
-      <Section title="What Our Customers Say" withPawPrintBg>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {testimonials.map((testimonial) => (
-            <TestimonialCard
-              key={testimonial.id}
-              name={testimonial.name}
-              location={testimonial.location}
-              testimonial={testimonial.testimonial}
-              rating={testimonial.rating}
-              imageSrc={testimonial.imageSrc}
-              puppyName={testimonial.puppyName}
-            />
-          ))}
-        </div>
+      {/* Customer Testimonials */}
+      <Section title="Customer Reviews" subtitle="Real stories from real families">
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, index) => (
+              <Card key={index}>
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-4 mb-4">
+                    <Skeleton className="h-12 w-12 rounded-full" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-20 w-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : testimonials && testimonials.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {testimonials.map((testimonial) => (
+              <TestimonialCard
+                key={testimonial.id}
+                name={testimonial.name}
+                location={testimonial.location || ""}
+                review={testimonial.content}
+                rating={testimonial.rating || 5}
+                image={testimonial.reviewer_avatar || testimonial.image}
+                puppyName={testimonial.puppy_name || ""}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <Heart className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
+            <h3 className="text-xl font-semibold mb-4">No reviews yet</h3>
+            <p className="text-muted-foreground">Be the first to share your experience!</p>
+          </div>
+        )}
       </Section>
 
-      <Section title="Share Your Experience" className="bg-secondary">
+      {/* Review Form */}
+      <Section 
+        id="review-form"
+        title="Share Your Experience" 
+        subtitle="Help other families by sharing your story"
+      >
         <div className="max-w-2xl mx-auto">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Your Name</Label>
-                <Input 
-                  id="name" 
-                  name="name" 
-                  value={reviewForm.name} 
-                  onChange={handleChange} 
-                  required 
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input 
-                  id="email" 
-                  name="email" 
-                  type="email" 
-                  value={reviewForm.email} 
-                  onChange={handleChange} 
-                  required 
-                />
-              </div>
-            </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Star className="h-5 w-5 text-yellow-500" />
+                Write a Review
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Your Name *</Label>
+                    <Input
+                      id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email Address *</Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="puppyName">Puppy's Name & Breed</Label>
-              <Input 
-                id="puppyName" 
-                name="puppyName" 
-                value={reviewForm.puppyName} 
-                onChange={handleChange} 
-                placeholder="e.g., Bella (Golden Retriever)"
-                required 
-              />
-            </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="puppyName">Puppy's Name</Label>
+                    <Input
+                      id="puppyName"
+                      name="puppyName"
+                      value={formData.puppyName}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="puppyBreed">Breed</Label>
+                    <Input
+                      id="puppyBreed"
+                      name="puppyBreed"
+                      value={formData.puppyBreed}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
 
-            <div className="space-y-2">
-              <Label>Rating</Label>
-              <div className="flex space-x-2">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    type="button"
-                    onClick={() => handleRatingChange(star)}
-                    className="text-2xl focus:outline-none"
-                  >
-                    {star <= reviewForm.rating ? "★" : "☆"}
-                  </button>
-                ))}
-              </div>
-            </div>
+                <div className="space-y-2">
+                  <Label>Rating *</Label>
+                  <div className="flex items-center space-x-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => handleRatingChange(star)}
+                        className={`text-2xl ${
+                          star <= formData.rating ? "text-yellow-400" : "text-gray-300"
+                        } hover:text-yellow-400 transition-colors`}
+                      >
+                        ★
+                      </button>
+                    ))}
+                    <span className="ml-2 text-sm text-muted-foreground">
+                      {formData.rating} of 5 stars
+                    </span>
+                  </div>
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="review">Your Review</Label>
-              <Textarea 
-                id="review" 
-                name="review" 
-                value={reviewForm.review} 
-                onChange={handleChange} 
-                rows={5}
-                placeholder="Share your experience with your GDS puppy"
-                required 
-              />
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="review">Your Review *</Label>
+                  <Textarea
+                    id="review"
+                    name="review"
+                    value={formData.review}
+                    onChange={handleChange}
+                    rows={5}
+                    placeholder="Tell us about your experience with your new family member..."
+                    required
+                  />
+                </div>
 
-            <Button type="submit" className="bg-brand-red hover:bg-red-700 text-white w-full">
-              Submit Review
-            </Button>
-          </form>
+                <Button type="submit" className="w-full">
+                  Submit Review
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
         </div>
       </Section>
-    </div>
+    </>
   );
 };
 

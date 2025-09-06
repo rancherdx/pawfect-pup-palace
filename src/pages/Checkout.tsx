@@ -13,24 +13,40 @@ import PaymentMethods from "@/components/checkout/PaymentMethods";
 import PuppyConfirmation from "@/components/checkout/PuppyConfirmation";
 import SuccessAnimation from "@/components/checkout/SuccessAnimation";
 import { motion, AnimatePresence } from "framer-motion";
-
-// Mock puppy data (would come from API in production)
-const puppiesData = [
-  {
-    id: "1",
-    name: "Bella",
-    breed: "Golden Retriever",
-    age: "8 weeks",
-    gender: "Female",
-    price: 1200,
-    image: "https://images.unsplash.com/photo-1615233500064-caa995e2f9dd?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80",
-  },
-];
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { calculateAge } from "@/utils/dateUtils";
 
 const Checkout = () => {
   const [searchParams] = useSearchParams();
-  const puppyId = searchParams.get("puppy") || "1";
-  const selectedPuppy = puppiesData.find(p => p.id === puppyId);
+  const puppyId = searchParams.get("puppy");
+  
+  // Fetch puppy data from Supabase
+  const { data: puppyData, isLoading } = useQuery({
+    queryKey: ['puppy', puppyId],
+    queryFn: async () => {
+      if (!puppyId) return null;
+      const { data, error } = await supabase
+        .from('puppies')
+        .select('*')
+        .eq('id', puppyId)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!puppyId
+  });
+
+  const selectedPuppy = puppyData ? {
+    id: puppyData.id,
+    name: puppyData.name,
+    breed: puppyData.breed,
+    age: puppyData.birth_date ? calculateAge(puppyData.birth_date) : 'Unknown',
+    gender: puppyData.gender || 'Unknown',
+    price: puppyData.price || 0,
+    image: puppyData.image_urls?.[0] || puppyData.photo_url || '/placeholder.svg',
+  } : null;
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -202,6 +218,29 @@ const Checkout = () => {
       </AnimatePresence>
     );
   };
+
+  if (isLoading) {
+    return (
+      <Section className="py-12">
+        <div className="flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-red"></div>
+          <span className="ml-2">Loading puppy details...</span>
+        </div>
+      </Section>
+    );
+  }
+
+  if (!selectedPuppy) {
+    return (
+      <Section className="py-12">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Puppy Not Found</h1>
+          <p className="text-muted-foreground mb-6">The puppy you're looking for could not be found.</p>
+          <Button onClick={() => navigate("/puppies")}>View Available Puppies</Button>
+        </div>
+      </Section>
+    );
+  }
 
   if (isComplete) {
     return (

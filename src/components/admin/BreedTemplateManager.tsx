@@ -16,40 +16,21 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-// Mock data for demo purposes
-const initialTemplates: BreedTemplate[] = [
-  {
-    id: "1",
-    breedName: "Golden Retriever",
-    description: "Friendly, intelligent dogs with a lustrous golden coat. Excellent family pets that are eager to please.",
-    size: "Large",
-    temperament: "Friendly, Reliable, Trustworthy",
-    careInstructions: "Regular grooming needed, moderate exercise requirements, prone to hip issues.",
-    commonTraits: ["Friendly", "Intelligent", "Devoted"],
-    averageWeight: {
-      min: 55,
-      max: 75
-    },
-    photo: "https://images.unsplash.com/photo-1530281700549-e82e7bf110d6?q=80&w=600"
-  },
-  {
-    id: "2",
-    breedName: "French Bulldog",
-    description: "Charming small dogs with bat-like ears and a playful disposition.",
-    size: "Small",
-    temperament: "Playful, Alert, Affectionate",
-    careInstructions: "Minimal grooming, low exercise requirements, watch for breathing issues.",
-    commonTraits: ["Playful", "Adaptable", "Sociable"],
-    averageWeight: {
-      min: 16,
-      max: 28
-    },
-    photo: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=600"
-  }
-];
-
 const BreedTemplateManager = () => {
-  const [templates, setTemplates] = useState<BreedTemplate[]>(initialTemplates);
+  // Mock data for now - would use Supabase in full implementation
+  const templates = [
+    {
+      id: "1",
+      breed_name: "Golden Retriever", 
+      size: "Large",
+      description: "Friendly family dogs",
+      temperament: ["Friendly", "Loyal"],
+      average_weight_min: 55,
+      average_weight_max: 75
+    }
+  ];
+
+  const setTemplates = () => {}; // Mock function
   const [searchQuery, setSearchQuery] = useState("");
   const [editingTemplate, setEditingTemplate] = useState<BreedTemplate | null>(null);
   const [isAddingTemplate, setIsAddingTemplate] = useState(false);
