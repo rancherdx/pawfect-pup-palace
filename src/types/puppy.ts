@@ -9,53 +9,44 @@ export interface Puppy {
   id: string;
   name: string;
   breed: string;
-  birthDate: string; // Standardize to birthDate (camelCase)
+  birth_date: string; // Match actual DB schema
   price: number;
   description: string;
   status: PuppyStatus;
-  photoUrl?: string; // Standardize to photoUrl (legacy field)
+  photo_url?: string; // Match actual DB schema (legacy field)
   image_urls?: string[]; // New multi-image field
   video_urls?: string[]; // New video field
   weight?: number;
   size?: PuppySize;
   temperament?: string[];
-  careNotes?: string;
-  motherName?: string;
-  fatherName?: string;
-  litterId?: string;
-  squareStatus?: 'Synced' | 'Not Synced' | 'Error' | string;
-  squareItemId?: string;
+  care_notes?: string; // Match DB schema
+  mother_name?: string; // Match DB schema
+  father_name?: string; // Match DB schema
+  litter_id?: string; // Match DB schema
+  square_status?: 'Synced' | 'Not Synced' | 'Error' | string;
+  square_item_id?: string; // Match DB schema
   gender?: string;
-  color?: string; // Added for page display consistency
+  color?: string;
   // Featured puppy fields
   is_featured?: boolean;
   banner_text?: string;
   banner_color?: string;
+  // Additional fields that exist in DB
+  breed_template_id?: string;
+  owner_user_id?: string;
   // Timestamps, if available from API
-  createdAt?: string;
-  updatedAt?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
-// For creating a new puppy - fields required by the backend
-// Omit server-generated fields. Make essential fields non-optional.
-export type PuppyCreationData = Omit<Puppy, 'id' | 'squareStatus' | 'squareItemId' | 'createdAt' | 'updatedAt' | 'gender' | 'photoUrl' | 'weight' | 'size' | 'temperament' | 'careNotes' | 'motherName' | 'fatherName' | 'litterId'> & {
+export type PuppyCreationData = Omit<Puppy, 'id' | 'square_status' | 'square_item_id' | 'created_at' | 'updated_at'> & {
   name: string;
   breed: string;
-  birthDate: string;
+  birth_date: string;
   price: number;
   status: PuppyStatus;
   description: string;
-  // Optional fields during creation that are not server-generated
-  photoUrl?: string;
-  weight?: number;
-  size?: PuppySize;
-  temperament?: string;
-  careNotes?: string;
-  motherName?: string;
-  fatherName?: string;
-  litterId?: string;
-  gender?: string;
-};
+}
 
 // For updating an existing puppy
 export type PuppyUpdateData = Partial<PuppyCreationData>;

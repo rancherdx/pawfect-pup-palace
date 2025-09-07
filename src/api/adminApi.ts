@@ -57,7 +57,7 @@ export const adminApi = {
       id: item.id,
       name: item.name,
       breed: item.breed,
-      birthDate: item.birth_date,
+      birth_date: item.birth_date,
       price: item.price,
       description: item.description,
       status: item.status,

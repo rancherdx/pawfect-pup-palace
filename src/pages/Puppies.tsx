@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Puppy } from "@/types/puppy";
 import HeroSection from "@/components/HeroSection";
 import Section from "@/components/Section";
 import PuppyCard from "@/components/PuppyCard";
@@ -19,54 +20,52 @@ const Puppies = () => {
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(false);
   const [breeds, setBreeds] = useState<string[]>([]);
   
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data: puppies, isLoading, isError, refetch } = useQuery({
     queryKey: ['puppies'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('puppies' as any).select('*');
+      const { data, error } = await supabase
+        .from('puppies')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
       if (error) throw error;
-      return data || [];
+      return (data || []) as Puppy[];
     },
   });
 
-  const [filteredPuppies, setFilteredPuppies] = useState<any[]>([]);
+  const [filteredPuppies, setFilteredPuppies] = useState<Puppy[]>([]);
 
   useEffect(() => {
-    if (data) {
+    if (puppies) {
       const uniqueBreeds = Array.from(new Set(
-        data
-          .map((puppy: any) => {
-            const breed = puppy.breed;
-            return typeof breed === 'string' ? breed : '';
-          })
-          .filter((breed: string) => breed.length > 0)
-      )) as string[];
+        puppies
+          .map((puppy) => puppy.breed)
+          .filter((breed) => breed && breed.length > 0)
+      ));
       setBreeds(["All Breeds", ...uniqueBreeds]);
-      setFilteredPuppies(data);
+      setFilteredPuppies(puppies);
     }
-  }, [data]);
+  }, [puppies]);
 
   const handleFilter = () => {
-    if (!data) return;
+    if (!puppies) return;
     
-    let filtered = data;
+    let filtered = puppies;
     
     if (selectedBreed !== "All Breeds") {
-      filtered = filtered.filter((puppy: any) => {
-        const puppyBreed = typeof puppy.breed === 'string' ? puppy.breed : '';
-        return puppyBreed === selectedBreed;
-      });
+      filtered = filtered.filter((puppy) => puppy.breed === selectedBreed);
     }
     
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter((puppy: any) => 
-        puppy.name?.toLowerCase().includes(term) || 
-        (typeof puppy.breed === 'string' && puppy.breed.toLowerCase().includes(term))
+      filtered = filtered.filter((puppy) => 
+        puppy.name.toLowerCase().includes(term) || 
+        puppy.breed.toLowerCase().includes(term)
       );
     }
     
     if (showOnlyAvailable) {
-      filtered = filtered.filter((puppy: any) => puppy.status === 'Available');
+      filtered = filtered.filter((puppy) => puppy.status === 'Available');
     }
     
     setFilteredPuppies(filtered);
@@ -76,8 +75,8 @@ const Puppies = () => {
     setSelectedBreed("All Breeds");
     setSearchTerm("");
     setShowOnlyAvailable(false);
-    if (data) {
-      setFilteredPuppies(data);
+    if (puppies) {
+      setFilteredPuppies(puppies);
     }
   };
 
@@ -171,19 +170,19 @@ const Puppies = () => {
           <>
             {filteredPuppies.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredPuppies.map((puppy) => (
-                  <PuppyCard
-                    key={puppy.id}
-                    id={puppy.id.toString()}
-                    name={puppy.name}
-                    breed={typeof puppy.breed === 'string' ? puppy.breed : ''}
-                    age={calculateAge(puppy.birth_date)}
-                    gender={puppy.gender}
-                    imageSrc={puppy.photo_url || "https://images.unsplash.com/photo-1591160690555-5debfba289f0?ixlib=rb-4.0.3"}
-                    price={puppy.price}
-                    status={puppy.status || 'Available'}
-                  />
-                ))}
+                 {filteredPuppies.map((puppy) => (
+                   <PuppyCard
+                     key={puppy.id}
+                     id={puppy.id}
+                     name={puppy.name}
+                     breed={puppy.breed}
+                     age={calculateAge(puppy.birth_date)}
+                     gender={puppy.gender}
+                     imageSrc={puppy.photo_url || "https://images.unsplash.com/photo-1591160690555-5debfba289f0?ixlib=rb-4.0.3"}
+                     price={puppy.price}
+                     status={puppy.status}
+                   />
+                 ))}
               </div>
             ) : (
               <div className="text-center py-12">
