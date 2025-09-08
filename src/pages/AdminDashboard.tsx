@@ -1,5 +1,6 @@
 
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   PawPrint, Dog, Receipt, Settings, CreditCard, Layers, FileText, Globe, Users, PlugZap, Mail, ShieldCheck, MessageSquare, MoreHorizontal, Bell
@@ -31,6 +32,9 @@ import EnhancedTestimonialManagement from '@/components/admin/EnhancedTestimonia
 import SEOManagement from '@/components/admin/SEOManagement'; // Import SEO Management
 import NotificationCenter from '@/components/admin/NotificationCenter';
 import SettingsHub from '@/components/admin/SettingsHub';
+import SwaggerDoc from "@/components/admin/SwaggerUI";
+import ReDocDoc from "@/components/admin/ReDocUI";
+import { Code } from "lucide-react";
 
 const allAdminTabs = [
   // Core Management
@@ -54,14 +58,28 @@ const allAdminTabs = [
   
   // Settings Hub (Consolidated)
   { value: "settings", label: "Settings", icon: Settings, component: <SettingsHub /> },
+
+  // Developer Tools
+  { value: "swagger", label: "Swagger UI", icon: Code, component: <SwaggerDoc /> },
+  { value: "redoc", label: "ReDoc", icon: Code, component: <ReDocDoc /> },
 ];
 
 const AdminDashboard = () => {
-  const [activeTabValue, setActiveTabValue] = useState("puppies");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") || "puppies";
+  const [activeTabValue, setActiveTabValue] = useState(initialTab);
   const [visibleTabs, setVisibleTabs] = useState<typeof allAdminTabs>([]);
   const [dropdownTabs, setDropdownTabs] = useState<typeof allAdminTabs>([]);
   const tabsListRef = useRef<HTMLDivElement>(null);
   const moreMenuRef = useRef<HTMLButtonElement>(null); // Ref for the "More" button
+
+  useEffect(() => {
+    // Sync URL with tab state
+    const currentTab = searchParams.get("tab");
+    if (currentTab && currentTab !== activeTabValue) {
+      setActiveTabValue(currentTab);
+    }
+  }, [searchParams, activeTabValue]);
 
   useEffect(() => {
     const calculateTabsLayout = () => {
@@ -111,6 +129,7 @@ const AdminDashboard = () => {
 
   const handleTabChange = (value: string) => {
     setActiveTabValue(value);
+    setSearchParams({ tab: value });
   };
 
   return (

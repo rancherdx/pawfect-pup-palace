@@ -1,0 +1,92 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "GDS Puppies API",
+    "version": "1.0.0",
+    "description": "API for the GDS Puppies website, powered by Supabase Edge Functions."
+  },
+  "servers": [
+    {
+      "url": "/api",
+      "description": "Supabase Edge Functions"
+    }
+  ],
+  "paths": {
+    "/setup-status": {
+      "get": {
+        "summary": "Get Setup Status",
+        "description": "Checks the setup status of the application to see how many super administrators have been created.",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "adminCount": {
+                      "type": "integer",
+                      "example": 1
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/setup-admin": {
+      "post": {
+        "summary": "Create Super Administrator",
+        "description": "Creates a new super administrator account during the initial setup phase. Requires a secret header for authorization.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "required": ["name", "email", "password"]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-Setup-Secret",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Admin created successfully"
+          },
+          "400": {
+            "description": "Bad Request (e.g., validation error, setup complete)"
+          },
+          "403": {
+            "description": "Forbidden (Missing or incorrect X-Setup-Secret)"
+          }
+        }
+      }
+    }
+  }
+}
