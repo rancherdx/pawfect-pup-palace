@@ -19,7 +19,7 @@ const Setup: React.FC = () => {
     confirmPassword: ""
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [needsSetup, setNeedsSetup] = useState(false);
+  const [adminCount, setAdminCount] = useState<number | null>(null);
   const [checkingSetup, setCheckingSetup] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -35,15 +35,17 @@ const Setup: React.FC = () => {
       if (error) {
         throw new Error('Failed to check setup status');
       }
-      
-      if (data?.setupRequired) {
-        setNeedsSetup(true);
-      } else {
-        navigate('/login');
+
+      const count = data?.adminCount ?? 0;
+      setAdminCount(count);
+
+      if (count >= 2) {
+        // Optionally navigate away if setup is fully complete
+        // For now, we'll let the component render a "complete" message
       }
     } catch (error) {
       console.error('Setup status check failed:', error);
-      setNeedsSetup(true);
+      setAdminCount(0); // Assume setup is needed if check fails
     } finally {
       setCheckingSetup(false);
     }
@@ -78,6 +80,9 @@ const Setup: React.FC = () => {
           name: formData.name,
           email: formData.email,
           password: formData.password
+        },
+        headers: {
+          'X-Setup-Secret': 'GDS-PUPPIES-SETUP-SECRET-KEY-2025'
         }
       });
 
@@ -118,9 +123,11 @@ const Setup: React.FC = () => {
     );
   }
 
-  if (!needsSetup) {
-    return null;
+  if (adminCount === null) {
+    return null; // or a loading state, though checkingSetup handles this
   }
+
+  const isSetupComplete = adminCount >= 2;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">
@@ -139,7 +146,9 @@ const Setup: React.FC = () => {
               GDS Puppies Setup
             </CardTitle>
             <p className="text-muted-foreground mt-2">
-              Create your super administrator account to get started
+              {isSetupComplete
+                ? "Administrator setup is complete."
+                : "Create a super administrator account to get started."}
             </p>
           </CardHeader>
 
@@ -147,7 +156,9 @@ const Setup: React.FC = () => {
             <Alert className="mb-6 border-amber-200 bg-amber-50">
               <AlertCircle className="h-4 w-4 text-amber-600" />
               <AlertDescription className="text-amber-800">
-                This will create the first super administrator account for your GDS Puppies website.
+                {isSetupComplete
+                  ? "All super administrator accounts have been created. No further setup is possible."
+                  : `This will create super administrator ${adminCount + 1} of 2.`}
               </AlertDescription>
             </Alert>
 
@@ -219,7 +230,7 @@ const Setup: React.FC = () => {
               <Button
                 type="submit"
                 className="w-full bg-brand-red hover:bg-red-700"
-                disabled={isLoading}
+                disabled={isLoading || isSetupComplete}
               >
                 {isLoading ? (
                   <>
@@ -229,7 +240,7 @@ const Setup: React.FC = () => {
                 ) : (
                   <>
                     <Shield className="mr-2 h-4 w-4" />
-                    Create Super Administrator Account
+                    {isSetupComplete ? 'Setup Complete' : 'Create Super Administrator Account'}
                   </>
                 )}
               </Button>

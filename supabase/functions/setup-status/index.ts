@@ -18,11 +18,11 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Call the database function to check if admin exists
-    const { data, error } = await supabase.rpc('check_admin_exists')
+    // Call the database function to count super admins
+    const { data, error } = await supabase.rpc('count_super_admins')
 
     if (error) {
-      console.error('Error checking admin status:', error)
+      console.error('Error counting super admins:', error)
       return new Response(
         JSON.stringify({ error: 'Failed to check setup status' }),
         { 
@@ -32,9 +32,9 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Return setup required status (opposite of admin exists)
+    // Return the number of admins found
     return new Response(
-      JSON.stringify({ setupRequired: !data }),
+      JSON.stringify({ adminCount: data }),
       { 
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

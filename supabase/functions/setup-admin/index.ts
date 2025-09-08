@@ -11,6 +11,18 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Security check for setup secret
+  const setupSecret = Deno.env.get('SETUP_SECRET');
+  if (!setupSecret || req.headers.get('X-Setup-Secret') !== setupSecret) {
+    return new Response(
+      JSON.stringify({ error: 'Forbidden' }),
+      {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    )
+  }
+
   if (req.method !== 'POST') {
     return new Response(
       JSON.stringify({ error: 'Method not allowed' }),
@@ -35,6 +47,21 @@ Deno.serve(async (req) => {
       )
     }
 
+    // If this is the second admin, validate the details
+    if (adminCount === 1) {
+      const expectedName = "Girard Sawyer";
+      const expectedEmail = "girard@gdspuppies.com";
+      if (name.toLowerCase() !== expectedName.toLowerCase() || email.toLowerCase() !== expectedEmail.toLowerCase()) {
+        return new Response(
+          JSON.stringify({ error: `Invalid details for the second administrator account. Please use the designated name and email.` }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        )
+      }
+    }
+
     if (password.length < 8) {
       return new Response(
         JSON.stringify({ error: 'Password must be at least 8 characters long' }),
@@ -51,11 +78,11 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // First check if admin already exists
-    const { data: adminExists, error: checkError } = await supabase.rpc('check_admin_exists')
+    // Check how many super admins already exist
+    const { data: adminCount, error: countError } = await supabase.rpc('count_super_admins')
 
-    if (checkError) {
-      console.error('Error checking admin status:', checkError)
+    if (countError) {
+      console.error('Error checking admin count:', countError)
       return new Response(
         JSON.stringify({ error: 'Failed to check setup status' }),
         { 
@@ -65,9 +92,9 @@ Deno.serve(async (req) => {
       )
     }
 
-    if (adminExists) {
+    if (adminCount >= 2) {
       return new Response(
-        JSON.stringify({ error: 'Setup already completed. Super administrator account already exists.' }),
+        JSON.stringify({ error: 'Setup already completed. The maximum number of super administrators has been reached.' }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
