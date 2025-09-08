@@ -64,8 +64,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (session?.user) {
-          // Defer additional data fetching to avoid deadlocks
-          setTimeout(async () => {
+          // Fetch user profile and roles synchronously to prevent race conditions
+          try {
+            setIsLoading(true);
             const { profile, roles } = await fetchUserProfile(session.user.id);
             
             setUser({
@@ -75,10 +76,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               roles,
               createdAt: session.user.created_at
             });
-          }, 0);
-
-          setToken(session.access_token);
-          setRefreshToken(session.refresh_token);
+            
+            setToken(session.access_token);
+            setRefreshToken(session.refresh_token);
+          } catch (error) {
+            console.error('Error loading user profile:', error);
+            setUser(null);
+            setToken(null);
+            setRefreshToken(null);
+          }
         } else {
           setUser(null);
           setToken(null);
