@@ -24,9 +24,19 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     return <Navigate to="/login" replace />;
   }
 
-  // If a specific role is required and the user doesn't have it
-  if (requiredRole && !user?.roles?.includes(requiredRole)) {
-    return <Navigate to="/dashboard" replace />;
+  // If a specific role is required, check for permission
+  if (requiredRole) {
+    const userRoles = user?.roles || [];
+    let hasPermission = userRoles.includes(requiredRole);
+
+    // If admin is required, super-admin also has permission
+    if (requiredRole === 'admin' && userRoles.includes('super-admin')) {
+      hasPermission = true;
+    }
+
+    if (!hasPermission) {
+      return <Navigate to="/dashboard" replace />;
+    }
   }
 
   return <>{children}</>;
