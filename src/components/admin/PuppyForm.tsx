@@ -50,7 +50,7 @@ const PuppyForm: React.FC<PuppyFormProps> = ({ puppy, onClose, isEditMode }) => 
       breed: puppy?.breed || "",
       description: puppy?.description || "",
       size: puppy?.size || "",
-      temperament: Array.isArray(puppy?.temperament) ? puppy.temperament.join(', ') : (typeof puppy?.temperament === 'string' ? puppy.temperament : ""),
+      temperament: Array.isArray(puppy?.temperament) ? puppy.temperament : (puppy?.temperament ? [puppy.temperament] : []),
       care_notes: puppy?.care_notes || "",
       name: puppy?.name || "",
       birth_date: puppy?.birth_date || new Date().toISOString().split("T")[0],
@@ -96,16 +96,16 @@ const PuppyForm: React.FC<PuppyFormProps> = ({ puppy, onClose, isEditMode }) => 
         breed: puppy.breed || "",
         description: puppy.description || "",
         size: puppy.size || "",
-        temperament: Array.isArray(puppy.temperament) ? puppy.temperament.join(', ') : (puppy.temperament || ""),
-        careNotes: puppy.careNotes || "",
+        temperament: Array.isArray(puppy.temperament) ? puppy.temperament : (puppy.temperament ? [puppy.temperament] : []),
+        care_notes: puppy.care_notes || "",
         name: puppy.name || "",
-        birthDate: puppy.birthDate || new Date().toISOString().split("T")[0],
+        birth_date: puppy.birth_date || new Date().toISOString().split("T")[0],
         price: puppy.price || 0,
-        photoUrl: puppy.photoUrl || "",
+        photo_url: puppy.photo_url || "",
         weight: puppy.weight || 0,
-        motherName: puppy.motherName || "",
-        fatherName: puppy.fatherName || "",
-        litterId: puppy.litterId || "",
+        mother_name: puppy.mother_name || "",
+        father_name: puppy.father_name || "",
+        litter_id: puppy.litter_id || "",
         gender: puppy.gender || "",
         status: puppy.status as PuppyStatus || "Available",
       });
@@ -163,12 +163,12 @@ const PuppyForm: React.FC<PuppyFormProps> = ({ puppy, onClose, isEditMode }) => 
             />
           </div>
           <div>
-            <Label htmlFor="birthDate">Birth Date</Label>
+            <Label htmlFor="birth_date">Birth Date</Label>
             <Input
               type="date"
-              id="birthDate"
-              name="birthDate"
-              value={formData.birthDate}
+              id="birth_date"
+              name="birth_date"
+              value={formData.birth_date}
               onChange={handleChange}
               required
             />
@@ -199,9 +199,9 @@ const PuppyForm: React.FC<PuppyFormProps> = ({ puppy, onClose, isEditMode }) => 
             <Label htmlFor="photoUrl">Photo URL</Label>
             <Input
               type="text"
-              id="photoUrl"
-              name="photoUrl"
-              value={formData.photoUrl}
+              id="photo_url"
+              name="photo_url"
+              value={formData.photo_url}
               onChange={handleChange}
             />
           </div>
@@ -219,29 +219,29 @@ const PuppyForm: React.FC<PuppyFormProps> = ({ puppy, onClose, isEditMode }) => 
             <Label htmlFor="motherName">Mother's Name</Label>
             <Input
               type="text"
-              id="motherName"
-              name="motherName"
-              value={formData.motherName}
+              id="mother_name"
+              name="mother_name"
+              value={formData.mother_name}
               onChange={handleChange}
             />
           </div>
           <div>
-            <Label htmlFor="fatherName">Father's Name</Label>
+            <Label htmlFor="father_name">Father's Name</Label>
             <Input
               type="text"
-              id="fatherName"
-              name="fatherName"
-              value={formData.fatherName}
+              id="father_name"
+              name="father_name"
+              value={formData.father_name}
               onChange={handleChange}
             />
           </div>
           <div>
-            <Label htmlFor="litterId">Litter ID</Label>
+            <Label htmlFor="litter_id">Litter ID</Label>
             <Input
               type="text"
-              id="litterId"
-              name="litterId"
-              value={formData.litterId}
+              id="litter_id"
+              name="litter_id"
+              value={formData.litter_id}
               onChange={handleChange}
             />
           </div>
@@ -267,11 +267,11 @@ const PuppyForm: React.FC<PuppyFormProps> = ({ puppy, onClose, isEditMode }) => 
             />
           </div>
           <div>
-            <Label htmlFor="careNotes">Care Notes</Label>
+            <Label htmlFor="care_notes">Care Notes</Label>
             <Textarea
-              id="careNotes"
-              name="careNotes"
-              value={formData.careNotes}
+              id="care_notes"
+              name="care_notes"
+              value={formData.care_notes}
               onChange={handleChange}
             />
           </div>

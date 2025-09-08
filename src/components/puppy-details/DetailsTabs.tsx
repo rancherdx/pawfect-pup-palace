@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clipboard, Pill, Dog, PawPrint } from "lucide-react";
+import { format } from "date-fns";
 import DetailsTabContent from "./DetailsTabContent";
 import HealthTabContent from "./HealthTabContent";
 import ParentsTabContent from "./ParentsTabContent";
@@ -29,7 +30,7 @@ const DetailsTabs = ({ puppy }: DetailsTabsProps) => {
       </TabsList>
 
       <TabsContent value="details" className="mt-4 animate-fade-in">
-        <DetailsTabContent puppy={{...puppy, age: 'Unknown', gender: puppy.gender || 'Unknown', weight: String(puppy.weight || 'Unknown'), color: puppy.color || 'Unknown', birth_date: puppy.birth_date}} />
+        <DetailsTabContent puppy={{...puppy, age: 'Unknown', gender: puppy.gender || 'Unknown', weight: String(puppy.weight || 'Unknown'), color: puppy.color || 'Unknown', birthDate: format(new Date(puppy.birth_date), 'PPP')}} />
       </TabsContent>
 
       <TabsContent value="health" className="mt-4 animate-fade-in">

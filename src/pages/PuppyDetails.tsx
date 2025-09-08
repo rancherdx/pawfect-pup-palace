@@ -131,7 +131,7 @@ const PuppyDetails = () => {
 
           {/* Detailed Information Tabs */}
           <DetailsTabs 
-            puppy={{...puppy, birthDate: puppy.birth_date}}
+            puppy={puppy}
           />
         </div>
       </div>
