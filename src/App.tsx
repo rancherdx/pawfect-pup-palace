@@ -37,6 +37,7 @@ const TermsOfServicePage = lazy(() => import("./pages/TermsOfServicePage"));
 const RefundPolicyPage = lazy(() => import("./pages/RefundPolicyPage"));
 const SystemStatus = lazy(() => import("./pages/SystemStatus"));
 const ApiDocs = lazy(() => import("./pages/ApiDocs"));
+const TestPage = lazy(() => import("./pages/TestPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Create QueryClient outside component to prevent recreation
@@ -91,6 +92,7 @@ const App: React.FC = () => {
                             <Route path="/refund" element={<RefundPolicyPage />} />
                             <Route path="/system-status" element={<SystemStatus />} />
                             <Route path="/api-docs" element={<ApiDocs />} />
+                            <Route path="/test" element={<TestPage />} />
                             <Route 
                               path="/dashboard" 
                               element={

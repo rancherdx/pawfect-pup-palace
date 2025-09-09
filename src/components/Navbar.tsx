@@ -36,7 +36,8 @@ const Navbar = () => {
     { name: "Blog", path: "/blog" },
     { name: "Reviews", path: "/reviews" },
     { name: "Health Guarantee", path: "/health" },
-    { name: "FAQ", path: "/faq" }, // Added FAQ link
+    { name: "FAQ", path: "/faq" },
+    { name: "API Docs", path: "/api-docs" },
     { name: "Contact", path: "/contact" },
   ];
 

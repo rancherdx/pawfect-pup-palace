@@ -2,10 +2,23 @@
   "openapi": "3.0.0",
   "info": {
     "title": "GDS Puppies API",
-    "version": "1.0.0",
-    "description": "API for the GDS Puppies website, powered by Supabase Edge Functions."
+    "version": "2.0.0",
+    "description": "Comprehensive API for the GDS Puppies breeder management system, powered by Supabase Edge Functions.",
+    "contact": {
+      "name": "GDS Puppies Support",
+      "url": "https://new.gdspuppies.com/contact",
+      "email": "support@gdspuppies.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
   },
   "servers": [
+    {
+      "url": "https://new.gdspuppies.com/api",
+      "description": "Production API"
+    },
     {
       "url": "/api",
       "description": "Supabase Edge Functions"
@@ -16,6 +29,7 @@
       "get": {
         "summary": "Get Setup Status",
         "description": "Checks the setup status of the application to see how many super administrators have been created.",
+        "tags": ["Setup"],
         "responses": {
           "200": {
             "description": "Successful response",
@@ -26,7 +40,13 @@
                   "properties": {
                     "adminCount": {
                       "type": "integer",
-                      "example": 1
+                      "example": 1,
+                      "description": "Number of super administrators created"
+                    },
+                    "isSetupComplete": {
+                      "type": "boolean",
+                      "example": true,
+                      "description": "Whether initial setup is complete"
                     }
                   }
                 }
@@ -43,6 +63,12 @@
       "post": {
         "summary": "Create Super Administrator",
         "description": "Creates a new super administrator account during the initial setup phase. Requires a secret header for authorization.",
+        "tags": ["Setup"],
+        "security": [
+          {
+            "SetupSecret": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -51,13 +77,21 @@
                 "type": "object",
                 "properties": {
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Administrator full name",
+                    "example": "John Doe"
                   },
                   "email": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "email",
+                    "description": "Administrator email address",
+                    "example": "admin@gdspuppies.com"
                   },
                   "password": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 8,
+                    "description": "Strong password for the administrator",
+                    "example": "SecurePassword123!"
                   }
                 },
                 "required": ["name", "email", "password"]
@@ -65,28 +99,217 @@
             }
           }
         },
-        "parameters": [
-          {
-            "name": "X-Setup-Secret",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "201": {
-            "description": "Admin created successfully"
+            "description": "Admin created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Super administrator created successfully"
+                    },
+                    "userId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "Created user ID"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
-            "description": "Bad Request (e.g., validation error, setup complete)"
+            "description": "Bad Request (e.g., validation error, setup complete)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "403": {
-            "description": "Forbidden (Missing or incorrect X-Setup-Secret)"
+            "description": "Forbidden (Missing or incorrect X-Setup-Secret)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
     }
-  }
+  },
+  "components": {
+    "securitySchemes": {
+      "SetupSecret": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Setup-Secret",
+        "description": "Secret key required for initial setup operations"
+      },
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT token obtained from Supabase authentication"
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error message"
+          },
+          "code": {
+            "type": "string",
+            "description": "Error code"
+          },
+          "details": {
+            "type": "object",
+            "description": "Additional error details"
+          }
+        },
+        "required": ["error"]
+      },
+      "Puppy": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique puppy identifier"
+          },
+          "name": {
+            "type": "string",
+            "description": "Puppy name",
+            "example": "Bella"
+          },
+          "breed": {
+            "type": "string",
+            "description": "Breed name",
+            "example": "Golden Retriever"
+          },
+          "birth_date": {
+            "type": "string",
+            "format": "date",
+            "description": "Date of birth",
+            "example": "2024-01-15"
+          },
+          "price": {
+            "type": "number",
+            "description": "Price in dollars",
+            "example": 2500.00
+          },
+          "status": {
+            "type": "string",
+            "enum": ["Available", "Reserved", "Sold", "Not For Sale"],
+            "description": "Current availability status"
+          },
+          "gender": {
+            "type": "string",
+            "enum": ["Male", "Female"],
+            "description": "Puppy gender"
+          },
+          "image_urls": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "url"
+            },
+            "description": "Array of image URLs"
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description of the puppy"
+          }
+        },
+        "required": ["id", "name", "breed", "birth_date", "price", "status"]
+      },
+      "Litter": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique litter identifier"
+          },
+          "name": {
+            "type": "string",
+            "description": "Litter name",
+            "example": "Spring 2024 Golden Litter"
+          },
+          "breed": {
+            "type": "string",
+            "description": "Breed name",
+            "example": "Golden Retriever"
+          },
+          "dam_name": {
+            "type": "string",
+            "description": "Mother's name",
+            "example": "Luna"
+          },
+          "sire_name": {
+            "type": "string",
+            "description": "Father's name",
+            "example": "Max"
+          },
+          "date_of_birth": {
+            "type": "string",
+            "format": "date",
+            "description": "Birth date of the litter"
+          },
+          "expected_date": {
+            "type": "string",
+            "format": "date",
+            "description": "Expected birth date (for upcoming litters)"
+          },
+          "puppy_count": {
+            "type": "integer",
+            "description": "Number of puppies in the litter",
+            "example": 8
+          },
+          "status": {
+            "type": "string",
+            "enum": ["Active", "Available Soon", "All Reserved", "All Sold", "Archived"],
+            "description": "Current litter status"
+          }
+        },
+        "required": ["id", "name", "breed", "status"]
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Setup",
+      "description": "Initial application setup operations"
+    },
+    {
+      "name": "Puppies",
+      "description": "Puppy management operations"
+    },
+    {
+      "name": "Litters",
+      "description": "Litter management operations"
+    },
+    {
+      "name": "Authentication",
+      "description": "User authentication and authorization"
+    },
+    {
+      "name": "Admin",
+      "description": "Administrative operations"
+    }
+  ]
 }
