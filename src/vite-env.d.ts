@@ -1,15 +1,16 @@
 /// <reference types="vite/client" />
 
-// Cloudflare Worker Types
 interface KVNamespace {
-  get(key: string): Promise<string | null>;
-  get(key: string, type: "text"): Promise<string | null>;
-  get<T>(key: string, type: "json"): Promise<T | null>;
-  put(
-    key: string,
-    value: string | ReadableStream | ArrayBuffer,
-    options?: {
-      expiration?: number;
+  get(key: string, options?: {
+    cacheTtl?: number;
+    type?: "text" | "json" | "arrayBuffer" | "stream";
+  }): Promise<string | ArrayBuffer | ReadableStream<Uint8Array> | null>;
+  get<T = unknown>(key: string, options?: {
+    cacheTtl?: number;
+    type?: "json";
+  }): Promise<T | null>;
+  put(key: string, value: string | ArrayBuffer | ReadableStream<Uint8Array>, options?: {
+      expiration?: Date;
       expirationTtl?: number;
     }
   ): Promise<void>;
