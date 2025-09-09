@@ -1,4 +1,5 @@
 {
+  "x-comment": "This is a placeholder for the OpenAPI specification. It is incomplete and needs to be updated with the full API definition.",
   "openapi": "3.0.0",
   "info": {
     "title": "GDS Puppies API",
