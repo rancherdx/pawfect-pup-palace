@@ -3,7 +3,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SwaggerDoc from "@/components/admin/SwaggerUI";
 import ReDocDoc from "@/components/admin/ReDocUI";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Code, FileText, ExternalLink } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Code, FileText, ExternalLink, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const ApiDocs = () => {
@@ -19,6 +20,14 @@ const ApiDocs = () => {
             Complete API documentation for the GDS Puppies platform
           </p>
         </div>
+
+        <Alert variant="destructive" className="mb-6">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Under Development</AlertTitle>
+          <AlertDescription>
+            The API documentation is currently incomplete. More endpoints and details will be added soon.
+          </AlertDescription>
+        </Alert>
 
         <Card className="mb-6">
           <CardHeader>

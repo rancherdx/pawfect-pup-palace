@@ -37,22 +37,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Fetch user profile and roles from database
   const fetchUserProfile = async (userId: string) => {
     try {
-      // Fetch profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('name')
-        .eq('id', userId)
-        .single();
+      const [profileRes, rolesRes] = await Promise.all([
+        supabase.from('profiles').select('name').eq('id', userId).single(),
+        supabase.from('user_roles').select('role').eq('user_id', userId)
+      ]);
 
-      // Fetch roles
-      const { data: userRoles } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId);
+      if (profileRes.error) console.error('Error fetching profile:', profileRes.error);
+      if (rolesRes.error) console.error('Error fetching roles:', rolesRes.error);
 
-      const roles = userRoles ? userRoles.map(ur => ur.role) : [];
+      const roles = rolesRes.data ? rolesRes.data.map(ur => ur.role) : [];
       
-      return { profile, roles };
+      return { profile: profileRes.data, roles };
     } catch (error) {
       console.error('Error fetching user profile:', error);
       return { profile: null, roles: [] };
@@ -60,51 +55,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (session?.user) {
-          // Fetch user profile and roles synchronously to prevent race conditions
-          try {
-            setIsLoading(true);
-            const { profile, roles } = await fetchUserProfile(session.user.id);
-            
-            setUser({
-              id: session.user.id,
-              email: session.user.email!,
-              name: profile?.name || session.user.user_metadata?.name || '',
-              roles,
-              createdAt: session.user.created_at
-            });
-            
-            setToken(session.access_token);
-            setRefreshToken(session.refresh_token);
-          } catch (error) {
-            console.error('Error loading user profile:', error);
-            setUser(null);
-            setToken(null);
-            setRefreshToken(null);
-          }
-        } else {
+    const handleAuthStateChange = async (session: any) => {
+      if (session?.user) {
+        try {
+          const { profile, roles } = await fetchUserProfile(session.user.id);
+
+          setUser({
+            id: session.user.id,
+            email: session.user.email!,
+            name: profile?.name || session.user.user_metadata?.name || '',
+            roles,
+            createdAt: session.user.created_at
+          });
+
+          setToken(session.access_token);
+          setRefreshToken(session.refresh_token);
+        } catch (error) {
+          console.error('Error loading user profile:', error);
           setUser(null);
           setToken(null);
           setRefreshToken(null);
         }
-        setIsLoading(false);
+      } else {
+        setUser(null);
+        setToken(null);
+        setRefreshToken(null);
+      }
+      setIsLoading(false);
+    };
+
+    setIsLoading(true);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      handleAuthStateChange(session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        // Only set loading true for sign-in/sign-out events
+        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+          setIsLoading(true);
+        }
+        await handleAuthStateChange(session);
       }
     );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      // This will trigger the onAuthStateChange listener above
-      if (session) {
-        // The listener will handle setting the user state
-        setToken(session.access_token);
-        setRefreshToken(session.refresh_token);
-      } else {
-        setIsLoading(false);
-      }
-    });
 
     return () => {
       subscription.unsubscribe();
