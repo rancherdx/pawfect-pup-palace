@@ -12,13 +12,13 @@ import { AlertCircle, LogIn } from "lucide-react";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, getDefaultRoute } = useAuth();
   const [credentials, setCredentials] = useState<UserLoginData>({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   if (isAuthenticated) {
-    navigate("/dashboard");
+    navigate(getDefaultRoute());
     return null;
   }
 
@@ -34,7 +34,10 @@ export default function Login() {
     try {
       await login(credentials);
       toast.success("Login successful!");
-      navigate("/dashboard");
+      // Wait briefly for user state to be updated, then navigate
+      setTimeout(() => {
+        navigate(getDefaultRoute());
+      }, 100);
     } catch (err) {
       console.error("Login error:", err);
       setError(err instanceof Error ? err.message : "Failed to login. Please check your credentials.");

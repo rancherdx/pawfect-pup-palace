@@ -16,6 +16,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   updateUser: (userData: Partial<User>) => void; // Uses imported User
   setNewTokens: (newAccessToken: string, newRefreshToken?: string) => void;
+  getDefaultRoute: () => string; // Helper to get appropriate dashboard route
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -172,6 +173,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const getDefaultRoute = () => {
+    if (!user) return '/';
+    
+    const userRoles = user.roles || [];
+    // Super-admins and admins go to admin dashboard
+    if (userRoles.includes('super-admin') || userRoles.includes('admin')) {
+      return '/admin';
+    }
+    // Regular users go to user dashboard
+    return '/dashboard';
+  };
+
   const value: AuthContextType = {
     user,
     token,
@@ -183,6 +196,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logout,
     updateUser,
     setNewTokens, // Add setNewTokens
+    getDefaultRoute,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
