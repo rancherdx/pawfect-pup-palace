@@ -694,15 +694,27 @@ export const adminApi = {
 
   getTransactions: async (params: any = {}) => {
     await requireAdmin();
-    // For now, return mock transaction data since we don't have actual Square transactions
+    
+    const page = params.page || 1;
+    const limit = params.limit || 10;
+    const offset = (page - 1) * limit;
+    
+    const { data: transactions, error, count } = await supabase
+      .from('transactions')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+    
+    if (error) throw error;
+    
     return {
-      data: [],
-      transactions: [],
-      total: 0,
-      totalTransactions: 0,
-      currentPage: 1,
-      totalPages: 0,
-      limit: 10
+      data: transactions || [],
+      transactions: transactions || [],
+      total: count || 0,
+      totalTransactions: count || 0,
+      currentPage: page,
+      totalPages: Math.ceil((count || 0) / limit),
+      limit
     };
   },
 

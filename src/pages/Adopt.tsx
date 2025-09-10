@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { PawPrint } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,19 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import HeroSection from "@/components/HeroSection";
 import Section from "@/components/Section";
-
-// Mock puppy data for selected puppy
-const puppiesData = [
-  {
-    id: "1",
-    name: "Bella",
-    breed: "Golden Retriever",
-    age: "8 weeks",
-    gender: "Female",
-    image: "https://images.unsplash.com/photo-1615233500064-caa995e2f9dd?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80",
-  },
-  // Add more puppies as needed
-];
+import { supabase } from "@/integrations/supabase/client";
+import { calculateAge } from "@/utils/dateUtils";
 
 const AdoptionProcess = () => {
   const steps = [
@@ -73,8 +62,25 @@ const AdoptionProcess = () => {
 const Adopt = () => {
   const [searchParams] = useSearchParams();
   const puppyId = searchParams.get("puppy");
-  const selectedPuppy = puppiesData.find(p => p.id === puppyId);
+  const [selectedPuppy, setSelectedPuppy] = useState<any>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (puppyId) {
+      const fetchPuppy = async () => {
+        const { data, error } = await supabase
+          .from('puppies')
+          .select('*')
+          .eq('id', puppyId)
+          .single();
+        
+        if (data && !error) {
+          setSelectedPuppy(data);
+        }
+      };
+      fetchPuppy();
+    }
+  }, [puppyId]);
   
   const { toast } = useToast();
   const [formData, setFormData] = useState({
@@ -148,7 +154,7 @@ const Adopt = () => {
               <CardContent className="p-6 flex items-center space-x-4">
                 <div className="w-20 h-20 rounded-full overflow-hidden">
                   <img 
-                    src={selectedPuppy.image} 
+                    src={selectedPuppy.photo_url || "https://images.unsplash.com/photo-1591160690555-5debfba289f0?ixlib=rb-4.0.3"} 
                     alt={selectedPuppy.name} 
                     className="w-full h-full object-cover"
                   />
@@ -156,7 +162,7 @@ const Adopt = () => {
                 <div>
                   <h3 className="text-lg font-medium">You're applying to adopt {selectedPuppy.name}</h3>
                   <p className="text-sm text-muted-foreground">
-                    {selectedPuppy.breed} • {selectedPuppy.age} • {selectedPuppy.gender}
+                    {selectedPuppy.breed} • {calculateAge(selectedPuppy.birth_date)} • {selectedPuppy.gender}
                   </p>
                 </div>
               </CardContent>

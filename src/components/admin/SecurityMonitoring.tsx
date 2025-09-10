@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Shield, AlertTriangle, Users, Activity, RefreshCw } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { fetchAdminAPI } from '@/api';
 import { adminApi } from '@/api';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
