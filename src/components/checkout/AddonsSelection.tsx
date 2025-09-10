@@ -1,17 +1,18 @@
-
 import { useState, useEffect } from "react";
 import { ArrowRight, ArrowLeft, Check, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 interface AddonItem {
   id: string;
   name: string;
   description: string;
   price: number;
-  image: string;
+  image_url: string;
 }
 
 interface AddonsSelectionProps {
@@ -23,38 +24,6 @@ interface AddonsSelectionProps {
   onPrevious: () => void;
 }
 
-// Mock addons data
-const addonItems: AddonItem[] = [
-  {
-    id: "addon-1",
-    name: "Puppy Starter Kit",
-    description: "Food, bowls, collar, and leash to get started",
-    price: 75,
-    image: "https://images.unsplash.com/photo-1585559700398-1385b3a8aeb6?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60",
-  },
-  {
-    id: "addon-2",
-    name: "Training Sessions (3)",
-    description: "Three private training sessions with our expert",
-    price: 120,
-    image: "https://images.unsplash.com/photo-1600272008408-6e05d5aa3e6a?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60",
-  },
-  {
-    id: "addon-3",
-    name: "Premium Bed",
-    description: "Comfortable, washable bed for your new puppy",
-    price: 60,
-    image: "https://images.unsplash.com/photo-1636066429695-a7518ab7db5a?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60",
-  },
-  {
-    id: "addon-4",
-    name: "Health Check Package",
-    description: "First vet visit and basic vaccinations",
-    price: 150,
-    image: "https://images.unsplash.com/photo-1610117802181-5fcbac55b61f?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60",
-  },
-];
-
 const AddonsSelection = ({ 
   onDataChange, 
   onPriceChange, 
@@ -64,6 +33,20 @@ const AddonsSelection = ({
   onPrevious 
 }: AddonsSelectionProps) => {
   const [addons, setAddons] = useState<AddonItem[]>(selectedAddons);
+  
+  const { data: addonItems = [], isLoading } = useQuery({
+    queryKey: ['addon-items'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('addon_items')
+        .select('*')
+        .eq('is_active', true)
+        .order('category, name');
+      
+      if (error) throw error;
+      return data || [];
+    },
+  });
   
   useEffect(() => {
     // Calculate total price when addons change
@@ -99,8 +82,19 @@ const AddonsSelection = ({
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          {addonItems.map(addon => {
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="border rounded-lg p-4 animate-pulse">
+                <div className="bg-gray-200 h-20 rounded mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            {addonItems.map((addon: any) => {
             const isSelected = addons.some(item => item.id === addon.id);
             
             return (
@@ -115,7 +109,7 @@ const AddonsSelection = ({
                 <div className="flex h-full">
                   <div className="w-1/3">
                     <img 
-                      src={addon.image} 
+                      src={addon.image_url} 
                       alt={addon.name} 
                       className="w-full h-full object-cover"
                     />
@@ -141,8 +135,9 @@ const AddonsSelection = ({
                 </div>
               </div>
             );
-          })}
-        </div>
+            })}
+          </div>
+        )}
         
         <div className="bg-secondary p-4 rounded-lg mb-6">
           <div className="flex justify-between mb-2">

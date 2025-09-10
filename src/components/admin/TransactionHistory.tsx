@@ -188,8 +188,11 @@ const TransactionHistory = () => {
                       <TableCell className="font-mono text-xs">{transaction.square_payment_id || 'N/A'}</TableCell>
                       <TableCell>{formatCurrency(transaction.amount, transaction.currency)}</TableCell>
                       <TableCell className="text-xs">
-                        {transaction.payment_method_details?.brand ?
-                         `${transaction.payment_method_details.brand} ****${transaction.payment_method_details.last4}` : 'N/A'}
+                        {(() => {
+                          const paymentDetails = transaction.payment_method_details as any;
+                          return paymentDetails?.brand ? 
+                            `${paymentDetails.brand} ****${paymentDetails.last4 || paymentDetails.last_four}` : 'N/A';
+                        })()}
                       </TableCell>
                       <TableCell>
                         <Badge variant={getStatusBadgeVariant(transaction.status)}>

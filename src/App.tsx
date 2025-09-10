@@ -10,6 +10,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Setup from "./pages/Setup";
+import CorsConfig from "@/components/CorsConfig";
 
 // Lazy load components for better performance
 const Index = lazy(() => import("./pages/Index"));
@@ -49,6 +50,7 @@ const App: React.FC = () => {
       <ThemeProvider defaultTheme="system" storageKey="gds-theme">
         <Toaster />
         <Sonner />
+        <CorsConfig />
         <ErrorBoundary>
           <BrowserRouter>
             <AuthProvider>
