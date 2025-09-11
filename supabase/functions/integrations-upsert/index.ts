@@ -1,29 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { encryptJson, decryptJson } from "../_shared/crypto.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
-
-async function encryptJson(json: unknown, base64Key: string): Promise<string> {
-  const enc = new TextEncoder();
-  const data = enc.encode(JSON.stringify(json));
-  const keyBytes = Uint8Array.from(atob(base64Key), (c) => c.charCodeAt(0));
-  if (keyBytes.length !== 32) throw new Error("ENCRYPTION_KEY must be 32 bytes (base64-encoded)");
-  const key = await crypto.subtle.importKey(
-    "raw",
-    keyBytes,
-    { name: "AES-GCM" },
-    false,
-    ["encrypt"]
-  );
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, data);
-  const ivB64 = btoa(String.fromCharCode(...iv));
-  const ctB64 = btoa(String.fromCharCode(...new Uint8Array(ciphertext)));
-  return `${ivB64}:${ctB64}`;
-}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -31,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { service, environment, data } = await req.json();
+    const { service, environment, data: partialData } = await req.json();
     if (!service || !environment || !data) {
       return new Response(JSON.stringify({ error: "Missing service, environment, or data" }), {
         status: 400,
@@ -64,7 +46,38 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, { auth: { persistSession: false } });
 
-    const data_ciphertext = await encryptJson(data, ENC_KEY);
+    // Fetch existing record to support partial updates
+    const { data: existingRecord, error: fetchError } = await supabase
+      .from("third_party_integrations")
+      .select("data_ciphertext")
+      .eq("service", service)
+      .eq("environment", environment)
+      .single();
+
+    if (fetchError && fetchError.code !== 'PGRST116') { // Ignore 'not found' error
+      throw fetchError;
+    }
+
+    let existingData = {};
+    if (existingRecord && existingRecord.data_ciphertext) {
+      try {
+        existingData = await decryptJson(existingRecord.data_ciphertext, ENC_KEY);
+      } catch (e) {
+        console.error("Failed to decrypt existing data, starting fresh.", e);
+        // Potentially corrupted data or key change, handle by overwriting.
+      }
+    }
+
+    const fullData = { ...existingData, ...partialData };
+
+    // If api_key is present but empty, it means the user wants to clear it.
+    // However, for updates that don't touch the key, it won't be in partialData.
+    // The only time we want to remove the key is if it's explicitly set to null or an empty string.
+    if (partialData.api_key === '' || partialData.api_key === null) {
+      delete fullData.api_key;
+    }
+
+    const data_ciphertext = await encryptJson(fullData, ENC_KEY);
 
     const upsertRes = await supabase
       .from("third_party_integrations")
