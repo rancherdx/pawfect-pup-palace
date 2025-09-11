@@ -4,14 +4,16 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 
 interface IntegrationData {
-  id?: string; // Optional: only present for existing integrations
+  id?: string;
   serviceName: string;
-  apiKey: string; // Will be empty if user wants to keep existing, or new key
-  otherConfig: string; // JSON string
+  apiKey: string;
+  otherConfig: string;
   isActive: boolean;
+  environment: 'production' | 'sandbox';
 }
 
 interface IntegrationFormProps {
@@ -25,6 +27,7 @@ const IntegrationForm: React.FC<IntegrationFormProps> = ({ integration, onSave, 
   const [apiKey, setApiKey] = useState('');
   const [otherConfig, setOtherConfig] = useState('');
   const [isActive, setIsActive] = useState(true);
+  const [environment, setEnvironment] = useState<'production' | 'sandbox'>('production');
   const [configError, setConfigError] = useState<string | null>(null);
 
   const isEditing = !!integration;
@@ -32,16 +35,16 @@ const IntegrationForm: React.FC<IntegrationFormProps> = ({ integration, onSave, 
   useEffect(() => {
     if (integration) {
       setServiceName(integration.serviceName || '');
-      // API Key is not pre-filled for security; user enters a new one or leaves blank
       setApiKey('');
-      setOtherConfig(integration.otherConfig || '');
+      setOtherConfig(integration.otherConfig || '{}');
       setIsActive(integration.isActive !== undefined ? integration.isActive : true);
+      setEnvironment(integration.environment || 'production');
     } else {
-      // Defaults for new form
       setServiceName('');
       setApiKey('');
-      setOtherConfig('{}'); // Default to empty JSON object
+      setOtherConfig('{}');
       setIsActive(true);
+      setEnvironment('production');
     }
   }, [integration]);
 
@@ -60,9 +63,10 @@ const IntegrationForm: React.FC<IntegrationFormProps> = ({ integration, onSave, 
     onSave({
       id: integration?.id,
       serviceName,
-      apiKey: apiKey, // Send the entered API key (empty if unchanged for existing)
-      otherConfig: JSON.stringify(parsedConfig), // Ensure it's stringified back if parsed for validation
+      apiKey: apiKey,
+      otherConfig: JSON.stringify(parsedConfig),
       isActive,
+      environment,
     });
   };
 
@@ -72,23 +76,43 @@ const IntegrationForm: React.FC<IntegrationFormProps> = ({ integration, onSave, 
         <CardTitle>{isEditing ? 'Edit Integration' : 'Add New Integration'}</CardTitle>
         <CardDescription>
           {isEditing
-            ? `Editing configuration for ${integration?.serviceName}.`
+            ? `Editing configuration for ${integration?.serviceName} (${integration?.environment}).`
             : 'Configure a new third-party service integration.'}
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="serviceName">Service Name</Label>
-            <Input
-              id="serviceName"
-              value={serviceName}
-              onChange={(e) => setServiceName(e.target.value)}
-              placeholder="e.g., SendGrid, Google Analytics"
-              disabled={isEditing}
-              required
-            />
-            {isEditing && <p className="text-xs text-muted-foreground">Service name cannot be changed after creation.</p>}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="serviceName">Service Name</Label>
+              <Input
+                id="serviceName"
+                value={serviceName}
+                onChange={(e) => setServiceName(e.target.value)}
+                placeholder="e.g., Square, MailChannels"
+                disabled={isEditing}
+                required
+              />
+              {isEditing && <p className="text-xs text-muted-foreground">Cannot be changed after creation.</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="environment">Environment</Label>
+              <Select
+                value={environment}
+                onValueChange={(value) => setEnvironment(value as 'production' | 'sandbox')}
+                disabled={isEditing}
+                required
+              >
+                <SelectTrigger id="environment">
+                  <SelectValue placeholder="Select environment" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="production">Production</SelectItem>
+                  <SelectItem value="sandbox">Sandbox</SelectItem>
+                </SelectContent>
+              </Select>
+              {isEditing && <p className="text-xs text-muted-foreground">Cannot be changed after creation.</p>}
+            </div>
           </div>
 
           <div className="space-y-2">

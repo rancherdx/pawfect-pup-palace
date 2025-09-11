@@ -531,49 +531,55 @@ export const adminApi = {
   // Third-party integrations
   getIntegrations: async () => {
     await requireAdmin();
-    const { data, error } = await supabase
-      .from('third_party_integrations')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
+    const { data, error } = await supabase.functions.invoke('integrations-list');
     if (error) throw error;
-    return { data };
-  },
-
-  createIntegration: async (integrationData: any) => {
-    await requireAdmin();
-    const { data, error } = await supabase
-      .from('third_party_integrations')
-      .insert(integrationData)
-      .select()
-      .single();
-    
-    if (error) throw error;
+    // The function returns { integrations: [...] }, so we return that directly
     return data;
   },
 
-  updateIntegration: async (id: string, integrationData: any) => {
+  upsertIntegration: async (integrationData: { service_name: string; environment?: string; [key: string]: any }) => {
     await requireAdmin();
-    const { data, error } = await supabase
-      .from('third_party_integrations')
-      .update(integrationData)
-      .eq('id', id)
-      .select()
-      .single();
-    
-    if (error) throw error;
+    const payload = {
+      service: integrationData.service_name,
+      environment: integrationData.environment || 'production',
+      data: { ...integrationData }, // Pass a copy
+    };
+    delete payload.data.service_name;
+    delete payload.data.environment;
+
+    const { data, error } = await supabase.functions.invoke('integrations-upsert', {
+      body: payload,
+    });
+
+    if (error) {
+      console.error('Error upserting integration:', error);
+      throw error;
+    }
     return data;
   },
 
-  deleteIntegration: async (id: string) => {
+  // Maintain separate functions for TanStack Query's optimistic updates if needed,
+  // but they both point to the same upsert logic.
+  createIntegration: async (integrationData: { service_name: string; environment?: string; [key: string]: any }) => {
+    return adminApi.upsertIntegration(integrationData);
+  },
+
+  updateIntegration: async (id: string, integrationData: { service_name: string; environment?: string; [key: string]: any }) => {
+    // The 'id' is ignored, but kept for compatibility with the calling component's mutation key.
+    return adminApi.upsertIntegration(integrationData);
+  },
+
+  deleteIntegration: async (identifiers: { service_name: string; environment: string }) => {
     await requireAdmin();
-    const { error } = await supabase
-      .from('third_party_integrations')
-      .delete()
-      .eq('id', id);
+    const { data, error } = await supabase.functions.invoke('integrations-delete', {
+      body: identifiers,
+    });
     
-    if (error) throw error;
-    return { success: true };
+    if (error) {
+      console.error('Error deleting integration:', error);
+      throw error;
+    }
+    return data;
   },
 
   // SEO Management
