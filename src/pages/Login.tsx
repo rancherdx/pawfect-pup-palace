@@ -1,5 +1,5 @@
 
-import { useState, ChangeEvent } from "react";
+import { useState, ChangeEvent, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserLoginData } from "@/types";
@@ -12,15 +12,17 @@ import { AlertCircle, LogIn } from "lucide-react";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login, isAuthenticated, getDefaultRoute } = useAuth();
+  const { login, isAuthenticated, getDefaultRoute, authStatus } = useAuth();
   const [credentials, setCredentials] = useState<UserLoginData>({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (isAuthenticated) {
-    navigate(getDefaultRoute());
-    return null;
-  }
+  // Redirect if already authenticated and roles are loaded
+  useEffect(() => {
+    if (isAuthenticated && authStatus === 'loaded') {
+      navigate(getDefaultRoute());
+    }
+  }, [isAuthenticated, authStatus, navigate, getDefaultRoute]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setCredentials({ ...credentials, [e.target.id]: e.target.value });
@@ -34,10 +36,7 @@ export default function Login() {
     try {
       await login(credentials);
       toast.success("Login successful!");
-      // Wait briefly for user state to be updated, then navigate
-      setTimeout(() => {
-        navigate(getDefaultRoute());
-      }, 100);
+      // Navigation will be handled by useEffect when authStatus becomes 'loaded'
     } catch (err) {
       console.error("Login error:", err);
       setError(err instanceof Error ? err.message : "Failed to login. Please check your credentials.");

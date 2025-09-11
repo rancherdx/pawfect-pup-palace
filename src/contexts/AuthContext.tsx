@@ -11,6 +11,7 @@ interface AuthContextType {
   refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  authStatus: 'idle' | 'loading' | 'loaded' | 'error' | 'timeout'; // New auth status
   login: (credentials: UserLoginData) => Promise<void>; // Updated
   register: (registrationData: UserRegistrationData) => Promise<void>; // Updated
   logout: () => Promise<void>;
@@ -32,8 +33,10 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [refreshToken, setRefreshToken] = useState<string | null>(null); // New state for refresh token
+  const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authStatus, setAuthStatus] = useState<'idle' | 'loading' | 'loaded' | 'error' | 'timeout'>('idle');
+  const authTimeoutRef = React.useRef<NodeJS.Timeout>();
 
   // Fetch user profile and roles from database
   const fetchUserProfile = async (userId: string) => {
@@ -56,52 +59,84 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    const handleAuthStateChange = async (session: any) => {
+    // Clear any existing timeout
+    if (authTimeoutRef.current) {
+      clearTimeout(authTimeoutRef.current);
+    }
+
+    // Set safety timeout (10 seconds)
+    authTimeoutRef.current = setTimeout(() => {
+      console.warn('Auth initialization timed out');
+      setAuthStatus('timeout');
+      setIsLoading(false);
+    }, 10000);
+
+    const handleAuthStateChange = (session: any) => {
+      // Clear timeout since we got a response
+      if (authTimeoutRef.current) {
+        clearTimeout(authTimeoutRef.current);
+      }
+
       if (session?.user) {
-        try {
-          const { profile, roles } = await fetchUserProfile(session.user.id);
+        setAuthStatus('loading');
+        // Defer the async operations
+        setTimeout(async () => {
+          try {
+            const { profile, roles } = await fetchUserProfile(session.user.id);
 
-          setUser({
-            id: session.user.id,
-            email: session.user.email!,
-            name: profile?.name || session.user.user_metadata?.name || '',
-            roles,
-            createdAt: session.user.created_at
-          });
+            setUser({
+              id: session.user.id,
+              email: session.user.email!,
+              name: profile?.name || session.user.user_metadata?.name || '',
+              roles,
+              createdAt: session.user.created_at
+            });
 
-          setToken(session.access_token);
-          setRefreshToken(session.refresh_token);
-        } catch (error) {
-          console.error('Error loading user profile:', error);
-          setUser(null);
-          setToken(null);
-          setRefreshToken(null);
-        }
+            setToken(session.access_token);
+            setRefreshToken(session.refresh_token);
+            setAuthStatus('loaded');
+          } catch (error) {
+            console.error('Error loading user profile:', error);
+            setUser(null);
+            setToken(null);
+            setRefreshToken(null);
+            setAuthStatus('error');
+          } finally {
+            setIsLoading(false);
+          }
+        }, 0);
       } else {
         setUser(null);
         setToken(null);
         setRefreshToken(null);
+        setAuthStatus('loaded');
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     setIsLoading(true);
+    setAuthStatus('loading');
+    
     supabase.auth.getSession().then(({ data: { session } }) => {
       handleAuthStateChange(session);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         // Only set loading true for sign-in/sign-out events
         if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
           setIsLoading(true);
+          setAuthStatus('loading');
         }
-        await handleAuthStateChange(session);
+        handleAuthStateChange(session);
       }
     );
 
     return () => {
       subscription.unsubscribe();
+      if (authTimeoutRef.current) {
+        clearTimeout(authTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -188,14 +223,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const value: AuthContextType = {
     user,
     token,
-    refreshToken, // Add refreshToken
-    isAuthenticated: !!user && !!token, // isAuthenticated logic remains based on access token
+    refreshToken,
+    isAuthenticated: !!user && !!token,
     isLoading,
+    authStatus,
     login,
     register,
     logout,
     updateUser,
-    setNewTokens, // Add setNewTokens
+    setNewTokens,
     getDefaultRoute,
   };
 
