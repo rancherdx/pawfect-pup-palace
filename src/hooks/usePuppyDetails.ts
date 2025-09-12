@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { puppiesApi } from '@/api';
@@ -49,7 +48,9 @@ const usePuppyDetails = (puppyId: string | undefined) => {
   });
 
   // Calculate the puppy's age if we have a birth date
-  const puppyAge = puppy?.birth_date ? calculateAge(puppy.birth_date) : '';
+  // Handle both field name possibilities for compatibility
+  const birthDate = (puppy as any)?.birth_date || (puppy as any)?.birthDate;
+  const puppyAge = birthDate ? calculateAge(birthDate) : '';
 
   return {
     puppy,
