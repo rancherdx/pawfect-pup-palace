@@ -94,7 +94,7 @@ const PuppyCard = ({
           className="w-full bg-brand-red hover:bg-red-700 text-white"
           disabled={!available}
         >
-          <Link to={`/puppies/${id}`}>
+          <Link to={`/puppy/${id}`}>
             {available ? "View Details" : "Not Available"}
           </Link>
         </Button>

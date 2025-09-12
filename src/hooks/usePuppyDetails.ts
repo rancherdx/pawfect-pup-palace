@@ -49,7 +49,7 @@ const usePuppyDetails = (puppyId: string | undefined) => {
   });
 
   // Calculate the puppy's age if we have a birth date
-  const puppyAge = puppy?.birthDate ? calculateAge(puppy.birthDate) : '';
+  const puppyAge = puppy?.birth_date ? calculateAge(puppy.birth_date) : '';
 
   return {
     puppy,
