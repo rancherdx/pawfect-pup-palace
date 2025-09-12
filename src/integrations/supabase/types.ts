@@ -921,9 +921,7 @@ export type Database = {
           created_by: string | null
           data_ciphertext: string
           environment: string
-          id: string
           is_active: boolean
-          name: string | null
           other_config: Json
           service: string
           updated_at: string
@@ -933,9 +931,7 @@ export type Database = {
           created_by?: string | null
           data_ciphertext: string
           environment: string
-          id?: string
           is_active?: boolean
-          name?: string | null
           other_config?: Json
           service: string
           updated_at?: string
@@ -945,9 +941,7 @@ export type Database = {
           created_by?: string | null
           data_ciphertext?: string
           environment?: string
-          id?: string
           is_active?: boolean
-          name?: string | null
           other_config?: Json
           service?: string
           updated_at?: string
