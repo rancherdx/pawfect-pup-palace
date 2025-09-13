@@ -9,30 +9,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Heart, Star, Users, Award, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { publicApi } from "@/api/publicApi";
 import { calculateAge } from "@/utils/dateUtils";
 
 const Home = () => {
   const { data: puppiesData, isLoading: puppiesLoading } = useQuery({
     queryKey: ['featured-puppies'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('puppies' as any).select('*').limit(3);
-      if (error) throw error;
-      return data || [];
-    },
+    queryFn: () => publicApi.getFeaturedPuppies(3),
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
   const { data: testimonialsData, isLoading: testimonialsLoading } = useQuery({
-    queryKey: ['testimonials'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('testimonials' as any).select('*').limit(3);
-      if (error) throw error;
-      return data || [];
-    },
+    queryKey: ['featured-testimonials'],
+    queryFn: () => publicApi.getFeaturedTestimonials(3),
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
-  const featuredPuppies = puppiesData?.slice(0, 3) || [];
-  const testimonials = Array.isArray(testimonialsData) ? testimonialsData.slice(0, 3) : [];
+  const featuredPuppies = puppiesData || [];
+  const testimonials = testimonialsData || [];
 
   
   return (

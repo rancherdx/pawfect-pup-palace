@@ -200,7 +200,15 @@ export const adminApi = {
     
     const { data, error } = await query;
     if (error) throw error;
-    return { data };
+    
+    return { 
+      posts: data || [], 
+      pagination: { 
+        current_page: 1, 
+        total_pages: 1, 
+        total: data?.length || 0 
+      } 
+    };
   },
 
   createPost: async (postData: any) => {

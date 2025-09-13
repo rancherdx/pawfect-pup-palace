@@ -1,148 +1,155 @@
 import { supabase } from "@/integrations/supabase/client";
+import { Puppy } from '@/types/puppy';
 
-export const puppiesApi = {
-  getAllPuppies: async () => {
+// Optimized public API endpoints for better performance
+export const publicApi = {
+  // Get featured puppies with optimized query
+  getFeaturedPuppies: async (limit: number = 3): Promise<Puppy[]> => {
     const { data, error } = await supabase
       .from('puppies')
-      .select('*')
+      .select(`
+        id, name, breed, birth_date, price, status, gender, 
+        image_urls, photo_url, color, weight, is_featured, description
+      `)
       .eq('status', 'Available')
-      .order('created_at', { ascending: false });
+      .eq('is_featured', true)
+      .order('created_at', { ascending: false })
+      .limit(limit);
     
     if (error) throw error;
-    
-    // Transform the data to match expected Puppy interface
-    const transformedData = data?.map(item => ({
-      id: item.id,
-      name: item.name,
-      breed: item.breed,
-      birthDate: item.birth_date,
-      price: item.price,
-      description: item.description,
-      status: item.status,
-      gender: item.gender,
-      image_urls: item.image_urls || [],
-      photoUrl: item.photo_url,
-      color: item.color,
-      weight: item.weight,
-      temperament: item.temperament || []
-    })) || [];
-    
-    return { puppies: transformedData };
+    return data || [];
   },
-  
-  getPuppyById: async (id: string) => {
+
+  // Get all available puppies with filtering
+  getAllPuppies: async (filters: {
+    breed?: string;
+    status?: string;
+    search?: string;
+    limit?: number;
+    offset?: number;
+  } = {}): Promise<{ puppies: Puppy[]; total: number }> => {
+    const { breed, status, search, limit = 50, offset = 0 } = filters;
+    
+    let query = supabase
+      .from('puppies')
+      .select(`
+        id, name, breed, birth_date, price, status, gender,
+        image_urls, photo_url, color, weight, is_featured,
+        litter_id, description
+      `, { count: 'exact' })
+      .order('created_at', { ascending: false });
+
+    if (breed && breed !== 'All Breeds') {
+      query = query.eq('breed', breed);
+    }
+
+    if (status && status !== 'All') {
+      query = query.eq('status', status as any);
+    }
+
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,breed.ilike.%${search}%`);
+    }
+
+    query = query.range(offset, offset + limit - 1);
+
+    const { data, error, count } = await query;
+    if (error) throw error;
+    
+    return {
+      puppies: data || [],
+      total: count || 0
+    };
+  },
+
+  // Get single puppy with litter info
+  getPuppyById: async (id: string): Promise<Puppy | null> => {
     const { data, error } = await supabase
       .from('puppies')
-      .select('*')
+      .select(`
+        *, 
+        litters (
+          id, name, dam_name, sire_name, breed, date_of_birth
+        )
+      `)
       .eq('id', id)
       .single();
     
-    if (error) throw error;
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      throw error;
+    }
     
-    // Transform the data to match expected Puppy interface
-    return {
-      id: data.id,
-      name: data.name,
-      breed: data.breed,
-      birthDate: data.birth_date,
-      price: data.price,
-      description: data.description,
-      status: data.status,
-      gender: data.gender,
-      image_urls: data.image_urls || [],
-      photoUrl: data.photo_url,
-      color: data.color,
-      weight: data.weight,
-      temperament: data.temperament || []
-    };
-  },
-};
-
-export const littersApi = {
-  getAll: async (filters = {}) => {
-    let query = supabase
-      .from('litters')
-      .select('*')
-      .eq('status', 'Active')
-      .order('created_at', { ascending: false });
-    
-    const { data, error } = await query;
-    if (error) throw error;
-    
-    // Transform the data to match expected Litter interface
-    const transformedData = data?.map(item => ({
-      id: item.id,
-      name: item.name,
-      breed: item.breed,
-      damName: item.dam_name,
-      sireName: item.sire_name,
-      dateOfBirth: item.date_of_birth,
-      status: item.status,
-      description: item.description,
-      coverImageUrl: item.cover_image_url,
-      image_urls: item.image_urls || [],
-      video_urls: item.video_urls || [],
-      puppyCount: item.puppy_count,
-      expectedDate: item.expected_date,
-      puppies: []
-    })) || [];
-    
-    return { litters: transformedData };
-  },
-  
-  getLitterById: async (id: string) => {
-    const { data, error } = await supabase
-      .from('litters')
-      .select('*')
-      .eq('id', id)
-      .single();
-    
-    if (error) throw error;
-    
-    // Transform the data to match expected Litter interface
-    return {
-      id: data.id,
-      name: data.name,
-      breed: data.breed,
-      damName: data.dam_name,
-      sireName: data.sire_name,
-      dateOfBirth: data.date_of_birth,
-      status: data.status,
-      description: data.description,
-      coverImageUrl: data.cover_image_url,
-      image_urls: data.image_urls || [],
-      video_urls: data.video_urls || [],
-      puppyCount: data.puppy_count,
-      expectedDate: data.expected_date,
-      puppies: []
-    };
-  },
-
-  createLitter: async (litterData: any) => {
-    const { adminApi } = await import('./adminApi');
-    return adminApi.createLitter(litterData);
-  },
-
-  updateLitter: async (id: string, litterData: any) => {
-    const { adminApi } = await import('./adminApi');
-    return adminApi.updateLitter(id, litterData);
-  },
-
-  deleteLitter: async (id: string) => {
-    const { adminApi } = await import('./adminApi');
-    return adminApi.deleteLitter(id);
-  }
-};
-
-export const testimonialApi = {
-  getAllPublic: async () => {
-    const { data, error } = await supabase
-      .from('testimonials')
-      .select('*')
-      .eq('admin_approved', true)
-      .order('created_at', { ascending: false });
-    
-    if (error) throw error;
     return data;
   },
+
+  // Get testimonials optimized
+  getTestimonials: async (limit: number = 6): Promise<any[]> => {
+    const { data, error } = await supabase
+      .from('testimonials')
+      .select('id, name, content, rating, location, puppy_name, is_featured')
+      .eq('admin_approved', true)
+      .order('is_featured', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  // Get featured testimonials
+  getFeaturedTestimonials: async (limit: number = 3): Promise<any[]> => {
+    const { data, error } = await supabase
+      .from('testimonials')
+      .select('id, name, content, rating, location, puppy_name')
+      .eq('admin_approved', true)
+      .eq('is_featured', true)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  // Get available breeds list
+  getAvailableBreeds: async (): Promise<string[]> => {
+    const { data, error } = await supabase
+      .from('puppies')
+      .select('breed')
+      .eq('status', 'Available')
+      .not('breed', 'is', null);
+    
+    if (error) throw error;
+    
+    const breeds = Array.from(new Set(data?.map(p => p.breed).filter(Boolean)));
+    return breeds.sort();
+  },
+
+  // Get litters with puppy count
+  getLitters: async (limit: number = 10): Promise<any[]> => {
+    const { data, error } = await supabase
+      .from('litters')
+      .select(`
+        id, name, breed, dam_name, sire_name, date_of_birth, 
+        expected_date, status, description, image_urls, puppy_count
+      `)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  // Get published blog posts
+  getBlogPosts: async (limit: number = 10): Promise<any[]> => {
+    const { data, error } = await supabase
+      .from('blog_posts')
+      .select('id, title, slug, excerpt, featured_image_url, published_at, category')
+      .eq('status', 'published')
+      .order('published_at', { ascending: false })
+      .limit(limit);
+    
+    if (error) throw error;
+    return data || [];
+  }
 };

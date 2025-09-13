@@ -10,74 +10,50 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { publicApi } from "@/api/publicApi";
 import { calculateAge } from "@/utils/dateUtils";
 
 const Puppies = () => {
   const [selectedBreed, setSelectedBreed] = useState("All Breeds");
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(false);
-  const [breeds, setBreeds] = useState<string[]>([]);
   
-  const { data: puppies, isLoading, isError, refetch } = useQuery({
-    queryKey: ['puppies'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('puppies')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return (data || []) as Puppy[];
-    },
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Get available breeds
+  const { data: breeds } = useQuery({
+    queryKey: ['available-breeds'],
+    queryFn: () => publicApi.getAvailableBreeds(),
+    staleTime: 10 * 60 * 1000, // Cache for 10 minutes
   });
 
-  const [filteredPuppies, setFilteredPuppies] = useState<Puppy[]>([]);
+  // Get puppies with filters
+  const { data: puppiesData, isLoading, isError, refetch } = useQuery({
+    queryKey: ['puppies', selectedBreed, debouncedSearchTerm, showOnlyAvailable],
+    queryFn: () => publicApi.getAllPuppies({
+      breed: selectedBreed !== "All Breeds" ? selectedBreed : undefined,
+      status: showOnlyAvailable ? 'Available' : undefined,
+      search: debouncedSearchTerm || undefined,
+      limit: 100
+    }),
+    staleTime: 2 * 60 * 1000, // Cache for 2 minutes
+  });
 
-  useEffect(() => {
-    if (puppies) {
-      const uniqueBreeds = Array.from(new Set(
-        puppies
-          .map((puppy) => puppy.breed)
-          .filter((breed) => breed && breed.length > 0)
-      ));
-      setBreeds(["All Breeds", ...uniqueBreeds]);
-      setFilteredPuppies(puppies);
-    }
-  }, [puppies]);
-
-  const handleFilter = () => {
-    if (!puppies) return;
-    
-    let filtered = puppies;
-    
-    if (selectedBreed !== "All Breeds") {
-      filtered = filtered.filter((puppy) => puppy.breed === selectedBreed);
-    }
-    
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter((puppy) => 
-        puppy.name.toLowerCase().includes(term) || 
-        puppy.breed.toLowerCase().includes(term)
-      );
-    }
-    
-    if (showOnlyAvailable) {
-      filtered = filtered.filter((puppy) => puppy.status === 'Available');
-    }
-    
-    setFilteredPuppies(filtered);
-  };
+  const puppies = puppiesData?.puppies || [];
+  const availableBreeds = ["All Breeds", ...(breeds || [])];
 
   const resetFilters = () => {
     setSelectedBreed("All Breeds");
     setSearchTerm("");
     setShowOnlyAvailable(false);
-    if (puppies) {
-      setFilteredPuppies(puppies);
-    }
   };
 
   return (
@@ -102,7 +78,7 @@ const Puppies = () => {
                   <SelectValue placeholder="Select breed" />
                 </SelectTrigger>
                 <SelectContent>
-                  {breeds.map(breed => (
+                  {availableBreeds.map(breed => (
                     <SelectItem key={breed} value={breed}>{breed}</SelectItem>
                   ))}
                 </SelectContent>
@@ -132,8 +108,7 @@ const Puppies = () => {
           </div>
           
           <div className="flex justify-end space-x-2 mt-4">
-            <Button variant="outline" onClick={resetFilters}>Reset</Button>
-            <Button onClick={handleFilter}>Apply Filters</Button>
+            <Button variant="outline" onClick={resetFilters}>Reset Filters</Button>
           </div>
         </div>
 
@@ -168,9 +143,9 @@ const Puppies = () => {
         {/* Puppies Grid */}
         {!isLoading && !isError && (
           <>
-            {filteredPuppies.length > 0 ? (
+            {puppies.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                 {filteredPuppies.map((puppy) => (
+                 {puppies.map((puppy) => (
                    <PuppyCard
                      key={puppy.id}
                      id={puppy.id}

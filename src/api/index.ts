@@ -1,7 +1,7 @@
 // Main API exports - all using Supabase directly
-export { authApi, publicApi } from './unifiedApi';
+export { authApi } from './unifiedApi';
 export { adminApi } from './adminApi';
-export { puppiesApi, littersApi, testimonialApi } from './publicApi';
+export { publicApi } from './publicApi';
 
 // Utility functions for auth
 export { getCurrentUser, isAdmin, requireAuth, requireAdmin, apiRequest, fetchAdminAPI } from './client';
@@ -13,7 +13,7 @@ export const blogApi = {
     try {
       const result = await adminApi.getAllPosts(params);
       // Transform blog posts to match expected interface
-      const transformedPosts = result?.data?.map((post: any) => ({
+      const transformedPosts = result?.posts?.map((post: any) => ({
         id: post.id,
         title: post.title,
         slug: post.slug,
@@ -40,7 +40,7 @@ export const blogApi = {
     const { adminApi } = await import('./adminApi');
     try {
       const result = await adminApi.getAllPosts({ status: 'published' });
-      const posts = result?.data || [];
+      const posts = result?.posts || [];
       const foundPost = posts.find((post: any) => post.slug === slug);
       
       if (!foundPost) {
