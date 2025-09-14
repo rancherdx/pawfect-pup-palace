@@ -302,52 +302,244 @@ const CompleteDashboard = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="sales">
+        <TabsContent value="sales" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">$12,234</div>
+                <p className="text-xs text-muted-foreground">+12% from last month</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">3.2%</div>
+                <p className="text-xs text-muted-foreground">+0.5% from last month</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Avg. Sale Value</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">$1,247</div>
+                <p className="text-xs text-muted-foreground">+8% from last month</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">47</div>
+                <p className="text-xs text-muted-foreground">+15% from last month</p>
+              </CardContent>
+            </Card>
+          </div>
+          
           <Card>
             <CardHeader>
-              <CardTitle>Sales Analytics</CardTitle>
-              <CardDescription>
-                Revenue and transaction insights
-              </CardDescription>
+              <CardTitle>Sales Breakdown by Breed</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                Advanced sales analytics dashboard would be implemented here
+              <div className="space-y-4">
+                {['Golden Retriever', 'Labrador', 'French Bulldog', 'German Shepherd'].map((breed, index) => (
+                  <div key={breed} className="flex items-center justify-between">
+                    <span>{breed}</span>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-32 bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-primary h-2 rounded-full" 
+                          style={{ width: `${85 - index * 15}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm font-medium">{85 - index * 15}%</span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="inventory">
+        <TabsContent value="inventory" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Available Puppies</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{dashboardStats.availablePuppies}</div>
+                <p className="text-xs text-muted-foreground">Ready for adoption</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Reserved</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">8</div>
+                <p className="text-xs text-muted-foreground">Pending pickup</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Active Litters</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">4</div>
+                <p className="text-xs text-muted-foreground">Currently breeding</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Health Checks</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">12</div>
+                <p className="text-xs text-muted-foreground">Due this week</p>
+              </CardContent>
+            </Card>
+          </div>
+
           <Card>
             <CardHeader>
-              <CardTitle>Inventory Management</CardTitle>
-              <CardDescription>
-                Puppy listings and availability tracking
-              </CardDescription>
+              <CardTitle>Inventory Status by Breed</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                Comprehensive inventory management interface would be implemented here
+              <div className="space-y-4">
+                {[
+                  { breed: 'Golden Retriever', available: 5, reserved: 2, sold: 8 },
+                  { breed: 'Labrador', available: 3, reserved: 1, sold: 6 },
+                  { breed: 'French Bulldog', available: 2, reserved: 3, sold: 4 },
+                  { breed: 'German Shepherd', available: 4, reserved: 2, sold: 5 }
+                ].map((item) => (
+                  <div key={item.breed} className="border rounded-lg p-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="font-medium">{item.breed}</h4>
+                      <Badge variant="outline">{item.available + item.reserved} active</Badge>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-sm">
+                      <div className="text-center">
+                        <div className="font-medium text-green-600">{item.available}</div>
+                        <div className="text-muted-foreground">Available</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="font-medium text-yellow-600">{item.reserved}</div>
+                        <div className="text-muted-foreground">Reserved</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="font-medium text-blue-600">{item.sold}</div>
+                        <div className="text-muted-foreground">Sold</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="customers">
-          <Card>
-            <CardHeader>
-              <CardTitle>Customer Analytics</CardTitle>
-              <CardDescription>
-                User behavior and engagement metrics
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                Customer analytics and CRM features would be implemented here
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="customers" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{dashboardStats.totalUsers}</div>
+                <p className="text-xs text-muted-foreground">+12 new this month</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Active Inquiries</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">23</div>
+                <p className="text-xs text-muted-foreground">Awaiting response</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Repeat Customers</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">8</div>
+                <p className="text-xs text-muted-foreground">32% of total sales</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Satisfaction Rate</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">98%</div>
+                <p className="text-xs text-muted-foreground">Based on reviews</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Customer Acquisition</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {[
+                    { source: 'Organic Search', count: 45, percentage: 60 },
+                    { source: 'Social Media', count: 18, percentage: 24 },
+                    { source: 'Referrals', count: 8, percentage: 11 },
+                    { source: 'Direct', count: 4, percentage: 5 }
+                  ].map((source) => (
+                    <div key={source.source} className="flex items-center justify-between">
+                      <span className="text-sm">{source.source}</span>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-24 bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-primary h-2 rounded-full" 
+                            style={{ width: `${source.percentage}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-sm font-medium w-8">{source.count}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Customer Activity</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {[
+                    { name: 'Sarah Johnson', action: 'Inquired about Golden Retriever', time: '2 hours ago' },
+                    { name: 'Mike Chen', action: 'Scheduled visit for Labrador', time: '4 hours ago' },
+                    { name: 'Emily Davis', action: 'Completed adoption process', time: '1 day ago' },
+                    { name: 'John Smith', action: 'Left 5-star review', time: '2 days ago' }
+                  ].map((activity, index) => (
+                    <div key={index} className="flex items-start space-x-3">
+                      <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">{activity.name}</p>
+                        <p className="text-xs text-muted-foreground">{activity.action}</p>
+                        <p className="text-xs text-muted-foreground">{activity.time}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

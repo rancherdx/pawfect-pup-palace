@@ -737,6 +737,104 @@ export const adminApi = {
     return { success: true };
   },
 
+  // Sales Analytics
+  getSalesAnalytics: async (timeRange: string = '30d') => {
+    await requireAdmin();
+    
+    // Calculate date range
+    const endDate = new Date();
+    const startDate = new Date();
+    
+    switch (timeRange) {
+      case '7d':
+        startDate.setDate(endDate.getDate() - 7);
+        break;
+      case '30d':
+        startDate.setDate(endDate.getDate() - 30);
+        break;
+      case '90d':
+        startDate.setDate(endDate.getDate() - 90);
+        break;
+      case '1y':
+        startDate.setFullYear(endDate.getFullYear() - 1);
+        break;
+    }
+
+    const { data: salesData, error } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('status', 'completed')
+      .gte('created_at', startDate.toISOString())
+      .lte('created_at', endDate.toISOString());
+
+    if (error) throw error;
+
+    // Calculate metrics
+    const totalRevenue = salesData?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
+    const totalSales = salesData?.length || 0;
+    const avgOrderValue = totalSales > 0 ? totalRevenue / totalSales : 0;
+
+    return {
+      totalRevenue,
+      totalSales,
+      avgOrderValue,
+      transactions: salesData
+    };
+  },
+
+  // Transactions
+  getTransactionHistory: async (params: { 
+    search?: string; 
+    status?: string; 
+    page?: number; 
+    limit?: number 
+  } = {}) => {
+    await requireAdmin();
+    
+    let query = supabase
+      .from('transactions')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (params.search) {
+      query = query.ilike('square_payment_id', `%${params.search}%`);
+    }
+
+    if (params.status) {
+      query = query.eq('status', params.status);
+    }
+
+    const { data, error, count } = await query
+      .range(
+        ((params.page || 1) - 1) * (params.limit || 10),
+        (params.page || 1) * (params.limit || 10) - 1
+      );
+
+    if (error) throw error;
+
+    // Get summary stats
+    const { data: summaryData } = await supabase
+      .from('transactions')
+      .select('amount, status');
+
+    const totalRevenue = summaryData?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
+    const successfulTransactions = summaryData?.filter(t => t.status === 'completed').length || 0;
+    const totalTransactions = summaryData?.length || 0;
+    const successRate = totalTransactions > 0 ? Math.round((successfulTransactions / totalTransactions) * 100) : 0;
+    const avgOrderValue = totalTransactions > 0 ? Math.round(totalRevenue / totalTransactions) : 0;
+
+    return {
+      data: data || [],
+      total: count || 0,
+      summary: {
+        totalRevenue,
+        totalCount: totalTransactions,
+        successRate,
+        avgOrderValue
+      }
+    };
+  },
+
   // Dashboard Stats
   getDashboardStats: async () => {
     await requireAdmin();
