@@ -742,15 +742,24 @@ export const adminApi = {
     await requireAdmin();
     
     // Get basic stats from multiple tables
-    const [puppiesResult, littersResult, transactionsResult] = await Promise.all([
+    const [puppiesResult, littersResult, transactionsResult, usersResult, testimonialsResult, blogPostsResult] = await Promise.all([
       supabase.from('puppies').select('status', { count: 'exact' }),
       supabase.from('litters').select('status', { count: 'exact' }),
-      supabase.from('transactions').select('amount', { count: 'exact' })
+      supabase.from('transactions').select('amount', { count: 'exact' }),
+      supabase.from('profiles').select('id', { count: 'exact' }),
+      supabase.from('testimonials').select('id', { count: 'exact' }),
+      supabase.from('blog_posts').select('id', { count: 'exact' })
     ]);
     
     const puppiesCount = puppiesResult.count || 0;
     const littersCount = littersResult.count || 0;
     const transactionsCount = transactionsResult.count || 0;
+    const usersCount = usersResult.count || 0;
+    const testimonialsCount = testimonialsResult.count || 0;
+    const blogPostsCount = blogPostsResult.count || 0;
+    
+    // Calculate revenue from transaction amounts
+    const totalRevenue = transactionsResult.data?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
     
     return {
       puppies: {
@@ -763,6 +772,18 @@ export const adminApi = {
       },
       transactions: {
         total: transactionsCount
+      },
+      users: {
+        total: usersCount
+      },
+      revenue: {
+        total: totalRevenue
+      },
+      testimonials: {
+        total: testimonialsCount
+      },
+      blogPosts: {
+        total: blogPostsCount
       }
     };
   }

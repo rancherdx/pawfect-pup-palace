@@ -3,6 +3,42 @@ export { authApi } from './unifiedApi';
 export { adminApi } from './adminApi';
 export { publicApi } from './publicApi';
 
+// Litters API
+export const littersApi = {
+  getAll: async (filters = {}) => {
+    const { adminApi } = await import('./adminApi');
+    return adminApi.getAllLitters(filters);
+  },
+  getLitterById: async (id: string) => {
+    const { adminApi } = await import('./adminApi');
+    return adminApi.getLitterById(id);
+  },
+  createLitter: async (data: any) => {
+    const { adminApi } = await import('./adminApi');
+    return adminApi.createLitter(data);
+  },
+  updateLitter: async (id: string, data: any) => {
+    const { adminApi } = await import('./adminApi');
+    return adminApi.updateLitter(id, data);
+  },
+  deleteLitter: async (id: string) => {
+    const { adminApi } = await import('./adminApi');
+    return adminApi.deleteLitter(id);
+  }
+};
+
+// Puppies API
+export const puppiesApi = {
+  getPuppyById: async (id: string) => {
+    const { publicApi } = await import('./publicApi');
+    return publicApi.getPuppyById(id);
+  },
+  getAll: async (filters = {}) => {
+    const { publicApi } = await import('./publicApi');
+    return publicApi.getAllPuppies(filters);
+  }
+};
+
 // Utility functions for auth
 export { getCurrentUser, isAdmin, requireAuth, requireAdmin, apiRequest, fetchAdminAPI } from './client';
 
