@@ -482,6 +482,7 @@ export type Database = {
           name: string
           puppy_count: number | null
           sire_name: string | null
+          slug: string | null
           status: Database["public"]["Enums"]["litter_status"]
           updated_at: string
           video_urls: string[] | null
@@ -500,6 +501,7 @@ export type Database = {
           name: string
           puppy_count?: number | null
           sire_name?: string | null
+          slug?: string | null
           status?: Database["public"]["Enums"]["litter_status"]
           updated_at?: string
           video_urls?: string[] | null
@@ -518,6 +520,7 @@ export type Database = {
           name?: string
           puppy_count?: number | null
           sire_name?: string | null
+          slug?: string | null
           status?: Database["public"]["Enums"]["litter_status"]
           updated_at?: string
           video_urls?: string[] | null
@@ -613,6 +616,7 @@ export type Database = {
           owner_user_id: string | null
           photo_url: string | null
           price: number | null
+          slug: string | null
           status: Database["public"]["Enums"]["puppy_status"]
           temperament: string[] | null
           updated_at: string
@@ -637,6 +641,7 @@ export type Database = {
           owner_user_id?: string | null
           photo_url?: string | null
           price?: number | null
+          slug?: string | null
           status?: Database["public"]["Enums"]["puppy_status"]
           temperament?: string[] | null
           updated_at?: string
@@ -661,6 +666,7 @@ export type Database = {
           owner_user_id?: string | null
           photo_url?: string | null
           price?: number | null
+          slug?: string | null
           status?: Database["public"]["Enums"]["puppy_status"]
           temperament?: string[] | null
           updated_at?: string
@@ -1017,6 +1023,10 @@ export type Database = {
       }
       encrypt_payment_details: {
         Args: { details: Json; user_id: string }
+        Returns: string
+      }
+      generate_slug: {
+        Args: { input_text: string }
         Returns: string
       }
       has_role: {
