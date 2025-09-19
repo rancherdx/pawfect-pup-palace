@@ -27,8 +27,9 @@ export const publicApi = {
     search?: string;
     limit?: number;
     offset?: number;
+    litter_id?: string;
   } = {}): Promise<{ puppies: Puppy[]; total: number }> => {
-    const { breed, status, search, limit = 50, offset = 0 } = filters;
+    const { breed, status, search, limit = 50, offset = 0, litter_id } = filters;
     
     let query = supabase
       .from('puppies')
@@ -51,6 +52,10 @@ export const publicApi = {
       query = query.or(`name.ilike.%${search}%,breed.ilike.%${search}%`);
     }
 
+    if (litter_id) {
+      query = query.eq('litter_id', litter_id);
+    }
+
     query = query.range(offset, offset + limit - 1);
 
     const { data, error, count } = await query;
@@ -62,7 +67,7 @@ export const publicApi = {
     };
   },
 
-  // Get single puppy with litter info
+  // Get single puppy with litter info by ID or slug
   getPuppyById: async (id: string): Promise<Puppy | null> => {
     const { data, error } = await supabase
       .from('puppies')
@@ -73,6 +78,43 @@ export const publicApi = {
         )
       `)
       .eq('id', id)
+      .single();
+    
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      throw error;
+    }
+    
+    return data;
+  },
+
+  // Get single puppy by slug
+  getPuppyBySlug: async (slug: string): Promise<Puppy | null> => {
+    const { data, error } = await supabase
+      .from('puppies')
+      .select(`
+        *, 
+        litters (
+          id, name, dam_name, sire_name, breed, date_of_birth
+        )
+      `)
+      .eq('slug', slug)
+      .single();
+    
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      throw error;
+    }
+    
+    return data;
+  },
+
+  // Get single litter by slug
+  getLitterBySlug: async (slug: string): Promise<any | null> => {
+    const { data, error } = await supabase
+      .from('litters')
+      .select('*')
+      .eq('slug', slug)
       .single();
     
     if (error) {

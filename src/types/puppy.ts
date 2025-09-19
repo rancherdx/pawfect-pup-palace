@@ -34,6 +34,7 @@ export interface Puppy {
   // Additional fields that exist in DB
   breed_template_id?: string;
   owner_user_id?: string;
+  slug?: string; // Added for slug-based routing
   // Timestamps, if available from API
   created_at?: string;
   updated_at?: string;

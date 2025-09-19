@@ -19,6 +19,7 @@ export interface Litter {
   image_urls?: string[]; // New multi-image field
   video_urls?: string[]; // New video field
   puppies?: Puppy[]; // Added for nested puppy data
+  slug?: string; // Added for slug-based routing
   // Timestamps, if available from API
   createdAt?: string;
   updatedAt?: string;

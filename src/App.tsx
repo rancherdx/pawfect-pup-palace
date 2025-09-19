@@ -17,6 +17,7 @@ const Index = lazy(() => import("./pages/Index"));
 const Puppies = lazy(() => import("./pages/Puppies"));
 const PuppyDetails = lazy(() => import("./pages/PuppyDetails"));
 const Litters = lazy(() => import("./pages/Litters"));
+const LitterDetails = lazy(() => import("./pages/LitterDetails"));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Adopt = lazy(() => import("./pages/Adopt"));
@@ -73,7 +74,8 @@ const App: React.FC = () => {
                           <Routes>
                             <Route path="/" element={<Index />} />
                             <Route path="/puppies" element={<Puppies />} />
-                            <Route path="/puppy/:id" element={<PuppyDetails />} />
+                            <Route path="/puppy/:slug" element={<PuppyDetails />} />
+                            <Route path="/litter/:slug" element={<LitterDetails />} />
                             <Route path="/litters" element={<Litters />} />
                             <Route path="/about" element={<About />} />
                             <Route path="/contact" element={<Contact />} />

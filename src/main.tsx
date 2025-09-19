@@ -1,8 +1,8 @@
-
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
+import { HelmetProvider } from 'react-helmet-async'
 
 // Add puppy-themed font (Quicksand)
 const fontLink = document.createElement('link');
@@ -17,7 +17,13 @@ favicon.href = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' w
 document.head.appendChild(favicon);
 
 const root = createRoot(document.getElementById("root")!);
-root.render(<App />);
+root.render(
+  <React.StrictMode>
+    <HelmetProvider>
+      <App />
+    </HelmetProvider>
+  </React.StrictMode>
+);
 
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {

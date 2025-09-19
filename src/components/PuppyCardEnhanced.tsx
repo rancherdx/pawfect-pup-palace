@@ -19,6 +19,7 @@ interface PuppyCardEnhancedProps {
   bannerText?: string;
   bannerColor?: string;
   isFeatured?: boolean;
+  slug?: string;
 }
 
 const PuppyCardEnhanced: React.FC<PuppyCardEnhancedProps> = ({
@@ -35,6 +36,7 @@ const PuppyCardEnhanced: React.FC<PuppyCardEnhancedProps> = ({
   bannerText,
   bannerColor = '#ef4444',
   isFeatured = false,
+  slug,
 }) => {
   // Use the first image from imageUrls, fallback to imageSrc, then placeholder
   const displayImage = imageUrls[0] || imageSrc || '/placeholder.svg';
@@ -126,7 +128,7 @@ const PuppyCardEnhanced: React.FC<PuppyCardEnhancedProps> = ({
             <div className="text-2xl font-bold text-primary">
               ${price.toLocaleString()}
             </div>
-            <Link to={`/puppy/${id}`}>
+            <Link to={`/puppy/${slug || id}`}>
               <Button size="sm" className="hover:scale-105 transition-transform">
                 View Details
               </Button>

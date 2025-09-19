@@ -1,7 +1,7 @@
 import React from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { publicApi } from "@/api";
 import { calculateAge } from "@/utils/dateUtils";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,25 +9,15 @@ import PuppyImageCarousel from "@/components/puppy-details/PuppyImageCarousel";
 import PuppyInfoSection from "@/components/puppy-details/PuppyInfoSection";
 import TemperamentTraitsCard from "@/components/puppy-details/TemperamentTraitsCard";
 import DetailsTabs from "@/components/puppy-details/DetailsTabs";
+import { Helmet } from "react-helmet-async";
 
 const PuppyDetails = () => {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
 
   const { data: puppy, isLoading, isError } = useQuery({
-    queryKey: ['puppy', id],
-    queryFn: async () => {
-      if (!id) throw new Error('No puppy ID provided');
-      
-      const { data, error } = await supabase
-        .from('puppies')
-        .select('*')
-        .eq('id', id)
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id
+    queryKey: ['puppy', slug],
+    queryFn: () => slug ? publicApi.getPuppyBySlug(slug) : null,
+    enabled: !!slug
   });
 
   if (isLoading) {
@@ -75,67 +65,116 @@ const PuppyDetails = () => {
     : ['/placeholder.svg'];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      {/* Hero Section with Background Pattern */}
-      <div 
-        className="relative bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage: "url('https://images.unsplash.com/photo-1601758228041-f3b2795255f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80')",
-          backgroundAttachment: 'fixed'
-        }}
-      >
-        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm"></div>
-        <div className="relative container mx-auto px-4 py-12">
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            {/* Image Carousel */}
-            <div className="space-y-4">
-              <PuppyImageCarousel 
-                images={imageUrls}
-                name={puppy.name}
-              />
+    <>
+      <Helmet>
+        <title>{`${puppy.name} - ${puppy.breed} Puppy | GDS Puppies`}</title>
+        <meta 
+          name="description" 
+          content={`Meet ${puppy.name}, a beautiful ${puppy.breed} puppy ${puppy.status === 'Available' ? 'available for adoption' : 'from our breeding program'}. ${puppy.description || ''}`} 
+        />
+        <meta name="keywords" content={`${puppy.breed} puppy, ${puppy.name}, dog for sale, puppy adoption, ${puppy.breed} breeder`} />
+        <link rel="canonical" href={`/puppy/${puppy.slug}`} />
+        
+        {/* Open Graph */}
+        <meta property="og:title" content={`${puppy.name} - ${puppy.breed} Puppy`} />
+        <meta property="og:description" content={`Meet ${puppy.name}, a beautiful ${puppy.breed} puppy. ${puppy.description || ''}`} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={`/puppy/${puppy.slug}`} />
+        {imageUrls[0] && <meta property="og:image" content={imageUrls[0]} />}
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${puppy.name} - ${puppy.breed} Puppy`} />
+        <meta name="twitter:description" content={`Meet ${puppy.name}, a beautiful ${puppy.breed} puppy.`} />
+        {imageUrls[0] && <meta name="twitter:image" content={imageUrls[0]} />}
+
+        {/* Structured Data */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": `${puppy.name} - ${puppy.breed} Puppy`,
+            "description": puppy.description || `Beautiful ${puppy.breed} puppy available for loving home`,
+            "category": "Pet",
+            "brand": {
+              "@type": "Brand",
+              "name": "GDS Puppies"
+            },
+            "offers": puppy.price ? {
+              "@type": "Offer",
+              "price": puppy.price,
+              "priceCurrency": "USD",
+              "availability": puppy.status === 'Available' ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+            } : undefined,
+            ...(imageUrls[0] && {
+              "image": imageUrls[0]
+            })
+          })}
+        </script>
+      </Helmet>
+
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+        {/* Hero Section with Background Pattern */}
+        <div 
+          className="relative bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: "url('https://images.unsplash.com/photo-1601758228041-f3b2795255f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80')",
+            backgroundAttachment: 'fixed'
+          }}
+        >
+          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm"></div>
+          <div className="relative container mx-auto px-4 py-12">
+            {/* Main Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+              {/* Image Carousel */}
+              <div className="space-y-4">
+                <PuppyImageCarousel 
+                  images={imageUrls}
+                  name={puppy.name}
+                />
+              </div>
+
+              {/* Puppy Information */}
+              <div className="space-y-6">
+                <PuppyInfoSection 
+                  puppy={{
+                    id: puppy.id,
+                    name: puppy.name,
+                    breed: puppy.breed,
+                    gender: puppy.gender || "Not specified",
+                    status: puppy.status,
+                    price: puppy.price || 0,
+                    description: puppy.description || "",
+                    growthProgress: 75,
+                    age: age || "Unknown",
+                    weight: formattedWeight || "Not specified",
+                    color: displayColor,
+                    available: puppy.status === 'Available'
+                  }}
+                  puppyAge={age || "Unknown"}
+                />
+              </div>
             </div>
 
-            {/* Puppy Information */}
-            <div className="space-y-6">
-              <PuppyInfoSection 
-                puppy={{
-                  id: puppy.id,
-                  name: puppy.name,
-                  breed: puppy.breed,
-                  gender: puppy.gender || "Not specified",
-                  status: puppy.status,
-                  price: puppy.price || 0,
-                  description: puppy.description || "",
-                  growthProgress: 75,
-                  age: age || "Unknown",
-                  weight: formattedWeight || "Not specified",
-                  color: displayColor,
-                  available: puppy.status === 'Available'
-                }}
-                puppyAge={age || "Unknown"}
-              />
-            </div>
+            {/* Temperament & Traits Card */}
+            {puppy.temperament && (
+              <div className="mb-8">
+                <TemperamentTraitsCard 
+                  temperament={puppy.temperament || []}
+                  trainability={80}
+                  activityLevel={70}
+                />
+              </div>
+            )}
+
+            {/* Detailed Information Tabs */}
+            <DetailsTabs 
+              puppy={puppy}
+            />
           </div>
-
-          {/* Temperament & Traits Card */}
-          {puppy.temperament && (
-            <div className="mb-8">
-              <TemperamentTraitsCard 
-                temperament={puppy.temperament || []}
-                trainability={80}
-                activityLevel={70}
-              />
-            </div>
-          )}
-
-          {/* Detailed Information Tabs */}
-          <DetailsTabs 
-            puppy={puppy}
-          />
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

@@ -197,9 +197,11 @@ const Litters = () => {
                       </Link>
                     )}
                     
-                    <Button variant="outline" size="sm" className="flex-1">
-                      Learn More
-                    </Button>
+                    <Link to={`/litter/${litter.slug || litter.id}`} className="flex-1">
+                      <Button variant="outline" size="sm" className="w-full">
+                        Learn More
+                      </Button>
+                    </Link>
                   </div>
                 </CardContent>
               </Card>

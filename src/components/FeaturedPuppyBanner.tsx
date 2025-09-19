@@ -17,6 +17,7 @@ interface FeaturedPuppy {
   banner_text: string | null;
   banner_color: string;
   status: string;
+  slug?: string;
 }
 
 const FeaturedPuppyBanner: React.FC = () => {
@@ -25,7 +26,7 @@ const FeaturedPuppyBanner: React.FC = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('puppies')
-        .select('id, name, breed, price, image_urls, banner_text, banner_color, status')
+        .select('id, name, breed, price, image_urls, banner_text, banner_color, status, slug')
         .eq('is_featured', true)
         .eq('status', 'Available')
         .order('created_at', { ascending: false })
@@ -106,7 +107,7 @@ const FeaturedPuppyBanner: React.FC = () => {
                         <div className="text-2xl font-bold text-primary">
                           ${puppy.price.toLocaleString()}
                         </div>
-                        <Link to={`/puppy/${puppy.id}`}>
+                        <Link to={`/puppy/${puppy.slug || puppy.id}`}>
                           <Button 
                             size="sm" 
                             className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"

@@ -16,6 +16,7 @@ interface PuppyCardProps {
   imageSrc?: string; // Made optional as per instruction
   price: number;
   status: PuppyStatus;
+  slug?: string; // Added for slug-based routing
 }
 
 const PuppyCard = ({
@@ -27,6 +28,7 @@ const PuppyCard = ({
   imageSrc,
   price,
   status,
+  slug,
 }: PuppyCardProps) => {
   const [isFavorite, setIsFavorite] = useState(false);
   const { toast } = useToast();
@@ -94,7 +96,7 @@ const PuppyCard = ({
           className="w-full bg-brand-red hover:bg-red-700 text-white"
           disabled={!available}
         >
-          <Link to={`/puppy/${id}`}>
+          <Link to={`/puppy/${slug || id}`}>
             {available ? "View Details" : "Not Available"}
           </Link>
         </Button>
