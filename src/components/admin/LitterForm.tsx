@@ -1,206 +1,171 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { LitterCreationData, LitterStatus } from "@/types";
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { adminApi } from '@/api';
+import { Litter, LitterStatus, LitterCreationData, LitterUpdateData } from "@/types";
+import { Loader2 } from 'lucide-react';
 
 const LITTER_STATUS_VALUES: LitterStatus[] = ["Active", "Available Soon", "All Reserved", "All Sold", "Archived"];
 
+type LitterFormData = Omit<LitterCreationData, "status"> & { status: LitterStatus };
+
 interface LitterFormProps {
-  formData: LitterCreationData;
-  onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
-  onSubmit: (e: React.FormEvent) => void;
-  onCancel: () => void;
-  isEditing: boolean;
+  litter?: Litter;
+  onClose: () => void;
+  isEditMode?: boolean;
 }
 
-const LitterForm: React.FC<LitterFormProps> = ({
-  formData,
-  onInputChange,
-  onSubmit,
-  onCancel,
-  isEditing
-}) => {
+const LitterForm: React.FC<LitterFormProps> = ({ litter, onClose, isEditMode }) => {
+  const [formData, setFormData] = useState<LitterFormData>({
+    name: litter?.name || "",
+    breed: litter?.breed || "",
+    damName: litter?.damName || "",
+    sireName: litter?.sireName || "",
+    dateOfBirth: litter?.dateOfBirth ? new Date(litter.dateOfBirth).toISOString().split('T')[0] : "",
+    status: litter?.status || "Active",
+    description: litter?.description || "",
+    coverImageUrl: litter?.coverImageUrl || "",
+    puppyCount: litter?.puppyCount || 0,
+    expectedDate: litter?.expectedDate ? new Date(litter.expectedDate).toISOString().split('T')[0] : "",
+  });
+
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation<unknown, Error, { id?: string; data: LitterFormData }>({
+    mutationFn: ({ id, data }) => {
+      const apiData = {
+        ...data,
+        dam_name: data.damName,
+        sire_name: data.sireName,
+        date_of_birth: data.dateOfBirth,
+        cover_image_url: data.coverImageUrl,
+        puppy_count: data.puppyCount,
+        expected_date: data.expectedDate,
+      };
+
+      if (isEditMode && id) {
+        return adminApi.updateLitter(id, apiData as LitterUpdateData);
+      } else {
+        return adminApi.createLitter(apiData as LitterCreationData);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["litters"] });
+      toast.success(`Litter ${isEditMode ? "updated" : "created"} successfully!`);
+      onClose();
+    },
+    onError: (error) => {
+      toast.error(`Failed to ${isEditMode ? "update" : "create"} litter: ${error.message}`);
+    },
+  });
+
+  useEffect(() => {
+    if (litter) {
+      setFormData({
+        name: litter.name || "",
+        breed: litter.breed || "",
+        damName: litter.damName || "",
+        sireName: litter.sireName || "",
+        dateOfBirth: litter.dateOfBirth ? new Date(litter.dateOfBirth).toISOString().split('T')[0] : "",
+        status: litter.status || "Active",
+        description: litter.description || "",
+        coverImageUrl: litter.coverImageUrl || "",
+        puppyCount: litter.puppyCount || 0,
+        expectedDate: litter.expectedDate ? new Date(litter.expectedDate).toISOString().split('T')[0] : "",
+      });
+    }
+  }, [litter]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (name: keyof LitterFormData, value: string) => {
+    setFormData(prev => ({ ...prev, [name]: value as LitterStatus }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    mutation.mutate({ id: litter?.id, data: formData });
+  };
+
   return (
-    <Card className="shadow-lg border-t-4 border-t-brand-red animate-fade-in">
-      <CardHeader className="bg-gray-50 dark:bg-gray-900/20">
-        <CardTitle className="text-2xl">
-          {isEditing ? "Edit Litter" : "Add New Litter"}
-        </CardTitle>
+    <Card>
+      <CardHeader>
+        <CardTitle>{isEditMode ? `Edit Litter: ${litter?.name}` : "Add New Litter"}</CardTitle>
       </CardHeader>
-      
-      <CardContent className="p-6">
-        <form onSubmit={onSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-lg font-medium mb-1">
-                  Litter Name
-                </label>
-                <input
-                  required
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={onInputChange}
-                  placeholder="Enter litter name"
-                  className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                />
-              </div>
-              <div>
-                <label className="block text-lg font-medium mb-1">
-                  Dam (Mother's Name)
-                </label>
-                <input
-                  required
-                  type="text"
-                  name="damName"
-                  value={formData.damName}
-                  onChange={onInputChange}
-                  placeholder="Enter dam's name"
-                  className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                />
-              </div>
-              <div>
-                <label className="block text-lg font-medium mb-1">
-                  Sire (Father's Name)
-                </label>
-                <input
-                  required
-                  type="text"
-                  name="sireName"
-                  value={formData.sireName}
-                  onChange={onInputChange}
-                  placeholder="Enter sire's name"
-                  className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                />
-              </div>
+      <form onSubmit={handleSubmit}>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Litter Name</Label>
+              <Input id="name" name="name" value={formData.name} onChange={handleChange} required />
             </div>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-lg font-medium mb-1">
-                  Breed
-                </label>
-                <input
-                  required
-                  type="text"
-                  name="breed"
-                  value={formData.breed}
-                  onChange={onInputChange}
-                  placeholder="Enter breed"
-                  className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-lg font-medium mb-1">
-                  Date of Birth
-                </label>
-                <input
-                  required
-                  type="date"
-                  name="dateOfBirth"
-                  value={formData.dateOfBirth}
-                  onChange={onInputChange}
-                  className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-lg font-medium mb-1">
-                    Number of Puppies
-                  </label>
-                  <input
-                    required
-                    type="number"
-                    name="puppyCount"
-                    min="1"
-                    value={formData.puppyCount}
-                    onChange={onInputChange}
-                    placeholder="0"
-                    className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-lg font-medium mb-1">
-                    Status
-                  </label>
-                  <select
-                    name="status"
-                    value={formData.status}
-                    onChange={onInputChange}
-                    className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                  >
-                    {LITTER_STATUS_VALUES.map(statusValue => (
-                      <option key={statusValue} value={statusValue}>{statusValue}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-lg font-medium mb-1">
-                  Expected Date (Optional)
-                </label>
-                <input
-                  type="date"
-                  name="expectedDate"
-                  value={formData.expectedDate || ""}
-                  onChange={onInputChange}
-                  className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-lg font-medium mb-1">
-                  Description (Optional)
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description || ""}
-                  onChange={onInputChange}
-                  placeholder="Brief description of the litter"
-                  rows={3}
-                  className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red resize-none"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-lg font-medium mb-1">
-                  Cover Image URL (Optional)
-                </label>
-                <input
-                  type="text"
-                  name="coverImageUrl"
-                  value={formData.coverImageUrl || ""}
-                  onChange={onInputChange}
-                  placeholder="https://example.com/image.jpg"
-                  className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="breed">Breed</Label>
+              <Input id="breed" name="breed" value={formData.breed} onChange={handleChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="damName">Dam (Mother's Name)</Label>
+              <Input id="damName" name="damName" value={formData.damName} onChange={handleChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="sireName">Sire (Father's Name)</Label>
+              <Input id="sireName" name="sireName" value={formData.sireName} onChange={handleChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="dateOfBirth">Date of Birth</Label>
+              <Input id="dateOfBirth" name="dateOfBirth" type="date" value={formData.dateOfBirth} onChange={handleChange} required />
+            </div>
+             <div className="space-y-2">
+              <Label htmlFor="puppyCount">Number of Puppies</Label>
+              <Input id="puppyCount" name="puppyCount" type="number" value={formData.puppyCount} onChange={handleChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select name="status" value={formData.status} onValueChange={value => handleSelectChange('status', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {LITTER_STATUS_VALUES.map(statusValue => (
+                    <SelectItem key={statusValue} value={statusValue}>{statusValue}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="expectedDate">Expected Date (Optional)</Label>
+              <Input id="expectedDate" name="expectedDate" type="date" value={formData.expectedDate} onChange={handleChange} />
             </div>
           </div>
-          
-          <div className="flex justify-end gap-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onCancel}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              className="bg-brand-red hover:bg-red-700 text-white min-w-32"
-            >
-              {isEditing ? "Update Litter" : "Create Litter"}
-            </Button>
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea id="description" name="description" value={formData.description} onChange={handleChange} />
           </div>
-        </form>
-      </CardContent>
+          <div className="space-y-2">
+            <Label htmlFor="coverImageUrl">Cover Image URL (Optional)</Label>
+            <Input id="coverImageUrl" name="coverImageUrl" value={formData.coverImageUrl} onChange={handleChange} />
+          </div>
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={mutation.isPending}>
+            {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isEditMode ? "Update Litter" : "Create Litter"}
+          </Button>
+        </CardFooter>
+      </form>
     </Card>
   );
 };

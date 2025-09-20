@@ -13,8 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button"; // For the DropdownMenuTrigger
 import Section from "@/components/Section";
-import PuppyManagement from "@/components/admin/PuppyManagement";
-import LitterManagement from "@/components/admin/LitterManagement";
+import UnifiedManagementHub from "@/components/admin/UnifiedManagementHub";
 import TransactionHistory from "@/components/admin/TransactionHistory";
 import SquareIntegration from "@/components/admin/SquareIntegration";
 import SettingsPanel from "@/components/admin/SettingsPanel";
@@ -38,10 +37,7 @@ import { Code } from "lucide-react";
 
 const allAdminTabs = [
   // Core Management
-  { value: "puppies", label: "Puppies", icon: Dog, component: <PuppyManagement /> },
-  { value: "litters", label: "Litters", icon: PawPrint, component: <LitterManagement /> },
-  { value: "breeds", label: "Breeds", icon: Layers, component: <BreedTemplateManager /> },
-  { value: "stud_dogs", label: "Stud Dogs", icon: Dog, component: <AdminStudDogManager /> },
+  { value: "hub", label: "Management Hub", icon: PawPrint, component: <UnifiedManagementHub /> },
   
   // Content & Marketing
   { value: "blog", label: "Blog", icon: FileText, component: <BlogManager /> },
@@ -66,7 +62,7 @@ const allAdminTabs = [
 
 const AdminDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialTab = searchParams.get("tab") || "puppies";
+  const initialTab = searchParams.get("tab") || "hub";
   const [activeTabValue, setActiveTabValue] = useState(initialTab);
   const [visibleTabs, setVisibleTabs] = useState<typeof allAdminTabs>([]);
   const [dropdownTabs, setDropdownTabs] = useState<typeof allAdminTabs>([]);

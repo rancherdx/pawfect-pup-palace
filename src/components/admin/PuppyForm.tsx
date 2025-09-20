@@ -1,26 +1,5 @@
 import { useState, useEffect } from "react";
 import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { adminApi } from "@/api";
-import {
   Puppy,
   PuppyCreationData,
   PuppyUpdateData,
@@ -28,6 +7,7 @@ import {
   PuppySize,
 } from "@/types";
 import { Loader2 } from "lucide-react";
+import ImageUploadWithCrop from "../media/ImageUploadWithCrop";
 
 // Define a type for the form data that includes all the fields
 type PuppyFormData = Omit<PuppyCreationData, "status" | "size"> & {
@@ -45,45 +25,45 @@ const PUPPY_SIZE_VALUES: PuppySize[] = ["Toy", "Small", "Medium", "Large", "Gian
 const PUPPY_STATUS_VALUES: PuppyStatus[] = ["Available", "Reserved", "Sold", "Not For Sale"];
 
 const PuppyForm: React.FC<PuppyFormProps> = ({ puppy, onClose, isEditMode }) => {
-  const [formData, setFormData] = useState<PuppyFormData>(
-    {
-      breed: puppy?.breed || "",
-      description: puppy?.description || "",
-      size: puppy?.size || "",
-      temperament: Array.isArray(puppy?.temperament) ? puppy.temperament : (puppy?.temperament ? [puppy.temperament] : []),
-      care_notes: puppy?.care_notes || "",
-      name: puppy?.name || "",
-      birth_date: puppy?.birth_date || new Date().toISOString().split("T")[0],
-      price: puppy?.price || 0,
-      photo_url: puppy?.photo_url || "",
-      weight: puppy?.weight || 0,
-      mother_name: puppy?.mother_name || "",
-      father_name: puppy?.father_name || "",
-      litter_id: puppy?.litter_id || "",
-      gender: puppy?.gender || "",
-      status: (puppy?.status || "Available") as PuppyStatus,
-    }
-  );
-  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState<PuppyFormData>({
+    breed: puppy?.breed || "",
+    description: puppy?.description || "",
+    size: puppy?.size || "",
+    temperament: Array.isArray(puppy?.temperament) ? puppy.temperament : (puppy?.temperament ? [puppy.temperament] : []),
+    care_notes: puppy?.care_notes || "",
+    name: puppy?.name || "",
+    birth_date: puppy?.birth_date || new Date().toISOString().split("T")[0],
+    price: puppy?.price || 0,
+    photo_url: puppy?.photo_url || "", // Keep for now, but prioritize image_urls
+    image_urls: puppy?.image_urls || [],
+    weight: puppy?.weight || 0,
+    mother_name: puppy?.mother_name || "",
+    father_name: puppy?.father_name || "",
+    litter_id: puppy?.litter_id || "",
+    gender: puppy?.gender || "",
+    status: (puppy?.status || "Available") as PuppyStatus,
+  });
+
   const queryClient = useQueryClient();
 
   const mutation = useMutation<unknown, Error, { id?: string; data: PuppyFormData }>({
     mutationFn: ({ id, data }) => {
-      setIsLoading(true);
+      // Prioritize image_urls and remove photo_url if it exists
+      const submissionData = { ...data };
+      delete submissionData.photo_url;
+
       if (isEditMode && id) {
-        return adminApi.updatePuppy(id, data as PuppyUpdateData);
+        return adminApi.updatePuppy(id, submissionData as PuppyUpdateData);
       } else {
-        return adminApi.createPuppy(data as PuppyCreationData);
+        return adminApi.createPuppy(submissionData as PuppyCreationData);
       }
     },
     onSuccess: () => {
-      setIsLoading(false);
       queryClient.invalidateQueries({ queryKey: ["puppies"] });
       toast.success(`Puppy ${isEditMode ? "updated" : "created"} successfully!`);
       onClose();
     },
     onError: (error) => {
-      setIsLoading(false);
       toast.error(
         `Failed to ${isEditMode ? "update" : "create"} puppy: ${error.message}`
       );
@@ -102,6 +82,7 @@ const PuppyForm: React.FC<PuppyFormProps> = ({ puppy, onClose, isEditMode }) => 
         birth_date: puppy.birth_date || new Date().toISOString().split("T")[0],
         price: puppy.price || 0,
         photo_url: puppy.photo_url || "",
+        image_urls: puppy.image_urls || [],
         weight: puppy.weight || 0,
         mother_name: puppy.mother_name || "",
         father_name: puppy.father_name || "",
@@ -114,16 +95,12 @@ const PuppyForm: React.FC<PuppyFormProps> = ({ puppy, onClose, isEditMode }) => 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isEditMode && puppy?.id) {
-      mutation.mutate({ id: puppy.id, data: formData });
-    } else {
-      mutation.mutate({ data: formData });
-    }
+    mutation.mutate({ id: puppy?.id, data: formData });
   };
 
   const handleChange = (
     e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+      HTMLInputElement | HTMLTextAreaElement
     >
   ) => {
     const { name, value } = e.target;
@@ -133,193 +110,132 @@ const PuppyForm: React.FC<PuppyFormProps> = ({ puppy, onClose, isEditMode }) => 
     }));
   };
 
+  const handleImagesUploaded = (urls: string[]) => {
+    setFormData(prev => ({
+      ...prev,
+      image_urls: urls,
+    }));
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>{isEditMode ? "Edit Puppy" : "Add New Puppy"}</CardTitle>
+        <CardTitle>{isEditMode ? `Edit Puppy: ${puppy?.name}` : "Add New Puppy"}</CardTitle>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit}>
+        <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="name">Name</Label>
-            <Input
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
+            <Label>Puppy Images</Label>
+            <ImageUploadWithCrop
+              bucket="puppy-images"
+              existingImages={formData.image_urls}
+              onImagesUploaded={handleImagesUploaded}
+              maxImages={5}
             />
           </div>
-          <div>
-            <Label htmlFor="breed">Breed</Label>
-            <Input
-              type="text"
-              id="breed"
-              name="breed"
-              value={formData.breed}
-              onChange={handleChange}
-              required
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Name</Label>
+              <Input id="name" name="name" value={formData.name} onChange={handleChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="breed">Breed</Label>
+              <Input id="breed" name="breed" value={formData.breed} onChange={handleChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="birth_date">Birth Date</Label>
+              <Input id="birth_date" name="birth_date" type="date" value={formData.birth_date} onChange={handleChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="gender">Gender</Label>
+              <Input id="gender" name="gender" value={formData.gender} onChange={handleChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="price">Price</Label>
+              <Input id="price" name="price" type="number" value={formData.price} onChange={handleChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="weight">Weight (lbs)</Label>
+              <Input id="weight" name="weight" type="number" value={formData.weight} onChange={handleChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="mother_name">Mother's Name</Label>
+              <Input id="mother_name" name="mother_name" value={formData.mother_name} onChange={handleChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="father_name">Father's Name</Label>
+              <Input id="father_name" name="father_name" value={formData.father_name} onChange={handleChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="litter_id">Litter ID</Label>
+              <Input id="litter_id" name="litter_id" value={formData.litter_id} onChange={handleChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="size">Size</Label>
+              <Select name="size" value={formData.size} onValueChange={value => setFormData(prev => ({...prev, size: value as PuppySize}))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select size" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PUPPY_SIZE_VALUES.map(sz => (
+                    <SelectItem key={sz} value={sz}>{sz || "Unspecified"}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+             <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select name="status" value={formData.status} onValueChange={value => setFormData(prev => ({...prev, status: value as PuppyStatus}))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PUPPY_STATUS_VALUES.map(st => (
+                    <SelectItem key={st} value={st}>{st}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div>
-            <Label htmlFor="birth_date">Birth Date</Label>
-            <Input
-              type="date"
-              id="birth_date"
-              name="birth_date"
-              value={formData.birth_date}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="gender">Gender</Label>
-            <Input
-              type="text"
-              id="gender"
-              name="gender"
-              value={formData.gender}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="price">Price</Label>
-            <Input
-              type="number"
-              id="price"
-              name="price"
-              value={formData.price}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="photoUrl">Photo URL</Label>
-            <Input
-              type="text"
-              id="photo_url"
-              name="photo_url"
-              value={formData.photo_url}
-              onChange={handleChange}
-            />
-          </div>
-          <div>
-            <Label htmlFor="weight">Weight</Label>
-            <Input
-              type="number"
-              id="weight"
-              name="weight"
-              value={formData.weight}
-              onChange={handleChange}
-            />
-          </div>
-          <div>
-            <Label htmlFor="motherName">Mother's Name</Label>
-            <Input
-              type="text"
-              id="mother_name"
-              name="mother_name"
-              value={formData.mother_name}
-              onChange={handleChange}
-            />
-          </div>
-          <div>
-            <Label htmlFor="father_name">Father's Name</Label>
-            <Input
-              type="text"
-              id="father_name"
-              name="father_name"
-              value={formData.father_name}
-              onChange={handleChange}
-            />
-          </div>
-          <div>
-            <Label htmlFor="litter_id">Litter ID</Label>
-            <Input
-              type="text"
-              id="litter_id"
-              name="litter_id"
-              value={formData.litter_id}
-              onChange={handleChange}
-            />
-          </div>
-          <div>
-            <Label htmlFor="size">Size</Label>
-            <select
-              name="size"
-              value={formData.size}
-              onChange={e => setFormData(prev => ({ ...prev, size: e.target.value as PuppySize }))}
-            >
-              {PUPPY_SIZE_VALUES.map(sz => (
-                <option key={sz} value={sz}>{sz || "Unspecified"}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <Label htmlFor="temperament">Temperament</Label>
+          <div className="space-y-2">
+            <Label htmlFor="temperament">Temperament (comma-separated)</Label>
             <Textarea
               id="temperament"
               name="temperament"
-              value={formData.temperament}
-              onChange={handleChange}
+              value={Array.isArray(formData.temperament) ? formData.temperament.join(', ') : formData.temperament}
+              onChange={e => setFormData(prev => ({ ...prev, temperament: e.target.value.split(',').map(t => t.trim()) }))}
             />
           </div>
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="care_notes">Care Notes</Label>
-            <Textarea
-              id="care_notes"
-              name="care_notes"
-              value={formData.care_notes}
-              onChange={handleChange}
-            />
+            <Textarea id="care_notes" name="care_notes" value={formData.care_notes} onChange={handleChange} />
           </div>
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              required
-            />
+            <Textarea id="description" name="description" value={formData.description} onChange={handleChange} required />
           </div>
-          <div>
-            <Label htmlFor="status">Status</Label>
-            <select
-              name="status"
-              value={formData.status}
-              onChange={e => setFormData(prev => ({ ...prev, status: e.target.value as PuppyStatus }))}
+        </CardContent>
+        <CardFooter>
+          <div className="flex justify-between w-full">
+            <Button type="button" variant="secondary" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={mutation.isPending}
             >
-              {PUPPY_STATUS_VALUES.map(st => (
-                <option key={st} value={st}>{st}</option>
-              ))}
-            </select>
+              {mutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Please wait
+                </>
+              ) : (
+                `${isEditMode ? "Update" : "Create"} Puppy`
+              )}
+            </Button>
           </div>
-        </form>
-      </CardContent>
-      <CardFooter>
-        <div className="flex justify-between w-full">
-          <Button variant="secondary" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            className="bg-brand-red hover:bg-red-700 text-white"
-            onClick={handleSubmit}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Please wait
-              </>
-            ) : (
-              `${isEditMode ? "Update" : "Create"} Puppy`
-            )}
-          </Button>
-        </div>
-      </CardFooter>
+        </CardFooter>
+      </form>
     </Card>
   );
 };
