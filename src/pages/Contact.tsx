@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -68,8 +69,56 @@ const Contact = () => {
     });
   };
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    "mainEntity": {
+      "@type": "Organization",
+      "name": "Golden Dreams Kennels",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+1-555-123-4567",
+        "contactType": "customer service",
+        "email": "woof@gdspuppies.com",
+        "hoursAvailable": "Mo-Fr 09:00-17:00"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "123 Puppy Lane",
+        "addressLocality": "Dogtown",
+        "addressRegion": "CA", 
+        "postalCode": "90210",
+        "addressCountry": "US"
+      }
+    }
+  };
+
   return (
     <div>
+      <Helmet>
+        <title>Contact GDS Puppies - Get in Touch | Golden Dreams Kennels</title>
+        <meta name="description" content="Contact Golden Dreams Kennels for puppy adoption inquiries, breeding questions, or to schedule a visit. Phone: (555) 123-4567, Email: woof@gdspuppies.com" />
+        <meta name="keywords" content="contact GDS Puppies, puppy adoption contact, dog breeder contact, Golden Dreams Kennels phone, puppy inquiry, schedule visit" />
+        <link rel="canonical" href="https://gdspuppies.com/contact" />
+        
+        {/* Open Graph */}
+        <meta property="og:title" content="Contact GDS Puppies - Get in Touch" />
+        <meta property="og:description" content="Contact us for puppy adoption inquiries, breeding questions, or to schedule a visit. We'd love to hear from you!" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://gdspuppies.com/contact" />
+        <meta property="og:image" content="https://images.unsplash.com/photo-1591160690555-5debfba289f0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=630" />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Contact GDS Puppies - Get in Touch" />
+        <meta name="twitter:description" content="Contact us for puppy adoption inquiries, breeding questions, or to schedule a visit. We'd love to hear from you!" />
+        <meta name="twitter:image" content="https://images.unsplash.com/photo-1591160690555-5debfba289f0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=630" />
+        
+        {/* Structured Data */}
+        <script type="application/ld+json">
+          {JSON.stringify(structuredData)}
+        </script>
+      </Helmet>
       <HeroSection
         title="Contact Us"
         subtitle="We'd love to hear from you. Contact us with any questions about our puppies or adoption process."

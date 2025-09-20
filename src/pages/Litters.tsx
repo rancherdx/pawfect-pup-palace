@@ -1,5 +1,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Helmet } from "react-helmet-async";
+import { LazyImage } from "@/components/LazyImage";
 import { supabase } from "@/integrations/supabase/client";
 import HeroSection from "@/components/HeroSection";
 import Section from "@/components/Section";
@@ -23,6 +25,27 @@ const Litters = () => {
       return data || [];
     }
   });
+
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Puppy Litters",
+    "description": "View our current and upcoming puppy litters from Golden Dreams Kennels. Quality breeding with champion bloodlines.",
+    "mainEntity": {
+      "@type": "ItemList",
+      "numberOfItems": litters?.length || 0,
+      "itemListElement": (litters || []).map((litter, index) => ({
+        "@type": "ListItem",
+        "position": index + 1,
+        "item": {
+          "@type": "Product",
+          "name": litter.name,
+          "description": `${litter.breed} litter - ${litter.sire_name} x ${litter.dam_name}`,
+          "image": litter.cover_image_url
+        }
+      }))
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -49,6 +72,11 @@ const Litters = () => {
   if (isLoading) {
     return (
       <>
+        <Helmet>
+          <title>Puppy Litters - Current & Upcoming | Golden Dreams Kennels</title>
+          <meta name="description" content="View our current and upcoming puppy litters from Golden Dreams Kennels. Quality breeding with champion bloodlines and health guarantees." />
+          <link rel="canonical" href="https://gdspuppies.com/litters" />
+        </Helmet>
         <HeroSection
           title="Our Litters"
           subtitle="Discover our current and upcoming litters of beautiful, healthy puppies"
@@ -96,6 +124,30 @@ const Litters = () => {
 
   return (
     <>
+      <Helmet>
+        <title>Puppy Litters - Current & Upcoming | Golden Dreams Kennels</title>
+        <meta name="description" content="View our current and upcoming puppy litters from Golden Dreams Kennels. Quality breeding with champion bloodlines and health guarantees." />
+        <meta name="keywords" content="puppy litters, dog breeding, upcoming litters, current litters, Golden Dreams Kennels, champion bloodlines, quality breeding" />
+        <link rel="canonical" href="https://gdspuppies.com/litters" />
+        
+        {/* Open Graph */}
+        <meta property="og:title" content="Puppy Litters - Current & Upcoming" />
+        <meta property="og:description" content="View our current and upcoming puppy litters from Golden Dreams Kennels. Quality breeding with champion bloodlines and health guarantees." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://gdspuppies.com/litters" />
+        <meta property="og:image" content="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=630" />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Puppy Litters - Current & Upcoming" />
+        <meta name="twitter:description" content="View our current and upcoming puppy litters from Golden Dreams Kennels. Quality breeding with champion bloodlines and health guarantees." />
+        <meta name="twitter:image" content="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=630" />
+        
+        {/* Structured Data */}
+        <script type="application/ld+json">
+          {JSON.stringify(structuredData)}
+        </script>
+      </Helmet>
       <HeroSection
         title="Our Litters"
         subtitle="Discover our current and upcoming litters of beautiful, healthy puppies"
@@ -122,7 +174,7 @@ const Litters = () => {
               <Card key={litter.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
                 {litter.cover_image_url && (
                   <div className="aspect-video overflow-hidden">
-                    <img 
+                    <LazyImage
                       src={litter.cover_image_url} 
                       alt={litter.name}
                       className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"

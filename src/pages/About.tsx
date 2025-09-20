@@ -1,11 +1,51 @@
 
 import { PawPrint } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 import HeroSection from "@/components/HeroSection";
 import Section from "@/components/Section";
 
 const About = () => {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "AboutPage",
+    "mainEntity": {
+      "@type": "Organization",
+      "name": "Golden Dreams Kennels",
+      "foundingDate": "2010",
+      "founder": {
+        "@type": "Person",
+        "name": "John Davis"
+      },
+      "description": "Professional dog breeding establishment founded in 2010, specializing in ethical breeding practices and raising well-socialized, healthy puppies."
+    }
+  };
+
   return (
     <div>
+      <Helmet>
+        <title>About GDS Puppies - Our Story & Mission | Golden Dreams Kennels</title>
+        <meta name="description" content="Learn about GDS Puppies' story, ethical breeding practices, and commitment to raising healthy, well-socialized puppies. Meet our experienced team and tour our facilities." />
+        <meta name="keywords" content="about GDS Puppies, dog breeder story, ethical breeding, puppy breeding facility, John Davis breeder, Golden Dreams Kennels history" />
+        <link rel="canonical" href="https://gdspuppies.com/about" />
+        
+        {/* Open Graph */}
+        <meta property="og:title" content="About GDS Puppies - Our Story & Mission" />
+        <meta property="og:description" content="Learn about our story, ethical breeding practices, and commitment to raising healthy, well-socialized puppies since 2010." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://gdspuppies.com/about" />
+        <meta property="og:image" content="https://images.unsplash.com/photo-1541599540903-216a46ca1dc0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=630" />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="About GDS Puppies - Our Story & Mission" />
+        <meta name="twitter:description" content="Learn about our story, ethical breeding practices, and commitment to raising healthy, well-socialized puppies since 2010." />
+        <meta name="twitter:image" content="https://images.unsplash.com/photo-1541599540903-216a46ca1dc0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=630" />
+        
+        {/* Structured Data */}
+        <script type="application/ld+json">
+          {JSON.stringify(structuredData)}
+        </script>
+      </Helmet>
       <HeroSection
         title="About GDS Puppies"
         subtitle="Learn about our story, our breeding practices, and our commitment to raising happy, healthy puppies"

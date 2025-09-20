@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { Helmet } from "react-helmet-async";
 import HeroSection from "@/components/HeroSection";
 import Section from "@/components/Section";
 import TestimonialCard from "@/components/TestimonialCard";
@@ -28,9 +29,62 @@ const Home = () => {
   const featuredPuppies = puppiesData || [];
   const testimonials = testimonialsData || [];
 
-  
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Golden Dreams Kennels",
+    "alternateName": "GDS Puppies",
+    "url": "https://gdspuppies.com",
+    "logo": "https://gdspuppies.com/logo.jpg",
+    "description": "Professional dog breeder specializing in healthy, well-socialized puppies. Champion bloodlines with health guarantees and lifetime support.",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "123 Puppy Lane",
+      "addressLocality": "Dogtown", 
+      "addressRegion": "CA",
+      "postalCode": "90210",
+      "addressCountry": "US"
+    },
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "+1-555-123-4567",
+      "contactType": "customer service",
+      "email": "woof@gdspuppies.com"
+    },
+    "sameAs": [
+      "https://www.instagram.com/gdspuppies",
+      "https://www.facebook.com/gdspuppies",
+      "https://twitter.com/gdspuppies"
+    ]
+  };
+
   return (
     <div>
+      <Helmet>
+        <title>Golden Dreams Kennels - Premium Puppy Breeder | Healthy, Happy Puppies</title>
+        <meta name="description" content="Welcome to Golden Dreams Kennels, where every puppy finds their perfect family. Champion bloodlines, health guarantees, and lifetime support. Browse available puppies today." />
+        <meta name="keywords" content="puppy breeder, dog breeder, puppies for sale, champion bloodlines, healthy puppies, Golden Dreams Kennels, GDS Puppies" />
+        <link rel="canonical" href="https://gdspuppies.com/" />
+        
+        {/* Open Graph */}
+        <meta property="og:title" content="Golden Dreams Kennels - Premium Puppy Breeder" />
+        <meta property="og:description" content="Where every puppy finds their perfect family and every family finds their perfect companion. Champion bloodlines with health guarantees." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://gdspuppies.com/" />
+        <meta property="og:image" content="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=630" />
+        <meta property="og:site_name" content="Golden Dreams Kennels" />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Golden Dreams Kennels - Premium Puppy Breeder" />
+        <meta name="twitter:description" content="Where every puppy finds their perfect family. Champion bloodlines, health guarantees, and lifetime support." />
+        <meta name="twitter:image" content="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=630" />
+        
+        {/* Structured Data */}
+        <script type="application/ld+json">
+          {JSON.stringify(structuredData)}
+        </script>
+      </Helmet>
       <HeroSection
         title="Welcome to Golden Dreams Kennels"
         subtitle="Where every puppy finds their perfect family and every family finds their perfect companion"
