@@ -106,6 +106,18 @@ export const adminApi = {
     return { success: true };
   },
 
+  bulkUpdatePuppiesStatus: async (puppyIds: string[], status: string) => {
+    await requireAdmin();
+    const { data, error } = await supabase
+      .from('puppies')
+      .update({ status })
+      .in('id', puppyIds)
+      .select();
+
+    if (error) throw error;
+    return { success: true, updatedCount: data.length };
+  },
+
   // Litters
   getAllLitters: async (filters = {}) => {
     await requireAdmin();
