@@ -64,3 +64,6 @@ verify_jwt = false
 
 [functions.square-webhook]
 verify_jwt = false
+
+[functions.vault-management]
+verify_jwt = false

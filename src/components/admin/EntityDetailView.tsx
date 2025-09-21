@@ -97,7 +97,7 @@ const LitterDetailsView: React.FC<{ litter: Litter, puppies: Puppy[], onEdit: ()
     );
 };
 
-const EntityDetailView: React.FC<EntityDetailViewProps> = ({ entityId, entityType, puppies, litters, onBulkAddPuppies }) => {
+const EntityDetailView: React.FC<EntityDetailViewProps> = ({ entityId, entityType, puppies, litters, studDogs, onBulkAddPuppies }) => {
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
@@ -155,5 +155,19 @@ const StudDogDetailsView: React.FC<{ studDog: StudDog, onEdit: () => void }> = (
         </CardContent>
     </Card>
 );
+
+  if (entityType === 'stud_dog') {
+    const studDog = studDogs.find(s => s.id === entityId);
+    if (!studDog) return <div>Stud dog not found.</div>;
+
+    return isEditing ? (
+      <div>StudDogForm component needed</div>
+    ) : (
+      <StudDogDetailsView studDog={studDog} onEdit={() => setIsEditing(true)} />
+    );
+  }
+
+  return <div>Unknown entity type.</div>;
+};
 
 export default EntityDetailView;

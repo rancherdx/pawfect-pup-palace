@@ -3,21 +3,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Settings, 
   Mail, 
-  PlugZap, 
-  ShieldCheck, 
-  Users, 
-  CreditCard,
   Shield,
+  Users, 
   Trash2,
   Image,
-  Eye
+  Eye,
+  Zap
 } from "lucide-react";
 import SettingsPanel from "./SettingsPanel";
 import EmailTemplatesManager from "./EmailTemplatesManager";
-import ThirdPartyIntegrationsManager from "./ThirdPartyIntegrationsManager";
-import SecureIntegrations from "./SecureIntegrations";
+import IntegrationsHub from "./IntegrationsHub";
 import AdminUserManager from "./AdminUserManager";
-import ApplePaySetup from "./ApplePaySetup";
 import AdvancedSecurityFeatures from "./AdvancedSecurityFeatures";
 import DataDeletionRequestsManager from "./DataDeletionRequestsManager";
 import BrandAssetManager from "./BrandAssetManager";
@@ -54,20 +50,8 @@ const SettingsHub = () => {
     { 
       value: "integrations", 
       label: "Integrations", 
-      icon: PlugZap, 
-      component: <ThirdPartyIntegrationsManager /> 
-    },
-    { 
-      value: "secure", 
-      label: "Secure Integrations", 
-      icon: ShieldCheck, 
-      component: <SecureIntegrations /> 
-    },
-    { 
-      value: "applepay", 
-      label: "Apple Pay", 
-      icon: CreditCard, 
-      component: <ApplePaySetup /> 
+      icon: Zap, 
+      component: <IntegrationsHub /> 
     },
     { 
       value: "security", 
