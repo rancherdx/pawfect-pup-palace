@@ -6,7 +6,7 @@ import { adminApi } from '@/api';
 import { Puppy, Litter } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle, ListTree, Dog, ChevronsRight, Trash2, Edit } from 'lucide-react';
+import { AlertTriangle, ListTree, Dog, ChevronsRight, Trash2, Edit, PlusCircle } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,6 +15,11 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import EntityDetailView from './EntityDetailView';
 import BulkUpdateStatusDialog from './BulkUpdateStatusDialog';
+import BulkAddPuppiesDialog from './BulkAddPuppiesDialog';
+import BulkPuppyCreator from './BulkPuppyCreator';
+import LitterForm from './LitterForm';
+import StudDogForm from './StudDogForm';
+import PuppyForm from './PuppyForm';
 import { PuppyStatus } from '@/types';
 
 // Define a type for the hierarchical data structure
@@ -24,8 +29,12 @@ interface LitterWithPuppies extends Litter {
 
 const UnifiedManagementHub = () => {
   const [selectedEntity, setSelectedEntity] = useState<{ type: 'puppy' | 'litter', id: string } | null>(null);
+  const [creationMode, setCreationMode] = useState<'litter' | 'stud_dog' | 'puppy' | null>(null);
   const [selectedPuppyIds, setSelectedPuppyIds] = useState<Set<string>>(new Set());
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
+  const [isBulkAddDialogOpen, setIsBulkAddDialogOpen] = useState(false);
+  const [bulkAddLitterId, setBulkAddLitterId] = useState<string | null>(null);
+  const [puppiesToCreate, setPuppiesToCreate] = useState(0);
   const queryClient = useQueryClient();
 
   const { data: puppiesData, isLoading: puppiesLoading, isError: puppiesIsError } = useQuery({
@@ -40,6 +49,12 @@ const UnifiedManagementHub = () => {
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: studDogsData, isLoading: studDogsLoading, isError: studDogsIsError } = useQuery({
+      queryKey: ['stud_dogs'],
+      queryFn: () => adminApi.getStudDogs(),
+      staleTime: 5 * 60 * 1000,
+  });
+
   const bulkUpdateMutation = useMutation({
     mutationFn: ({ ids, status }: { ids: string[], status: PuppyStatus }) =>
       adminApi.bulkUpdatePuppiesStatus(ids, status),
@@ -52,6 +67,19 @@ const UnifiedManagementHub = () => {
     onError: (error) => {
       toast.error(`Failed to update puppies: ${error.message}`);
     },
+  });
+
+  const bulkCreateMutation = useMutation({
+    mutationFn: (puppiesData: any[]) => adminApi.bulkCreatePuppies(puppiesData),
+    onSuccess: (data) => {
+        toast.success(`${data.createdCount} new puppies have been created successfully!`);
+        queryClient.invalidateQueries({ queryKey: ['puppies'] });
+        setPuppiesToCreate(0);
+        setBulkAddLitterId(null);
+    },
+    onError: (error) => {
+        toast.error(`Failed to create puppies: ${error.message}`);
+    }
   });
 
   const { hierarchicalData, unassignedPuppies } = useMemo(() => {
@@ -73,8 +101,8 @@ const UnifiedManagementHub = () => {
     return { hierarchicalData: littersWithPuppies, unassignedPuppies: unassigned };
   }, [puppiesData, littersData]);
 
-  const isLoading = puppiesLoading || littersLoading;
-  const isError = puppiesIsError || littersIsError;
+  const isLoading = puppiesLoading || littersLoading || studDogsLoading;
+  const isError = puppiesIsError || littersIsError || studDogsIsError;
 
   useEffect(() => {
     const channel = supabase.channel('public-tables');
@@ -93,6 +121,14 @@ const UnifiedManagementHub = () => {
         (payload) => {
           console.log('Litter change received!', payload);
           queryClient.invalidateQueries({ queryKey: ['litters'] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'stud_dogs' },
+        (payload) => {
+          console.log('Stud dog change received!', payload);
+          queryClient.invalidateQueries({ queryKey: ['stud_dogs'] });
         }
       )
       .subscribe();
@@ -174,9 +210,29 @@ const UnifiedManagementHub = () => {
       );
     }
 
+    const handleAddNewLitter = () => {
+        setSelectedEntity(null);
+        setCreationMode('litter');
+    }
+
+    const handleAddNewStudDog = () => {
+        setSelectedEntity(null);
+        setCreationMode('stud_dog');
+    }
+
+    const handleAddNewPuppy = () => {
+        setSelectedEntity(null);
+        setCreationMode('puppy');
+    }
+
     return (
       <div className="p-2 space-y-2">
-        <h3 className="font-semibold text-lg px-2 flex items-center"><ListTree className="w-5 h-5 mr-2" /> Litters</h3>
+        <div className="flex justify-between items-center px-2">
+            <h3 className="font-semibold text-lg flex items-center"><ListTree className="w-5 h-5 mr-2" /> Litters</h3>
+            <Button variant="ghost" size="icon" onClick={handleAddNewLitter}>
+                <PlusCircle className="h-5 w-5" />
+            </Button>
+        </div>
         {hierarchicalData.map(litter => {
             const puppyIdsInLitter = new Set(litter.puppies.map(p => p.id));
             const selectedInLitterCount = Array.from(selectedPuppyIds).filter(id => puppyIdsInLitter.has(id)).length;
@@ -225,7 +281,30 @@ const UnifiedManagementHub = () => {
               </Collapsible>
             )
         })}
-         <h3 className="font-semibold text-lg px-2 pt-4 flex items-center"><Dog className="w-5 h-5 mr-2" /> Unassigned Puppies</h3>
+         <div className="flex justify-between items-center px-2 pt-4">
+            <h3 className="font-semibold text-lg flex items-center"><Dog className="w-5 h-5 mr-2" /> Stud Dogs</h3>
+            <Button variant="ghost" size="icon" onClick={handleAddNewStudDog}>
+                <PlusCircle className="h-5 w-5" />
+            </Button>
+        </div>
+        {(studDogsData?.data || []).map((dog) => (
+            <Button
+                key={dog.id}
+                variant={selectedEntity?.id === dog.id ? "secondary" : "ghost"}
+                className="w-full justify-start ml-2"
+                onClick={() => setSelectedEntity({ type: 'stud_dog', id: dog.id })}
+            >
+                <Dog className="w-4 h-4 mr-2" />
+                {dog.name}
+            </Button>
+        ))}
+
+        <div className="flex justify-between items-center px-2 pt-4">
+            <h3 className="font-semibold text-lg flex items-center"><Dog className="w-5 h-5 mr-2" /> Unassigned Puppies</h3>
+            <Button variant="ghost" size="icon" onClick={handleAddNewPuppy}>
+                <PlusCircle className="h-5 w-5" />
+            </Button>
+        </div>
          {unassignedPuppies.map(puppy => (
             <div key={puppy.id} className="flex items-center">
                 <Checkbox
@@ -270,20 +349,41 @@ const UnifiedManagementHub = () => {
               <ResizableHandle withHandle />
               <ResizablePanel defaultSize={75}>
                 <div className="h-full overflow-y-auto p-4">
-                  {selectedEntity ? (
-                    <EntityDetailView
-                      entityId={selectedEntity.id}
-                      entityType={selectedEntity.type}
-                      puppies={puppiesData?.puppies || []}
-                      litters={littersData?.litters || []}
-                    />
-                  ) : (
-                    <div className="flex h-full flex-col items-center justify-center text-center text-muted-foreground">
-                      <ListTree className="w-16 h-16 mb-4" />
-                      <h3 className="text-xl font-semibold">Select an Entity</h3>
-                      <p>Click on a puppy or litter in the sidebar to view and edit its details.</p>
-                    </div>
-                  )}
+                {creationMode === 'litter' && <LitterForm onClose={() => setCreationMode(null)} isEditMode={false} />}
+                {creationMode === 'stud_dog' && <StudDogForm onClose={() => setCreationMode(null)} isEditMode={false} />}
+                {creationMode === 'puppy' ? (
+                  <PuppyForm onClose={() => setCreationMode(null)} isEditMode={false} />
+                ) : puppiesToCreate > 0 && bulkAddLitterId ? (
+                  <BulkPuppyCreator
+                    count={puppiesToCreate}
+                    litterId={bulkAddLitterId}
+                    onClose={() => setPuppiesToCreate(0)}
+                    onSave={(puppiesData) => bulkCreateMutation.mutate(puppiesData)}
+                    isSaving={bulkCreateMutation.isPending}
+                  />
+                ) : creationMode === 'litter' ? (
+                  <LitterForm onClose={() => setCreationMode(null)} isEditMode={false} />
+                ) : creationMode === 'stud_dog' ? (
+                  <StudDogForm onClose={() => setCreationMode(null)} isEditMode={false} />
+                ) : selectedEntity ? (
+                  <EntityDetailView
+                    entityId={selectedEntity.id}
+                    entityType={selectedEntity.type}
+                    puppies={puppiesData?.puppies || []}
+                    litters={littersData?.litters || []}
+                    studDogs={studDogsData?.data || []}
+                    onBulkAddPuppies={(litterId) => {
+                      setBulkAddLitterId(litterId);
+                      setIsBulkAddDialogOpen(true);
+                    }}
+                  />
+                ) : (
+                  <div className="flex h-full flex-col items-center justify-center text-center text-muted-foreground">
+                    <ListTree className="w-16 h-16 mb-4" />
+                    <h3 className="text-xl font-semibold">Select an Entity</h3>
+                    <p>Click on a puppy or litter in the sidebar to view and edit its details, or add a new entity.</p>
+                  </div>
+                )}
                 </div>
               </ResizablePanel>
             </ResizablePanelGroup>
@@ -298,6 +398,16 @@ const UnifiedManagementHub = () => {
         }}
         isUpdating={bulkUpdateMutation.isPending}
         selectedCount={selectedPuppyIds.size}
+      />
+      <BulkAddPuppiesDialog
+        isOpen={isBulkAddDialogOpen}
+        onClose={() => setIsBulkAddDialogOpen(false)}
+        onConfirm={(count) => {
+            setPuppiesToCreate(count);
+            setIsBulkAddDialogOpen(false);
+            setCreationMode(null);
+            setSelectedEntity(null);
+        }}
       />
     </>
   );

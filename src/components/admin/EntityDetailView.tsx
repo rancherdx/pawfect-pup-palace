@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Puppy, Litter } from '@/types';
+import { Puppy, Litter, StudDog } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Pencil } from 'lucide-react';
+import { Pencil, PlusCircle } from 'lucide-react';
 import PuppyForm from './PuppyForm';
 import LitterForm from './LitterForm';
 
 interface EntityDetailViewProps {
   entityId: string;
-  entityType: 'puppy' | 'litter';
+  entityType: 'puppy' | 'litter' | 'stud_dog';
   puppies: Puppy[];
   litters: Litter[];
+  studDogs: StudDog[];
+  onBulkAddPuppies: (litterId: string) => void;
 }
 
 const PuppyDetailsView: React.FC<{ puppy: Puppy, onEdit: () => void }> = ({ puppy, onEdit }) => (
@@ -47,7 +49,7 @@ const PuppyDetailsView: React.FC<{ puppy: Puppy, onEdit: () => void }> = ({ pupp
   </Card>
 );
 
-const LitterDetailsView: React.FC<{ litter: Litter, puppies: Puppy[], onEdit: () => void }> = ({ litter, puppies, onEdit }) => {
+const LitterDetailsView: React.FC<{ litter: Litter, puppies: Puppy[], onEdit: () => void, onBulkAdd: () => void }> = ({ litter, puppies, onEdit, onBulkAdd }) => {
     const litterPuppies = puppies.filter(p => p.litter_id === litter.id);
     return (
         <Card>
@@ -56,9 +58,15 @@ const LitterDetailsView: React.FC<{ litter: Litter, puppies: Puppy[], onEdit: ()
                     <CardTitle className="text-2xl">{litter.name}</CardTitle>
                     <CardDescription>{litter.breed}</CardDescription>
                 </div>
-                <Button variant="outline" size="icon" onClick={onEdit}>
-                    <Pencil className="h-4 w-4" />
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={onBulkAdd}>
+                        <PlusCircle className="h-4 w-4 mr-2" />
+                        Add Puppies
+                    </Button>
+                    <Button variant="outline" size="icon" onClick={onEdit}>
+                        <Pencil className="h-4 w-4" />
+                    </Button>
+                </div>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="flex justify-between">
@@ -89,7 +97,7 @@ const LitterDetailsView: React.FC<{ litter: Litter, puppies: Puppy[], onEdit: ()
     );
 };
 
-const EntityDetailView: React.FC<EntityDetailViewProps> = ({ entityId, entityType, puppies, litters }) => {
+const EntityDetailView: React.FC<EntityDetailViewProps> = ({ entityId, entityType, puppies, litters, onBulkAddPuppies }) => {
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
@@ -115,11 +123,37 @@ const EntityDetailView: React.FC<EntityDetailViewProps> = ({ entityId, entityTyp
     return isEditing ? (
       <LitterForm litter={litter} onClose={() => setIsEditing(false)} isEditMode={true} />
     ) : (
-      <LitterDetailsView litter={litter} puppies={puppies} onEdit={() => setIsEditing(true)} />
+      <LitterDetailsView litter={litter} puppies={puppies} onEdit={() => setIsEditing(true)} onBulkAdd={() => onBulkAddPuppies(litter.id)} />
     );
   }
 
-  return null;
-};
+const StudDogDetailsView: React.FC<{ studDog: StudDog, onEdit: () => void }> = ({ studDog, onEdit }) => (
+    <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+                <CardTitle className="text-2xl">{studDog.name}</CardTitle>
+                <CardDescription>{studDog.breed_id}</CardDescription>
+            </div>
+            <Button variant="outline" size="icon" onClick={onEdit}>
+                <Pencil className="h-4 w-4" />
+            </Button>
+        </CardHeader>
+        <CardContent className="space-y-4">
+            <div className="flex justify-between">
+                <strong>Status:</strong>
+                <Badge>{studDog.is_available ? 'Available' : 'Unavailable'}</Badge>
+            </div>
+            <div className="flex justify-between">
+                <strong>Age:</strong>
+                <span>{studDog.age} years</span>
+            </div>
+            <div className="flex justify-between">
+                <strong>Stud Fee:</strong>
+                <span>${studDog.stud_fee}</span>
+            </div>
+            <p className="text-sm text-muted-foreground pt-4">{studDog.description}</p>
+        </CardContent>
+    </Card>
+);
 
 export default EntityDetailView;

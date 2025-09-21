@@ -118,6 +118,40 @@ export const adminApi = {
     return { success: true, updatedCount: data.length };
   },
 
+  bulkCreatePuppies: async (puppiesData: any[]) => {
+    await requireAdmin();
+    const { data, error } = await supabase
+      .from('puppies')
+      .insert(puppiesData)
+      .select();
+
+    if (error) throw error;
+    return { success: true, createdCount: data.length, puppies: data };
+  },
+
+  // Storage
+  getStorageBucketFiles: async (bucketName: string) => {
+    await requireAdmin();
+    const { data, error } = await supabase
+      .storage
+      .from(bucketName)
+      .list('', {
+        limit: 100, // Adjust as needed
+        offset: 0,
+        sortBy: { column: 'created_at', order: 'desc' },
+      });
+
+    if (error) throw error;
+
+    // Add public URLs to the file objects
+    const filesWithUrls = data.map(file => {
+      const { data: { publicUrl } } = supabase.storage.from(bucketName).getPublicUrl(file.name);
+      return { ...file, publicUrl };
+    });
+
+    return filesWithUrls;
+  },
+
   // Litters
   getAllLitters: async (filters = {}) => {
     await requireAdmin();
