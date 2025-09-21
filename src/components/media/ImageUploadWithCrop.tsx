@@ -5,8 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { Upload, X, Crop, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, Crop, Image as ImageIcon, Library } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import ImageGalleryDialog from '../admin/ImageGalleryDialog';
 
 interface ImageUploadWithCropProps {
   onImagesUploaded: (urls: string[]) => void;
@@ -32,6 +33,7 @@ const ImageUploadWithCrop: React.FC<ImageUploadWithCropProps> = ({
   const [images, setImages] = useState<ImageFile[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -262,17 +264,32 @@ const ImageUploadWithCrop: React.FC<ImageUploadWithCropProps> = ({
         </div>
       )}
 
-      {images.length > 0 && !uploading && (
-        <div className="flex gap-2 justify-end">
-          <Button variant="outline" onClick={() => setImages([])}>
-            Clear All
+      <div className="flex gap-2 justify-end">
+          <Button variant="outline" onClick={() => setIsGalleryOpen(true)}>
+            <Library className="h-4 w-4 mr-2" />
+            Choose from Gallery
           </Button>
-          <Button onClick={uploadImages}>
-            <ImageIcon className="h-4 w-4 mr-2" />
-            Upload {images.length} Image{images.length > 1 ? 's' : ''}
-          </Button>
-        </div>
-      )}
+        {images.length > 0 && !uploading && (
+          <>
+            <Button variant="outline" onClick={() => setImages([])}>
+              Clear All
+            </Button>
+            <Button onClick={uploadImages}>
+              <ImageIcon className="h-4 w-4 mr-2" />
+              Upload {images.length} Image{images.length > 1 ? 's' : ''}
+            </Button>
+          </>
+        )}
+      </div>
+
+      <ImageGalleryDialog
+        isOpen={isGalleryOpen}
+        onClose={() => setIsGalleryOpen(false)}
+        onSelectImage={(url) => {
+            const allUrls = [...existingImages, url];
+            onImagesUploaded(allUrls);
+        }}
+      />
 
       <p className="text-xs text-muted-foreground">
         Maximum {maxImages} images • Max 10MB per file • Auto-converted to WebP for optimization
