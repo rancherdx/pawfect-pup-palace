@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
@@ -28,7 +28,7 @@ interface LitterWithPuppies extends Litter {
 }
 
 const UnifiedManagementHub = () => {
-  const [selectedEntity, setSelectedEntity] = useState<{ type: 'puppy' | 'litter', id: string } | null>(null);
+  const [selectedEntity, setSelectedEntity] = useState<{ type: 'puppy' | 'litter' | 'stud', id: string } | null>(null);
   const [creationMode, setCreationMode] = useState<'litter' | 'stud_dog' | 'puppy' | null>(null);
   const [selectedPuppyIds, setSelectedPuppyIds] = useState<Set<string>>(new Set());
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
@@ -92,10 +92,10 @@ const UnifiedManagementHub = () => {
 
     const littersWithPuppies: LitterWithPuppies[] = litters.map(litter => ({
       ...litter,
-      puppies: puppies.filter(puppy => puppy.litter_id === litter.id),
+      puppies: puppies.filter(puppy => (puppy as any).litter_id === litter.id),
     }));
 
-    const assignedPuppyIds = new Set(puppies.filter(p => p.litter_id).map(p => p.id));
+    const assignedPuppyIds = new Set(puppies.filter(p => (p as any).litter_id).map(p => p.id));
     const unassigned = puppies.filter(p => !assignedPuppyIds.has(p.id));
 
     return { hierarchicalData: littersWithPuppies, unassignedPuppies: unassigned };
@@ -245,7 +245,6 @@ const UnifiedManagementHub = () => {
                     <Checkbox
                         className="ml-2"
                         checked={isAllSelected || isPartiallySelected}
-                        indeterminate={isPartiallySelected}
                         onCheckedChange={(checked) => handleLitterSelection(litter, !!checked)}
                         disabled={litter.puppies.length === 0}
                     />
@@ -292,7 +291,7 @@ const UnifiedManagementHub = () => {
                 key={dog.id}
                 variant={selectedEntity?.id === dog.id ? "secondary" : "ghost"}
                 className="w-full justify-start ml-2"
-                onClick={() => setSelectedEntity({ type: 'stud_dog', id: dog.id })}
+                onClick={() => setSelectedEntity({ type: 'stud', id: dog.id })}
             >
                 <Dog className="w-4 h-4 mr-2" />
                 {dog.name}

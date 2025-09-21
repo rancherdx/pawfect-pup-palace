@@ -18,11 +18,30 @@ type LitterFormData = Omit<LitterCreationData, "status"> & { status: LitterStatu
 
 interface LitterFormProps {
   litter?: Litter;
-  onClose: () => void;
+  onClose?: () => void;
   isEditMode?: boolean;
+  // Legacy props for compatibility with LitterManagement
+  formData?: any;
+  onInputChange?: any;
+  onSubmit?: any;
+  onCancel?: any;
+  isEditing?: boolean;
 }
 
-const LitterForm: React.FC<LitterFormProps> = ({ litter, onClose, isEditMode }) => {
+const LitterForm: React.FC<LitterFormProps> = ({ 
+  litter, 
+  onClose, 
+  isEditMode,
+  // Legacy props
+  formData: legacyFormData,
+  onInputChange,
+  onSubmit: legacyOnSubmit,
+  onCancel,
+  isEditing
+}) => {
+  // Use legacy props if provided
+  const actualOnClose = onClose || onCancel || (() => {});
+  const actualIsEditMode = isEditMode !== undefined ? isEditMode : !!isEditing;
   const [formData, setFormData] = useState<LitterFormData>({
     name: litter?.name || "",
     breed: litter?.breed || "",
@@ -50,7 +69,7 @@ const LitterForm: React.FC<LitterFormProps> = ({ litter, onClose, isEditMode }) 
         expected_date: data.expectedDate,
       };
 
-      if (isEditMode && id) {
+      if (actualIsEditMode && id) {
         return adminApi.updateLitter(id, apiData as LitterUpdateData);
       } else {
         return adminApi.createLitter(apiData as LitterCreationData);
@@ -58,11 +77,11 @@ const LitterForm: React.FC<LitterFormProps> = ({ litter, onClose, isEditMode }) 
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["litters"] });
-      toast.success(`Litter ${isEditMode ? "updated" : "created"} successfully!`);
-      onClose();
+      toast.success(`Litter ${actualIsEditMode ? "updated" : "created"} successfully!`);
+      actualOnClose();
     },
     onError: (error) => {
-      toast.error(`Failed to ${isEditMode ? "update" : "create"} litter: ${error.message}`);
+      toast.error(`Failed to ${actualIsEditMode ? "update" : "create"} litter: ${error.message}`);
     },
   });
 
@@ -100,7 +119,7 @@ const LitterForm: React.FC<LitterFormProps> = ({ litter, onClose, isEditMode }) 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{isEditMode ? `Edit Litter: ${litter?.name}` : "Add New Litter"}</CardTitle>
+        <CardTitle>{actualIsEditMode ? `Edit Litter: ${litter?.name}` : "Add New Litter"}</CardTitle>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
@@ -157,12 +176,12 @@ const LitterForm: React.FC<LitterFormProps> = ({ litter, onClose, isEditMode }) 
           </div>
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button type="button" variant="outline" onClick={onClose}>
+          <Button type="button" variant="outline" onClick={actualOnClose}>
             Cancel
           </Button>
           <Button type="submit" disabled={mutation.isPending}>
             {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isEditMode ? "Update Litter" : "Create Litter"}
+            {actualIsEditMode ? "Update Litter" : "Create Litter"}
           </Button>
         </CardFooter>
       </form>

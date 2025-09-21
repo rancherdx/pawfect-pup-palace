@@ -14,7 +14,10 @@ import { Loader2 } from 'lucide-react';
 interface StudDogFormProps {
   studDog?: StudDog;
   onClose: () => void;
+  onSave?: (formData: StudDogCreationData, id?: string) => void;
+  onCancel?: () => void;
   isEditMode?: boolean;
+  isLoading?: boolean;
 }
 
 const StudDogForm: React.FC<StudDogFormProps> = ({ studDog, onClose, isEditMode }) => {
@@ -145,5 +148,8 @@ const StudDogForm: React.FC<StudDogFormProps> = ({ studDog, onClose, isEditMode 
     </Card>
   );
 };
+
+export type StudDogFormData = StudDogCreationData;
+export type StudDogApiPayload = StudDogCreationData;
 
 export default StudDogForm;

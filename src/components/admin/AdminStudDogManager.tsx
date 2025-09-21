@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Dog, Search, ArrowLeft, ArrowRight, Edit2, Trash2, Loader2, PlusCircle, X } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import StudDogForm, { StudDogFormData, StudDogApiPayload } from './StudDogForm';
+import StudDogForm from './StudDogForm';
+import { StudDog, StudDogCreationData, StudDogUpdateData } from '@/types';
 import {
   Dialog,
   DialogContent,
@@ -17,16 +18,23 @@ import {
 } from "@/components/ui/dialog";
 import { adminApi } from '@/api';
 
-interface AdminStudDog extends StudDogApiPayload {
+interface AdminStudDog {
   id: string;
+  name: string;
+  breed_id: string;
+  age?: number;
+  description?: string;
+  temperament?: string;
+  certifications?: string[];
+  image_urls?: string[];
+  stud_fee: number;
+  is_available: boolean;
   owner_user_id?: string;
   owner_name?: string | null;
   owner_email?: string | null;
   breed_name?: string | null;
   created_at: string;
   updated_at: string;
-  image_urls_raw_json?: string;
-  certifications_raw_json?: string;
 }
 
 interface AdminStudDogsApiResponse {
@@ -86,7 +94,7 @@ const AdminStudDogManager: React.FC = () => {
   });
 
   const addStudDogMutation = useMutation({
-    mutationFn: (newData: StudDogApiPayload) => adminApi.createStudDog(newData),
+    mutationFn: (newData: StudDogCreationData) => adminApi.createStudDog(newData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminStudDogs'] });
       setShowFormModal(false);
@@ -98,7 +106,7 @@ const AdminStudDogManager: React.FC = () => {
   });
 
   const updateStudDogMutation = useMutation({
-    mutationFn: ({ id, data: updateData }: { id: string, data: StudDogApiPayload }) => 
+    mutationFn: ({ id, data: updateData }: { id: string, data: StudDogUpdateData }) =>
       adminApi.updateStudDog(id, updateData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminStudDogs'] });
@@ -131,7 +139,7 @@ const AdminStudDogManager: React.FC = () => {
   };
   const handleDeleteClick = (id: string) => { setDeletingStudDogId(id); setShowDeleteConfirmModal(true); };
 
-  const handleSaveStudDog = (formDataValues: StudDogApiPayload, id?: string) => {
+  const handleSaveStudDog = (formDataValues: StudDogCreationData, id?: string) => {
     if (id) {
       updateStudDogMutation.mutate({ id, data: formDataValues });
     } else {
@@ -215,16 +223,16 @@ const AdminStudDogManager: React.FC = () => {
                 id: editingStudDog.id,
                 name: editingStudDog.name,
                 breed_id: editingStudDog.breed_id,
-                age: editingStudDog.age ?? '',
-                description: editingStudDog.description ?? '',
-                temperament: editingStudDog.temperament ?? '',
-                certifications: editingStudDog.certifications_raw_json || JSON.stringify(editingStudDog.certifications || []),
-                stud_fee: editingStudDog.stud_fee ?? '',
-                image_urls: editingStudDog.image_urls_raw_json || JSON.stringify(editingStudDog.image_urls || []),
+                age: typeof editingStudDog.age === 'string' ? parseInt(editingStudDog.age) || 0 : editingStudDog.age || 0,
+                description: editingStudDog.description || '',
+                temperament: editingStudDog.temperament || '',
+                certifications: editingStudDog.certifications || [],
+                stud_fee: typeof editingStudDog.stud_fee === 'string' ? parseFloat(editingStudDog.stud_fee) || 0 : editingStudDog.stud_fee || 0,
+                image_urls: editingStudDog.image_urls || [],
                 is_available: Boolean(editingStudDog.is_available)
             } : undefined}
             onSave={handleSaveStudDog}
-            onCancel={() => { setShowFormModal(false); setEditingStudDog(null); }}
+            onClose={() => { setShowFormModal(false); setEditingStudDog(null); }}
             isLoading={addStudDogMutation.isPending || updateStudDogMutation.isPending}
           />
         </DialogContent>

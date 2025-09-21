@@ -9,7 +9,7 @@ import LitterForm from './LitterForm';
 
 interface EntityDetailViewProps {
   entityId: string;
-  entityType: 'puppy' | 'litter' | 'stud_dog';
+  entityType: 'puppy' | 'litter' | 'stud';
   puppies: Puppy[];
   litters: Litter[];
   studDogs: StudDog[];
@@ -156,7 +156,7 @@ const StudDogDetailsView: React.FC<{ studDog: StudDog, onEdit: () => void }> = (
     </Card>
 );
 
-  if (entityType === 'stud_dog') {
+  if (entityType === 'stud') {
     const studDog = studDogs.find(s => s.id === entityId);
     if (!studDog) return <div>Stud dog not found.</div>;
 

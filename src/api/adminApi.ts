@@ -106,7 +106,7 @@ export const adminApi = {
     return { success: true };
   },
 
-  bulkUpdatePuppiesStatus: async (puppyIds: string[], status: string) => {
+  bulkUpdatePuppiesStatus: async (puppyIds: string[], status: "Available" | "Reserved" | "Sold" | "Not For Sale") => {
     await requireAdmin();
     const { data, error } = await supabase
       .from('puppies')
