@@ -1,11 +1,19 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+/**
+ * @constant corsHeaders
+ * @description Defines the CORS headers for the function, allowing cross-origin requests.
+ */
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+/**
+ * @interface CheckoutRequest
+ * @description Defines the structure for the JSON body of a checkout request.
+ */
 interface CheckoutRequest {
   amount: number;
   puppyName: string;
@@ -24,6 +32,16 @@ interface CheckoutRequest {
   };
 }
 
+/**
+ * The main handler for the square-checkout serverless function.
+ * This function creates a Square online checkout payment link for a puppy adoption.
+ * It retrieves Square credentials from the database, constructs a request to the
+ * Square API, and returns the generated checkout URL to the client. It also logs
+ * the payment session for tracking purposes.
+ *
+ * @param {Request} req - The incoming HTTP request, containing the checkout data.
+ * @returns {Promise<Response>} A response containing the Square checkout URL or an error.
+ */
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {

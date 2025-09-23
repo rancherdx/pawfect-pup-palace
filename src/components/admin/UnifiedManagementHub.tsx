@@ -22,11 +22,21 @@ import StudDogForm from './StudDogForm';
 import PuppyForm from './PuppyForm';
 import { PuppyStatus } from '@/types';
 
-// Define a type for the hierarchical data structure
+/**
+ * @interface LitterWithPuppies
+ * @description Extends the Litter type to include an array of associated puppy objects.
+ */
 interface LitterWithPuppies extends Litter {
   puppies: Puppy[];
 }
 
+/**
+ * @component UnifiedManagementHub
+ * @description A central management interface that provides a hierarchical view of litters and puppies,
+ * as well as lists of stud dogs and unassigned puppies. It supports creating, viewing, editing,
+ * and performing bulk actions on these entities.
+ * @returns {React.ReactElement} The rendered unified management hub.
+ */
 const UnifiedManagementHub = () => {
   const [selectedEntity, setSelectedEntity] = useState<{ type: 'puppy' | 'litter' | 'stud', id: string } | null>(null);
   const [creationMode, setCreationMode] = useState<'litter' | 'stud_dog' | 'puppy' | null>(null);
@@ -82,6 +92,10 @@ const UnifiedManagementHub = () => {
     }
   });
 
+  /**
+   * @property {object} hierarchicalData
+   * @description A memoized data structure that organizes puppies under their respective litters.
+   */
   const { hierarchicalData, unassignedPuppies } = useMemo(() => {
     if (!puppiesData?.puppies || !littersData?.litters) {
       return { hierarchicalData: [], unassignedPuppies: [] };
@@ -138,6 +152,11 @@ const UnifiedManagementHub = () => {
     };
   }, [supabase, queryClient]);
 
+  /**
+   * Handles the selection or deselection of a single puppy.
+   * @param {string} puppyId - The ID of the puppy.
+   * @param {boolean} isSelected - The new selection state.
+   */
   const handlePuppySelection = (puppyId: string, isSelected: boolean) => {
     setSelectedPuppyIds(prev => {
       const newSet = new Set(prev);
@@ -150,6 +169,11 @@ const UnifiedManagementHub = () => {
     });
   };
 
+  /**
+   * Handles the selection or deselection of all puppies within a litter.
+   * @param {LitterWithPuppies} litter - The litter whose puppies are to be selected/deselected.
+   * @param {boolean} isSelected - The new selection state.
+   */
   const handleLitterSelection = (litter: LitterWithPuppies, isSelected: boolean) => {
     setSelectedPuppyIds(prev => {
       const newSet = new Set(prev);
@@ -163,6 +187,10 @@ const UnifiedManagementHub = () => {
     });
   };
 
+  /**
+   * Renders the bulk action buttons when one or more puppies are selected.
+   * @returns {React.ReactElement | null} The bulk actions card, or null if no puppies are selected.
+   */
   const renderBulkActions = () => {
     if (selectedPuppyIds.size === 0) return null;
 
@@ -185,6 +213,10 @@ const UnifiedManagementHub = () => {
     )
   }
 
+  /**
+   * Renders the content of the sidebar, including the hierarchical list of litters and puppies.
+   * @returns {React.ReactElement} The rendered sidebar content.
+   */
   const renderSidebarContent = () => {
     if (isLoading) {
       return (

@@ -7,11 +7,20 @@ import { PawPrint, CalendarDays, Link as LinkIcon } from "lucide-react"; // Bot 
 import { Link } from "react-router-dom"; // For navigation
 import type { PuppyProfileData } from "../CreatureProfiles"; // Import the Puppy type
 
+/**
+ * @interface CreatureCardProps
+ * @description Defines the props for the CreatureCard component.
+ */
 interface CreatureCardProps {
+  /** The puppy profile data to display in the card. */
   puppy: PuppyProfileData; // Changed from 'creature' to 'puppy' for clarity
 }
 
-// Calculate age in a fun way
+/**
+ * Calculates a human-readable age string from a birth date.
+ * @param {string | null | undefined} birthdayStr - The birth date as a string.
+ * @returns {string} The formatted age string (e.g., "1 year, 2 months", "3 months", "5 days old").
+ */
 const calculateAge = (birthdayStr: string | null | undefined) => {
   if (!birthdayStr) return "Unknown";
   const birthday = new Date(birthdayStr);
@@ -35,7 +44,11 @@ const calculateAge = (birthdayStr: string | null | undefined) => {
   }
 };
 
-// Simplified growth progress - can be enhanced later if needed
+/**
+ * Calculates an estimated growth progress percentage based on the puppy's age.
+ * @param {string | null | undefined} birthdayStr - The birth date as a string.
+ * @returns {number} The estimated growth progress as a percentage (0-100).
+ */
 const calculateGrowthProgress = (birthdayStr: string | null | undefined): number => {
   if (!birthdayStr) return 0;
   const birthday = new Date(birthdayStr);
@@ -48,6 +61,12 @@ const calculateGrowthProgress = (birthdayStr: string | null | undefined): number
   return progress < 0 ? 0 : progress; // Ensure progress isn't negative if bday is in future
 };
 
+/**
+ * @component CreatureCard
+ * @description A card component that displays a summary of a user's adopted puppy ("creature").
+ * @param {CreatureCardProps} props - The props for the component.
+ * @returns {React.ReactElement} The rendered creature card.
+ */
 const CreatureCard = ({ puppy }: CreatureCardProps) => {
   // const [showAssistant, setShowAssistant] = useState(false); // AI Assistant feature can be re-added later
   const age = calculateAge(puppy.birth_date);

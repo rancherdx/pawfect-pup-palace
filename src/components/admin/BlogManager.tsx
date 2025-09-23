@@ -31,6 +31,10 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
+/**
+ * @constant initialFormData
+ * @description Initial state for the blog post form data.
+ */
 const initialFormData: BlogPostCreateData = {
   title: "",
   slug: "",
@@ -41,8 +45,18 @@ const initialFormData: BlogPostCreateData = {
   excerpt: "",
 };
 
+/**
+ * @constant BLOG_POST_STATUS_VALUES
+ * @description An array of possible statuses for a blog post.
+ */
 const BLOG_POST_STATUS_VALUES: BlogPostStatus[] = ["draft", "published", "archived"];
 
+/**
+ * @component BlogManager
+ * @description A comprehensive component for managing blog posts. It allows for creating,
+ * editing, deleting, filtering, and searching for blog posts.
+ * @returns {React.ReactElement} The rendered blog management interface.
+ */
 const BlogManager = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -127,28 +141,46 @@ const BlogManager = () => {
     }
   }, [currentPost, showForm]);
 
+  /**
+   * Initiates the process of deleting a blog post by setting its ID and showing the confirmation dialog.
+   * @param {string} id - The ID of the post to delete.
+   */
   const handleDeletePost = (id: string) => {
     setPostToDeleteId(id);
     setShowDeleteDialog(true);
   };
 
+  /**
+   * Confirms and executes the deletion of the blog post.
+   */
   const confirmDeletePost = () => {
     if (postToDeleteId) {
       deletePostMutation.mutate(postToDeleteId);
     }
   };
 
+  /**
+   * Prepares the form for editing an existing blog post.
+   * @param {BlogPost} post - The post to be edited.
+   */
   const handleEditPost = (post: BlogPost) => {
     setCurrentPost(post);
     setShowForm(true);
   };
 
+  /**
+   * Prepares the form for adding a new blog post.
+   */
   const handleAddPost = () => {
     setCurrentPost(null);
     setFormData(initialFormData);
     setShowForm(true);
   };
 
+  /**
+   * Handles the submission of the blog post form, either for creation or update.
+   * @param {React.FormEvent} e - The form submission event.
+   */
   const handleSavePost = (e: React.FormEvent) => {
     e.preventDefault();
     const payload: BlogPostCreateData | BlogPostUpdateData = {
@@ -162,6 +194,10 @@ const BlogManager = () => {
     }
   };
 
+  /**
+   * Handles changes in form inputs and updates the form state.
+   * @param {React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>} e - The input change event.
+   */
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {

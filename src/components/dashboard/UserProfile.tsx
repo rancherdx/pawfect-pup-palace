@@ -10,6 +10,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { authApi } from "@/api/unifiedApi"; // Fixed import
 import { User, UserProfileUpdateData } from "@/types"; // Import User and UserProfileUpdateData
 
+/**
+ * @component UserProfile
+ * @description A component for displaying and editing the currently authenticated user's profile information.
+ * @returns {React.ReactElement} The rendered user profile view or form.
+ */
 const UserProfile = () => {
   const { toast } = useToast();
   const { user, updateUser, isLoading: isAuthLoading } = useAuth(); // Get user and updateUser from AuthContext
@@ -39,11 +44,19 @@ const UserProfile = () => {
     }
   }, [user, isEditing]);
 
+  /**
+   * Handles changes to the form's input and textarea fields.
+   * @param {React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>} e - The change event.
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  /**
+   * Handles the submission of the profile update form.
+   * @param {React.FormEvent} e - The form submission event.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsUpdating(true);
@@ -74,6 +87,9 @@ const UserProfile = () => {
     }
   };
 
+  /**
+   * Cancels the editing mode and resets any form changes.
+   */
   const handleCancel = () => {
     // Reset formData from current user state if needed, or just exit editing mode
     if (user) {

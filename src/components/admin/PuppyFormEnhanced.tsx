@@ -28,6 +28,10 @@ import { Loader2, Star, Tag } from "lucide-react";
 import ImageUploadWithCrop from "@/components/media/ImageUploadWithCrop";
 import VideoUpload from "@/components/media/VideoUpload";
 
+/**
+ * @typedef {object} PuppyFormData
+ * @description Defines the shape of the form data for the enhanced puppy form, including media and promotional fields.
+ */
 type PuppyFormData = Omit<PuppyCreationData, "status" | "size"> & {
   status: PuppyStatus;
   size: PuppySize;
@@ -38,15 +42,26 @@ type PuppyFormData = Omit<PuppyCreationData, "status" | "size"> & {
   video_urls?: string[];
 };
 
+/**
+ * @interface PuppyFormEnhancedProps
+ * @description Defines the props for the PuppyFormEnhanced component.
+ */
 interface PuppyFormEnhancedProps {
+  /** The puppy data to populate the form for editing. If not provided, the form is in creation mode. */
   puppy?: Puppy;
+  /** Callback function to be invoked when the form is closed. */
   onClose: () => void;
+  /** A boolean to explicitly set the form to edit mode. */
   isEditMode?: boolean;
 }
 
 const PUPPY_SIZE_VALUES: PuppySize[] = ["Toy", "Small", "Medium", "Large", "Giant", ""];
 const PUPPY_STATUS_VALUES: PuppyStatus[] = ["Available", "Reserved", "Sold", "Not For Sale"];
 
+/**
+ * @constant BANNER_PRESETS
+ * @description A list of predefined presets for the promotional banner.
+ */
 const BANNER_PRESETS = [
   { text: "🔥 SALE", color: "#ef4444" },
   { text: "💝 LAST ONE LEFT", color: "#f97316" },
@@ -56,6 +71,13 @@ const BANNER_PRESETS = [
   { text: "❤️ RESERVED", color: "#ec4899" },
 ];
 
+/**
+ * @component PuppyFormEnhanced
+ * @description An advanced, tabbed form for creating and editing puppy details with extensive options,
+ * including media uploads and promotional settings.
+ * @param {PuppyFormEnhancedProps} props - The props for the component.
+ * @returns {React.ReactElement} The rendered enhanced puppy form.
+ */
 const PuppyFormEnhanced: React.FC<PuppyFormEnhancedProps> = ({ puppy, onClose, isEditMode }) => {
   const [formData, setFormData] = useState<PuppyFormData>({
     breed: puppy?.breed || "",
@@ -133,6 +155,10 @@ const PuppyFormEnhanced: React.FC<PuppyFormEnhancedProps> = ({ puppy, onClose, i
     }
   }, [puppy]);
 
+  /**
+   * Handles the form submission for creating or updating a puppy.
+   * @param {React.FormEvent} e - The form submission event.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isEditMode && puppy?.id) {
@@ -142,6 +168,10 @@ const PuppyFormEnhanced: React.FC<PuppyFormEnhancedProps> = ({ puppy, onClose, i
     }
   };
 
+  /**
+   * Handles changes in form input fields and updates the component's state.
+   * @param {React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>} e - The input change event.
+   */
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
@@ -152,6 +182,10 @@ const PuppyFormEnhanced: React.FC<PuppyFormEnhancedProps> = ({ puppy, onClose, i
     }));
   };
 
+  /**
+   * Applies a predefined banner text and color to the form state.
+   * @param {{ text: string; color: string }} preset - The banner preset to apply.
+   */
   const handleBannerPreset = (preset: { text: string; color: string }) => {
     setFormData(prev => ({
       ...prev,

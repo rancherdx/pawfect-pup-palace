@@ -9,6 +9,10 @@ import { AlertTriangle, Info, TestTube } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminApi } from '@/api';
 
+/**
+ * @interface SquareConfig
+ * @description Defines the structure of the Square configuration data being edited in the form.
+ */
 interface SquareConfig {
   environment: 'sandbox' | 'production';
   applicationId: string;
@@ -17,6 +21,10 @@ interface SquareConfig {
   webhookSignatureKey: string;
 }
 
+/**
+ * @interface SquareStatus
+ * @description Defines the structure for the status of the Square integration loaded from the backend.
+ */
 interface SquareStatus {
   configured: boolean;
   environment?: string;
@@ -26,6 +34,11 @@ interface SquareStatus {
   testError?: string;
 }
 
+/**
+ * @component SquareConfiguration
+ * @description A component that provides a user interface for configuring and managing the Square payment integration.
+ * @returns {React.ReactElement} The rendered Square configuration panel.
+ */
 const SquareConfiguration = () => {
   const [config, setConfig] = useState<SquareConfig>({
     environment: 'sandbox',
@@ -44,6 +57,9 @@ const SquareConfiguration = () => {
     loadSquareStatus();
   }, []);
 
+  /**
+   * Loads the current status of the Square configuration from the backend.
+   */
   const loadSquareStatus = async () => {
     try {
       setLoading(true);
@@ -69,6 +85,10 @@ const SquareConfiguration = () => {
     }
   };
 
+  /**
+   * Handles the saving of the Square configuration.
+   * It validates required fields and calls the API to save the data.
+   */
   const handleSave = async () => {
     const requiredFields = ['applicationId', 'accessToken'];
     for (const field of requiredFields) {
@@ -91,6 +111,9 @@ const SquareConfiguration = () => {
     }
   };
 
+  /**
+   * Initiates a test of the Square API connection with the provided credentials.
+   */
   const testConfiguration = async () => {
     if (!config.applicationId || !config.accessToken) {
       toast.error('Please fill in Application ID and Access Token first');
@@ -109,6 +132,11 @@ const SquareConfiguration = () => {
     }
   };
 
+  /**
+   * Handles changes to form inputs and updates the configuration state.
+   * @param {keyof SquareConfig} field - The configuration field to update.
+   * @param {string | boolean} value - The new value for the field.
+   */
   const handleInputChange = (field: keyof SquareConfig, value: string | boolean) => {
     setConfig(prev => ({ ...prev, [field]: value }));
   };

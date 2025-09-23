@@ -2,6 +2,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { littersApi } from "@/api";
 import { toast } from "sonner";
 
+/**
+ * @hook useLitters
+ * @description A custom hook to fetch a list of litters, with optional filters.
+ * @param {object} [filters={}] - Optional filters to apply to the query.
+ * @returns {import('@tanstack/react-query').UseQueryResult} The result of the react-query useQuery hook.
+ */
 export const useLitters = (filters = {}) => {
   return useQuery({
     queryKey: ['litters', filters],
@@ -9,6 +15,12 @@ export const useLitters = (filters = {}) => {
   });
 };
 
+/**
+ * @hook useLitter
+ * @description A custom hook to fetch a single litter by its ID.
+ * @param {string | undefined} litterId - The ID of the litter to fetch. The query is disabled if the ID is not provided.
+ * @returns {import('@tanstack/react-query').UseQueryResult} The result of the react-query useQuery hook.
+ */
 export const useLitter = (litterId: string | undefined) => {
   return useQuery({
     queryKey: ['litter', litterId],
@@ -17,6 +29,12 @@ export const useLitter = (litterId: string | undefined) => {
   });
 };
 
+/**
+ * @hook useLitterMutations
+ * @description A custom hook that provides mutation functions for creating, updating, and deleting litters.
+ * It handles react-query cache invalidation and displays toasts on success or error.
+ * @returns {{ createLitter: import('@tanstack/react-query').UseMutationResult, updateLitter: import('@tanstack/react-query').UseMutationResult, deleteLitter: import('@tanstack/react-query').UseMutationResult }} An object containing the mutation functions.
+ */
 export const useLitterMutations = () => {
   const queryClient = useQueryClient();
   

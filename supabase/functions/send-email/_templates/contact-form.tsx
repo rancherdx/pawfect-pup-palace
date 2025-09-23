@@ -12,6 +12,10 @@ import {
 } from 'npm:@react-email/components@0.0.22';
 import * as React from 'npm:react@18.3.1';
 
+/**
+ * @interface ContactFormEmailProps
+ * @description Defines the props for the ContactFormEmail component.
+ */
 interface ContactFormEmailProps {
   name: string;
   email: string;
@@ -20,6 +24,14 @@ interface ContactFormEmailProps {
   submittedAt: string;
 }
 
+/**
+ * @component ContactFormEmail
+ * @description Renders the email template for a new contact form submission.
+ * This email is sent to the site administrator and includes the details of the submission,
+ * recommended actions, and a quick response template.
+ * @param {ContactFormEmailProps} props - The props for the component.
+ * @returns {JSX.Element} The rendered email template.
+ */
 export const ContactFormEmail = ({
   name,
   email,
@@ -136,6 +148,10 @@ export const ContactFormEmail = ({
 
 export default ContactFormEmail;
 
+/**
+ * @description A collection of style objects used for inline styling of the email components.
+ * This approach is used for maximum compatibility across different email clients.
+ */
 const main = {
   backgroundColor: '#f6f9fc',
   fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',

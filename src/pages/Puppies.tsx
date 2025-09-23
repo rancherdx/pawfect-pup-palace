@@ -13,6 +13,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { publicApi } from "@/api/publicApi";
 import { calculateAge } from "@/utils/dateUtils";
 
+/**
+ * @component Puppies
+ * @description This page displays a grid of available puppies and provides an advanced
+ * search and filtering component (`EnhancedSearch`). It fetches puppy data based on the
+ * applied filters, handles loading and error states, and is optimized for SEO with
+ * dynamic titles, meta descriptions, and structured data.
+ *
+ * @returns {JSX.Element} The rendered puppies page with filtering capabilities.
+ */
 const Puppies = () => {
   const [filters, setFilters] = useState<SearchFilters>({
     search: "",
@@ -26,6 +35,11 @@ const Puppies = () => {
     sortOrder: 'asc'
   });
 
+  /**
+   * @function handleFiltersChange
+   * @description A memoized callback function to update the filters state.
+   * @param {SearchFilters} newFilters - The new filter values from the EnhancedSearch component.
+   */
   const handleFiltersChange = useCallback((newFilters: SearchFilters) => {
     setFilters(newFilters);
   }, []);
@@ -52,6 +66,10 @@ const Puppies = () => {
 
   const puppies = puppiesData?.puppies || [];
 
+  /**
+   * @function resetFilters
+   * @description Resets all search filters to their default values.
+   */
   const resetFilters = () => {
     const defaultFilters = {
       search: "",
@@ -67,6 +85,11 @@ const Puppies = () => {
     setFilters(defaultFilters);
   };
 
+  /**
+   * @constant structuredData
+   * @description JSON-LD structured data for the available puppies collection page.
+   * This helps search engines understand the page content as a list of products.
+   */
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",

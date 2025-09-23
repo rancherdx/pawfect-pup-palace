@@ -2,6 +2,15 @@ import React from 'react';
 import Section from "@/components/Section";
 import { RotateCcw } from 'lucide-react'; // Icon for refunds/returns
 
+/**
+ * @component RefundPolicyPage
+ * @description A static informational page that displays the company's refund policy.
+ * It is structured with clear headings for different sections of the policy, such as deposits
+ * and health guarantees. The content is currently placeholder text and should be replaced
+ * with the actual legal text.
+ *
+ * @returns {JSX.Element} The rendered refund policy page.
+ */
 const RefundPolicyPage: React.FC = () => {
   const lastUpdatedDate = new Date().toLocaleDateString('en-US', {
     year: 'numeric',
@@ -64,9 +73,5 @@ const RefundPolicyPage: React.FC = () => {
     </Section>
   );
 };
-
-// Mock Card components
-const Card: React.FC<{children: React.ReactNode, className?: string}> = ({children, className}) => <div className={`bg-white dark:bg-gray-800 rounded-lg ${className}`}>{children}</div>;
-const CardContent: React.FC<{children: React.ReactNode, className?: string}> = ({children, className}) => <div className={className}>{children}</div>;
 
 export default RefundPolicyPage;

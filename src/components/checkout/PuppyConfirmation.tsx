@@ -3,6 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, Heart } from "lucide-react";
 
+/**
+ * @interface PuppyData
+ * @description Defines the structure of the data for the puppy being confirmed for adoption.
+ */
 interface PuppyData {
   id: string;
   name: string;
@@ -13,11 +17,23 @@ interface PuppyData {
   image: string;
 }
 
+/**
+ * @interface PuppyConfirmationProps
+ * @description Defines the props for the PuppyConfirmation component.
+ */
 interface PuppyConfirmationProps {
+  /** The data for the puppy to be confirmed. */
   puppy: PuppyData | undefined;
+  /** Callback function to proceed to the next step of the checkout process. */
   onNext: () => void;
 }
 
+/**
+ * @component PuppyConfirmation
+ * @description A component that displays the details of the selected puppy and asks the user to confirm before proceeding with the adoption process.
+ * @param {PuppyConfirmationProps} props - The props for the component.
+ * @returns {React.ReactElement} The rendered puppy confirmation card or a "not found" message.
+ */
 const PuppyConfirmation = ({ puppy, onNext }: PuppyConfirmationProps) => {
   if (!puppy) {
     return (

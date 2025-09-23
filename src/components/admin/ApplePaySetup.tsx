@@ -10,6 +10,10 @@ import { adminApi } from '@/api/adminApi';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+/**
+ * @interface ApplePayConfig
+ * @description Defines the structure for the Apple Pay configuration object.
+ */
 interface ApplePayConfig {
   merchant_id: string;
   domain_verified: boolean;
@@ -19,6 +23,13 @@ interface ApplePayConfig {
   domains: string[];
 }
 
+/**
+ * @component ApplePaySetup
+ * @description A component for managing the Apple Pay integration setup.
+ * It provides a tabbed interface for configuring the Merchant ID, verifying the domain,
+ * and uploading the payment processing certificate.
+ * @returns {React.ReactElement} The rendered Apple Pay setup component.
+ */
 const ApplePaySetup = () => {
   const [merchantId, setMerchantId] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -67,6 +78,9 @@ const ApplePaySetup = () => {
     }
   });
 
+  /**
+   * Handles saving the merchant ID configuration.
+   */
   const handleSaveConfig = () => {
     if (!merchantId.trim()) {
       toast.error('Please enter a valid Merchant ID');
@@ -75,6 +89,10 @@ const ApplePaySetup = () => {
     updateConfigMutation.mutate({ merchant_id: merchantId });
   };
 
+  /**
+   * Handles the selection of a certificate file from the file input.
+   * @param {React.ChangeEvent<HTMLInputElement>} event - The file input change event.
+   */
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -86,6 +104,9 @@ const ApplePaySetup = () => {
     }
   };
 
+  /**
+   * Handles the upload of the selected certificate file.
+   */
   const handleUploadCertificate = () => {
     if (!selectedFile) {
       toast.error('Please select a certificate file first');
@@ -97,6 +118,10 @@ const ApplePaySetup = () => {
     uploadCertificateMutation.mutate(formData);
   };
 
+  /**
+   * Copies the content of the domain verification file to the clipboard.
+   * This is a placeholder as the file content is typically provided by Apple.
+   */
   const handleCopyDomainVerificationFile = () => {
     const verificationContent = `This file verifies domain ownership for Apple Pay.`;
     navigator.clipboard.writeText(verificationContent);

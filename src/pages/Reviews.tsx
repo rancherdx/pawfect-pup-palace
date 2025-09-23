@@ -14,6 +14,14 @@ import { Star, Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 
+/**
+ * @component Reviews
+ * @description This page displays customer reviews and provides a form for users to submit
+ * their own testimonials. It fetches and displays approved reviews from the database
+ * and handles the submission of new reviews, which are subject to admin approval.
+ *
+ * @returns {JSX.Element} The rendered reviews page with a form.
+ */
 const Reviews = () => {
   const [formData, setFormData] = useState({
     name: "",
@@ -40,6 +48,11 @@ const Reviews = () => {
     }
   });
 
+  /**
+   * @function handleChange
+   * @description Handles changes for the input and textarea elements in the review form.
+   * @param {React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>} e - The event object.
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -48,6 +61,11 @@ const Reviews = () => {
     }));
   };
 
+  /**
+   * @function handleRatingChange
+   * @description Updates the rating in the form state when a user clicks a star.
+   * @param {number} rating - The selected rating value.
+   */
   const handleRatingChange = (rating: number) => {
     setFormData(prev => ({
       ...prev,
@@ -55,6 +73,12 @@ const Reviews = () => {
     }));
   };
 
+  /**
+   * @function handleSubmit
+   * @description Handles the submission of the review form. It inserts the new testimonial
+   * into the database (as unapproved) and provides user feedback.
+   * @param {React.FormEvent} e - The form submission event.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     

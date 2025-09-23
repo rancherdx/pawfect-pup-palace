@@ -10,13 +10,29 @@ import { blogApi } from "@/api";
 import { BlogPost as BlogPostType, BlogPostAuthor } from "@/types";
 import DOMPurify from 'dompurify';
 
-// Helper to display author information
+/**
+ * @function getAuthorDisplay
+ * @description A helper function to safely get the author's name for display.
+ * It can handle an author object, a string, or an undefined value.
+ * @param {BlogPostAuthor | string | undefined} author - The author data.
+ * @returns {string} The name of the author or "Anonymous".
+ */
 const getAuthorDisplay = (author?: BlogPostAuthor | string): string => {
   if (!author) return "Anonymous";
   if (typeof author === 'string') return author;
   return author.name;
 };
 
+/**
+ * @component BlogPostPage
+ * @description This component fetches and displays a single blog post based on the slug
+ * from the URL. It includes the post's featured image, title, content, and metadata.
+ * It also provides a feature to copy the post's link to the clipboard for sharing.
+ * The component handles loading and error states, showing appropriate feedback to the user.
+ * The content is sanitized using DOMPurify before rendering.
+ *
+ * @returns {JSX.Element} The rendered blog post page, or a loading/error state.
+ */
 const BlogPostPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const { toast } = useToast();
@@ -32,6 +48,10 @@ const BlogPostPage = () => {
     retry: false,
   });
 
+  /**
+   * @function copyLinkToClipboard
+   * @description Copies the current page URL to the clipboard and shows a toast notification.
+   */
   const copyLinkToClipboard = () => {
     const url = window.location.href;
     navigator.clipboard.writeText(url).then(() => {
@@ -42,6 +62,12 @@ const BlogPostPage = () => {
     });
   };
 
+  /**
+   * @function formatDate
+   * @description Formats a date string into a readable format (e.g., "September 22, 2025").
+   * @param {string | null | undefined} dateString - The date string to format.
+   * @returns {string} The formatted date or "Date N/A".
+   */
   const formatDate = (dateString?: string | null) => {
     if (!dateString) return "Date N/A";
     return new Date(dateString).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });

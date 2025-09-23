@@ -2,6 +2,14 @@ import React from 'react';
 import Section from "@/components/Section";
 import { Trash2 } from 'lucide-react';
 
+/**
+ * @component UserDataDeletionPage
+ * @description A static informational page that explains the process for users to request
+ * the deletion of their personal data. It outlines what data is held, how to make a request,
+ * the verification process, and any exceptions to the deletion policy.
+ *
+ * @returns {JSX.Element} The rendered user data deletion page.
+ */
 const UserDataDeletionPage: React.FC = () => {
   const lastUpdatedDate = new Date().toLocaleDateString('en-US', {
     year: 'numeric',
@@ -62,9 +70,5 @@ const UserDataDeletionPage: React.FC = () => {
     </Section>
   );
 };
-
-// Mock Card components
-const Card: React.FC<{children: React.ReactNode, className?: string}> = ({children, className}) => <div className={`bg-white dark:bg-gray-800 rounded-lg ${className}`}>{children}</div>;
-const CardContent: React.FC<{children: React.ReactNode, className?: string}> = ({children, className}) => <div className={className}>{children}</div>;
 
 export default UserDataDeletionPage;

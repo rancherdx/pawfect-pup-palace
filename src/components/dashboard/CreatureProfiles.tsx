@@ -7,7 +7,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
-// Define Puppy interface based on expected API response and CreatureCard needs
+/**
+ * @interface PuppyProfileData
+ * @description Defines the structure for a puppy's profile data, used for display in the dashboard.
+ */
 export interface PuppyProfileData {
   id: string;
   name: string;
@@ -23,7 +26,11 @@ export interface PuppyProfileData {
   [key: string]: unknown; // Allow other properties
 }
 
-
+/**
+ * Fetches the puppies owned by the currently authenticated user from Supabase.
+ * @returns {Promise<PuppyProfileData[]>} A promise that resolves to an array of puppy profile data.
+ * @throws Will throw an error if the user is not authenticated or if the database query fails.
+ */
 async function fetchMyPuppiesFromSupabase(): Promise<PuppyProfileData[]> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("User not authenticated");
@@ -38,7 +45,12 @@ async function fetchMyPuppiesFromSupabase(): Promise<PuppyProfileData[]> {
   return (data || []) as PuppyProfileData[];
 }
 
-
+/**
+ * @component CreatureProfiles
+ * @description A component that displays a list of "creatures" (adopted puppies) owned by the user.
+ * It fetches the user's pets and displays them as a list of CreatureCard components.
+ * @returns {React.ReactElement} The rendered list of creature profiles.
+ */
 const CreatureProfiles = () => {
   const { user } = useAuth();
   const { toast } = useToast();

@@ -14,6 +14,10 @@ import {
 } from 'npm:@react-email/components@0.0.22';
 import * as React from 'npm:react@18.3.1';
 
+/**
+ * @interface PuppyAvailableEmailProps
+ * @description Defines the props for the PuppyAvailableEmail component.
+ */
 interface PuppyAvailableEmailProps {
   customerName: string;
   puppyName: string;
@@ -23,6 +27,14 @@ interface PuppyAvailableEmailProps {
   puppyUrl: string;
 }
 
+/**
+ * @component PuppyAvailableEmail
+ * @description Renders the email template to notify a customer that a puppy is available.
+ * This email includes details about the puppy, a call to action to view the puppy's profile,
+ * and information about the next steps for adoption.
+ * @param {PuppyAvailableEmailProps} props - The props for the component.
+ * @returns {JSX.Element} The rendered email template.
+ */
 export const PuppyAvailableEmail = ({
   customerName,
   puppyName,
@@ -134,6 +146,10 @@ export const PuppyAvailableEmail = ({
 
 export default PuppyAvailableEmail;
 
+/**
+ * @description A collection of style objects used for inline styling of the email components.
+ * This approach is used for maximum compatibility across different email clients.
+ */
 const main = {
   backgroundColor: '#f6f9fc',
   fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',

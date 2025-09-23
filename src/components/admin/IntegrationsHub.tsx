@@ -9,6 +9,10 @@ import SquareIntegration from './SquareIntegration';
 import ApplePaySetup from './ApplePaySetup';
 import MailChannelsSetup from './MailChannelsSetup';
 
+/**
+ * @interface IntegrationStatus
+ * @description Defines the structure for displaying the status of an integration in the overview tab.
+ */
 interface IntegrationStatus {
   name: string;
   status: 'active' | 'inactive' | 'error';
@@ -16,6 +20,12 @@ interface IntegrationStatus {
   icon: React.ElementType;
 }
 
+/**
+ * @component IntegrationsHub
+ * @description A central dashboard for managing all third-party integrations. It uses a tabbed layout
+ * to separate different categories of integrations like payments, email, and others.
+ * @returns {React.ReactElement} The rendered integrations hub component.
+ */
 const IntegrationsHub = () => {
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -46,6 +56,11 @@ const IntegrationsHub = () => {
     }
   ];
 
+  /**
+   * Returns a Tailwind CSS background color class based on the integration status.
+   * @param {string} status - The status of the integration.
+   * @returns {string} The corresponding CSS class for the status color.
+   */
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'bg-green-500';

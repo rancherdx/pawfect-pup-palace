@@ -12,6 +12,10 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Edit3, Eye, CheckCircle, XCircle, Hourglass, Filter } from "lucide-react";
 import { format } from 'date-fns';
 
+/**
+ * @interface DeletionRequest
+ * @description Represents the structure of a data deletion request.
+ */
 interface DeletionRequest {
   id: string;
   name?: string;
@@ -25,6 +29,10 @@ interface DeletionRequest {
   admin_notes?: string | null;
 }
 
+/**
+ * @interface ApiResponse
+ * @description Defines the shape of the API response for fetching data deletion requests.
+ */
 interface ApiResponse {
   requests: DeletionRequest[];
   pagination: {
@@ -35,6 +43,12 @@ interface ApiResponse {
   };
 }
 
+/**
+ * @component DataDeletionRequestsManager
+ * @description A component for admins to manage user data deletion requests,
+ * allowing them to view details, update status, and add notes.
+ * @returns {React.ReactElement} The rendered data deletion request management interface.
+ */
 const DataDeletionRequestsManager = () => {
   const { toast } = useToast();
   const [requests, setRequests] = useState<DeletionRequest[]>([]);
@@ -51,6 +65,11 @@ const DataDeletionRequestsManager = () => {
   const [totalItems, setTotalItems] = useState(0);
   const limit = 10;
 
+  /**
+   * Fetches data deletion requests from the API.
+   * @param {number} [page=1] - The page number to fetch.
+   * @param {string} [status=""] - The status to filter requests by.
+   */
   const fetchRequests = useCallback(async (page = 1, status = "") => {
     setIsLoading(true);
     try {
@@ -78,11 +97,19 @@ const DataDeletionRequestsManager = () => {
     fetchRequests(currentPage, filterStatus);
   }, [fetchRequests, currentPage, filterStatus]);
 
+  /**
+   * Opens the detail modal for a specific request.
+   * @param {DeletionRequest} request - The request to view.
+   */
   const handleViewDetails = (request: DeletionRequest) => {
     setSelectedRequest(request);
     setIsDetailModalOpen(true);
   };
 
+  /**
+   * Opens the edit modal for a specific request.
+   * @param {DeletionRequest} request - The request to edit.
+   */
   const handleEditRequest = (request: DeletionRequest) => {
     setSelectedRequest(request);
     setEditStatus(request.status);
@@ -90,6 +117,9 @@ const DataDeletionRequestsManager = () => {
     setIsEditModalOpen(true);
   };
 
+  /**
+   * Handles the submission of a status update for a request.
+   */
   const handleStatusUpdate = async () => {
     if (!selectedRequest) return;
     setIsLoading(true);
@@ -110,6 +140,11 @@ const DataDeletionRequestsManager = () => {
     }
   };
 
+  /**
+   * Determines the badge variant based on the request status.
+   * @param {DeletionRequest['status']} status - The status of the request.
+   * @returns {'secondary' | 'default' | 'destructive'} The corresponding badge variant.
+   */
   const getStatusBadgeVariant = (status: DeletionRequest['status']) => {
     switch (status) {
       case 'pending': return 'secondary';
@@ -120,6 +155,10 @@ const DataDeletionRequestsManager = () => {
     }
   };
 
+  /**
+   * Renders the pagination controls for the requests table.
+   * @returns {React.ReactElement | null} The pagination component, or null if not needed.
+   */
   const renderPagination = () => {
     if (totalPages <= 1) return null;
     return (

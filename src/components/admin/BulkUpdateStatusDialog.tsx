@@ -13,16 +13,35 @@ import { Label } from '@/components/ui/label';
 import { PuppyStatus } from '@/types';
 import { Loader2 } from 'lucide-react';
 
+/**
+ * @interface BulkUpdateStatusDialogProps
+ * @description Defines the props for the BulkUpdateStatusDialog component.
+ */
 interface BulkUpdateStatusDialogProps {
+  /** Whether the dialog is currently open. */
   isOpen: boolean;
+  /** Callback function to be invoked when the dialog is closed. */
   onClose: () => void;
+  /** Callback function to be invoked when the user confirms the status update. */
   onConfirm: (newStatus: PuppyStatus) => void;
+  /** A boolean indicating if the update operation is in progress. */
   isUpdating: boolean;
+  /** The number of puppies selected for the bulk update. */
   selectedCount: number;
 }
 
+/**
+ * @constant PUPPY_STATUS_VALUES
+ * @description An array of all possible statuses a puppy can have.
+ */
 const PUPPY_STATUS_VALUES: PuppyStatus[] = ["Available", "Reserved", "Sold", "Not For Sale"];
 
+/**
+ * @component BulkUpdateStatusDialog
+ * @description A dialog component that allows an admin to update the status of multiple selected puppies at once.
+ * @param {BulkUpdateStatusDialogProps} props - The props for the component.
+ * @returns {React.ReactElement} The rendered dialog for bulk status updates.
+ */
 const BulkUpdateStatusDialog: React.FC<BulkUpdateStatusDialogProps> = ({
   isOpen,
   onClose,
@@ -32,6 +51,10 @@ const BulkUpdateStatusDialog: React.FC<BulkUpdateStatusDialogProps> = ({
 }) => {
   const [newStatus, setNewStatus] = useState<PuppyStatus | ''>('');
 
+  /**
+   * Handles the confirmation of the status update.
+   * It calls the onConfirm prop with the newly selected status if one has been chosen.
+   */
   const handleConfirm = () => {
     if (newStatus) {
       onConfirm(newStatus);

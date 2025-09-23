@@ -2,11 +2,24 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { decryptJson } from "../_shared/crypto.ts";
 
+/**
+ * @constant corsHeaders
+ * @description Defines the CORS headers for the function, allowing cross-origin requests.
+ */
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+/**
+ * Serves the function to list all third-party integrations.
+ * This function retrieves all integration records from the database, decrypts the
+ * ciphertext to check for an API key and active status, and returns a sanitized list
+ * suitable for display in an admin dashboard, without exposing sensitive keys.
+ *
+ * @param {Request} _req - The incoming HTTP request (not used in this function).
+ * @returns {Promise<Response>} A response containing the list of sanitized integrations.
+ */
 serve(async (_req) => {
   if (_req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });

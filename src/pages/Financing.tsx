@@ -10,10 +10,22 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Info, CheckCircle, ArrowRight, ExternalLink } from "lucide-react";
 import PaymentMethodCard from "@/components/financing/PaymentMethodCard";
 
+/**
+ * @component Financing
+ * @description This page provides comprehensive information about the available payment and financing
+ * options for adopting a puppy. It features a tabbed interface to switch between payment plans
+ * and accepted payment methods. It also includes information about a third-party financing partner.
+ *
+ * @returns {JSX.Element} The rendered financing page.
+ */
 const Financing = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("payment-plans");
 
+  /**
+   * @constant paymentPlans
+   * @description An array of objects defining the available payment plans.
+   */
   const paymentPlans = [
     {
       id: "plan-1",
@@ -35,6 +47,10 @@ const Financing = () => {
     }
   ];
 
+  /**
+   * @constant paymentMethods
+   * @description An array of objects defining the accepted payment methods.
+   */
   const paymentMethods = [
     {
       id: "credit-card",
@@ -66,6 +82,12 @@ const Financing = () => {
     }
   ];
 
+  /**
+   * @function handleApplyForFinancing
+   * @description Navigates the user to the checkout page with the selected payment plan ID
+   * included in the URL search parameters.
+   * @param {string} planId - The ID of the selected payment plan.
+   */
   const handleApplyForFinancing = (planId: string) => {
     navigate(`/checkout?plan=${planId}`);
   };

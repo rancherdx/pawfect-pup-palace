@@ -28,6 +28,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import Section from "@/components/Section";
 
+/**
+ * @interface User
+ * @description Defines the structure for a user object.
+ */
 interface User {
   id: string;
   email: string;
@@ -35,6 +39,10 @@ interface User {
   roles: string[];
 }
 
+/**
+ * @interface TestSession
+ * @description Defines the structure for a test session object.
+ */
 interface TestSession {
   id: string;
   adminUserId: string;
@@ -46,6 +54,10 @@ interface TestSession {
   createdAt: string;
 }
 
+/**
+ * @interface TestLog
+ * @description Defines the structure for a test log object, capturing the details of an API test.
+ */
 interface TestLog {
   id: string;
   sessionId: string;
@@ -58,6 +70,10 @@ interface TestLog {
   createdAt: string;
 }
 
+/**
+ * @interface ApiEndpoint
+ * @description Defines the structure for an API endpoint object used for testing.
+ */
 interface ApiEndpoint {
   path: string;
   method: string;
@@ -67,6 +83,20 @@ interface ApiEndpoint {
   adminOnly: boolean;
 }
 
+/**
+ * @component AdminTest
+ * @description A comprehensive test suite for administrators to perform various system checks.
+ * This component provides functionality for:
+ * - API Endpoint Testing: Allows admins to select and test various API endpoints with custom request bodies.
+ * - User Impersonation: Enables admins to generate temporary, secure tokens to test the application from a specific user's perspective.
+ * - Test Results Viewing: Displays a log of recent API tests with their status, latency, and other details.
+ * - System Health Checks: A placeholder for future system health monitoring.
+ *
+ * It uses React Query for data fetching and mutations, ensuring a responsive and efficient user experience.
+ * All test activities, especially impersonation, are designed with security in mind and are logged.
+ *
+ * @returns {JSX.Element} The rendered admin test suite component.
+ */
 const AdminTest = () => {
   const [selectedUser, setSelectedUser] = useState<string>("");
   const [selectedEndpoint, setSelectedEndpoint] = useState<string>("");
@@ -75,7 +105,11 @@ const AdminTest = () => {
   const [currentSession, setCurrentSession] = useState<TestSession | null>(null);
   const queryClient = useQueryClient();
 
-  // API Endpoints for testing
+  /**
+   * @constant apiEndpoints
+   * @description A predefined list of API endpoints available for testing in the admin suite.
+   * This list is categorized for easier navigation and selection in the UI.
+   */
   const apiEndpoints: ApiEndpoint[] = [
     // Public endpoints
     { path: "/api/puppies", method: "GET", description: "Get all puppies", category: "Public", requiresAuth: false, adminOnly: false },
@@ -227,6 +261,12 @@ const AdminTest = () => {
     });
   };
 
+  /**
+   * @function getStatusBadge
+   * @description A helper function that returns a styled Badge component based on the HTTP status code.
+   * @param {number} status - The HTTP status code of the API response.
+   * @returns {JSX.Element} A Badge component indicating the status (e.g., Success, Client Error, Server Error).
+   */
   const getStatusBadge = (status: number) => {
     if (status >= 200 && status < 300) {
       return <Badge variant="default" className="bg-green-500">Success</Badge>;

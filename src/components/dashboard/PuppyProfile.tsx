@@ -22,8 +22,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-// Interfaces for API data
-
+/**
+ * @interface PuppyData
+ * @description Defines the structure for a puppy's detailed profile data.
+ */
 interface PuppyData {
   id: string;
   name: string;
@@ -40,6 +42,10 @@ interface PuppyData {
   [key: string]: unknown;
 }
 
+/**
+ * @interface HealthRecord
+ * @description Defines the structure for a single health record entry.
+ */
 interface HealthRecord {
   id: string;
   puppy_id: string;
@@ -52,6 +58,10 @@ interface HealthRecord {
   updated_at: string;
 }
 
+/**
+ * @interface Conversation
+ * @description Defines the structure for a conversation related to a puppy.
+ */
 interface Conversation {
   id: string;
   title: string;
@@ -61,6 +71,10 @@ interface Conversation {
   [key: string]: unknown;
 }
 
+/**
+ * @interface Message
+ * @description Defines the structure for a single message within a conversation.
+ */
 interface Message {
   id: string;
   conversation_id: string;
@@ -72,6 +86,11 @@ interface Message {
   read_at?: string | null;
 }
 
+/**
+ * Calculates the age of a puppy in months from its birth date.
+ * @param {string} birthDateStr - The birth date of the puppy as an ISO string.
+ * @returns {number} The age of the puppy in months.
+ */
 const calculateAgeMonths = (birthDateStr: string): number => {
   const birthDate = new Date(birthDateStr);
   const today = new Date();
@@ -81,6 +100,11 @@ const calculateAgeMonths = (birthDateStr: string): number => {
   return months <= 0 ? 0 : months;
 };
 
+/**
+ * @component PuppyProfile
+ * @description A detailed profile page for a single puppy, displaying its information, health records, documents, and messages.
+ * @returns {React.ReactElement} The rendered puppy profile page.
+ */
 const PuppyProfile = () => {
   const { puppyId } = useParams<{ puppyId: string }>();
   const { token, user } = useAuth();
@@ -108,6 +132,9 @@ const PuppyProfile = () => {
     unit: ""
   });
 
+  /**
+   * Fetches the main data for the puppy profile.
+   */
   const fetchPuppyData = useCallback(async () => {
     if (!puppyId) return;
     setIsLoadingPuppy(true);
@@ -132,7 +159,9 @@ const PuppyProfile = () => {
     }
   }, [puppyId, toast]);
 
-  // Temporarily disabled - health records feature coming soon
+  /**
+   * Placeholder function to fetch health records. Feature is temporarily disabled.
+   */
   const fetchHealthRecords = useCallback(async () => {
     if (!puppyId) return;
     setIsLoadingHealth(true);
@@ -146,7 +175,9 @@ const PuppyProfile = () => {
     }
   }, [puppyId, toast]);
   
-  // Temporarily disabled - conversations feature coming soon  
+  /**
+   * Placeholder function to fetch conversations related to the puppy. Feature is temporarily disabled.
+   */
   const fetchConversations = useCallback(async () => {
     if (!puppyId) return;
     setIsLoadingConvos(true);
@@ -160,7 +191,10 @@ const PuppyProfile = () => {
     }
   }, [puppyId, toast]);
 
-  // Temporarily disabled
+  /**
+   * Placeholder function to fetch messages for a conversation. Feature is temporarily disabled.
+   * @param {string} conversationId - The ID of the conversation.
+   */
   const fetchMessagesForConversation = useCallback(async (conversationId: string) => {
     setMessages([]);
     toast({ title: "Info", description: "Messages feature coming soon!" });
@@ -180,14 +214,19 @@ const PuppyProfile = () => {
     }
   }, [activeConversation, fetchMessagesForConversation]);
 
-  // Temporarily disabled
+  /**
+   * Placeholder function to handle the submission of a new health record. Feature is temporarily disabled.
+   * @param {React.FormEvent} e - The form submission event.
+   */
   const handleAddHealthRecordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     toast({ title: "Info", description: "Health records feature coming soon!" });
     setShowAddHealthForm(false);
   };
   
-  // Temporarily disabled  
+  /**
+   * Placeholder function to handle sending a message. Feature is temporarily disabled.
+   */
   const handleStartOrSendMessage = async () => {
     toast({ title: "Info", description: "Messaging feature coming soon!" });
     setNewMessageContent("");

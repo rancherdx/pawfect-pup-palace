@@ -18,21 +18,37 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ImageUploadWithCrop from "../media/ImageUploadWithCrop";
 
-// Define a type for the form data that includes all the fields
+/**
+ * @typedef {Omit<PuppyCreationData, "status" | "size"> & { status: PuppyStatus; size: PuppySize; }} PuppyFormData
+ * @description Defines the shape of the form data for creating or editing a puppy.
+ */
 type PuppyFormData = Omit<PuppyCreationData, "status" | "size"> & {
   status: PuppyStatus;
   size: PuppySize;
 };
 
+/**
+ * @interface PuppyFormProps
+ * @description Defines the props for the PuppyForm component.
+ */
 interface PuppyFormProps {
+  /** The puppy data to populate the form for editing. If not provided, the form is in creation mode. */
   puppy?: Puppy;
+  /** Callback function to be invoked when the form is closed. */
   onClose: () => void;
+  /** A boolean to explicitly set the form to edit mode. */
   isEditMode?: boolean;
 }
 
 const PUPPY_SIZE_VALUES: PuppySize[] = ["Toy", "Small", "Medium", "Large", "Giant", ""];
 const PUPPY_STATUS_VALUES: PuppyStatus[] = ["Available", "Reserved", "Sold", "Not For Sale"];
 
+/**
+ * @component PuppyForm
+ * @description A comprehensive form for creating and editing puppy details, including image uploads.
+ * @param {PuppyFormProps} props - The props for the component.
+ * @returns {React.ReactElement} The rendered puppy form.
+ */
 const PuppyForm: React.FC<PuppyFormProps> = ({ puppy, onClose, isEditMode }) => {
   const [formData, setFormData] = useState<PuppyFormData>({
     breed: puppy?.breed || "",
@@ -102,11 +118,19 @@ const PuppyForm: React.FC<PuppyFormProps> = ({ puppy, onClose, isEditMode }) => 
     }
   }, [puppy]);
 
+  /**
+   * Handles the form submission for creating or updating a puppy.
+   * @param {React.FormEvent} e - The form submission event.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     mutation.mutate({ id: puppy?.id, data: formData });
   };
 
+  /**
+   * Handles changes in form input fields and updates the component's state.
+   * @param {React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>} e - The input change event.
+   */
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement
@@ -119,6 +143,10 @@ const PuppyForm: React.FC<PuppyFormProps> = ({ puppy, onClose, isEditMode }) => 
     }));
   };
 
+  /**
+   * Handles the successful upload of images and updates the form state.
+   * @param {string[]} urls - An array of URLs for the uploaded images.
+   */
   const handleImagesUploaded = (urls: string[]) => {
     setFormData(prev => ({
       ...prev,

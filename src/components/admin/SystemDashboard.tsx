@@ -17,6 +17,10 @@ import {
   Cpu
 } from 'lucide-react';
 
+/**
+ * @interface SystemStats
+ * @description Defines the structure for the system statistics object.
+ */
 interface SystemStats {
   totalPuppies: number;
   totalLitters: number;
@@ -28,6 +32,12 @@ interface SystemStats {
   lastBackup: string;
 }
 
+/**
+ * @component SystemDashboard
+ * @description A dashboard component that displays key metrics and statistics about the system's health,
+ * performance, and resource usage.
+ * @returns {React.ReactElement} The rendered system dashboard.
+ */
 const SystemDashboard = () => {
   // System statistics
   const { data: systemStats, isLoading } = useQuery({

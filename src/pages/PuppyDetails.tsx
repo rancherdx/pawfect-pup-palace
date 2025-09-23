@@ -11,6 +11,15 @@ import TemperamentTraitsCard from "@/components/puppy-details/TemperamentTraitsC
 import DetailsTabs from "@/components/puppy-details/DetailsTabs";
 import { Helmet } from "react-helmet-async";
 
+/**
+ * @component PuppyDetails
+ * @description This component displays a detailed page for a single puppy, identified by a slug
+ * from the URL. It fetches the puppy's data and presents it in a structured layout with an
+ * image carousel, information sections, and tabs for more details. The page is optimized for
+ * SEO with a dynamic title, meta description, and structured data for the specific puppy (product).
+ *
+ * @returns {JSX.Element} The rendered puppy details page.
+ */
 const PuppyDetails = () => {
   const { slug } = useParams<{ slug: string }>();
 
@@ -88,7 +97,10 @@ const PuppyDetails = () => {
         <meta name="twitter:description" content={`Meet ${puppy.name}, a beautiful ${puppy.breed} puppy.`} />
         {imageUrls[0] && <meta name="twitter:image" content={imageUrls[0]} />}
 
-        {/* Structured Data */}
+        {/*
+          Structured Data (JSON-LD) for the puppy, treated as a Product.
+          This helps search engines understand the page content and can lead to rich snippets.
+        */}
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",

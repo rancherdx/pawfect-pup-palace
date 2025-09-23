@@ -12,10 +12,22 @@ import { adminApi } from '@/api';
 import { Litter, LitterStatus, LitterCreationData, LitterUpdateData } from "@/types";
 import { Loader2 } from 'lucide-react';
 
+/**
+ * @constant LITTER_STATUS_VALUES
+ * @description An array of possible statuses for a litter.
+ */
 const LITTER_STATUS_VALUES: LitterStatus[] = ["Active", "Available Soon", "All Reserved", "All Sold", "Archived"];
 
+/**
+ * @typedef {Omit<LitterCreationData, "status"> & { status: LitterStatus }} LitterFormData
+ * @description Defines the shape of the form data for creating or editing a litter.
+ */
 type LitterFormData = Omit<LitterCreationData, "status"> & { status: LitterStatus };
 
+/**
+ * @interface LitterFormProps
+ * @description Defines the props for the LitterForm component, including legacy props for backward compatibility.
+ */
 interface LitterFormProps {
   litter?: Litter;
   onClose?: () => void;
@@ -28,6 +40,13 @@ interface LitterFormProps {
   isEditing?: boolean;
 }
 
+/**
+ * @component LitterForm
+ * @description A form component for creating and editing litter information.
+ * It supports both creating a new litter and updating an existing one.
+ * @param {LitterFormProps} props - The props for the component.
+ * @returns {React.ReactElement} The rendered litter form.
+ */
 const LitterForm: React.FC<LitterFormProps> = ({ 
   litter, 
   onClose, 
@@ -102,15 +121,28 @@ const LitterForm: React.FC<LitterFormProps> = ({
     }
   }, [litter]);
 
+  /**
+   * Handles changes to standard input and textarea elements.
+   * @param {React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>} e - The change event.
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  /**
+   * Handles changes to the status select element.
+   * @param {keyof LitterFormData} name - The name of the form field to update.
+   * @param {string} value - The new value from the select input.
+   */
   const handleSelectChange = (name: keyof LitterFormData, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value as LitterStatus }));
   };
 
+  /**
+   * Handles the form submission.
+   * @param {React.FormEvent} e - The form submission event.
+   */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     mutation.mutate({ id: litter?.id, data: formData });

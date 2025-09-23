@@ -13,6 +13,12 @@ const domain = {
   production: "https://gdspuppies.com",
 };
 
+/**
+ * @component UrlRow
+ * @description A helper component to display a labeled URL with a copy button.
+ * @param {{ label: string; url: string }} props - The props for the component.
+ * @returns {React.ReactElement} A row displaying a URL and a copy button.
+ */
 function UrlRow({ label, url }: { label: string; url: string }) {
   return (
     <div className="flex flex-col gap-1">
@@ -25,6 +31,12 @@ function UrlRow({ label, url }: { label: string; url: string }) {
   );
 }
 
+/**
+ * @component SecureIntegrations
+ * @description A component for securely managing credentials for third-party services like Square and Apple Pay.
+ * It provides forms to save credentials for both sandbox and production environments.
+ * @returns {React.ReactElement} The rendered secure integrations management interface.
+ */
 const SecureIntegrations = () => {
   const { toast } = useToast();
 
@@ -44,6 +56,10 @@ const SecureIntegrations = () => {
 
   const [applePayContent, setApplePayContent] = useState("");
 
+  /**
+   * Saves the credentials for a specific environment (sandbox or production) by invoking a Supabase function.
+   * @param {"sandbox" | "production"} env - The environment for which to save the credentials.
+   */
   const save = async (env: "sandbox" | "production") => {
     const body = {
       service: "square",
@@ -60,6 +76,10 @@ const SecureIntegrations = () => {
     }
   };
 
+  /**
+   * Uploads the Apple Pay domain verification file content for a specific environment.
+   * @param {"sandbox" | "production"} env - The environment for which to upload the file.
+   */
   const uploadApplePay = async (env: "sandbox" | "production") => {
     if (!applePayContent.trim()) {
       toast({ title: "No content", description: "Paste the Apple Pay verification file contents first." });

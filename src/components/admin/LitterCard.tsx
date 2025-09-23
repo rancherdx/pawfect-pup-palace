@@ -5,13 +5,32 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Edit, Trash } from "lucide-react";
 import { Litter } from "@/types";
 
+/**
+ * @interface LitterCardProps
+ * @description Defines the props for the LitterCard component.
+ */
 interface LitterCardProps {
+  /** The litter object containing the details to display. */
   litter: Litter;
+  /** Callback function to be invoked when the edit button is clicked. */
   onEdit: (litter: Litter) => void;
+  /** Callback function to be invoked when the delete button is clicked. */
   onDelete: (id: string) => void;
 }
 
+/**
+ * @component LitterCard
+ * @description A card component that displays a summary of a single litter's information,
+ * including actions to edit or delete the litter.
+ * @param {LitterCardProps} props - The props for the component.
+ * @returns {React.ReactElement} The rendered litter card.
+ */
 const LitterCard: React.FC<LitterCardProps> = ({ litter, onEdit, onDelete }) => {
+  /**
+   * Returns a Tailwind CSS class string for styling a status badge based on the litter's status.
+   * @param {string} status - The status of the litter.
+   * @returns {string} The corresponding CSS classes for the badge background and text color.
+   */
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Active":

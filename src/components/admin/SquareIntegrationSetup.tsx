@@ -11,6 +11,10 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Upload, ExternalLink, Copy, Check, AlertTriangle, Info } from 'lucide-react';
 import { toast } from 'sonner';
 
+/**
+ * @interface SquareConfig
+ * @description Defines the structure for the Square integration configuration, including both sandbox and production credentials.
+ */
 interface SquareConfig {
   environment: 'sandbox' | 'production';
   sandbox_application_id?: string;
@@ -25,12 +29,25 @@ interface SquareConfig {
   apple_pay_verification_file?: File;
 }
 
+/**
+ * @interface SquareIntegrationSetupProps
+ * @description Defines the props for the SquareIntegrationSetup component.
+ */
 interface SquareIntegrationSetupProps {
+  /** Optional initial configuration data to pre-fill the form. */
   initialConfig?: Partial<SquareConfig>;
+  /** Callback function to be invoked when the configuration is saved. */
   onSave: (config: SquareConfig) => void;
+  /** Callback function to be invoked when the setup is cancelled. */
   onCancel: () => void;
 }
 
+/**
+ * @component SquareIntegrationSetup
+ * @description A comprehensive setup form for the Square integration, featuring a tabbed interface for credentials, URLs, and Apple Pay settings.
+ * @param {SquareIntegrationSetupProps} props - The props for the component.
+ * @returns {React.ReactElement} The rendered Square integration setup form.
+ */
 const SquareIntegrationSetup: React.FC<SquareIntegrationSetupProps> = ({
   initialConfig,
   onSave,
@@ -54,10 +71,20 @@ const SquareIntegrationSetup: React.FC<SquareIntegrationSetupProps> = ({
     applePayVerificationUrl: `https://${currentDomain}/.well-known/apple-developer-merchantid-domain-association`,
   };
 
+  /**
+   * Handles changes to form inputs and updates the configuration state.
+   * @param {keyof SquareConfig} field - The configuration field to update.
+   * @param {string | boolean | File} value - The new value for the field.
+   */
   const handleInputChange = (field: keyof SquareConfig, value: string | boolean | File) => {
     setConfig(prev => ({ ...prev, [field]: value }));
   };
 
+  /**
+   * Copies a given text to the clipboard and provides user feedback.
+   * @param {string} text - The text to copy.
+   * @param {string} field - The name of the field being copied, for visual feedback.
+   */
   const copyToClipboard = async (text: string, field: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -69,6 +96,10 @@ const SquareIntegrationSetup: React.FC<SquareIntegrationSetupProps> = ({
     }
   };
 
+  /**
+   * Handles the selection of the Apple Pay domain verification file.
+   * @param {React.ChangeEvent<HTMLInputElement>} event - The file input change event.
+   */
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -77,6 +108,9 @@ const SquareIntegrationSetup: React.FC<SquareIntegrationSetupProps> = ({
     }
   };
 
+  /**
+   * Validates and saves the current configuration by calling the onSave prop.
+   */
   const handleSave = () => {
     // Validate required fields based on environment
     const envPrefix = isProduction ? 'production' : 'sandbox';

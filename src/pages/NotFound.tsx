@@ -3,6 +3,14 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Home } from "lucide-react";
 
+/**
+ * @component NotFound
+ * @description A standard 404 "Page Not Found" component that is displayed when a user
+ * navigates to a route that does not exist. It provides a clear message and a link
+ * to return to the homepage.
+ *
+ * @returns {JSX.Element} The rendered 404 page.
+ */
 const NotFound = () => {
   return (
     <div className="min-h-screen flex items-center justify-center">

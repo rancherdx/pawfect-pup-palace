@@ -6,16 +6,32 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Mail, Check, X } from "lucide-react";
 
+/**
+ * @interface MailChannelsSetupProps
+ * @description Defines the props for the MailChannelsSetup component.
+ */
 interface MailChannelsSetupProps {
+  /** Optional callback function to be invoked when the configuration is saved. */
   onSave?: (data: any) => void;
+  /** Optional callback function to be invoked when the setup is cancelled. */
   onCancel?: () => void;
 }
 
+/**
+ * @component MailChannelsSetup
+ * @description A component for setting up and configuring the MailChannels email service integration.
+ * @param {MailChannelsSetupProps} props - The props for the component.
+ * @returns {React.ReactElement} The rendered MailChannels setup form.
+ */
 const MailChannelsSetup: React.FC<MailChannelsSetupProps> = ({ onSave, onCancel }) => {
   const [apiKey, setApiKey] = useState('');
   const [fromEmail, setFromEmail] = useState('');
   const [isConfigured, setIsConfigured] = useState(false);
 
+  /**
+   * Handles the save action for the MailChannels configuration.
+   * It constructs the data object and calls the onSave callback if it exists.
+   */
   const handleSave = () => {
     const data = {
       apiKey,

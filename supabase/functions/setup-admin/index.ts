@@ -1,10 +1,23 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+/**
+ * @constant corsHeaders
+ * @description Defines the CORS headers for the function, allowing cross-origin requests.
+ */
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+/**
+ * The main handler for the setup-admin serverless function.
+ * This function is responsible for creating the initial super administrator accounts.
+ * It is protected by a secret key and has a limit on the number of admin accounts that can be created.
+ * It performs validation, creates the user in Supabase Auth, and promotes them to an admin role.
+ *
+ * @param {Request} req - The incoming HTTP request, expected to contain the admin user details.
+ * @returns {Promise<Response>} A response indicating the success or failure of the account creation.
+ */
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {

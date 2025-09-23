@@ -1,10 +1,18 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
+/**
+ * @constant corsHeaders
+ * @description Defines the CORS headers for the function, allowing cross-origin requests.
+ */
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+/**
+ * @interface EmailRequest
+ * @description Defines the structure for the JSON body of an email sending request.
+ */
 interface EmailRequest {
   template: 'welcome' | 'puppy-available' | 'payment-confirmation' | 'contact-form';
   to: string;
@@ -12,6 +20,12 @@ interface EmailRequest {
   subject?: string;
 }
 
+/**
+ * Generates the HTML content for an email based on a template name and data.
+ * @param {string} template - The name of the email template to use.
+ * @param {Record<string, any>} data - The data to populate the template with.
+ * @returns {string} The full HTML content of the email.
+ */
 const generateEmailHTML = (template: string, data: Record<string, any>): string => {
   const baseStyles = `
     <style>
@@ -147,6 +161,15 @@ const generateEmailHTML = (template: string, data: Record<string, any>): string 
   }
 };
 
+/**
+ * The main handler for the send-email serverless function.
+ * This function processes requests to send transactional emails. It uses a specified
+ * template, populates it with data, and sends the resulting email via the
+ * MailChannels API.
+ *
+ * @param {Request} req - The incoming request, expected to contain an EmailRequest payload.
+ * @returns {Promise<Response>} A response indicating the success or failure of the email sending operation.
+ */
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });

@@ -8,6 +8,10 @@ import { useQuery } from '@tanstack/react-query';
 import { adminApi } from '@/api';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
+/**
+ * @interface SecurityEvent
+ * @description Defines the structure of a security event object.
+ */
 interface SecurityEvent {
   id: string;
   user_id: string | null;
@@ -18,6 +22,10 @@ interface SecurityEvent {
   created_at: string;
 }
 
+/**
+ * @interface SecurityStats
+ * @description Defines the structure for the summary of security statistics.
+ */
 interface SecurityStats {
   failed_logins_24h: number;
   role_changes_7d: number;
@@ -25,6 +33,11 @@ interface SecurityStats {
   suspicious_activities_24h: number;
 }
 
+/**
+ * @component SecurityMonitoring
+ * @description A dashboard component for monitoring security-related statistics and events within the application.
+ * @returns {React.ReactElement} The rendered security monitoring dashboard.
+ */
 const SecurityMonitoring: React.FC = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -40,6 +53,11 @@ const SecurityMonitoring: React.FC = () => {
     refetchInterval: 60000, // Refresh every minute
   });
 
+  /**
+   * Determines the color variant for a badge based on the event type.
+   * @param {string} eventType - The type of the security event.
+   * @returns {'destructive' | 'secondary' | 'outline' | 'default'} The badge variant.
+   */
   const getEventTypeColor = (eventType: string) => {
     switch (eventType) {
       case 'login_failed':
@@ -55,10 +73,18 @@ const SecurityMonitoring: React.FC = () => {
     }
   };
 
+  /**
+   * Formats a date string into a localized string representation.
+   * @param {string} dateString - The ISO date string to format.
+   * @returns {string} The formatted date string.
+   */
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString();
   };
 
+  /**
+   * Triggers a manual refresh of the security data.
+   */
   const handleRefresh = () => {
     setRefreshTrigger(prev => prev + 1);
   };

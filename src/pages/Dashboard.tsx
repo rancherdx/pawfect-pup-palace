@@ -10,6 +10,14 @@ import ChatHistory from "@/components/dashboard/ChatHistory";
 import CreatureProfiles from "@/components/dashboard/CreatureProfiles";
 import NotificationCenter from "@/components/admin/NotificationCenter";
 
+/**
+ * @component Dashboard
+ * @description The user dashboard page, which provides a tabbed interface for users
+ * to manage their profile, view their puppy and kitten profiles, access receipts,
+ * and check their messages and notifications.
+ *
+ * @returns {JSX.Element} The rendered dashboard component.
+ */
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("profile");
 

@@ -17,6 +17,16 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { calculateAge } from "@/utils/dateUtils";
 
+/**
+ * @component Checkout
+ * @description A multi-step checkout component for the puppy adoption process.
+ * It guides the user through several steps: confirming the puppy, answering adoption questions,
+ * selecting optional add-ons, and completing the payment. The component fetches puppy data
+ * based on a URL search parameter and manages the state for the entire checkout flow.
+ * It features animated transitions between steps and handles loading, success, and error states.
+ *
+ * @returns {JSX.Element} The rendered checkout page.
+ */
 const Checkout = () => {
   const [searchParams] = useSearchParams();
   const puppyId = searchParams.get("puppy");
@@ -92,6 +102,12 @@ const Checkout = () => {
     },
   ];
 
+  /**
+   * @function handleAdoptionDataChange
+   * @description Updates the main adoption data state object with new values.
+   * @param {string} field - The key of the data to update.
+   * @param {any} value - The new value for the field.
+   */
   const handleAdoptionDataChange = (field: string, value: any) => {
     setAdoptionData(prev => ({
       ...prev,
@@ -99,6 +115,10 @@ const Checkout = () => {
     }));
   };
 
+  /**
+   * @function handleNext
+   * @description Navigates to the next step in the checkout process.
+   */
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
       setSlideDirection("right");
@@ -107,6 +127,10 @@ const Checkout = () => {
     }
   };
 
+  /**
+   * @function handlePrevious
+   * @description Navigates to the previous step in the checkout process.
+   */
   const handlePrevious = () => {
     if (currentStep > 0) {
       setSlideDirection("left");
@@ -115,6 +139,11 @@ const Checkout = () => {
     }
   };
 
+  /**
+   * @function handleCompleteCheckout
+   * @description Handles the final submission of the checkout process. It simulates an API call,
+   * sets the completion state, and shows a success toast.
+   */
   const handleCompleteCheckout = async () => {
     setIsProcessing(true);
     
@@ -168,6 +197,13 @@ const Checkout = () => {
     duration: 0.3
   };
 
+  /**
+   * @function renderStepContent
+   * @description Renders the component for the current step in the checkout process.
+   * It uses AnimatePresence and motion from Framer Motion to create animated transitions
+   * between the different step components.
+   * @returns {JSX.Element} The component for the current checkout step.
+   */
   const renderStepContent = () => {
     return (
       <AnimatePresence mode="wait" initial={false} custom={slideDirection}>

@@ -2,6 +2,12 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { ShieldCheck, AlertTriangle, UserCheck, BarChartHorizontalBig } from 'lucide-react';
 
+/**
+ * @component AdvancedSecurityFeatures
+ * @description A presentational component that outlines planned, future-scope security features for the application.
+ * It serves as a placeholder and informational page within the admin dashboard.
+ * @returns {React.ReactElement} The rendered component displaying cards for future security enhancements.
+ */
 const AdvancedSecurityFeatures: React.FC = () => {
   return (
     <div className="p-4 md:p-6 space-y-6">

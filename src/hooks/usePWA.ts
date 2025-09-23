@@ -1,6 +1,10 @@
 
 import { useState, useEffect } from 'react';
 
+/**
+ * @interface BeforeInstallPromptEvent
+ * @description Extends the base Event interface to include properties specific to the 'beforeinstallprompt' event for PWAs.
+ */
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
   readonly userChoice: Promise<{
@@ -10,6 +14,12 @@ interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
 }
 
+/**
+ * @hook usePWA
+ * @description A custom hook for managing the Progressive Web App (PWA) installation lifecycle.
+ * It detects if the app can be installed, if it's already installed, and provides a function to trigger the installation prompt.
+ * @returns {{ isInstallable: boolean, isInstalled: boolean, installApp: () => Promise<boolean> }} An object containing the PWA status and the installation function.
+ */
 export const usePWA = () => {
   const [isInstallable, setIsInstallable] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
@@ -45,6 +55,10 @@ export const usePWA = () => {
     };
   }, []);
 
+  /**
+   * Triggers the PWA installation prompt.
+   * @returns {Promise<boolean>} A promise that resolves to true if the installation was accepted, otherwise false.
+   */
   const installApp = async () => {
     if (!deferredPrompt) return false;
 

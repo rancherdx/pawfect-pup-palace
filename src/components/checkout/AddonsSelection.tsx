@@ -7,6 +7,10 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 
+/**
+ * @interface AddonItem
+ * @description Defines the structure of an add-on item.
+ */
 interface AddonItem {
   id: string;
   name: string;
@@ -15,15 +19,31 @@ interface AddonItem {
   image_url: string;
 }
 
+/**
+ * @interface AddonsSelectionProps
+ * @description Defines the props for the AddonsSelection component.
+ */
 interface AddonsSelectionProps {
+  /** Callback to update the parent component with the selected addons. */
   onDataChange: (addons: AddonItem[]) => void;
+  /** Callback to update the total price in the parent component. */
   onPriceChange: (total: number) => void;
+  /** The base price of the item being purchased. */
   basePrice: number;
+  /** An array of currently selected add-on items. */
   selectedAddons: AddonItem[];
+  /** Callback function to proceed to the next step in the checkout process. */
   onNext: () => void;
+  /** Callback function to return to the previous step in the checkout process. */
   onPrevious: () => void;
 }
 
+/**
+ * @component AddonsSelection
+ * @description A component that allows users to select optional add-on items during the checkout process.
+ * @param {AddonsSelectionProps} props - The props for the component.
+ * @returns {React.ReactElement} The rendered add-ons selection interface.
+ */
 const AddonsSelection = ({ 
   onDataChange, 
   onPriceChange, 
@@ -54,6 +74,10 @@ const AddonsSelection = ({
     onPriceChange(basePrice + addonTotal);
   }, [addons, basePrice, onPriceChange]);
 
+  /**
+   * Toggles the selection of an add-on item.
+   * @param {AddonItem} addon - The add-on item to toggle.
+   */
   const handleToggleAddon = (addon: AddonItem) => {
     if (addons.some(item => item.id === addon.id)) {
       // Remove addon
@@ -64,6 +88,9 @@ const AddonsSelection = ({
     }
   };
 
+  /**
+   * Finalizes the addon selection and proceeds to the next step.
+   */
   const handleContinue = () => {
     onDataChange(addons);
     onNext();

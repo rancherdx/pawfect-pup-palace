@@ -1,10 +1,23 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+/**
+ * @constant corsHeaders
+ * @description Defines the CORS headers for the function, allowing cross-origin requests.
+ */
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+/**
+ * The main handler for the setup-status serverless function.
+ * This function checks the application's setup status by calling a database function
+ * to count the number of existing super administrator accounts. This is used by the
+ * setup page to determine if the setup process needs to be run.
+ *
+ * @param {Request} req - The incoming HTTP request.
+ * @returns {Promise<Response>} A response containing the count of admin accounts.
+ */
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {

@@ -6,11 +6,23 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 
+/**
+ * @interface CreatureProfileFormProps
+ * @description Defines the props for the CreatureProfileForm component.
+ */
 interface CreatureProfileFormProps {
+  /** Callback function to handle the submission of the form data. */
   onSubmit: (data: Record<string, string>) => void;
+  /** Callback function to cancel the form operation. */
   onCancel: () => void;
 }
 
+/**
+ * @component CreatureProfileForm
+ * @description A form for users to create a profile for their creature (pet), including name, breed, birthday, and feeding notes.
+ * @param {CreatureProfileFormProps} props - The props for the component.
+ * @returns {React.ReactElement} The rendered form for creating a creature profile.
+ */
 const CreatureProfileForm = ({ onSubmit, onCancel }: CreatureProfileFormProps) => {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
@@ -21,11 +33,19 @@ const CreatureProfileForm = ({ onSubmit, onCancel }: CreatureProfileFormProps) =
     feedingNotes: ""
   });
 
+  /**
+   * Handles changes to the form's input and textarea fields.
+   * @param {React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>} e - The change event.
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  /**
+   * Handles the form submission, performs validation, and calls the onSubmit callback.
+   * @param {React.FormEvent} e - The form submission event.
+   */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     

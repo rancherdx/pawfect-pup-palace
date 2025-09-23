@@ -10,6 +10,14 @@ import { Calendar, Heart, PawPrint, Dog } from "lucide-react";
 import PuppyCard from "@/components/PuppyCard";
 import { Helmet } from "react-helmet-async";
 
+/**
+ * @component LitterDetails
+ * @description This component displays detailed information about a specific litter, identified by a slug
+ * from the URL. It fetches data for the litter and the puppies within it, handling loading and error states.
+ * The page is optimized for SEO with a dynamic title, meta description, and structured data.
+ *
+ * @returns {JSX.Element} The rendered litter details page.
+ */
 const LitterDetails = () => {
   const { slug } = useParams<{ slug: string }>();
 
@@ -27,11 +35,23 @@ const LitterDetails = () => {
     enabled: !!litter?.id
   });
 
+  /**
+   * @function formatDate
+   * @description Formats a date string into a localized date format.
+   * @param {string | null} dateString - The date string to format.
+   * @returns {string} The formatted date string or 'Not specified'.
+   */
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'Not specified';
     return new Date(dateString).toLocaleDateString();
   };
 
+  /**
+   * @function getStatusColor
+   * @description Returns a Tailwind CSS class string for the litter status badge based on the status.
+   * @param {string} status - The status of the litter.
+   * @returns {string} The corresponding CSS class for the badge color.
+   */
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Active':

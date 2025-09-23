@@ -9,6 +9,12 @@ import { toast } from 'sonner';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
+/**
+ * Fetches a paginated list of transactions for the currently authenticated user from Supabase.
+ * @param {number} page - The page number to fetch.
+ * @param {number} limit - The number of transactions per page.
+ * @returns {Promise<TransactionsApiResponse>} A promise that resolves to an object containing the transactions and pagination info.
+ */
 const fetchMyTransactionsFromSupabase = async (page: number, limit: number) => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
@@ -39,12 +45,20 @@ const fetchMyTransactionsFromSupabase = async (page: number, limit: number) => {
   };
 };
 
+/**
+ * @interface TransactionItem
+ * @description Defines the structure for an item within a transaction.
+ */
 interface TransactionItem {
   name: string;
   price: number;
   quantity?: number;
 }
 
+/**
+ * @interface Transaction
+ * @description Defines the structure of a transaction object.
+ */
 interface Transaction {
   id: string;
   square_payment_id: string | null;
@@ -58,6 +72,10 @@ interface Transaction {
   description?: string;
 }
 
+/**
+ * @interface TransactionsApiResponse
+ * @description Defines the shape of the API response for fetching transactions.
+ */
 interface TransactionsApiResponse {
   transactions: Transaction[];
   currentPage: number;
@@ -66,6 +84,11 @@ interface TransactionsApiResponse {
   limit: number;
 }
 
+/**
+ * Returns a Tailwind CSS class string for a status badge based on the transaction status.
+ * @param {string} status - The status of the transaction.
+ * @returns {string} The corresponding CSS classes for the badge.
+ */
 const getStatusBadgeClass = (status: string) => {
   switch (status?.toUpperCase()) {
       case 'COMPLETED': return 'bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-300';
@@ -78,6 +101,12 @@ const getStatusBadgeClass = (status: string) => {
   }
 };
 
+/**
+ * @component ReceiptDetail
+ * @description A modal component that displays the detailed view of a single transaction receipt.
+ * @param {{ transaction: Transaction, onClose: () => void }} props - The props for the component.
+ * @returns {React.ReactElement} The rendered receipt detail modal.
+ */
 const ReceiptDetail = ({ transaction, onClose }: { transaction: Transaction, onClose: () => void }) => {
   const items = transaction.items || [
     {
@@ -88,6 +117,10 @@ const ReceiptDetail = ({ transaction, onClose }: { transaction: Transaction, onC
   ];
   const description = transaction.description || `Transaction ID: ${transaction.id}`;
 
+  /**
+   * Placeholder function to handle the download PDF action.
+   * @param {Transaction} currentTransaction - The transaction for which to download the PDF.
+   */
   const handleDownloadPdf = (currentTransaction: Transaction) => {
     console.log("Download PDF requested for receipt:", currentTransaction.id);
     toast.info(`PDF generation for receipt ${currentTransaction.square_payment_id || currentTransaction.id} is not yet implemented. This feature is coming soon!`);
@@ -161,6 +194,12 @@ const ReceiptDetail = ({ transaction, onClose }: { transaction: Transaction, onC
   );
 };
 
+/**
+ * @component Receipts
+ * @description A component that displays a list of the user's past transactions and receipts.
+ * It allows users to search, view details, and paginate through their transaction history.
+ * @returns {React.ReactElement} The rendered receipts and transactions list.
+ */
 const Receipts = () => {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
@@ -193,6 +232,10 @@ const Receipts = () => {
     );
   }, [data?.transactions, searchQuery]);
 
+  /**
+   * Sets the selected receipt and opens the detail modal.
+   * @param {Transaction} receipt - The receipt to view.
+   */
   const handleViewReceipt = (receipt: Transaction) => {
     const displayItems = receipt.items || [
         {

@@ -14,11 +14,23 @@ import {
 } from 'npm:@react-email/components@0.0.22';
 import * as React from 'npm:react@18.3.1';
 
+/**
+ * @interface WelcomeEmailProps
+ * @description Defines the props for the WelcomeEmail component.
+ */
 interface WelcomeEmailProps {
   customerName: string;
   loginUrl: string;
 }
 
+/**
+ * @component WelcomeEmail
+ * @description Renders the welcome email template for new users who have just registered.
+ * This email greets the user, provides a link to log in, and highlights key features
+ * of their new account.
+ * @param {WelcomeEmailProps} props - The props for the component.
+ * @returns {JSX.Element} The rendered email template.
+ */
 export const WelcomeEmail = ({
   customerName,
   loginUrl,
@@ -102,6 +114,10 @@ export const WelcomeEmail = ({
 
 export default WelcomeEmail;
 
+/**
+ * @description A collection of style objects used for inline styling of the email components.
+ * This approach is used for maximum compatibility across different email clients.
+ */
 const main = {
   backgroundColor: '#f6f9fc',
   fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',

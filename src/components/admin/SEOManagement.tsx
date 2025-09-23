@@ -43,6 +43,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+/**
+ * @interface SEOMetadata
+ * @description Defines the structure for an SEO metadata record.
+ */
 interface SEOMetadata {
   id: string;
   page_type: string;
@@ -66,6 +70,12 @@ interface SEOMetadata {
   updated_at: string;
 }
 
+/**
+ * @component SEOManagement
+ * @description A comprehensive component for managing SEO metadata across the website.
+ * It provides analytics, a filterable list of SEO records, and modals for creating, editing, and deleting them.
+ * @returns {React.ReactElement} The rendered SEO management interface.
+ */
 const SEOManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("pages");
@@ -146,6 +156,11 @@ const SEOManagement = () => {
      seo.page_type.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
+  /**
+   * Returns a styled Badge component based on the page type.
+   * @param {string} pageType - The type of the page.
+   * @returns {React.ReactElement} A styled Badge component.
+   */
   const getPageTypeBadge = (pageType: string) => {
     const colors = {
       page: 'bg-blue-100 text-blue-800',
@@ -374,13 +389,27 @@ const SEOManagement = () => {
   );
 };
 
+/**
+ * @interface SEOFormProps
+ * @description Defines the props for the SEOForm component.
+ */
 interface SEOFormProps {
+  /** The existing SEO metadata for editing, or null for creating new metadata. */
   seo?: SEOMetadata | null;
+  /** Callback function to close the form modal. */
   onClose: () => void;
+  /** Callback function to handle the form submission. */
   onSubmit: (formData: any, id?: string) => void;
+  /** A boolean indicating if the form submission is in progress. */
   isLoading: boolean;
 }
 
+/**
+ * @component SEOForm
+ * @description A form for creating and editing SEO metadata for a specific page or entity.
+ * @param {SEOFormProps} props - The props for the component.
+ * @returns {React.ReactElement} The rendered SEO metadata form.
+ */
 const SEOForm: React.FC<SEOFormProps> = ({ seo, onClose, onSubmit, isLoading }) => {
   const [formData, setFormData] = useState({
     page_type: seo?.page_type || 'page',
@@ -401,6 +430,10 @@ const SEOForm: React.FC<SEOFormProps> = ({ seo, onClose, onSubmit, isLoading }) 
     robots: seo?.robots || 'index,follow',
   });
 
+  /**
+   * Handles changes in form input and textarea fields.
+   * @param {React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>} e - The change event.
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -409,6 +442,11 @@ const SEOForm: React.FC<SEOFormProps> = ({ seo, onClose, onSubmit, isLoading }) 
     }));
   };
 
+  /**
+   * Handles changes in select fields.
+   * @param {string} name - The name of the field to update.
+   * @param {string} value - The new value from the select component.
+   */
   const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -416,6 +454,10 @@ const SEOForm: React.FC<SEOFormProps> = ({ seo, onClose, onSubmit, isLoading }) 
     }));
   };
 
+  /**
+   * Handles the form submission.
+   * @param {React.FormEvent} e - The form submission event.
+   */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const submitData = {

@@ -1,3 +1,12 @@
+/**
+ * Encrypts a JSON object using AES-GCM.
+ * The key must be a 32-byte value, base64-encoded.
+ * The output format is "iv:ciphertext", where both are base64-encoded.
+ *
+ * @param json The JSON object to encrypt.
+ * @param base64Key The base64-encoded 32-byte encryption key.
+ * @returns A promise that resolves to the encrypted string.
+ */
 export async function encryptJson(json: unknown, base64Key: string): Promise<string> {
   const enc = new TextEncoder();
   const data = enc.encode(JSON.stringify(json));
@@ -11,6 +20,13 @@ export async function encryptJson(json: unknown, base64Key: string): Promise<str
   return `${ivB64}:${ctB64}`;
 }
 
+/**
+ * Decrypts a string that was encrypted with `encryptJson`.
+ *
+ * @param encrypted The encrypted string in "iv:ciphertext" format.
+ * @param base64Key The base64-encoded 32-byte encryption key.
+ * @returns A promise that resolves to the decrypted JSON object.
+ */
 export async function decryptJson(encrypted: string, base64Key: string): Promise<any> {
   const dec = new TextDecoder();
   const [ivB64, ctB64] = encrypted.split(":");

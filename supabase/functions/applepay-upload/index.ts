@@ -1,11 +1,25 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
+/**
+ * @constant corsHeaders
+ * @description Defines the CORS headers for the function, allowing cross-origin requests.
+ */
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+/**
+ * Serves the function to upload the Apple Pay merchant domain verification file.
+ * This is a critical step for enabling Apple Pay on the Web, as Apple requires hosting
+ * a specific file at a well-known URL to verify domain ownership.
+ *
+ * @param {Request} req - The incoming request, expected to be a POST with a JSON body
+ *                        containing the environment ('sandbox' or 'production') and the
+ *                        file content.
+ * @returns {Promise<Response>} A response indicating the success or failure of the upload.
+ */
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 

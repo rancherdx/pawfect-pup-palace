@@ -11,6 +11,15 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { motion } from "framer-motion";
 
+/**
+ * @component Setup
+ * @description A special one-time setup page for creating the initial super administrator accounts.
+ * This page checks if the setup has already been completed by looking at the number of existing
+ * admin accounts. If setup is required, it presents a form to create a new super admin.
+ * The form submission is handled by a secure Supabase edge function.
+ *
+ * @returns {JSX.Element | null} The rendered setup page, or a loading/complete state.
+ */
 const Setup: React.FC = () => {
   const [formData, setFormData] = useState({
     name: "",
@@ -28,6 +37,12 @@ const Setup: React.FC = () => {
     checkSetupStatus();
   }, []);
 
+  /**
+   * @function checkSetupStatus
+   * @description Checks the application's setup status by calling a Supabase function
+   * to determine the number of existing admin accounts. It updates the component's state
+   * based on the result.
+   */
   const checkSetupStatus = async () => {
     try {
       const { data, error } = await supabase.functions.invoke('setup-status');
@@ -51,6 +66,12 @@ const Setup: React.FC = () => {
     }
   };
 
+  /**
+   * @function handleSubmit
+   * @description Handles the submission of the admin creation form. It performs validation,
+   * calls the `setup-admin` Supabase function, and provides user feedback.
+   * @param {React.FormEvent} e - The form submission event.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -107,6 +128,11 @@ const Setup: React.FC = () => {
     }
   };
 
+  /**
+   * @function handleChange
+   * @description Updates the form data state when the user types in the input fields.
+   * @param {React.ChangeEvent<HTMLInputElement>} e - The change event from the input field.
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));

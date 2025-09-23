@@ -13,6 +13,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '@/api';
 import { toast } from 'sonner';
 
+/**
+ * @interface EmailTemplate
+ * @description Defines the structure of an email template object used within the manager.
+ */
 interface EmailTemplate {
   id: string;
   name: string;
@@ -24,6 +28,12 @@ interface EmailTemplate {
   updated_at?: string;
 }
 
+/**
+ * @component EmailTemplatesManager
+ * @description A component for managing email templates. It allows viewing and editing of templates,
+ * distinguishing between system-defined (non-editable) and custom (editable) templates.
+ * @returns {React.ReactElement} The rendered email template management interface.
+ */
 const EmailTemplatesManager: React.FC = () => {
   const [showTemplateForm, setShowTemplateForm] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<EmailTemplate | null>(null);
@@ -60,6 +70,10 @@ const EmailTemplatesManager: React.FC = () => {
     },
   });
 
+  /**
+   * Handles the action to edit or view a template.
+   * @param {EmailTemplate} template - The template to be edited or viewed.
+   */
   const handleEditTemplate = (template: EmailTemplate) => {
     if (template.is_editable_in_admin) {
       setEditingTemplate(template);
@@ -71,11 +85,18 @@ const EmailTemplatesManager: React.FC = () => {
     }
   };
 
+  /**
+   * Placeholder function for adding a new template. Currently shows an info toast.
+   */
   const handleAddNewTemplate = () => {
     console.log('Add new custom template clicked - Placeholder');
     toast.info("Adding new custom templates via the UI is not currently supported. Custom templates are typically added by developers.");
   };
 
+  /**
+   * Handles saving the data from the email template form.
+   * @param {Pick<FormEmailTemplateData, 'id' | 'subject' | 'html_body'>} data - The data from the form to be saved.
+   */
   const handleSaveTemplateForm = (data: Pick<FormEmailTemplateData, 'id' | 'subject' | 'html_body'>) => {
     if (!data.id) {
       toast.error("Cannot save template without an ID.");
@@ -91,6 +112,9 @@ const EmailTemplatesManager: React.FC = () => {
     updateTemplateMutation.mutate({ id: data.id, subject: data.subject, html_body: data.html_body });
   };
 
+  /**
+   * Handles the cancellation of the template editing form.
+   */
   const handleCancelTemplateForm = () => {
     setShowTemplateForm(false);
     setEditingTemplate(null);

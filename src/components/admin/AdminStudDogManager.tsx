@@ -18,6 +18,10 @@ import {
 } from "@/components/ui/dialog";
 import { adminApi } from '@/api';
 
+/**
+ * @interface AdminStudDog
+ * @description Represents the structure of a stud dog object as used in the admin interface.
+ */
 interface AdminStudDog {
   id: string;
   name: string;
@@ -37,6 +41,10 @@ interface AdminStudDog {
   updated_at: string;
 }
 
+/**
+ * @interface AdminStudDogsApiResponse
+ * @description Defines the shape of the API response for fetching stud dogs.
+ */
 interface AdminStudDogsApiResponse {
   studDogs: AdminStudDog[];
   currentPage: number;
@@ -45,6 +53,12 @@ interface AdminStudDogsApiResponse {
   limit: number;
 }
 
+/**
+ * @component AdminStudDogManager
+ * @description A comprehensive component for managing stud dogs within the admin dashboard.
+ * It provides functionalities for viewing, searching, filtering, adding, editing, and deleting stud dogs.
+ * @returns {React.ReactElement} The rendered stud dog management interface.
+ */
 const AdminStudDogManager: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -67,6 +81,12 @@ const AdminStudDogManager: React.FC = () => {
 
   useEffect(() => { setCurrentPage(1); }, [filterAvailability, filterBreedId]);
 
+  /**
+   * Fetches stud dogs from the admin API based on query parameters.
+   * @param {object} context - The react-query context.
+   * @param {any[]} context.queryKey - The query key array.
+   * @returns {Promise<AdminStudDogsApiResponse>} A promise that resolves with the stud dog data.
+   */
   const fetchAdminStudDogs = async ({ queryKey }: { queryKey: [string, number, number, string, string, string] }): Promise<AdminStudDogsApiResponse> => {
     const [_key, page, limit, search, availability, breedId] = queryKey;
     const params = {
@@ -132,13 +152,29 @@ const AdminStudDogManager: React.FC = () => {
     }
   });
 
+  /** Opens the form modal to add a new stud dog. */
   const handleAddClick = () => { setEditingStudDog(null); setShowFormModal(true); };
+
+  /**
+   * Opens the form modal to edit an existing stud dog.
+   * @param {AdminStudDog} studDog - The stud dog to edit.
+   */
   const handleEditClick = (studDog: AdminStudDog) => {
     setEditingStudDog(studDog);
     setShowFormModal(true);
   };
+
+  /**
+   * Opens the confirmation modal to delete a stud dog.
+   * @param {string} id - The ID of the stud dog to delete.
+   */
   const handleDeleteClick = (id: string) => { setDeletingStudDogId(id); setShowDeleteConfirmModal(true); };
 
+  /**
+   * Handles saving a stud dog, either creating a new one or updating an existing one.
+   * @param {StudDogCreationData} formDataValues - The form data.
+   * @param {string} [id] - The ID of the stud dog to update. If not provided, a new dog is created.
+   */
   const handleSaveStudDog = (formDataValues: StudDogCreationData, id?: string) => {
     if (id) {
       updateStudDogMutation.mutate({ id, data: formDataValues });
@@ -147,10 +183,16 @@ const AdminStudDogManager: React.FC = () => {
     }
   };
 
+  /** Confirms and executes the deletion of a stud dog. */
   const confirmDelete = () => { 
     if (deletingStudDogId) deleteStudDogMutation.mutate(deletingStudDogId); 
   };
 
+  /**
+   * Formats a date string into a more readable format.
+   * @param {string} dateString - The date string to format.
+   * @returns {string} The formatted date string.
+   */
   const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 
   return (

@@ -28,6 +28,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '@/api/adminApi';
 import { toast } from 'sonner';
 
+/**
+ * @interface Integration
+ * @description Defines the structure of an integration object as used within this component.
+ */
 interface Integration {
   id: string; // This will be deprecated, but we'll keep it for now for keys
   service_name: string;
@@ -39,6 +43,10 @@ interface Integration {
   updated_at?: string;
 }
 
+/**
+ * @interface IntegrationApiPayload
+ * @description Defines the structure of the payload sent to the API for creating or updating an integration.
+ */
 interface IntegrationApiPayload {
     service_name: string;
     environment: 'production' | 'sandbox';
@@ -47,6 +55,10 @@ interface IntegrationApiPayload {
     is_active?: boolean;
 }
 
+/**
+ * @interface IntegrationFormData
+ * @description Defines the structure of the data managed by the IntegrationForm component.
+ */
 interface IntegrationFormData {
   serviceName: string;
   apiKey: string;
@@ -55,6 +67,11 @@ interface IntegrationFormData {
   environment: 'production' | 'sandbox';
 }
 
+/**
+ * @component ThirdPartyIntegrationsManager
+ * @description A component for managing third-party service integrations, including viewing, adding, editing, and deleting them.
+ * @returns {React.ReactElement} The rendered integrations management interface.
+ */
 const ThirdPartyIntegrationsManager: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingIntegration, setEditingIntegration] = useState<Integration | null>(null);
@@ -124,6 +141,10 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
     }
   });
 
+  /**
+   * Toggles the active status of an integration.
+   * @param {Integration} integration - The integration to toggle.
+   */
   const handleToggleActive = (integration: Integration) => {
     const updatedData: IntegrationApiPayload = {
       is_active: !integration.is_active,
@@ -134,16 +155,27 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
     updateIntegrationMutation.mutate({ id: integration.id, data: updatedData });
   };
 
+  /**
+   * Sets the state to edit an existing integration and shows the form.
+   * @param {Integration} integration - The integration to edit.
+   */
   const handleEditIntegration = (integration: Integration) => {
     setEditingIntegration(integration);
     setShowForm(true);
   };
 
+  /**
+   * Sets the state for deleting an integration and shows the confirmation dialog.
+   * @param {Integration} integration - The integration to delete.
+   */
   const handleDeleteIntegration = (integration: Integration) => {
     setIntegrationToDelete({ service_name: integration.service_name, environment: integration.environment });
     setShowDeleteIntegrationDialog(true);
   };
 
+  /**
+   * Confirms and executes the deletion of an integration.
+   */
   const confirmDeleteIntegration = () => {
     if (integrationToDelete) {
       deleteIntegrationMutation.mutate(integrationToDelete);
@@ -151,11 +183,18 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
     setShowDeleteIntegrationDialog(false);
   };
 
+  /**
+   * Shows the form to add a new integration.
+   */
   const handleAddNewIntegration = () => {
     setEditingIntegration(null);
     setShowForm(true);
   };
 
+  /**
+   * Handles the saving of form data for both new and existing integrations.
+   * @param {IntegrationFormData} formData - The data from the integration form.
+   */
   const handleSaveForm = (formData: IntegrationFormData) => {
     let parsedOtherConfig = {};
     try {
@@ -188,6 +227,9 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
     }
   };
 
+  /**
+   * Hides the integration form and resets the editing state.
+   */
   const handleCancelForm = () => {
     setShowForm(false);
     setEditingIntegration(null);

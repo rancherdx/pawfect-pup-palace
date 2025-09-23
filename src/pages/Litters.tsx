@@ -12,6 +12,15 @@ import { PawPrint, Calendar, Heart, Dog } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 
+/**
+ * @component Litters
+ * @description This page displays a collection of all puppy litters, both current and upcoming.
+ * It fetches litter data from Supabase and presents each litter in a card format with key details.
+ * The component handles loading and error states, and includes SEO optimizations with
+ * dynamic titles, meta descriptions, and structured data for the collection.
+ *
+ * @returns {JSX.Element} The rendered litters page.
+ */
 const Litters = () => {
   const { data: litters, isLoading, isError } = useQuery({
     queryKey: ['litters'],
@@ -26,6 +35,11 @@ const Litters = () => {
     }
   });
 
+  /**
+   * @constant structuredData
+   * @description JSON-LD structured data for the litters collection page, conforming to Schema.org standards.
+   * This helps search engines understand the content of the page as a collection of items.
+   */
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
@@ -64,6 +78,12 @@ const Litters = () => {
     }
   };
 
+  /**
+   * @function formatDate
+   * @description Formats a date string into a localized date format.
+   * @param {string | null} dateString - The date string to format.
+   * @returns {string} The formatted date string or 'Not specified'.
+   */
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'Not specified';
     return new Date(dateString).toLocaleDateString();

@@ -8,6 +8,10 @@ import { Loader2, Shield } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
+/**
+ * @interface EmailTemplateData
+ * @description Defines the shape of an email template object.
+ */
 export interface EmailTemplateData {
   id: string;
   name: string; // Typically not editable if it's a key
@@ -16,16 +20,28 @@ export interface EmailTemplateData {
   is_editable?: boolean; // Received from parent
 }
 
+/**
+ * @interface EmailTemplateFormProps
+ * @description Defines the props for the EmailTemplateForm component.
+ */
 interface EmailTemplateFormProps {
+  /** The email template data to be edited. */
   template: EmailTemplateData;
+  /** Callback function to save the updated template data. */
   onSave: (data: Pick<EmailTemplateData, 'id' | 'subject' | 'html_body'>) => void;
+  /** Callback function to cancel the editing process. */
   onCancel: () => void;
-  // is_editable is now part of the template object passed in,
-  // but also explicitly passed for clarity if preferred by parent.
-  // For this task, template.is_editable will be used.
-  isSaving: boolean;    // Added this
+  /** A boolean indicating if the save operation is in progress. */
+  isSaving: boolean;
 }
 
+/**
+ * @component EmailTemplateForm
+ * @description A form component for editing the subject and HTML body of an email template.
+ * It includes security features like HTML sanitization to prevent XSS attacks.
+ * @param {EmailTemplateFormProps} props - The props for the component.
+ * @returns {React.ReactElement | null} The rendered form for editing an email template, or null if no template is provided.
+ */
 const EmailTemplateForm: React.FC<EmailTemplateFormProps> = ({ template, onSave, onCancel, isSaving }) => {
   const [subject, setSubject] = useState('');
   const [htmlBody, setHtmlBody] = useState('');
@@ -38,6 +54,10 @@ const EmailTemplateForm: React.FC<EmailTemplateFormProps> = ({ template, onSave,
     }
   }, [template]);
 
+  /**
+   * Handles the form submission. It sanitizes the HTML body before calling the onSave callback.
+   * @param {React.FormEvent} e - The form submission event.
+   */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     

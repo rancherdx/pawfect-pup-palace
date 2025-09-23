@@ -19,6 +19,10 @@ import { Loader2 } from "lucide-react";
 import LitterForm from "./LitterForm";
 import LitterCard from "./LitterCard";
 
+/**
+ * @constant initialFormData
+ * @description The initial state for the litter form data when creating a new litter.
+ */
 const initialFormData = {
   name: "",
   damName: "",
@@ -32,6 +36,12 @@ const initialFormData = {
   coverImageUrl: ""
 };
 
+/**
+ * @component LitterManagement
+ * @description A comprehensive component for managing litters. It allows admins to view, search,
+ * add, edit, and delete litters.
+ * @returns {React.ReactElement} The rendered litter management interface.
+ */
 const LitterManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -111,28 +121,46 @@ const LitterManagement = () => {
     }
   }, [currentLitter, showForm]);
 
+  /**
+   * Sets the ID of the litter to be deleted and opens the confirmation dialog.
+   * @param {string} id - The ID of the litter to delete.
+   */
   const handleDeleteLitter = (id: string) => {
     setLitterToDeleteId(id);
     setShowDeleteDialog(true);
   };
 
+  /**
+   * Confirms and executes the deletion of a litter.
+   */
   const confirmDeleteLitter = () => {
     if (litterToDeleteId) {
       deleteLitterMutation.mutate(litterToDeleteId);
     }
   };
 
+  /**
+   * Sets the current litter for editing and shows the litter form.
+   * @param {Litter} litter - The litter to be edited.
+   */
   const handleEditLitter = (litter: Litter) => {
     setCurrentLitter(litter);
     setShowForm(true);
   };
 
+  /**
+   * Resets the form and shows it for adding a new litter.
+   */
   const handleAddLitter = () => {
     setCurrentLitter(null);
     setFormData(initialFormData);
     setShowForm(true);
   };
 
+  /**
+   * Handles the form submission for saving or updating a litter.
+   * @param {React.FormEvent} e - The form submission event.
+   */
   const handleSaveLitter = (e: React.FormEvent) => {
     e.preventDefault();
     const payload: LitterCreationData | LitterUpdateData = {
@@ -147,6 +175,10 @@ const LitterManagement = () => {
     }
   };
 
+  /**
+   * Handles changes in form inputs and updates the form state.
+   * @param {React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>} e - The input change event.
+   */
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {

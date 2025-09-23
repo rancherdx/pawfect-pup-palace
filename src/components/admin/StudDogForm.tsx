@@ -11,15 +11,31 @@ import { adminApi } from '@/api';
 import { StudDog, StudDogCreationData, StudDogUpdateData } from "@/types";
 import { Loader2 } from 'lucide-react';
 
+/**
+ * @interface StudDogFormProps
+ * @description Defines the props for the StudDogForm component.
+ */
 interface StudDogFormProps {
+  /** The stud dog data to populate the form for editing. If not provided, the form is in creation mode. */
   studDog?: StudDog;
+  /** Callback function to be invoked when the form is closed. */
   onClose: () => void;
+  /** Optional callback for saving, provided for legacy compatibility. */
   onSave?: (formData: StudDogCreationData, id?: string) => void;
+  /** Optional callback for cancelling, provided for legacy compatibility. */
   onCancel?: () => void;
+  /** A boolean to explicitly set the form to edit mode. */
   isEditMode?: boolean;
+  /** A boolean to indicate if an external process is loading. */
   isLoading?: boolean;
 }
 
+/**
+ * @component StudDogForm
+ * @description A form for creating and editing stud dog profiles.
+ * @param {StudDogFormProps} props - The props for the component.
+ * @returns {React.ReactElement} The rendered stud dog form.
+ */
 const StudDogForm: React.FC<StudDogFormProps> = ({ studDog, onClose, isEditMode }) => {
   const [formData, setFormData] = useState<StudDogCreationData>({
     name: studDog?.name || "",
@@ -69,16 +85,29 @@ const StudDogForm: React.FC<StudDogFormProps> = ({ studDog, onClose, isEditMode 
     }
   }, [studDog]);
 
+  /**
+   * Handles changes for standard input and textarea elements.
+   * @param {React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>} e - The change event.
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     const isNumber = type === 'number';
     setFormData(prev => ({ ...prev, [name]: isNumber ? Number(value) : value }));
   };
 
+  /**
+   * Handles changes for input fields that represent an array of strings (e.g., certifications).
+   * @param {'certifications' | 'image_urls'} name - The name of the field to update.
+   * @param {string} value - The comma-separated string value.
+   */
   const handleArrayChange = (name: 'certifications' | 'image_urls', value: string) => {
     setFormData(prev => ({ ...prev, [name]: value.split(',').map(item => item.trim()) }));
   };
 
+  /**
+   * Handles the form submission for creating or updating a stud dog.
+   * @param {React.FormEvent} e - The form submission event.
+   */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     mutation.mutate({ id: studDog?.id, data: formData });

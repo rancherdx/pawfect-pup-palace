@@ -4,6 +4,12 @@ import { Helmet } from "react-helmet-async";
 import HeroSection from "@/components/HeroSection";
 import Section from "@/components/Section";
 
+/**
+ * @component About
+ * @description The "About Us" page component, detailing the company's story, team, and facilities.
+ * It includes SEO optimizations using React Helmet Async for metadata and structured data.
+ * @returns {React.ReactElement} The rendered About Us page.
+ */
 const About = () => {
   const structuredData = {
     "@context": "https://schema.org",

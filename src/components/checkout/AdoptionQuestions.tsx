@@ -8,13 +8,28 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+/**
+ * @interface AdoptionQuestionsProps
+ * @description Defines the props for the AdoptionQuestions component.
+ */
 interface AdoptionQuestionsProps {
+  /** The current data object for the adoption form. */
   data: Record<string, unknown>;
+  /** Callback to update the parent component's data state. */
   onDataChange: (data: Record<string, unknown>) => void;
+  /** Callback to proceed to the next step. */
   onNext: () => void;
+  /** Callback to return to the previous step. */
   onPrevious: () => void;
 }
 
+/**
+ * @component AdoptionQuestions
+ * @description A form component that collects information from potential adopters as part of the checkout process.
+ * It includes fields for personal information, home environment, and experience with pets.
+ * @param {AdoptionQuestionsProps} props - The props for the component.
+ * @returns {React.ReactElement} The rendered adoption questions form.
+ */
 const AdoptionQuestions = ({ data, onDataChange, onNext, onPrevious }: AdoptionQuestionsProps) => {
   const [formData, setFormData] = useState({
     firstName: (data.firstName as string) || "",
@@ -33,15 +48,28 @@ const AdoptionQuestions = ({ data, onDataChange, onNext, onPrevious }: AdoptionQ
   
   const [errors, setErrors] = useState<Record<string, string>>({});
   
+  /**
+   * Handles changes for standard input and textarea elements.
+   * @param {React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>} e - The change event.
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
+  /**
+   * Handles changes for select and radio group elements.
+   * @param {string} name - The name of the field to update.
+   * @param {string} value - The new value.
+   */
   const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  /**
+   * Validates the form fields and updates the errors state.
+   * @returns {boolean} True if the form is valid, otherwise false.
+   */
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     
@@ -56,6 +84,10 @@ const AdoptionQuestions = ({ data, onDataChange, onNext, onPrevious }: AdoptionQ
     return Object.keys(newErrors).length === 0;
   };
   
+  /**
+   * Handles the form submission, validates the form, and proceeds to the next step if valid.
+   * @param {React.FormEvent} e - The form submission event.
+   */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     

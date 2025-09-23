@@ -1,9 +1,17 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Puppy } from '@/types/puppy';
 
-// Optimized public API endpoints for better performance
+/**
+ * @namespace publicApi
+ * @description A collection of optimized, public-facing API endpoints for fetching data without authentication.
+ */
 export const publicApi = {
-  // Get featured puppies with optimized query
+  /**
+   * Fetches a list of featured, available puppies.
+   * @param {number} [limit=3] - The maximum number of featured puppies to return.
+   * @returns {Promise<Puppy[]>} A promise that resolves to an array of featured puppy objects.
+   * @throws Will throw an error if the Supabase query fails.
+   */
   getFeaturedPuppies: async (limit: number = 3): Promise<Puppy[]> => {
     const { data, error } = await supabase
       .from('puppies')
@@ -20,7 +28,18 @@ export const publicApi = {
     return data || [];
   },
 
-  // Get all available puppies with filtering
+  /**
+   * Fetches a paginated and filterable list of all puppies.
+   * @param {object} [filters={}] - The filter and pagination options.
+   * @param {string} [filters.breed] - Filter by a specific breed.
+   * @param {string} [filters.status] - Filter by status (e.g., 'Available').
+   * @param {string} [filters.search] - A search term to match against puppy names and breeds.
+   * @param {number} [filters.limit=50] - The number of puppies to return per page.
+   * @param {number} [filters.offset=0] - The starting offset for pagination.
+   * @param {string} [filters.litter_id] - Filter puppies belonging to a specific litter.
+   * @returns {Promise<{ puppies: Puppy[]; total: number }>} A promise that resolves to an object containing the list of puppies and the total count.
+   * @throws Will throw an error if the Supabase query fails.
+   */
   getAllPuppies: async (filters: {
     breed?: string;
     status?: string;
@@ -67,7 +86,12 @@ export const publicApi = {
     };
   },
 
-  // Get single puppy with litter info by ID or slug
+  /**
+   * Fetches a single puppy by its ID, including information about its litter.
+   * @param {string} id - The UUID of the puppy to fetch.
+   * @returns {Promise<Puppy | null>} A promise that resolves to the puppy object, or null if not found.
+   * @throws Will throw an error if the Supabase query fails for reasons other than not found.
+   */
   getPuppyById: async (id: string): Promise<Puppy | null> => {
     const { data, error } = await supabase
       .from('puppies')
@@ -88,7 +112,12 @@ export const publicApi = {
     return data;
   },
 
-  // Get single puppy by slug
+  /**
+   * Fetches a single puppy by its slug, including information about its litter.
+   * @param {string} slug - The unique slug of the puppy to fetch.
+   * @returns {Promise<Puppy | null>} A promise that resolves to the puppy object, or null if not found.
+   * @throws Will throw an error if the Supabase query fails for reasons other than not found.
+   */
   getPuppyBySlug: async (slug: string): Promise<Puppy | null> => {
     const { data, error } = await supabase
       .from('puppies')
@@ -109,7 +138,12 @@ export const publicApi = {
     return data;
   },
 
-  // Get single litter by slug
+  /**
+   * Fetches a single litter by its unique slug.
+   * @param {string} slug - The unique slug of the litter to fetch.
+   * @returns {Promise<any | null>} A promise that resolves to the litter object, or null if not found.
+   * @throws Will throw an error if the Supabase query fails for reasons other than not found.
+   */
   getLitterBySlug: async (slug: string): Promise<any | null> => {
     const { data, error } = await supabase
       .from('litters')
@@ -125,7 +159,12 @@ export const publicApi = {
     return data;
   },
 
-  // Get testimonials optimized
+  /**
+   * Fetches a list of approved testimonials.
+   * @param {number} [limit=6] - The maximum number of testimonials to return.
+   * @returns {Promise<any[]>} A promise that resolves to an array of testimonial objects.
+   * @throws Will throw an error if the Supabase query fails.
+   */
   getTestimonials: async (limit: number = 6): Promise<any[]> => {
     const { data, error } = await supabase
       .from('testimonials')
@@ -139,7 +178,12 @@ export const publicApi = {
     return data || [];
   },
 
-  // Get featured testimonials
+  /**
+   * Fetches a list of featured, approved testimonials.
+   * @param {number} [limit=3] - The maximum number of featured testimonials to return.
+   * @returns {Promise<any[]>} A promise that resolves to an array of featured testimonial objects.
+   * @throws Will throw an error if the Supabase query fails.
+   */
   getFeaturedTestimonials: async (limit: number = 3): Promise<any[]> => {
     const { data, error } = await supabase
       .from('testimonials')
@@ -153,7 +197,11 @@ export const publicApi = {
     return data || [];
   },
 
-  // Get available breeds list
+  /**
+   * Fetches a unique, sorted list of available puppy breeds.
+   * @returns {Promise<string[]>} A promise that resolves to an array of breed names.
+   * @throws Will throw an error if the Supabase query fails.
+   */
   getAvailableBreeds: async (): Promise<string[]> => {
     const { data, error } = await supabase
       .from('puppies')
@@ -167,7 +215,12 @@ export const publicApi = {
     return breeds.sort();
   },
 
-  // Get litters with puppy count
+  /**
+   * Fetches a list of litters, including their puppy count.
+   * @param {number} [limit=10] - The maximum number of litters to return.
+   * @returns {Promise<any[]>} A promise that resolves to an array of litter objects.
+   * @throws Will throw an error if the Supabase query fails.
+   */
   getLitters: async (limit: number = 10): Promise<any[]> => {
     const { data, error } = await supabase
       .from('litters')
@@ -182,7 +235,12 @@ export const publicApi = {
     return data || [];
   },
 
-  // Get published blog posts
+  /**
+   * Fetches a list of published blog posts.
+   * @param {number} [limit=10] - The maximum number of blog posts to return.
+   * @returns {Promise<any[]>} A promise that resolves to an array of blog post objects.
+   * @throws Will throw an error if the Supabase query fails.
+   */
   getBlogPosts: async (limit: number = 10): Promise<any[]> => {
     const { data, error } = await supabase
       .from('blog_posts')

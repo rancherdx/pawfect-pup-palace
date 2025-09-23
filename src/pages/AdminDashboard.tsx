@@ -35,6 +35,11 @@ import SwaggerDoc from "@/components/admin/SwaggerUI";
 import ReDocDoc from "@/components/admin/ReDocUI";
 import { Code } from "lucide-react";
 
+/**
+ * @constant allAdminTabs
+ * @description An array of objects defining the tabs available in the admin dashboard.
+ * Each object contains the value, label, icon, and component for a tab.
+ */
 const allAdminTabs = [
   // Core Management
   { value: "hub", label: "Management Hub", icon: PawPrint, component: <UnifiedManagementHub /> },
@@ -60,6 +65,16 @@ const allAdminTabs = [
   { value: "redoc", label: "ReDoc", icon: Code, component: <ReDocDoc /> },
 ];
 
+/**
+ * @component AdminDashboard
+ * @description The main administrative interface for the application.
+ * It provides a tabbed navigation to various management panels, such as user management,
+ * transaction history, content management, and system settings. The component is responsive
+ * and will collapse tabs into a "More" dropdown menu on smaller screens. The active
+ * tab is synced with the URL search parameters, allowing for direct linking to specific tabs.
+ *
+ * @returns {JSX.Element} The rendered admin dashboard component.
+ */
 const AdminDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") || "hub";

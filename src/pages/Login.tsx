@@ -10,6 +10,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from "sonner";
 import { AlertCircle, LogIn } from "lucide-react";
 
+/**
+ * @component Login
+ * @description The login page component for user authentication. It provides a form for users
+ * to enter their email and password. It handles the login process, displays errors,
+ * and redirects authenticated users to their appropriate dashboard or default route.
+ *
+ * @returns {JSX.Element} The rendered login page.
+ */
 export default function Login() {
   const navigate = useNavigate();
   const { login, isAuthenticated, getDefaultRoute, authStatus } = useAuth();
@@ -24,10 +32,21 @@ export default function Login() {
     }
   }, [isAuthenticated, authStatus, navigate, getDefaultRoute]);
 
+  /**
+   * @function handleChange
+   * @description Updates the credentials state when the user types in the input fields.
+   * @param {ChangeEvent<HTMLInputElement>} e - The change event from the input field.
+   */
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setCredentials({ ...credentials, [e.target.id]: e.target.value });
   };
 
+  /**
+   * @function handleSubmit
+   * @description Handles the form submission for logging in the user. It calls the login function
+   * from the AuthContext, handles errors, and provides user feedback via toasts.
+   * @param {React.FormEvent} e - The form submission event.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);

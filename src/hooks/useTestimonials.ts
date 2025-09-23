@@ -3,7 +3,12 @@ import { publicApi } from "@/api/publicApi";
 import { adminApi } from "@/api/adminApi";
 import { toast } from "sonner";
 
-// Hook for public testimonials
+/**
+ * @hook useTestimonials
+ * @description A custom hook to fetch a list of public testimonials.
+ * @param {number} [limit=6] - The maximum number of testimonials to fetch.
+ * @returns {import('@tanstack/react-query').UseQueryResult} The result of the react-query useQuery hook.
+ */
 export const useTestimonials = (limit: number = 6) => {
   return useQuery({
     queryKey: ['testimonials', limit],
@@ -12,7 +17,12 @@ export const useTestimonials = (limit: number = 6) => {
   });
 };
 
-// Hook for featured testimonials
+/**
+ * @hook useFeaturedTestimonials
+ * @description A custom hook to fetch a list of featured testimonials.
+ * @param {number} [limit=3] - The maximum number of featured testimonials to fetch.
+ * @returns {import('@tanstack/react-query').UseQueryResult} The result of the react-query useQuery hook.
+ */
 export const useFeaturedTestimonials = (limit: number = 3) => {
   return useQuery({
     queryKey: ['featured-testimonials', limit],
@@ -21,7 +31,12 @@ export const useFeaturedTestimonials = (limit: number = 3) => {
   });
 };
 
-// Admin hook for testimonial management
+/**
+ * @hook useTestimonialMutations
+ * @description A custom hook that provides mutation functions for creating, updating, and deleting testimonials.
+ * It handles react-query cache invalidation and displays toasts on success or error.
+ * @returns {{ createTestimonial: import('@tanstack/react-query').UseMutationResult, updateTestimonial: import('@tanstack/react-query').UseMutationResult, deleteTestimonial: import('@tanstack/react-query').UseMutationResult }} An object containing the mutation functions.
+ */
 export const useTestimonialMutations = () => {
   const queryClient = useQueryClient();
   

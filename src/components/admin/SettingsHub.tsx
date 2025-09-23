@@ -19,9 +19,20 @@ import DataDeletionRequestsManager from "./DataDeletionRequestsManager";
 import BrandAssetManager from "./BrandAssetManager";
 import SecurityMonitoring from "./SecurityMonitoring";
 
+/**
+ * @component SettingsHub
+ * @description A central hub for all administrative settings. It uses a tab-based navigation
+ * to render different management components for various aspects of the application.
+ * @returns {React.ReactElement} The rendered settings hub interface.
+ */
 const SettingsHub = () => {
   const [activeTab, setActiveTab] = useState("general");
 
+  /**
+   * @const settingsTabs
+   * @description An array of objects defining the configuration for each tab in the settings hub.
+   * Each object contains the tab's value, label, icon, and the component to render.
+   */
   const settingsTabs = [
     { 
       value: "general", 

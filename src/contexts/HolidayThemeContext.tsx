@@ -1,11 +1,19 @@
 
 import React, { createContext, useContext, useMemo } from "react";
 
+/**
+ * @typedef {'juneteenth' | 'fathersday' | 'none'} Holiday
+ * @description A type representing the possible holiday themes.
+ */
 export type Holiday =
   | "juneteenth"
   | "fathersday"
   | "none";
 
+/**
+ * @interface HolidayThemeContextType
+ * @description Defines the shape of the holiday theme context.
+ */
 interface HolidayThemeContextType {
   holiday: Holiday;
   colors: {
@@ -17,6 +25,10 @@ interface HolidayThemeContextType {
   };
 }
 
+/**
+ * Determines the current holiday and returns the corresponding theme colors.
+ * @returns {HolidayThemeContextType} The theme object for the current holiday, or the default theme.
+ */
 function getHolidayAndColors(): HolidayThemeContextType {
   const today = new Date();
   const month = today.getMonth() + 1; // January = 0
@@ -83,6 +95,13 @@ const HolidayThemeContext = createContext<HolidayThemeContextType>({
   }
 });
 
+/**
+ * @component HolidayThemeProvider
+ * @description Provides the holiday theme context to its children components.
+ * It calculates the current theme once and provides it to the context.
+ * @param {{ children: React.ReactNode }} props - The props for the component.
+ * @returns {React.ReactElement} The rendered provider component.
+ */
 export const HolidayThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const theme = useMemo(getHolidayAndColors, []);
   return (
@@ -90,6 +109,11 @@ export const HolidayThemeProvider = ({ children }: { children: React.ReactNode }
   );
 };
 
+/**
+ * @hook useHolidayTheme
+ * @description A custom hook to access the holiday theme context.
+ * @returns {HolidayThemeContextType} The holiday theme context.
+ */
 export function useHolidayTheme() {
   return useContext(HolidayThemeContext);
 }

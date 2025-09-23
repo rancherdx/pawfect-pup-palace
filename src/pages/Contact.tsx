@@ -12,6 +12,15 @@ import { Mail, Phone, MapPin, Clock, PawPrint } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import Section from "@/components/Section";
 
+/**
+ * @component ContactCard
+ * @description A reusable card component to display contact information.
+ * @param {object} props - The component props.
+ * @param {React.ElementType} props.icon - The icon component to display.
+ * @param {string} props.title - The title of the card.
+ * @param {string | string[]} props.details - The details to display, can be a string or an array of strings.
+ * @returns {JSX.Element} The rendered contact card.
+ */
 const ContactCard = ({ icon: Icon, title, details }) => (
   <Card className="p-6 flex flex-col items-center text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
     <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
@@ -30,6 +39,15 @@ const ContactCard = ({ icon: Icon, title, details }) => (
   </Card>
 );
 
+/**
+ * @component Contact
+ * @description The main contact page for the website. It includes a contact form,
+ * contact information cards, an embedded map, and social media links. It also handles
+ * form state and submission, and includes SEO optimizations using React Helmet Async
+ * with structured data for better search engine visibility.
+ *
+ * @returns {JSX.Element} The rendered contact page.
+ */
 const Contact = () => {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
@@ -40,15 +58,30 @@ const Contact = () => {
     message: "",
   });
 
+  /**
+   * @function handleChange
+   * @description Handles changes for standard input and textarea elements in the contact form.
+   * @param {React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>} e - The event object.
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  /**
+   * @function handleSelectChange
+   * @description Handles changes for the subject Select component in the contact form.
+   * @param {string} value - The new value for the subject.
+   */
   const handleSelectChange = (value: string) => {
     setFormData(prev => ({ ...prev, subject: value }));
   };
 
+  /**
+   * @function handleSubmit
+   * @description Handles the contact form submission, shows a success toast, and resets the form.
+   * @param {React.FormEvent} e - The form event object.
+   */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Form submitted:", formData);
@@ -69,6 +102,11 @@ const Contact = () => {
     });
   };
 
+  /**
+   * @constant structuredData
+   * @description JSON-LD structured data for the contact page, conforming to Schema.org standards.
+   * This helps search engines understand the page content and can improve search result presentation.
+   */
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "ContactPage",
