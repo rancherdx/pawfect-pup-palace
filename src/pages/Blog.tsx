@@ -10,6 +10,14 @@ import { useQuery } from "@tanstack/react-query";
 import { blogApi } from "@/api";
 import { BlogPost, BlogPostsResponse } from "@/types";
 
+/**
+ * @component Blog
+ * @description The main page for displaying a list of blog posts. It fetches posts from the API,
+ * allows users to filter them by category, and provides a search functionality.
+ * It handles loading and error states gracefully.
+ *
+ * @returns {JSX.Element} The rendered blog page with a list of articles.
+ */
 const Blog = () => {
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
@@ -40,12 +48,23 @@ const Blog = () => {
     });
   }, [rawPosts, activeCategory, searchTerm]);
 
+  /**
+   * @function formatDate
+   * @description Formats a date string into a more readable format (e.g., "September 22, 2025").
+   * @param {string | null | undefined} dateString - The date string to format.
+   * @returns {string} The formatted date string or "Date N/A" if the input is invalid.
+   */
   const formatDate = (dateString?: string | null) => {
     if (!dateString) return "Date N/A";
     return new Date(dateString).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
-  // Estimated read time (simple version)
+  /**
+   * @function calculateReadTime
+   * @description Estimates the read time for a given string of content.
+   * @param {string} content - The text content of the blog post.
+   * @returns {string} A string indicating the estimated read time (e.g., "5 min read").
+   */
   const calculateReadTime = (content: string): string => {
     if (!content) return "N/A";
     const wordsPerMinute = 200; // Average reading speed

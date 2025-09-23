@@ -2,6 +2,14 @@ import React from 'react';
 import Section from "@/components/Section"; // Assuming this component provides consistent padding and layout
 import { FileText } from 'lucide-react'; // Optional icon
 
+/**
+ * @component TermsOfServicePage
+ * @description A static informational page that displays the company's terms of service.
+ * It is structured with clear headings for different sections of the terms. The content
+ * is currently placeholder text and should be replaced with the actual legal text.
+ *
+ * @returns {JSX.Element} The rendered terms of service page.
+ */
 const TermsOfServicePage: React.FC = () => {
   const lastUpdatedDate = new Date().toLocaleDateString('en-US', {
     year: 'numeric',
@@ -67,12 +75,5 @@ const TermsOfServicePage: React.FC = () => {
     </Section>
   );
 };
-
-// Assuming Card and CardContent are from "@/components/ui/card"
-// If not, a simple div structure would be fine for the placeholder.
-// For this placeholder, I'll mock them if not available.
-const Card: React.FC<{children: React.ReactNode, className?: string}> = ({children, className}) => <div className={`bg-white dark:bg-gray-800 rounded-lg ${className}`}>{children}</div>;
-const CardContent: React.FC<{children: React.ReactNode, className?: string}> = ({children, className}) => <div className={className}>{children}</div>;
-
 
 export default TermsOfServicePage;

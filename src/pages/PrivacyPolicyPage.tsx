@@ -2,6 +2,14 @@ import React from 'react';
 import Section from "@/components/Section";
 import { ShieldAlert } from 'lucide-react';
 
+/**
+ * @component PrivacyPolicyPage
+ * @description A static informational page that displays the company's privacy policy.
+ * It is structured with clear headings for different sections of the policy.
+ * The content is currently placeholder text and should be replaced with the actual legal text.
+ *
+ * @returns {JSX.Element} The rendered privacy policy page.
+ */
 const PrivacyPolicyPage: React.FC = () => {
   const lastUpdatedDate = new Date().toLocaleDateString('en-US', {
     year: 'numeric',
@@ -76,9 +84,5 @@ const PrivacyPolicyPage: React.FC = () => {
     </Section>
   );
 };
-
-// Mock Card components if not globally available or imported from UI lib
-const Card: React.FC<{children: React.ReactNode, className?: string}> = ({children, className}) => <div className={`bg-white dark:bg-gray-800 rounded-lg ${className}`}>{children}</div>;
-const CardContent: React.FC<{children: React.ReactNode, className?: string}> = ({children, className}) => <div className={className}>{children}</div>;
 
 export default PrivacyPolicyPage;

@@ -7,6 +7,10 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, XCircle, AlertCircle, Database, Image, FileText, Users } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
+/**
+ * @interface TestResult
+ * @description Defines the structure for the result of a single system test.
+ */
 interface TestResult {
   name: string;
   status: 'pass' | 'fail' | 'warning';
@@ -14,6 +18,14 @@ interface TestResult {
   details?: string;
 }
 
+/**
+ * @component TestPage
+ * @description A dashboard for running a series of automated system tests to verify the
+ * health and functionality of various application components, including database connectivity,
+ * data fetching, authentication, and storage.
+ *
+ * @returns {JSX.Element} The rendered system test dashboard.
+ */
 const TestPage = () => {
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
@@ -38,6 +50,11 @@ const TestPage = () => {
     enabled: false
   });
 
+  /**
+   * @function runSystemTests
+   * @description Executes a series of predefined system tests asynchronously. It updates the
+   * component's state with the results of each test and manages the running state.
+   */
   const runSystemTests = async () => {
     setIsRunning(true);
     setTestResults([]);
@@ -159,6 +176,12 @@ const TestPage = () => {
     }
   };
 
+  /**
+   * @function getStatusIcon
+   * @description Returns an icon component based on the test result status.
+   * @param {string} status - The status of the test ('pass', 'fail', 'warning').
+   * @returns {JSX.Element} The corresponding status icon.
+   */
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'pass':
@@ -172,6 +195,12 @@ const TestPage = () => {
     }
   };
 
+  /**
+   * @function getStatusBadgeVariant
+   * @description Returns the variant prop for the Badge component based on the test result status.
+   * @param {string} status - The status of the test.
+   * @returns {'default' | 'destructive' | 'secondary' | 'outline'} The badge variant.
+   */
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case 'pass':

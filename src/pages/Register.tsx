@@ -10,6 +10,15 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from "sonner";
 import { AlertCircle, UserPlus } from "lucide-react";
 
+/**
+ * @component Register
+ * @description The user registration page component. It provides a form for new users to
+ * create an account by providing their name, email, and a password. It includes password
+ * confirmation, handles the registration process, displays errors, and redirects
+ * successfully registered users to their dashboard.
+ *
+ * @returns {JSX.Element | null} The rendered registration page, or null if the user is already authenticated.
+ */
 export default function Register() {
   const navigate = useNavigate();
   const { register, isAuthenticated } = useAuth();
@@ -23,10 +32,21 @@ export default function Register() {
     return null;
   }
 
+  /**
+   * @function handleChange
+   * @description Updates the registration info state when the user types in the input fields.
+   * @param {ChangeEvent<HTMLInputElement>} e - The change event from the input field.
+   */
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setRegistrationInfo({ ...registrationInfo, [e.target.id]: e.target.value });
   };
 
+  /**
+   * @function handleSubmit
+   * @description Handles the form submission for user registration. It validates the password,
+   * calls the register function from the AuthContext, and handles success or error feedback.
+   * @param {React.FormEvent} e - The form submission event.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);

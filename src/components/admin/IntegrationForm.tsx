@@ -7,6 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 
+/**
+ * @interface IntegrationData
+ * @description Defines the structure of the data for a third-party integration.
+ */
 interface IntegrationData {
   id?: string;
   serviceName: string;
@@ -16,12 +20,26 @@ interface IntegrationData {
   environment: 'production' | 'sandbox';
 }
 
+/**
+ * @interface IntegrationFormProps
+ * @description Defines the props for the IntegrationForm component.
+ */
 interface IntegrationFormProps {
-  integration?: IntegrationData | null; // Data for editing, null for new
+  /** The integration data for editing, or null for creating a new one. */
+  integration?: IntegrationData | null;
+  /** Callback function to save the integration data. */
   onSave: (data: IntegrationData) => void;
+  /** Callback function to cancel the form operation. */
   onCancel: () => void;
 }
 
+/**
+ * @component IntegrationForm
+ * @description A form component for creating and editing third-party service integrations.
+ * It handles API keys, JSON configurations, and environment settings.
+ * @param {IntegrationFormProps} props - The props for the component.
+ * @returns {React.ReactElement} The rendered integration form.
+ */
 const IntegrationForm: React.FC<IntegrationFormProps> = ({ integration, onSave, onCancel }) => {
   const [serviceName, setServiceName] = useState('');
   const [apiKey, setApiKey] = useState('');
@@ -48,6 +66,10 @@ const IntegrationForm: React.FC<IntegrationFormProps> = ({ integration, onSave, 
     }
   }, [integration]);
 
+  /**
+   * Handles the form submission, validates the JSON configuration, and calls the onSave callback.
+   * @param {React.FormEvent} e - The form submission event.
+   */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setConfigError(null);

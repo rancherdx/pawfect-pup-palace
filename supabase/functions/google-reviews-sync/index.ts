@@ -1,10 +1,18 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+/**
+ * @constant corsHeaders
+ * @description Defines the CORS headers for the function, allowing cross-origin requests.
+ */
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+/**
+ * @interface GoogleReview
+ * @description Defines the structure of a single review object as returned by the Google My Business API.
+ */
 interface GoogleReview {
   reviewId: string;
   reviewer: {
@@ -21,6 +29,10 @@ interface GoogleReview {
   };
 }
 
+/**
+ * @interface GoogleBusinessLocation
+ * @description Defines the structure for the Google Business location data, which is used to identify the business location for fetching reviews.
+ */
 interface GoogleBusinessLocation {
   accounts: Array<{
     name: string;
@@ -31,6 +43,11 @@ interface GoogleBusinessLocation {
   }>;
 }
 
+/**
+ * Converts a Google star rating string (e.g., 'FIVE') to a number.
+ * @param starRating The star rating string from the Google API.
+ * @returns The numeric representation of the rating.
+ */
 function convertStarRating(starRating: string): number {
   const ratingMap = {
     'ONE': 1,
@@ -42,6 +59,12 @@ function convertStarRating(starRating: string): number {
   return ratingMap[starRating as keyof typeof ratingMap] || 5;
 }
 
+/**
+ * Fetches reviews for a specific business location from the Google My Business API.
+ * @param accessToken The OAuth2 access token for authentication.
+ * @param locationName The name of the business location.
+ * @returns A promise that resolves to an array of GoogleReview objects.
+ */
 async function fetchGoogleReviews(accessToken: string, locationName: string): Promise<GoogleReview[]> {
   const response = await fetch(
     `https://mybusiness.googleapis.com/v4/${locationName}/reviews?pageSize=50`,
@@ -61,6 +84,12 @@ async function fetchGoogleReviews(accessToken: string, locationName: string): Pr
   return data.reviews || [];
 }
 
+/**
+ * Syncs an array of Google reviews to the Supabase database.
+ * It upserts reviews into a cache table and the main testimonials table.
+ * @param reviews An array of GoogleReview objects to sync.
+ * @param supabase The Supabase client instance.
+ */
 async function syncReviewsToSupabase(reviews: GoogleReview[], supabase: any) {
   const promises = reviews.map(async (review) => {
     const reviewData = {
@@ -118,6 +147,16 @@ async function syncReviewsToSupabase(reviews: GoogleReview[], supabase: any) {
   await Promise.all(promises);
 }
 
+/**
+ * The main handler for the Google Reviews sync serverless function.
+ * This function can be triggered in two ways:
+ * 1. POST request: Manually triggers a sync for a specific location using a provided access token.
+ * 2. GET request: Can be called by a cron job to automatically check and sync reviews for all
+ *    configured and enabled business locations based on their sync frequency.
+ *
+ * @param {Request} req - The incoming HTTP request.
+ * @returns {Promise<Response>} A response indicating the result of the sync operation.
+ */
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {

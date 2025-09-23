@@ -14,6 +14,12 @@ import Section from "@/components/Section";
 import { supabase } from "@/integrations/supabase/client";
 import { calculateAge } from "@/utils/dateUtils";
 
+/**
+ * @component AdoptionProcess
+ * @description A component that displays the step-by-step process for adopting a puppy.
+ * This is a visual guide for users to understand the adoption journey.
+ * @returns {JSX.Element} The rendered list of adoption steps.
+ */
 const AdoptionProcess = () => {
   const steps = [
     {
@@ -59,6 +65,14 @@ const AdoptionProcess = () => {
   );
 };
 
+/**
+ * @component Adopt
+ * @description The main page for the adoption application process. It includes a hero section,
+ * the adoption process steps, and a detailed application form. If a puppy ID is provided
+ * in the URL search parameters, it prefills the application for that specific puppy.
+ * On submission, it shows a confirmation and redirects the user to the checkout page.
+ * @returns {JSX.Element} The rendered adoption page.
+ */
 const Adopt = () => {
   const [searchParams] = useSearchParams();
   const puppyId = searchParams.get("puppy");
@@ -102,19 +116,41 @@ const Adopt = () => {
     additionalInfo: "",
   });
 
+  /**
+   * @function handleChange
+   * @description Handles changes for standard input and textarea elements.
+   * @param {React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>} e - The event object.
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  /**
+   * @function handleSelectChange
+   * @description Handles changes for Select components.
+   * @param {string} name - The name of the form field.
+   * @param {string} value - The new value.
+   */
   const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  /**
+   * @function handleCheckboxChange
+   * @description Handles changes for Checkbox components.
+   * @param {string} name - The name of the form field.
+   * @param {boolean} checked - The new checked state.
+   */
   const handleCheckboxChange = (name: string, checked: boolean) => {
     setFormData(prev => ({ ...prev, [name]: checked }));
   };
 
+  /**
+   * @function handleSubmit
+   * @description Handles the form submission, displays a toast notification, and navigates to the checkout page.
+   * @param {React.FormEvent} e - The form event object.
+   */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Form submitted:", formData);

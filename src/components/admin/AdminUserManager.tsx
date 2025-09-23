@@ -19,6 +19,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { adminApi } from '@/api';
 
+/**
+ * @interface User
+ * @description Represents the structure of a user object in the admin management context.
+ */
 interface User {
   id: string;
   name: string | null;
@@ -28,6 +32,10 @@ interface User {
   updated_at: string;
 }
 
+/**
+ * @interface UsersApiResponse
+ * @description Defines the shape of the API response when fetching a list of users.
+ */
 interface UsersApiResponse {
   users: User[];
   currentPage: number;
@@ -38,7 +46,11 @@ interface UsersApiResponse {
 
 const AVAILABLE_ROLES = ['user', 'admin', 'editor', 'super-admin'];
 
-// Security: Define role hierarchy for privilege escalation prevention
+/**
+ * @constant ROLE_HIERARCHY
+ * @description Defines a numeric hierarchy for user roles to prevent privilege escalation.
+ * Higher numbers indicate higher privilege.
+ */
 const ROLE_HIERARCHY = {
   'user': 1,
   'editor': 2, 
@@ -46,10 +58,21 @@ const ROLE_HIERARCHY = {
   'super-admin': 4
 };
 
+/**
+ * Calculates the maximum role level for a given set of roles.
+ * @param {string[]} userRoles - An array of role strings.
+ * @returns {number} The highest numeric value from the ROLE_HIERARCHY for the given roles.
+ */
 const getCurrentUserMaxRole = (userRoles: string[]): number => {
   return Math.max(...userRoles.map(role => ROLE_HIERARCHY[role as keyof typeof ROLE_HIERARCHY] || 0));
 };
 
+/**
+ * @component AdminUserManager
+ * @description A component for managing users, including viewing, searching, editing roles, and deleting users.
+ * It includes security features to prevent privilege escalation.
+ * @returns {React.ReactElement} The rendered user management interface.
+ */
 const AdminUserManager: React.FC = () => {
   const [searchUserQuery, setSearchUserQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
@@ -71,6 +94,12 @@ const AdminUserManager: React.FC = () => {
     return () => clearTimeout(handler);
   }, [searchUserQuery]);
 
+  /**
+   * Fetches users from the API based on pagination and search query.
+   * @param {object} context - The react-query context.
+   * @param {any[]} context.queryKey - The query key.
+   * @returns {Promise<UsersApiResponse>} A promise that resolves with the list of users and pagination info.
+   */
   const fetchUsers = async ({ queryKey }: { queryKey: [string, number, number, string] }): Promise<UsersApiResponse> => {
     const [_key, page, limit, search] = queryKey;
     const params = {
@@ -127,23 +156,39 @@ const AdminUserManager: React.FC = () => {
     },
   });
 
+  /**
+   * Opens the modal to edit roles for a selected user.
+   * @param {User} user - The user to edit.
+   */
   const openEditRoleModal = (user: User) => {
     setSelectedUser(user);
     setEditingRoles(user.roles || []);
     setShowEditRoleModal(true);
   };
 
+  /**
+   * Opens the confirmation modal for deleting a user.
+   * @param {User} user - The user to delete.
+   */
   const openDeleteConfirmModal = (user: User) => {
     setSelectedUser(user);
     setShowDeleteConfirmModal(true);
   };
 
+  /**
+   * Handles changes to a user's roles from the checkbox inputs.
+   * @param {string} role - The role that was changed.
+   * @param {boolean} checked - The new checked state of the role.
+   */
   const handleRoleChange = (role: string, checked: boolean) => {
     setEditingRoles(prev =>
       checked ? [...prev, role] : prev.filter(r => r !== role)
     );
   };
 
+  /**
+   * Saves the updated roles for the selected user, with security checks.
+   */
   const handleSaveRoles = () => {
     if (selectedUser) {
       // Security: Prevent privilege escalation attempts
@@ -167,12 +212,20 @@ const AdminUserManager: React.FC = () => {
     }
   };
 
+  /**
+   * Confirms and proceeds with deleting the selected user.
+   */
   const handleDeleteConfirmed = () => {
     if (selectedUser) {
       deleteUserMutation.mutate(selectedUser.id);
     }
   };
 
+  /**
+   * Formats a date string into a readable local date and time format.
+   * @param {string} dateString - The ISO date string to format.
+   * @returns {string} The formatted date string.
+   */
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
         year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'

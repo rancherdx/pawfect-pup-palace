@@ -4,7 +4,12 @@ import { adminApi } from "@/api/adminApi";
 import { toast } from "sonner";
 import { Puppy } from "@/types/puppy";
 
-// Hook for public puppy data
+/**
+ * @hook usePuppies
+ * @description A custom hook to fetch a list of puppies with optional filters.
+ * @param {object} [filters={}] - Optional filters for breed, status, search term, and limit.
+ * @returns {import('@tanstack/react-query').UseQueryResult} The result of the react-query useQuery hook.
+ */
 export const usePuppies = (filters: {
   breed?: string;
   status?: string;
@@ -18,7 +23,12 @@ export const usePuppies = (filters: {
   });
 };
 
-// Hook for featured puppies
+/**
+ * @hook useFeaturedPuppies
+ * @description A custom hook to fetch a list of featured puppies.
+ * @param {number} [limit=3] - The maximum number of featured puppies to fetch.
+ * @returns {import('@tanstack/react-query').UseQueryResult} The result of the react-query useQuery hook.
+ */
 export const useFeaturedPuppies = (limit: number = 3) => {
   return useQuery({
     queryKey: ['featured-puppies', limit],
@@ -27,7 +37,12 @@ export const useFeaturedPuppies = (limit: number = 3) => {
   });
 };
 
-// Hook for single puppy details
+/**
+ * @hook usePuppy
+ * @description A custom hook to fetch the details of a single puppy by its ID.
+ * @param {string | undefined} id - The ID of the puppy to fetch. The query is disabled if the ID is not provided.
+ * @returns {import('@tanstack/react-query').UseQueryResult} The result of the react-query useQuery hook.
+ */
 export const usePuppy = (id: string | undefined) => {
   return useQuery({
     queryKey: ['puppy', id],
@@ -37,7 +52,11 @@ export const usePuppy = (id: string | undefined) => {
   });
 };
 
-// Hook for available breeds
+/**
+ * @hook useAvailableBreeds
+ * @description A custom hook to fetch a list of unique, available puppy breeds.
+ * @returns {import('@tanstack/react-query').UseQueryResult} The result of the react-query useQuery hook.
+ */
 export const useAvailableBreeds = () => {
   return useQuery({
     queryKey: ['available-breeds'],
@@ -46,7 +65,12 @@ export const useAvailableBreeds = () => {
   });
 };
 
-// Admin hook for puppy management
+/**
+ * @hook usePuppyMutations
+ * @description A custom hook that provides mutation functions for creating, updating, and deleting puppies.
+ * It handles react-query cache invalidation and displays toasts on success or error.
+ * @returns {{ createPuppy: import('@tanstack/react-query').UseMutationResult, updatePuppy: import('@tanstack/react-query').UseMutationResult, deletePuppy: import('@tanstack/react-query').UseMutationResult }} An object containing the mutation functions.
+ */
 export const usePuppyMutations = () => {
   const queryClient = useQueryClient();
   

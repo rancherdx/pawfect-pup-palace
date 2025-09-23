@@ -11,6 +11,10 @@ import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '@/api/adminApi';
 
+/**
+ * @interface SiteSettings
+ * @description Defines the structure of the site settings object, covering various configuration sections.
+ */
 interface SiteSettings {
   siteName: string;
   siteDescription: string;
@@ -41,6 +45,10 @@ interface SiteSettings {
   };
 }
 
+/**
+ * @constant defaultSettings
+ * @description Provides a default structure for the site settings to be used as an initial state.
+ */
 const defaultSettings: SiteSettings = {
   siteName: "GDS Puppies",
   siteDescription: "Premium puppy breeding and adoption services",
@@ -67,6 +75,12 @@ const defaultSettings: SiteSettings = {
   }
 };
 
+/**
+ * @component SettingsPanel
+ * @description A comprehensive settings panel with a tabbed interface for managing various site configurations,
+ * including general info, contact details, feature flags, and branding.
+ * @returns {React.ReactElement} The rendered settings panel.
+ */
 const SettingsPanel = () => {
   const [settings, setSettings] = useState<SiteSettings>(defaultSettings);
   const queryClient = useQueryClient();
@@ -103,6 +117,12 @@ const SettingsPanel = () => {
     }
   }, [settingsData]);
 
+  /**
+   * Handles changes to input fields and updates the nested settings state.
+   * @param {keyof SiteSettings} section - The top-level key in the SiteSettings object.
+   * @param {string} field - The specific field within the section to update.
+   * @param {any} value - The new value for the field.
+   */
   const handleInputChange = (section: keyof SiteSettings, field: string, value: any) => {
     setSettings(prev => ({
       ...prev,
@@ -112,6 +132,9 @@ const SettingsPanel = () => {
     }));
   };
 
+  /**
+   * Triggers the mutation to save the current settings state to the backend.
+   */
   const handleSaveSettings = () => {
     updateSettingsMutation.mutate(settings);
   };

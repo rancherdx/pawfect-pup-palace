@@ -2,11 +2,25 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { encryptJson, decryptJson } from "../_shared/crypto.ts";
 
+/**
+ * @constant corsHeaders
+ * @description Defines the CORS headers for the function, allowing cross-origin requests.
+ */
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content--type",
 };
 
+/**
+ * Serves the function to create or update (upsert) a third-party integration.
+ * This function handles the secure storage of integration data, such as API keys.
+ * It supports partial updates by fetching the existing record, decrypting its data,
+ * merging the new partial data, and then re-encrypting the result before saving.
+ *
+ * @param {Request} req - The incoming request, expected to contain a JSON body with
+ *                        'service', 'environment', and a 'data' object for upsertion.
+ * @returns {Promise<Response>} A response indicating the success or failure of the upsert operation.
+ */
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });

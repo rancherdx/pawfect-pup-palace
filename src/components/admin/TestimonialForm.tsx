@@ -6,8 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { ArrowLeft, Save, Star } from 'lucide-react'; // Assuming Star icon for rating
 
-// Assuming Testimonial types are accessible, e.g., imported from where they are defined in client.ts or a global types file.
-// For this subtask, we'll define them locally if not easily importable.
+/**
+ * @interface Testimonial
+ * @description Defines the structure of a testimonial object.
+ */
 interface Testimonial {
   id: string;
   name: string;
@@ -18,17 +20,39 @@ interface Testimonial {
   image_url?: string;
   created_at: string;
 }
+/**
+ * @typedef {Omit<Testimonial, 'id' | 'created_at'>} TestimonialCreationData
+ * @description Defines the data structure for creating a new testimonial.
+ */
 type TestimonialCreationData = Omit<Testimonial, 'id' | 'created_at'>;
+/**
+ * @typedef {Partial<TestimonialCreationData>} TestimonialUpdateData
+ * @description Defines the data structure for updating an existing testimonial.
+ */
 type TestimonialUpdateData = Partial<TestimonialCreationData>;
 
 
+/**
+ * @interface TestimonialFormProps
+ * @description Defines the props for the TestimonialForm component.
+ */
 interface TestimonialFormProps {
-  testimonial?: Testimonial; // For editing
+  /** The testimonial data to populate the form for editing. If not provided, the form is in creation mode. */
+  testimonial?: Testimonial;
+  /** Callback function to save the testimonial data. */
   onSave: (data: TestimonialCreationData | TestimonialUpdateData) => void;
+  /** Callback function to cancel the form operation. */
   onCancel: () => void;
-  isLoading?: boolean; // To disable form during submission
+  /** A boolean to indicate if the form submission is in progress. */
+  isLoading?: boolean;
 }
 
+/**
+ * @component TestimonialForm
+ * @description A form component for creating and editing customer testimonials.
+ * @param {TestimonialFormProps} props - The props for the component.
+ * @returns {React.ReactElement} The rendered testimonial form.
+ */
 const TestimonialForm: React.FC<TestimonialFormProps> = ({ testimonial, onSave, onCancel, isLoading }) => {
   const [formData, setFormData] = useState<TestimonialCreationData | TestimonialUpdateData>(
     testimonial ?
@@ -74,6 +98,10 @@ const TestimonialForm: React.FC<TestimonialFormProps> = ({ testimonial, onSave, 
     }
   }, [testimonial]);
 
+  /**
+   * Handles changes to the form's input and textarea fields.
+   * @param {React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>} e - The change event.
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -82,6 +110,10 @@ const TestimonialForm: React.FC<TestimonialFormProps> = ({ testimonial, onSave, 
     }));
   };
 
+  /**
+   * Handles the form submission, validates the data, and calls the onSave callback.
+   * @param {React.FormEvent} e - The form submission event.
+   */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Basic validation for rating

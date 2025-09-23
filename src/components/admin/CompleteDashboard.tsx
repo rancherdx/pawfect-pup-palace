@@ -19,6 +19,10 @@ import {
   Database
 } from 'lucide-react';
 
+/**
+ * @interface DashboardStats
+ * @description Defines the shape of the statistics object used throughout the dashboard.
+ */
 interface DashboardStats {
   totalPuppies: number;
   availablePuppies: number;
@@ -30,10 +34,19 @@ interface DashboardStats {
   activeListings: number;
 }
 
+/**
+ * @component CompleteDashboard
+ * @description A comprehensive dashboard component that provides a complete overview of business metrics,
+ * content performance, system health, and other key performance indicators.
+ * @returns {React.ReactElement} The rendered dashboard interface.
+ */
 const CompleteDashboard = () => {
   const [timeRange, setTimeRange] = useState("30d");
 
-  // Dashboard statistics
+  /**
+   * Fetches dashboard statistics from the admin API.
+   * The query is refetched every 60 seconds to keep the data fresh.
+   */
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['dashboard-stats', timeRange],
     queryFn: () => adminApi.getDashboardStats(),

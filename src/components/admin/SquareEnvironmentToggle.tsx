@@ -18,6 +18,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+/**
+ * @interface SquareEnvironment
+ * @description Defines the structure of the Square environment configuration object.
+ */
 interface SquareEnvironment {
   environment: 'sandbox' | 'production';
   application_id: string;
@@ -27,6 +31,12 @@ interface SquareEnvironment {
   is_active: boolean;
 }
 
+/**
+ * @component SquareEnvironmentToggle
+ * @description A component that allows an administrator to view the current Square API environment
+ * and switch between 'sandbox' and 'production' modes.
+ * @returns {React.ReactElement} The rendered environment toggle component.
+ */
 const SquareEnvironmentToggle = () => {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [targetEnvironment, setTargetEnvironment] = useState<'sandbox' | 'production'>('sandbox');
@@ -63,11 +73,18 @@ const SquareEnvironmentToggle = () => {
     }
   });
 
+  /**
+   * Initiates the environment switch process by setting the target environment and showing the confirmation dialog.
+   * @param {'sandbox' | 'production'} environment - The target environment to switch to.
+   */
   const handleEnvironmentSwitch = (environment: 'sandbox' | 'production') => {
     setTargetEnvironment(environment);
     setShowConfirmDialog(true);
   };
 
+  /**
+   * Confirms and executes the environment switch mutation.
+   */
   const confirmEnvironmentSwitch = () => {
     switchEnvironmentMutation.mutate(targetEnvironment);
   };

@@ -1,11 +1,21 @@
 import React, { useEffect, useState } from 'react';
 
+/**
+ * @interface PerformanceMetrics
+ * @description Defines the structure for storing various performance metrics.
+ */
 interface PerformanceMetrics {
   loadTime?: number;
   renderTime?: number;
   memoryUsage?: number;
 }
 
+/**
+ * @hook usePerformance
+ * @description A custom React hook to measure and report web performance metrics like load time,
+ * render time, and memory usage using the Performance API.
+ * @returns {PerformanceMetrics} An object containing the collected performance metrics.
+ */
 export const usePerformance = () => {
   const [metrics, setMetrics] = useState<PerformanceMetrics>({});
 
@@ -40,6 +50,13 @@ export const usePerformance = () => {
   return metrics;
 };
 
+/**
+ * @component PerformanceMonitor
+ * @description A component that utilizes the usePerformance hook to monitor performance
+ * and log the metrics to the console in development mode.
+ * @param {{ children: React.ReactNode }} props - The props for the component.
+ * @returns {React.ReactNode} The children components wrapped by the monitor.
+ */
 export const PerformanceMonitor: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const metrics = usePerformance();
   

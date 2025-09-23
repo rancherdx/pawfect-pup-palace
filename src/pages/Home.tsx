@@ -13,6 +13,15 @@ import { Link } from "react-router-dom";
 import { publicApi } from "@/api/publicApi";
 import { calculateAge } from "@/utils/dateUtils";
 
+/**
+ * @component Home
+ * @description The main landing page of the website. It serves as the central hub, showcasing
+ * featured puppies, testimonials from happy families, and key reasons to choose the kennel.
+ * The component fetches data for puppies and testimonials using React Query, handles loading states,
+ * and is optimized for SEO with dynamic titles, meta descriptions, and structured data (JSON-LD).
+ *
+ * @returns {JSX.Element} The rendered home page.
+ */
 const Home = () => {
   const { data: puppiesData, isLoading: puppiesLoading } = useQuery({
     queryKey: ['featured-puppies'],
@@ -29,6 +38,12 @@ const Home = () => {
   const featuredPuppies = puppiesData || [];
   const testimonials = testimonialsData || [];
 
+  /**
+   * @constant structuredData
+   * @description JSON-LD structured data for the organization, conforming to Schema.org standards.
+   * This provides detailed information about the business to search engines, which can be
+   * used to generate rich snippets in search results.
+   */
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "Organization",

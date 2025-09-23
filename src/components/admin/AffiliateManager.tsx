@@ -34,6 +34,13 @@ import { toast } from "sonner";
 import { useToast } from "@/hooks/use-toast";
 import { Users, Plus, Copy, Link, FileText } from "lucide-react";
 
+/**
+ * @component AffiliateManager
+ * @description A component for managing marketing efforts, including affiliate partners and promotional codes.
+ * It features a tabbed interface to switch between managing affiliates and promo codes.
+ * Note: This component currently uses mock data and local state. Backend integration is required for full functionality.
+ * @returns {React.ReactElement} The rendered marketing and affiliates management dashboard.
+ */
 const AffiliateManager = () => {
   const [activeTab, setActiveTab] = useState("affiliates");
   
@@ -63,6 +70,10 @@ const AffiliateManager = () => {
   });
   const { toast: uiToast } = useToast();
 
+  /**
+   * Copies an affiliate's referral link to the clipboard.
+   * @param {string} code - The affiliate's unique referral code.
+   */
   const handleCopyLink = (code: string) => {
     const baseUrl = window.location.origin;
     const affiliateLink = `${baseUrl}/?ref=${code}`;
@@ -73,11 +84,20 @@ const AffiliateManager = () => {
     });
   };
 
+  /**
+   * Toggles the active status of an affiliate or promo code.
+   * @param {string} id - The ID of the item to toggle.
+   * @param {"affiliate" | "promo"} type - The type of item being toggled.
+   */
   const handleToggleStatus = (id: string, type: "affiliate" | "promo") => {
     // Toggle functionality - would integrate with Supabase for production
     toast.success(`${type === "affiliate" ? "Affiliate" : "Promo code"} status updated`);
   };
 
+  /**
+   * Handles the creation of a new affiliate partner.
+   * Validates input and provides feedback.
+   */
   const handleCreateAffiliate = () => {
     if (!newAffiliate.name || !newAffiliate.email || !newAffiliate.code) {
       uiToast({
@@ -102,6 +122,10 @@ const AffiliateManager = () => {
     });
   };
 
+  /**
+   * Handles the creation of a new promotional code.
+   * Validates input and provides feedback.
+   */
   const handleCreatePromo = () => {
     if (!newPromo.code || !newPromo.discount) {
       uiToast({

@@ -1,16 +1,34 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+/**
+ * @constant corsHeaders
+ * @description Defines the CORS headers for the function, allowing cross-origin requests.
+ */
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+/**
+ * @interface VaultSecret
+ * @description Defines the structure for a secret to be stored in the vault.
+ */
 interface VaultSecret {
   name: string;
   description?: string;
   secret: string;
 }
 
+/**
+ * The main handler for the vault-management serverless function.
+ * This function provides a mock API for managing secrets. It includes endpoints
+ * for listing, creating, and deleting secrets, with authentication and admin-level
+ * authorization checks. Note: This is a mock implementation and does not securely
+ * store or manage real secrets.
+ *
+ * @param {Request} req - The incoming HTTP request.
+ * @returns {Promise<Response>} A response indicating the result of the vault operation.
+ */
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {

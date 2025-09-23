@@ -1,11 +1,25 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
+/**
+ * @constant corsHeaders
+ * @description Defines the CORS headers for the function. Allows all origins and specifies
+ * the headers that are permitted in cross-origin requests.
+ */
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+/**
+ * The main handler for the admin security API serverless function.
+ * This function provides endpoints for administrators to access security-related data,
+ * such as audit logs and statistics. It includes robust authentication and authorization
+ * checks to ensure that only users with 'admin' or 'super-admin' roles can access the data.
+ *
+ * @param {Request} req - The incoming HTTP request object.
+ * @returns {Promise<Response>} A promise that resolves to the HTTP response.
+ */
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {

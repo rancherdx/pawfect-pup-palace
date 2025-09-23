@@ -7,6 +7,15 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Code, FileText, ExternalLink, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+/**
+ * @component ApiDocs
+ * @description A page that renders the API documentation for the platform.
+ * It provides a tabbed interface to switch between Swagger UI for interactive exploration
+ * and ReDoc for comprehensive, readable documentation. It also includes information
+ * about the base API URL and links to further resources.
+ *
+ * @returns {JSX.Element} The rendered API documentation page.
+ */
 const ApiDocs = () => {
   const [activeTab, setActiveTab] = useState("swagger");
   const baseUrl = "https://new.gdspuppies.com";

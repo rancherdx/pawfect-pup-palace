@@ -12,6 +12,12 @@ import React, { useEffect } from 'react';
 const TAWK_TO_PROPERTY_ID = 'YOUR_TAWK_TO_PROPERTY_ID'; // e.g., '60c8a1b2b1d06a4dd1c0a1b2'
 const TAWK_TO_WIDGET_ID = 'default'; // e.g., 'default' or a specific widget ID like 'chat_widget_1'
 
+/**
+ * @component TawkToWidget
+ * @description A component that integrates the Tawk.to live chat widget into the application.
+ * It dynamically loads the Tawk.to script and handles cases where the configuration is not set.
+ * @returns {null} This component does not render any visible elements itself; it injects the Tawk.to script.
+ */
 const TawkToWidget: React.FC = () => {
   useEffect(() => {
     // Check if the Property ID is still the placeholder value.

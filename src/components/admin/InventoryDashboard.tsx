@@ -20,6 +20,12 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 
+/**
+ * @component InventoryDashboard
+ * @description A dashboard component for viewing and managing puppy and litter inventory.
+ * It provides summary statistics, a list of active litters, and a detailed, filterable table of all puppies.
+ * @returns {React.ReactElement} The rendered inventory dashboard.
+ */
 const InventoryDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -35,6 +41,11 @@ const InventoryDashboard = () => {
     queryFn: () => adminApi.getAllLitters()
   });
 
+  /**
+   * Returns a Tailwind CSS class string for styling a status badge based on the status text.
+   * @param {string} status - The status of the puppy.
+   * @returns {string} The corresponding CSS classes for the badge.
+   */
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'available': return 'bg-green-100 text-green-800';
@@ -45,6 +56,11 @@ const InventoryDashboard = () => {
     }
   };
 
+  /**
+   * Calculates the age of a puppy based on its birth date.
+   * @param {string} birthDate - The birth date of the puppy in a string format.
+   * @returns {string} A human-readable string representing the puppy's age.
+   */
   const calculateAge = (birthDate: string) => {
     const today = new Date();
     const birth = new Date(birthDate);

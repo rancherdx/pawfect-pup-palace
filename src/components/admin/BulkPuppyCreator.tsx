@@ -11,26 +11,62 @@ import ImageUploadWithCrop from '../media/ImageUploadWithCrop';
 import { PuppyCreationData } from '@/types';
 import { Loader2 } from 'lucide-react';
 
+/**
+ * @typedef {object} BulkPuppyFormData
+ * @description Represents the shape of the form data for a single puppy in the bulk creation process.
+ */
 type BulkPuppyFormData = Partial<Omit<PuppyCreationData, 'image_urls'>> & { image_urls: string[] };
 
+/**
+ * @interface BulkPuppyCreatorProps
+ * @description Defines the props for the BulkPuppyCreator component.
+ */
 interface BulkPuppyCreatorProps {
+  /** The number of puppies to create forms for. */
   count: number;
+  /** The ID of the litter to which the puppies will be added. */
   litterId: string;
+  /** Callback function to close the creator interface. */
   onClose: () => void;
-  onSave: (puppies: PuppyCreationData[]) => void; // Will be used in next step
-  isSaving: boolean; // Will be used in next step
+  /** Callback function to save the created puppies' data. */
+  onSave: (puppies: PuppyCreationData[]) => void;
+  /** A boolean indicating if the save operation is in progress. */
+  isSaving: boolean;
 }
 
-const SimplifiedPuppyForm: React.FC<{
-  index: number;
-  formData: BulkPuppyFormData;
-  onChange: (index: number, data: BulkPuppyFormData) => void;
-}> = ({ index, formData, onChange }) => {
+/**
+ * @interface SimplifiedPuppyFormProps
+ * @description Defines the props for the SimplifiedPuppyForm sub-component.
+ */
+interface SimplifiedPuppyFormProps {
+    /** The index of the puppy form, used for unique IDs and state management. */
+    index: number;
+    /** The form data for this specific puppy. */
+    formData: BulkPuppyFormData;
+    /** Callback to update the parent component's state when form data changes. */
+    onChange: (index: number, data: BulkPuppyFormData) => void;
+}
 
+/**
+ * @component SimplifiedPuppyForm
+ * @description A sub-component that renders a simplified form for a single puppy's details within the bulk creator.
+ * @param {SimplifiedPuppyFormProps} props - The props for the component.
+ * @returns {React.ReactElement} The rendered puppy form.
+ */
+const SimplifiedPuppyForm: React.FC<SimplifiedPuppyFormProps> = ({ index, formData, onChange }) => {
+
+  /**
+   * Handles changes to text-based input fields.
+   * @param {React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>} e - The input change event.
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     onChange(index, { ...formData, [e.target.name]: e.target.value });
   };
 
+  /**
+   * Handles the successful upload of images for the puppy.
+   * @param {string[]} urls - An array of URLs for the uploaded images.
+   */
   const handleImagesUploaded = (urls: string[]) => {
     onChange(index, { ...formData, image_urls: urls });
   };
@@ -65,7 +101,13 @@ const SimplifiedPuppyForm: React.FC<{
   );
 };
 
-
+/**
+ * @component BulkPuppyCreator
+ * @description The main component for creating multiple puppies in bulk. It orchestrates the rendering of
+ * multiple `SimplifiedPuppyForm` instances and handles the final save operation.
+ * @param {BulkPuppyCreatorProps} props - The props for the component.
+ * @returns {React.ReactElement} The rendered bulk puppy creation interface.
+ */
 const BulkPuppyCreator: React.FC<BulkPuppyCreatorProps> = ({ count, litterId, onClose, onSave, isSaving }) => {
   const [puppies, setPuppies] = useState<BulkPuppyFormData[]>(() =>
     Array(count).fill({}).map(() => ({ image_urls: [] }))
@@ -77,12 +119,21 @@ const BulkPuppyCreator: React.FC<BulkPuppyCreatorProps> = ({ count, litterId, on
       enabled: !!litterId,
   });
 
+  /**
+   * Updates the state for a single puppy's form data.
+   * @param {number} index - The index of the puppy form to update.
+   * @param {BulkPuppyFormData} data - The new form data for the puppy.
+   */
   const handlePuppyChange = (index: number, data: BulkPuppyFormData) => {
     const newPuppies = [...puppies];
     newPuppies[index] = data;
     setPuppies(newPuppies);
   };
 
+  /**
+   * Handles the final save operation. It validates the puppy data, constructs the
+   * full puppy objects with data inherited from the litter, and calls the onSave callback.
+   */
   const handleSaveAll = () => {
     if (!litterData) {
         toast.error("Litter data is not available. Cannot save puppies.");

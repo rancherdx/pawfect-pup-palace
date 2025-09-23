@@ -37,6 +37,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 
+/**
+ * @interface Testimonial
+ * @description Defines the structure of a testimonial object.
+ */
 interface Testimonial {
   id: string;
   name: string;
@@ -45,6 +49,11 @@ interface Testimonial {
   image: string;
 }
 
+/**
+ * @component TestimonialManagement
+ * @description A component for managing customer testimonials, including viewing, searching, adding, editing, and deleting them.
+ * @returns {React.ReactElement} The rendered testimonial management interface.
+ */
 const TestimonialManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -108,22 +117,36 @@ const TestimonialManagement = () => {
     }
   });
 
+  /**
+   * Sets the ID of the testimonial to be deleted and opens the confirmation dialog.
+   * @param {string} id - The ID of the testimonial to delete.
+   */
   const handleDeleteTestimonial = (id: string) => {
     setTestimonialToDeleteId(id);
     setShowDeleteDialog(true);
   };
 
+  /**
+   * Confirms and executes the deletion of a testimonial.
+   */
   const confirmDeleteTestimonial = () => {
     if (testimonialToDeleteId) {
       deleteTestimonialMutation.mutate(testimonialToDeleteId);
     }
   };
 
+  /**
+   * Sets the selected testimonial for editing and opens the form modal.
+   * @param {Testimonial} testimonial - The testimonial to edit.
+   */
   const handleEditTestimonial = (testimonial: Testimonial) => {
     setSelectedTestimonial(testimonial);
     setIsModalOpen(true);
   };
 
+  /**
+   * Opens the form modal to add a new testimonial.
+   */
   const handleAddTestimonial = () => {
     setSelectedTestimonial(null);
     setIsModalOpen(true);
@@ -265,13 +288,27 @@ const TestimonialManagement = () => {
   );
 };
 
+/**
+ * @interface TestimonialFormProps
+ * @description Defines the props for the TestimonialForm sub-component.
+ */
 interface TestimonialFormProps {
+  /** The testimonial data for editing, or undefined for a new testimonial. */
   testimonial?: Testimonial;
+  /** Callback to close the form modal. */
   onClose: () => void;
+  /** Callback to handle form submission. */
   onSubmit: (formData: any, id?: string) => void;
+  /** A boolean indicating if the submission is in progress. */
   isLoading: boolean;
 }
 
+/**
+ * @component TestimonialForm
+ * @description A form for creating or editing a testimonial, intended to be used within a dialog.
+ * @param {TestimonialFormProps} props - The props for the component.
+ * @returns {React.ReactElement} The rendered testimonial form.
+ */
 const TestimonialForm: React.FC<TestimonialFormProps> = ({ testimonial, onClose, onSubmit, isLoading }) => {
   const [formData, setFormData] = useState({
     name: testimonial?.name || "",
@@ -298,6 +335,10 @@ const TestimonialForm: React.FC<TestimonialFormProps> = ({ testimonial, onClose,
     }
   }, [testimonial]);
 
+  /**
+   * Handles changes to the form's input and textarea fields.
+   * @param {React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>} e - The change event.
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -306,6 +347,10 @@ const TestimonialForm: React.FC<TestimonialFormProps> = ({ testimonial, onClose,
     }));
   };
 
+  /**
+   * Handles the form submission.
+   * @param {React.FormEvent} e - The form submission event.
+   */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData, testimonial?.id);

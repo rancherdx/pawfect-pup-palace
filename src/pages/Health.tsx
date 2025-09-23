@@ -4,6 +4,14 @@ import Section from "@/components/Section";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Heart, Shield, Stethoscope } from "lucide-react";
 
+/**
+ * @component Health
+ * @description An informational page that provides details about the health and care of the puppies.
+ * It includes a hero section and cards highlighting key health-related features like screenings,
+ * vaccinations, and a health guarantee.
+ *
+ * @returns {JSX.Element} The rendered health and care page.
+ */
 const Health = () => {
   return (
     <>

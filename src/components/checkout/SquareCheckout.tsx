@@ -8,16 +8,33 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 
+/**
+ * @interface SquareCheckoutProps
+ * @description Defines the props for the SquareCheckout component.
+ */
 interface SquareCheckoutProps {
+  /** The total amount for the transaction. */
   amount: number;
+  /** The name of the puppy being purchased. */
   puppyName: string;
+  /** The ID of the puppy being purchased. */
   puppyId: string;
+  /** The ID of the authenticated user, if available. */
   userId?: string;
+  /** The customer's email address. */
   customerEmail?: string;
+  /** Callback function to be invoked on successful payment. */
   onSuccess: (paymentResult: unknown) => void;
+  /** Callback function to be invoked when the checkout is cancelled. */
   onCancel: () => void;
 }
 
+/**
+ * @component SquareCheckout
+ * @description A component that collects billing information and initiates the payment process by redirecting to Square's hosted checkout page.
+ * @param {SquareCheckoutProps} props - The props for the component.
+ * @returns {React.ReactElement} The rendered Square checkout form.
+ */
 const SquareCheckout = ({ 
   amount, 
   puppyName, 
@@ -40,11 +57,19 @@ const SquareCheckout = ({
   });
   const { toast } = useToast();
 
+  /**
+   * Handles changes to the billing information input fields.
+   * @param {React.ChangeEvent<HTMLInputElement>} e - The input change event.
+   */
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setBillingInfo(prev => ({ ...prev, [name]: value }));
   };
 
+  /**
+   * Validates the billing information form.
+   * @returns {boolean} True if the form is valid, otherwise false.
+   */
   const validateForm = () => {
     const required = ['firstName', 'lastName', 'email', 'phone', 'address', 'city', 'state', 'zipCode'];
     for (const field of required) {
@@ -71,6 +96,10 @@ const SquareCheckout = ({
     return true;
   };
 
+  /**
+   * Processes the payment by validating the form and calling the Square checkout edge function.
+   * On success, it redirects the user to the Square hosted checkout page.
+   */
   const processPayment = async () => {
     if (!validateForm()) return;
 

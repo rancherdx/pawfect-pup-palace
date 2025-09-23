@@ -9,6 +9,12 @@ import PuppyTable from "./PuppyTable";
 import PuppySearchBar from "./PuppySearchBar";
 import PuppyDeleteDialog from "./PuppyDeleteDialog";
 
+/**
+ * @component PuppyManagement
+ * @description The main component for managing the puppy inventory. It orchestrates fetching,
+ * displaying, creating, updating, and deleting puppies, using various sub-components for UI.
+ * @returns {React.ReactElement} The rendered puppy management interface.
+ */
 const PuppyManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPuppy, setSelectedPuppy] = useState<Puppy | null>(null);
@@ -77,27 +83,44 @@ const PuppyManagement = () => {
     }
   });
 
+  /**
+   * Initiates the deletion process for a puppy.
+   * @param {string} id - The ID of the puppy to delete.
+   */
   const handleDeletePuppy = (id: string) => {
     setPuppyToDeleteId(id);
     setShowDeleteDialog(true);
   };
 
+  /**
+   * Confirms and executes the deletion of the selected puppy.
+   */
   const confirmDeletePuppy = () => {
     if (puppyToDeleteId) {
       deletePuppyMutation.mutate(puppyToDeleteId);
     }
   };
 
+  /**
+   * Opens the form modal to edit an existing puppy.
+   * @param {Puppy} puppy - The puppy data to edit.
+   */
   const handleEditPuppy = (puppy: Puppy) => {
     setSelectedPuppy(puppy);
     setIsModalOpen(true);
   };
 
+  /**
+   * Opens the form modal to add a new puppy.
+   */
   const handleAddPuppy = () => {
     setSelectedPuppy(null);
     setIsModalOpen(true);
   };
 
+  /**
+   * Closes the delete confirmation dialog.
+   */
   const handleCloseDeleteDialog = () => {
     setShowDeleteDialog(false);
     setPuppyToDeleteId(null);

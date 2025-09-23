@@ -10,7 +10,10 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
-// Interfaces (consistent with PuppyProfile.tsx)
+/**
+ * @interface Conversation
+ * @description Defines the structure of a conversation object.
+ */
 interface Conversation {
   id: string;
   user_id: string;
@@ -26,6 +29,10 @@ interface Conversation {
   unread?: boolean; // Can be derived or managed locally
 }
 
+/**
+ * @interface Message
+ * @description Defines the structure of a message object within a conversation.
+ */
 interface Message {
   id: string;
   conversation_id: string;
@@ -37,7 +44,10 @@ interface Message {
   read_at?: string | null;
 }
 
-// Supabase API functions
+/**
+ * Fetches all conversations from the Supabase database.
+ * @returns {Promise<any[]>} A promise that resolves to an array of conversation objects.
+ */
 const fetchConversationsFromSupabase = async () => {
   const { data, error } = await supabase
     .from('conversations')
@@ -49,6 +59,11 @@ const fetchConversationsFromSupabase = async () => {
   return data || [];
 };
 
+/**
+ * Fetches all messages for a specific conversation from the Supabase database.
+ * @param {string} conversationId - The ID of the conversation to fetch messages for.
+ * @returns {Promise<Message[]>} A promise that resolves to an array of message objects.
+ */
 const fetchMessagesFromSupabase = async (conversationId: string) => {
   const { data, error } = await supabase
     .from('messages')
@@ -63,6 +78,12 @@ const fetchMessagesFromSupabase = async (conversationId: string) => {
   }));
 };
 
+/**
+ * Creates a new conversation and sends the first message in a single operation.
+ * @param {string} title - The title for the new conversation.
+ * @param {string} firstMessageContent - The content of the initial message.
+ * @returns {Promise<{ conversation: any; message: Message }>} A promise that resolves to an object containing the new conversation and message.
+ */
 const createConversationWithMessage = async (title: string, firstMessageContent: string) => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
@@ -101,6 +122,12 @@ const createConversationWithMessage = async (title: string, firstMessageContent:
   } };
 };
 
+/**
+ * Sends a new message to an existing conversation and updates the conversation's metadata.
+ * @param {string} conversationId - The ID of the conversation to send the message to.
+ * @param {string} content - The content of the message.
+ * @returns {Promise<Message>} A promise that resolves to the newly created message object.
+ */
 const sendMessageToSupabase = async (conversationId: string, content: string) => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
@@ -135,7 +162,12 @@ const sendMessageToSupabase = async (conversationId: string, content: string) =>
   };
 };
 
-
+/**
+ * @component ChatHistory
+ * @description A full-featured chat component that displays a list of conversations and the messages
+ * for the selected conversation. It allows users to send messages and start new chats.
+ * @returns {React.ReactElement} The rendered chat history interface.
+ */
 const ChatHistory = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -155,6 +187,9 @@ const ChatHistory = () => {
 
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
 
+  /**
+   * Scrolls the message view to the bottom.
+   */
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -206,6 +241,10 @@ const ChatHistory = () => {
     }
   }, [activeConversation, fetchMessages]);
 
+  /**
+   * Handles sending a new message in the active conversation.
+   * @param {React.FormEvent} [e] - The form submission event, if applicable.
+   */
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!messageInput.trim() || !activeConversation?.id || !user) return;
@@ -222,6 +261,9 @@ const ChatHistory = () => {
     }
   };
 
+  /**
+   * Handles the creation of a new chat conversation from the modal.
+   */
   const handleStartNewChat = async () => {
     if (!newChatMessage.trim() || !newChatTitle.trim() || !user) return;
     try {
@@ -238,11 +280,21 @@ const ChatHistory = () => {
     }
   };
 
+  /**
+   * Formats a timestamp into a time string (e.g., "10:30 AM").
+   * @param {string | null | undefined} timestamp - The ISO date string to format.
+   * @returns {string} The formatted time string.
+   */
   const formatTimestamp = (timestamp?: string | null) => {
     if (!timestamp) return "";
     return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  /**
+   * Formats a timestamp into a date string (e.g., "1/1/2025").
+   * @param {string | null | undefined} timestamp - The ISO date string to format.
+   * @returns {string} The formatted date string.
+   */
   const formatDate = (timestamp?: string | null) => {
     if (!timestamp) return "N/A";
     return new Date(timestamp).toLocaleDateString();

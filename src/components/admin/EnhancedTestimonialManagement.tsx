@@ -45,6 +45,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+/**
+ * @interface EnhancedTestimonial
+ * @description Defines the comprehensive structure of a testimonial object, including metadata from various sources.
+ */
 interface EnhancedTestimonial {
   id: string;
   name: string;
@@ -67,6 +71,13 @@ interface EnhancedTestimonial {
   updated_at: string;
 }
 
+/**
+ * @component EnhancedTestimonialManagement
+ * @description A feature-rich component for managing customer testimonials from various sources.
+ * It includes functionalities for viewing, approving, featuring, responding to, and deleting testimonials,
+ * as well as syncing reviews from external platforms like Google.
+ * @returns {React.ReactElement} The rendered testimonial management interface.
+ */
 const EnhancedTestimonialManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
@@ -159,6 +170,10 @@ const EnhancedTestimonialManagement = () => {
     }
   });
 
+  /**
+   * Toggles the approval status of a testimonial.
+   * @param {EnhancedTestimonial} testimonial - The testimonial to update.
+   */
   const handleToggleApproval = async (testimonial: EnhancedTestimonial) => {
     updateTestimonialMutation.mutate({
       id: testimonial.id,
@@ -166,6 +181,10 @@ const EnhancedTestimonialManagement = () => {
     });
   };
 
+  /**
+   * Toggles the featured status of a testimonial.
+   * @param {EnhancedTestimonial} testimonial - The testimonial to update.
+   */
   const handleToggleFeatured = async (testimonial: EnhancedTestimonial) => {
     updateTestimonialMutation.mutate({
       id: testimonial.id,
@@ -173,12 +192,19 @@ const EnhancedTestimonialManagement = () => {
     });
   };
 
+  /**
+   * Opens the response modal for a specific testimonial.
+   * @param {EnhancedTestimonial} testimonial - The testimonial to respond to.
+   */
   const handleAddResponse = (testimonial: EnhancedTestimonial) => {
     setSelectedTestimonial(testimonial);
     setResponseText(testimonial.response_text || '');
     setResponseModalOpen(true);
   };
 
+  /**
+   * Saves the response text for a testimonial.
+   */
   const handleSaveResponse = () => {
     if (selectedTestimonial) {
       updateTestimonialMutation.mutate({
@@ -194,6 +220,11 @@ const EnhancedTestimonialManagement = () => {
     (testimonial.puppy_name && testimonial.puppy_name.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
+  /**
+   * Returns a Badge component styled based on the testimonial source.
+   * @param {string} source - The source of the testimonial ('local', 'google', 'facebook').
+   * @returns {React.ReactElement} A styled Badge component.
+   */
   const getSourceBadge = (source: string) => {
     const colors = {
       local: 'bg-blue-100 text-blue-800',
@@ -207,6 +238,11 @@ const EnhancedTestimonialManagement = () => {
     );
   };
 
+  /**
+   * Renders a star rating display based on a numeric rating.
+   * @param {number} rating - The numeric rating (1-5).
+   * @returns {React.ReactElement} A div containing star icons.
+   */
   const renderRating = (rating: number) => {
     return (
       <div className="flex">

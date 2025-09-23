@@ -11,12 +11,32 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
+/**
+ * @interface BulkAddPuppiesDialogProps
+ * @description Defines the props for the BulkAddPuppiesDialog component.
+ */
 interface BulkAddPuppiesDialogProps {
+  /**
+   * @property {boolean} isOpen - Controls whether the dialog is open or closed.
+   */
   isOpen: boolean;
+  /**
+   * @property {() => void} onClose - Callback function to be invoked when the dialog is requested to be closed.
+   */
   onClose: () => void;
+  /**
+   * @property {(count: number) => void} onConfirm - Callback function to be invoked when the user confirms the number of puppies to add.
+   * @param {number} count - The number of puppies to add.
+   */
   onConfirm: (count: number) => void;
 }
 
+/**
+ * @component BulkAddPuppiesDialog
+ * @description A dialog component that allows an admin to specify a number of puppies to add to a litter in bulk.
+ * @param {BulkAddPuppiesDialogProps} props - The props for the component.
+ * @returns {React.ReactElement} The rendered dialog component.
+ */
 const BulkAddPuppiesDialog: React.FC<BulkAddPuppiesDialogProps> = ({
   isOpen,
   onClose,
@@ -24,6 +44,9 @@ const BulkAddPuppiesDialog: React.FC<BulkAddPuppiesDialogProps> = ({
 }) => {
   const [count, setCount] = useState(1);
 
+  /**
+   * Handles the confirmation action, calling the onConfirm callback with the selected count.
+   */
   const handleConfirm = () => {
     if (count > 0) {
       onConfirm(count);

@@ -1,7 +1,13 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Litter, LitterListResponse, LitterCreationData, LitterUpdateData } from '@/types/litter';
 
-export const getAll = async (params?: Record<string, unknown>) => {
+/**
+ * Fetches all active litters from the database.
+ * @param {Record<string, unknown>} [params] - Optional query parameters (currently unused).
+ * @returns {Promise<LitterListResponse>} A promise that resolves to an object containing the list of litters and pagination info.
+ * @throws Will throw an error if the Supabase query fails.
+ */
+export const getAll = async (params?: Record<string, unknown>): Promise<LitterListResponse> => {
   let query = supabase
     .from('litters')
     .select('*')
@@ -11,7 +17,7 @@ export const getAll = async (params?: Record<string, unknown>) => {
   if (error) throw error;
   
   // Transform the data to match the expected Litter interface
-  const transformedData = data?.map(item => ({
+  const transformedData: Litter[] = data?.map(item => ({
     id: item.id,
     name: item.name,
     breed: item.breed,
@@ -38,8 +44,17 @@ export const getAll = async (params?: Record<string, unknown>) => {
   };
 };
 
+/**
+ * @deprecated Use `getAll` instead.
+ */
 export const getAllLitters = getAll;
 
+/**
+ * Fetches a single litter by its unique ID.
+ * @param {string} id - The UUID of the litter to fetch.
+ * @returns {Promise<Litter>} A promise that resolves to the transformed litter object.
+ * @throws Will throw an error if the Supabase query fails or if no litter is found.
+ */
 export const getLitterById = async (id: string): Promise<Litter> => {
   const { data, error } = await supabase
     .from('litters')
@@ -68,6 +83,12 @@ export const getLitterById = async (id: string): Promise<Litter> => {
   };
 };
 
+/**
+ * Creates a new litter in the database.
+ * @param {LitterCreationData} data - The data for the new litter.
+ * @returns {Promise<Litter>} A promise that resolves to the newly created and transformed litter object.
+ * @throws Will throw an error if the Supabase insert operation fails.
+ */
 export const createLitter = async (data: LitterCreationData): Promise<Litter> => {
   const { data: newLitter, error } = await supabase
     .from('litters')
@@ -108,6 +129,13 @@ export const createLitter = async (data: LitterCreationData): Promise<Litter> =>
   };
 };
 
+/**
+ * Updates an existing litter in the database.
+ * @param {string} id - The UUID of the litter to update.
+ * @param {LitterUpdateData} data - An object containing the fields to update.
+ * @returns {Promise<Litter>} A promise that resolves to the updated and transformed litter object.
+ * @throws Will throw an error if the Supabase update operation fails.
+ */
 export const updateLitter = async (id: string, data: LitterUpdateData): Promise<Litter> => {
   const { data: updatedLitter, error } = await supabase
     .from('litters')
@@ -149,6 +177,12 @@ export const updateLitter = async (id: string, data: LitterUpdateData): Promise<
   };
 };
 
+/**
+ * Deletes a litter from the database.
+ * @param {string} id - The UUID of the litter to delete.
+ * @returns {Promise<{ id: string }>} A promise that resolves to an object containing the ID of the deleted litter.
+ * @throws Will throw an error if the Supabase delete operation fails.
+ */
 export const deleteLitter = async (id: string): Promise<{ id: string }> => {
   const { error } = await supabase
     .from('litters')

@@ -11,6 +11,15 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle, AlertTriangle } from "lucide-react";
 import { Link } from "react-router-dom";
 
+/**
+ * @component DataDeletionRequestPage
+ * @description A page containing a form for users to submit a request for the deletion of their personal data.
+ * The form collects information to help identify the user's data and submits the request to a secure
+ * Supabase edge function. The component manages form state, submission logic, and provides feedback
+ * to the user on success, loading, or error.
+ *
+ * @returns {JSX.Element} The rendered data deletion request page.
+ */
 const DataDeletionRequestPage = () => {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
@@ -24,14 +33,30 @@ const DataDeletionRequestPage = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  /**
+   * @function handleChange
+   * @description Handles changes for the input and textarea elements in the form.
+   * @param {React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>} e - The event object.
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  /**
+   * @function handleSelectChange
+   * @description Handles changes for the Select component in the form.
+   * @param {string} value - The new value from the select component.
+   */
   const handleSelectChange = (value: string) => {
     setFormData({ ...formData, account_creation_timeframe: value });
   };
 
+  /**
+   * @function handleSubmit
+   * @description Handles the form submission for the data deletion request.
+   * It performs validation, calls a Supabase edge function, and handles success/error feedback.
+   * @param {React.FormEvent<HTMLFormElement>} e - The form event object.
+   */
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);

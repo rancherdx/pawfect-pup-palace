@@ -5,18 +5,33 @@ import { Card, CardContent } from "@/components/ui/card";
 import confetti from "canvas-confetti";
 import { motion } from "framer-motion";
 
+/**
+ * @interface PuppyData
+ * @description Defines the structure of the data for the puppy to be displayed on the success screen.
+ */
 interface PuppyData {
   name?: string;
   breed?: string;
   image?: string;
 }
 
+/**
+ * @interface SuccessAnimationProps
+ * @description Defines the props for the SuccessAnimation component.
+ */
 interface SuccessAnimationProps {
+  /** The data for the adopted puppy. */
   puppy: PuppyData | undefined;
+  /** Callback function to navigate to the home page. */
   returnHome: () => void;
+  /** Callback function to navigate to the newly created puppy profile. */
   viewProfile: () => void;
 }
 
+/**
+ * @constant boneShape
+ * @description A custom shape definition for the canvas-confetti library to render a bone shape.
+ */
 const boneShape = {
   draw: (ctx: CanvasRenderingContext2D) => {
     ctx.beginPath();
@@ -28,6 +43,10 @@ const boneShape = {
   }
 };
 
+/**
+ * @constant pawShape
+ * @description A custom shape definition for the canvas-confetti library to render a paw shape.
+ */
 const pawShape = {
   draw: (ctx: CanvasRenderingContext2D) => {
     ctx.beginPath();
@@ -42,6 +61,12 @@ const pawShape = {
   }
 };
 
+/**
+ * @component SuccessAnimation
+ * @description A component that displays a success message with animations and confetti after a successful adoption.
+ * @param {SuccessAnimationProps} props - The props for the component.
+ * @returns {React.ReactElement} The rendered success animation screen.
+ */
 const SuccessAnimation = ({ puppy, returnHome, viewProfile }: SuccessAnimationProps) => {
   const [showConfetti, setShowConfetti] = useState(false);
   

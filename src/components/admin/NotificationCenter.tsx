@@ -31,6 +31,10 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 
+/**
+ * @interface Notification
+ * @description Defines the structure of a notification object.
+ */
 interface Notification {
   id: string;
   type: 'info' | 'success' | 'warning' | 'error';
@@ -42,6 +46,10 @@ interface Notification {
   priority: 'low' | 'medium' | 'high';
 }
 
+/**
+ * @interface NotificationSettings
+ * @description Defines the structure for user notification settings.
+ */
 interface NotificationSettings {
   email_notifications: boolean;
   push_notifications: boolean;
@@ -52,6 +60,11 @@ interface NotificationSettings {
   marketing_updates: boolean;
 }
 
+/**
+ * @component NotificationCenter
+ * @description A comprehensive component for viewing and managing system notifications and user notification settings.
+ * @returns {React.ReactElement} The rendered notification center interface.
+ */
 const NotificationCenter = () => {
   const [activeTab, setActiveTab] = useState("notifications");
   const [showComposeDialog, setShowComposeDialog] = useState(false);
@@ -130,6 +143,12 @@ const NotificationCenter = () => {
 
   const unreadCount = notificationsList.filter(n => !n.read).length;
 
+  /**
+   * Returns an icon component based on the notification type and priority.
+   * @param {string} type - The type of the notification.
+   * @param {string} priority - The priority of the notification.
+   * @returns {React.ReactElement} A Lucide icon component.
+   */
   const getNotificationIcon = (type: string, priority: string) => {
     if (priority === 'high') {
       return <AlertTriangle className="h-5 w-5 text-red-500" />;
@@ -147,6 +166,11 @@ const NotificationCenter = () => {
     }
   };
 
+  /**
+   * Returns a styled Badge component based on the notification type.
+   * @param {string} type - The type of the notification.
+   * @returns {React.ReactElement} A styled Badge component.
+   */
   const getNotificationBadge = (type: string) => {
     const colors = {
       info: 'bg-blue-100 text-blue-800',
@@ -161,6 +185,9 @@ const NotificationCenter = () => {
     );
   };
 
+  /**
+   * Marks all unread notifications as read.
+   */
   const handleMarkAllAsRead = () => {
     const unreadIds = notificationsList.filter(n => !n.read).map(n => n.id);
     if (unreadIds.length > 0) {
@@ -168,14 +195,26 @@ const NotificationCenter = () => {
     }
   };
 
+  /**
+   * Marks a single notification as read.
+   * @param {string} notificationId - The ID of the notification to mark as read.
+   */
   const handleMarkAsRead = (notificationId: string) => {
     markAsReadMutation.mutate([notificationId]);
   };
 
+  /**
+   * Toggles a specific notification setting.
+   * @param {keyof NotificationSettings} setting - The setting to toggle.
+   * @param {boolean} value - The new value for the setting.
+   */
   const handleSettingToggle = (setting: keyof NotificationSettings, value: boolean) => {
     updateSettingsMutation.mutate({ [setting]: value });
   };
 
+  /**
+   * Handles the submission of the compose notification dialog.
+   */
   const handleSendNotification = () => {
     if (!composeData.title.trim() || !composeData.message.trim()) {
       toast.error('Please fill in both title and message');

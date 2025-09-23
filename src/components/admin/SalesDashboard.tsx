@@ -15,6 +15,12 @@ import {
   Download
 } from 'lucide-react';
 
+/**
+ * @component SalesDashboard
+ * @description A dashboard component that provides detailed sales analytics, including key metrics,
+ * performance by breed, monthly trends, and recent transactions.
+ * @returns {React.ReactElement} The rendered sales analytics dashboard.
+ */
 const SalesDashboard = () => {
   const [timeRange, setTimeRange] = useState('30d');
 
@@ -28,6 +34,12 @@ const SalesDashboard = () => {
     queryFn: () => adminApi.getTransactions({ limit: 5 })
   });
 
+  /**
+   * Formats a numeric amount into a USD currency string.
+   * Assumes the amount is provided in cents.
+   * @param {number} amount - The amount in cents.
+   * @returns {string} The formatted currency string (e.g., "$456.78").
+   */
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',

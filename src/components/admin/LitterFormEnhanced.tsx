@@ -15,18 +15,33 @@ import { Loader2 } from "lucide-react";
 import ImageUploadWithCrop from "@/components/media/ImageUploadWithCrop";
 import VideoUpload from "@/components/media/VideoUpload";
 
+/**
+ * @typedef {Omit<LitterCreationData, "status"> & { status: LitterStatus; image_urls?: string[]; video_urls?: string[]; }} LitterFormData
+ * @description Defines the shape of the form data for the enhanced litter form, including media URLs.
+ */
 type LitterFormData = Omit<LitterCreationData, "status"> & {
   status: LitterStatus;
   image_urls?: string[];
   video_urls?: string[];
 };
 
+/**
+ * @interface LitterFormEnhancedProps
+ * @description Defines the props for the LitterFormEnhanced component.
+ */
 interface LitterFormEnhancedProps {
+  /** The litter data to populate the form for editing. If not provided, the form is in creation mode. */
   litter?: Litter;
+  /** Callback function to be invoked when the form is closed or cancelled. */
   onClose: () => void;
+  /** A boolean to explicitly set the form to edit mode. */
   isEditMode?: boolean;
 }
 
+/**
+ * @constant LITTER_STATUS_VALUES
+ * @description An array of possible statuses for a litter.
+ */
 const LITTER_STATUS_VALUES: LitterStatus[] = [
   "Active",
   "Available Soon", 
@@ -35,6 +50,12 @@ const LITTER_STATUS_VALUES: LitterStatus[] = [
   "Archived"
 ];
 
+/**
+ * @component LitterFormEnhanced
+ * @description An advanced form for creating and editing litters, featuring a tabbed interface for better organization of information, including media uploads.
+ * @param {LitterFormEnhancedProps} props - The props for the component.
+ * @returns {React.ReactElement} The rendered enhanced litter form.
+ */
 const LitterFormEnhanced: React.FC<LitterFormEnhancedProps> = ({ litter, onClose, isEditMode }) => {
   const [formData, setFormData] = useState<LitterFormData>({
     name: litter?.name || "",
@@ -96,6 +117,10 @@ const LitterFormEnhanced: React.FC<LitterFormEnhancedProps> = ({ litter, onClose
     }
   }, [litter]);
 
+  /**
+   * Handles the form submission for creating or updating a litter.
+   * @param {React.FormEvent} e - The form submission event.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isEditMode && litter?.id) {
@@ -105,6 +130,10 @@ const LitterFormEnhanced: React.FC<LitterFormEnhancedProps> = ({ litter, onClose
     }
   };
 
+  /**
+   * Handles changes in form input fields and updates the component's state.
+   * @param {React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>} e - The input change event.
+   */
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {

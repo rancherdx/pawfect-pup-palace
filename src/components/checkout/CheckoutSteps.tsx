@@ -2,18 +2,36 @@
 import { Check } from "lucide-react";
 import { motion } from "framer-motion";
 
+/**
+ * @interface Step
+ * @description Defines the structure for a single step in the checkout process.
+ */
 interface Step {
   title: string;
   description: string;
   icon?: React.ReactNode;
 }
 
+/**
+ * @interface CheckoutStepsProps
+ * @description Defines the props for the CheckoutSteps component.
+ */
 interface CheckoutStepsProps {
+  /** An array of step objects to be displayed. */
   steps: Step[];
+  /** The index of the current active step. */
   currentStep: number;
+  /** Optional callback function to be invoked when a completed step is clicked. */
   onClick?: (index: number) => void;
 }
 
+/**
+ * @component CheckoutSteps
+ * @description A component that visually represents the steps in a multi-step process, like a checkout flow.
+ * It indicates completed, active, and upcoming steps.
+ * @param {CheckoutStepsProps} props - The props for the component.
+ * @returns {React.ReactElement} The rendered checkout steps progress bar.
+ */
 const CheckoutSteps = ({ steps, currentStep, onClick }: CheckoutStepsProps) => {
   return (
     <div className="relative mb-8">

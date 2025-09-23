@@ -12,12 +12,26 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 
+/**
+ * @interface ImageGalleryDialogProps
+ * @description Defines the props for the ImageGalleryDialog component.
+ */
 interface ImageGalleryDialogProps {
+  /** Whether the dialog is currently open. */
   isOpen: boolean;
+  /** Callback function to be invoked when the dialog is closed. */
   onClose: () => void;
+  /** Callback function to be invoked when an image is selected. */
   onSelectImage: (url: string) => void;
 }
 
+/**
+ * @component ImageGalleryDialog
+ * @description A dialog component that displays images from 'puppy-images' and 'litter-images' storage buckets,
+ * allowing a user to select an image.
+ * @param {ImageGalleryDialogProps} props - The props for the component.
+ * @returns {React.ReactElement} The rendered image gallery dialog.
+ */
 const ImageGalleryDialog: React.FC<ImageGalleryDialogProps> = ({ isOpen, onClose, onSelectImage }) => {
   const { data: puppyImages, isLoading: puppyImagesLoading } = useQuery({
     queryKey: ['storage-files', 'puppy-images'],
@@ -38,6 +52,10 @@ const ImageGalleryDialog: React.FC<ImageGalleryDialogProps> = ({ isOpen, onClose
   // A simple way to deduplicate images by URL if they appear in multiple places
   const uniqueImages = Array.from(new Map(allImages.map(item => [item.publicUrl, item])).values());
 
+  /**
+   * Handles the selection of an image from the gallery.
+   * @param {string} url - The URL of the selected image.
+   */
   const handleSelect = (url: string) => {
     onSelectImage(url);
     onClose();

@@ -30,6 +30,12 @@ import { toast } from "sonner";
 import { Search, Globe, FileText, Share2, ArrowUpRight, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
+/**
+ * @component SEOManager
+ * @description A comprehensive dashboard for managing and monitoring the website's Search Engine Optimization.
+ * It includes features for viewing overall SEO scores, editing page-specific metadata, and managing sitemaps.
+ * @returns {React.ReactElement} The rendered SEO management dashboard.
+ */
 const SEOManager = () => {
   const [selectedTab, setSelectedTab] = useState("pages");
   const [selectedPage, setSelectedPage] = useState<string | null>(null);
@@ -49,7 +55,11 @@ const SEOManager = () => {
     }
   });
 
-  // Calculate SEO scores and analytics
+  /**
+   * Calculates a simple SEO score for a given metadata object.
+   * @param {any} meta - The SEO metadata object for a page.
+   * @returns {number} A score from 0 to 100.
+   */
   const calculateSEOScore = (meta: any) => {
     let score = 0;
     if (meta.meta_title && meta.meta_title.length <= 60) score += 25;
@@ -64,6 +74,10 @@ const SEOManager = () => {
     ? Math.round(seoData.reduce((sum, meta) => sum + calculateSEOScore(meta), 0) / seoData.length)
     : 0;
   
+  /**
+   * Sets the state to edit a specific page's SEO metadata.
+   * @param {string} pageId - The ID of the page's SEO record to edit.
+   */
   const handleEditPage = (pageId: string) => {
     const page = seoData?.find(p => p.id === pageId);
     if (page) {
@@ -72,6 +86,9 @@ const SEOManager = () => {
     }
   };
   
+  /**
+   * Saves the updated SEO metadata to the database.
+   */
   const handleSaveMeta = async () => {
     if (!editingMeta) return;
     
@@ -105,23 +122,37 @@ const SEOManager = () => {
     }
   };
   
+  /**
+   * Cancels the editing of SEO metadata and returns to the list view.
+   */
   const handleCancelEdit = () => {
     setSelectedPage(null);
     setEditingMeta(null);
   };
   
+  /**
+   * Placeholder function to simulate sitemap generation.
+   */
   const handleGenerateSitemap = () => {
     toast.success("Sitemap generation started", {
       description: "Your sitemap will be updated shortly."
     });
   };
   
+  /**
+   * Placeholder function to simulate sitemap submission.
+   */
   const handleSubmitToSearchEngines = () => {
     toast.success("Sitemap submitted to search engines", {
       description: "Your sitemap has been submitted to Google and Bing."
     });
   };
 
+  /**
+   * Returns a Tailwind CSS text color class based on the SEO score.
+   * @param {number} score - The SEO score.
+   * @returns {string} The corresponding CSS class for the text color.
+   */
   const getSeoScoreColor = (score: number) => {
     if (score >= 80) return "text-green-600";
     if (score >= 60) return "text-yellow-600";

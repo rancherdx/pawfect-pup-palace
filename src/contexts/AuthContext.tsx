@@ -3,8 +3,10 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, AuthResponse, UserRegistrationData, UserLoginData } from '@/types';
 
-// Local User interface is removed. Imported User will be used.
-
+/**
+ * @interface AuthContextType
+ * @description Defines the shape of the authentication context, including user data, auth status, and functions.
+ */
 interface AuthContextType {
   user: User | null; // Uses imported User
   token: string | null;
@@ -22,6 +24,12 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/**
+ * @hook useAuth
+ * @description A custom hook to access the authentication context.
+ * @throws Will throw an error if used outside of an `AuthProvider`.
+ * @returns {AuthContextType} The authentication context.
+ */
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
@@ -30,6 +38,13 @@ export const useAuth = () => {
   return context;
 };
 
+/**
+ * @component AuthProvider
+ * @description Provides authentication state and functions to its children components.
+ * It manages the user's session, profile data, and authentication status.
+ * @param {{ children: React.ReactNode }} props - The props for the component.
+ * @returns {React.ReactElement} The rendered provider component.
+ */
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -38,7 +53,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [authStatus, setAuthStatus] = useState<'idle' | 'loading' | 'loaded' | 'error' | 'timeout'>('idle');
   const authTimeoutRef = React.useRef<NodeJS.Timeout>();
 
-  // Fetch user profile and roles from database
+  /**
+   * Fetches a user's profile and roles from the database.
+   * @param {string} userId - The ID of the user to fetch data for.
+   * @returns {Promise<{ profile: any; roles: string[] }>} An object containing the user's profile and roles.
+   */
   const fetchUserProfile = async (userId: string) => {
     try {
       const [profileRes, rolesRes] = await Promise.all([
@@ -140,6 +159,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
+  /**
+   * Logs in a user with email and password.
+   * @param {UserLoginData} credentials - The user's login credentials.
+   * @returns {Promise<void>}
+   */
   const login = async (credentials: UserLoginData) => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -157,6 +181,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  /**
+   * Registers a new user.
+   * @param {UserRegistrationData} registrationData - The data for the new user.
+   * @returns {Promise<void>}
+   */
   const register = async (registrationData: UserRegistrationData) => {
     try {
       const redirectUrl = `${window.location.origin}/`;
@@ -183,6 +212,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  /**
+   * Logs out the current user.
+   * @returns {Promise<void>}
+   */
   const logout = async () => {
     try {
       await supabase.auth.signOut();
@@ -195,6 +228,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  /**
+   * Sets new authentication tokens in the state.
+   * @param {string} newAccessToken - The new access token.
+   * @param {string} [newRefreshToken] - The new refresh token, if available.
+   */
   const setNewTokens = (newAccessToken: string, newRefreshTokenValue?: string) => {
     setToken(newAccessToken);
     if (newRefreshTokenValue) {
@@ -202,12 +240,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  /**
+   * Updates the user data in the context state.
+   * @param {Partial<User>} userData - The partial user data to update.
+   */
   const updateUser = (userData: Partial<User>) => {
     if (user) {
       setUser({ ...user, ...userData });
     }
   };
 
+  /**
+   * Determines the default route for a user based on their roles.
+   * @returns {string} The default route path.
+   */
   const getDefaultRoute = () => {
     if (!user) return '/';
     

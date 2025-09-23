@@ -13,12 +13,25 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+/**
+ * @interface PuppyTableProps
+ * @description Defines the props for the PuppyTable component.
+ */
 interface PuppyTableProps {
+  /** An array of puppy objects to display in the table. */
   puppies: Puppy[];
+  /** Callback function to be invoked when the edit button for a puppy is clicked. */
   onEditPuppy: (puppy: Puppy) => void;
+  /** Callback function to be invoked when the delete button for a puppy is clicked. */
   onDeletePuppy: (id: string) => void;
 }
 
+/**
+ * @component PuppyTable
+ * @description A component that renders a table of puppies with actions to edit or delete them.
+ * @param {PuppyTableProps} props - The props for the component.
+ * @returns {React.ReactElement} The rendered table of puppies.
+ */
 const PuppyTable: React.FC<PuppyTableProps> = ({ puppies, onEditPuppy, onDeletePuppy }) => {
   return (
     <div className="w-full overflow-x-auto">

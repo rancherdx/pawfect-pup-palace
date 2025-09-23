@@ -16,12 +16,22 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+/**
+ * @component BreedTemplateManager
+ * @description A component for creating, managing, and viewing breed templates.
+ * These templates can be used to pre-fill information when adding new puppies.
+ * @returns {React.ReactElement} The rendered breed template management interface.
+ */
 const BreedTemplateManager = () => {
   // State for managing templates
   const [templates, setTemplates] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Transform database data to component format
+  /**
+   * Transforms a breed template from the database format to the format used by the component.
+   * @param {any} dbTemplate - The template object from the database.
+   * @returns {BreedTemplate} The transformed template object.
+   */
   const transformTemplate = (dbTemplate: any): BreedTemplate => ({
     id: dbTemplate.id,
     breedName: dbTemplate.breed_name,
@@ -62,6 +72,9 @@ const BreedTemplateManager = () => {
     loadTemplates();
   }, []);
 
+  /**
+   * Loads all breed templates from the Supabase database.
+   */
   const loadTemplates = async () => {
     try {
       setIsLoading(true);
@@ -80,6 +93,10 @@ const BreedTemplateManager = () => {
     }
   };
 
+  /**
+   * Handles changes in the form inputs and updates the form state.
+   * @param {React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>} e - The input change event.
+   */
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
@@ -106,6 +123,9 @@ const BreedTemplateManager = () => {
     }
   };
 
+  /**
+   * Prepares the form for adding a new breed template.
+   */
   const handleAddTemplate = () => {
     setIsAddingTemplate(true);
     setEditingTemplate(null);
@@ -124,17 +144,28 @@ const BreedTemplateManager = () => {
     });
   };
 
+  /**
+   * Prepares the form for editing an existing breed template.
+   * @param {BreedTemplate} template - The template to be edited.
+   */
   const handleEditTemplate = (template: BreedTemplate) => {
     setEditingTemplate(template);
     setIsAddingTemplate(false);
     setFormData({...template});
   };
 
+  /**
+   * Initiates the deletion process for a breed template.
+   * @param {string} id - The ID of the template to delete.
+   */
   const handleDeleteTemplate = (id: string) => {
     setTemplateToDeleteId(id);
     setShowDeleteDialog(true);
   };
 
+  /**
+   * Confirms and executes the deletion of a breed template.
+   */
   const confirmDeleteTemplate = async () => {
     if (templateToDeleteId) {
       try {
@@ -156,6 +187,10 @@ const BreedTemplateManager = () => {
     setShowDeleteDialog(false);
   };
 
+  /**
+   * Handles the form submission for saving or updating a breed template.
+   * @param {React.FormEvent} e - The form submission event.
+   */
   const handleSaveTemplate = async (e: React.FormEvent) => {
     e.preventDefault();
     

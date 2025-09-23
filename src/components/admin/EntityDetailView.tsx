@@ -7,15 +7,31 @@ import { Pencil, PlusCircle } from 'lucide-react';
 import PuppyForm from './PuppyForm';
 import LitterForm from './LitterForm';
 
+/**
+ * @interface EntityDetailViewProps
+ * @description Defines the props for the EntityDetailView component.
+ */
 interface EntityDetailViewProps {
+  /** The ID of the entity to display. */
   entityId: string;
+  /** The type of the entity ('puppy', 'litter', or 'stud'). */
   entityType: 'puppy' | 'litter' | 'stud';
+  /** An array of all available puppies. */
   puppies: Puppy[];
+  /** An array of all available litters. */
   litters: Litter[];
+  /** An array of all available stud dogs. */
   studDogs: StudDog[];
+  /** Callback function to trigger the bulk add puppies flow for a litter. */
   onBulkAddPuppies: (litterId: string) => void;
 }
 
+/**
+ * @component PuppyDetailsView
+ * @description A view component to display the details of a single puppy.
+ * @param {{ puppy: Puppy, onEdit: () => void }} props - The props for the component.
+ * @returns {React.ReactElement} The rendered puppy details card.
+ */
 const PuppyDetailsView: React.FC<{ puppy: Puppy, onEdit: () => void }> = ({ puppy, onEdit }) => (
   <Card>
     <CardHeader className="flex flex-row items-center justify-between">
@@ -49,6 +65,12 @@ const PuppyDetailsView: React.FC<{ puppy: Puppy, onEdit: () => void }> = ({ pupp
   </Card>
 );
 
+/**
+ * @component LitterDetailsView
+ * @description A view component to display the details of a single litter and its puppies.
+ * @param {{ litter: Litter, puppies: Puppy[], onEdit: () => void, onBulkAdd: () => void }} props - The props for the component.
+ * @returns {React.ReactElement} The rendered litter details card.
+ */
 const LitterDetailsView: React.FC<{ litter: Litter, puppies: Puppy[], onEdit: () => void, onBulkAdd: () => void }> = ({ litter, puppies, onEdit, onBulkAdd }) => {
     const litterPuppies = puppies.filter(p => p.litter_id === litter.id);
     return (
@@ -97,6 +119,13 @@ const LitterDetailsView: React.FC<{ litter: Litter, puppies: Puppy[], onEdit: ()
     );
 };
 
+/**
+ * @component EntityDetailView
+ * @description A higher-level component that dynamically renders a detail view or an edit form
+ * based on the selected entity type (puppy, litter, or stud dog).
+ * @param {EntityDetailViewProps} props - The props for the component.
+ * @returns {React.ReactElement} The rendered detail view or edit form for the specified entity.
+ */
 const EntityDetailView: React.FC<EntityDetailViewProps> = ({ entityId, entityType, puppies, litters, studDogs, onBulkAddPuppies }) => {
   const [isEditing, setIsEditing] = useState(false);
 
@@ -127,6 +156,12 @@ const EntityDetailView: React.FC<EntityDetailViewProps> = ({ entityId, entityTyp
     );
   }
 
+/**
+ * @component StudDogDetailsView
+ * @description A view component to display the details of a single stud dog.
+ * @param {{ studDog: StudDog, onEdit: () => void }} props - The props for the component.
+ * @returns {React.ReactElement} The rendered stud dog details card.
+ */
 const StudDogDetailsView: React.FC<{ studDog: StudDog, onEdit: () => void }> = ({ studDog, onEdit }) => (
     <Card>
         <CardHeader className="flex flex-row items-center justify-between">

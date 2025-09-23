@@ -9,17 +9,29 @@ import { motion } from "framer-motion";
 import { toast } from 'sonner';
 import { supabase } from "@/integrations/supabase/client";
 
+/**
+ * @interface PaymentMethodsProps
+ * @description Defines the props for the PaymentMethods component.
+ */
 interface PaymentMethodsProps {
+  /** Callback to update the parent component with the selected payment method. */
   onDataChange: (method: string) => void;
+  /** The currently selected payment method. */
   selectedMethod: string;
+  /** The total amount to be charged. */
   totalAmount: number;
-  isProcessing: boolean; // This prop might be controlled by parent, or we use a local one
-  onComplete: (paymentResult?: unknown) => void; // Modified to potentially pass payment result
+  /** A boolean indicating if the payment is currently being processed. */
+  isProcessing: boolean;
+  /** Callback to be invoked upon completion of the payment process. */
+  onComplete: (paymentResult?: unknown) => void;
+  /** Callback to return to the previous step. */
   onPrevious: () => void;
-  // Optional props that might come from a broader checkout context
+  /** The ID of the authenticated user, if available. */
   userId?: string;
+  /** The ID of the puppy being purchased. */
   puppyId?: string;
-  customerEmail?: string; // Email for receipt if not logged in or different from account
+  /** The customer's email address, for receipts. */
+  customerEmail?: string;
 }
 
 const containerVariants = {
@@ -40,6 +52,12 @@ const itemVariants = {
   visible: { opacity: 1, y: 0 }
 };
 
+/**
+ * @component PaymentMethods
+ * @description A component for selecting a payment method and submitting the final payment during checkout.
+ * @param {PaymentMethodsProps} props - The props for the component.
+ * @returns {React.ReactElement} The rendered payment methods selection interface.
+ */
 const PaymentMethods = ({ 
   onDataChange, 
   selectedMethod,
@@ -68,6 +86,11 @@ const PaymentMethods = ({
     }
   }, [paymentMethod, cardNumber]);
   
+  /**
+   * Returns a Lucide icon component based on the payment method string.
+   * @param {string} method - The payment method identifier.
+   * @returns {React.ReactElement | null} The corresponding icon or null.
+   */
   const getPaymentIcon = (method: string) => {
     switch (method) {
       case "wallet": return <Smartphone className="h-5 w-5 text-brand-red" />;
@@ -78,6 +101,10 @@ const PaymentMethods = ({
     }
   };
 
+  /**
+   * Handles the final submission of the payment. It invokes the appropriate
+   * backend service based on the selected payment method.
+   */
   const handleFinalSubmit = async () => {
     setIsProcessing(true);
 

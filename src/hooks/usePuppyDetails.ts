@@ -2,7 +2,11 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { puppiesApi } from '@/api';
 
-// Calculate age in a fun way 
+/**
+ * Calculates a human-readable age string from a birth date string.
+ * @param {string} birthdayStr - The birth date of the puppy as a string.
+ * @returns {string} A formatted string representing the puppy's age.
+ */
 const calculateAge = (birthdayStr: string) => {
   const birthday = new Date(birthdayStr);
   const today = new Date();
@@ -35,6 +39,12 @@ const calculateAge = (birthdayStr: string) => {
   return ageDisplay;
 };
 
+/**
+ * @hook usePuppyDetails
+ * @description A custom hook to fetch and process the details of a single puppy, including calculating its age.
+ * @param {string | undefined} puppyId - The ID of the puppy to fetch. The query is disabled if the ID is not provided.
+ * @returns {{ puppy: any, puppyAge: string, isLoading: boolean, error: any, refetch: () => void }} An object containing the puppy data, calculated age, and query state.
+ */
 const usePuppyDetails = (puppyId: string | undefined) => {
   const {
     data: puppy,

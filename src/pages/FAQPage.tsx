@@ -4,6 +4,10 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
+/**
+ * @constant faqData
+ * @description An array of objects containing the frequently asked questions and their answers.
+ */
 const faqData = [
   {
     question: "What breeds of puppies do you offer?",
@@ -43,9 +47,22 @@ const faqData = [
   }
 ];
 
+/**
+ * @component FAQPage
+ * @description A page that displays a list of frequently asked questions and their answers
+ * in an accordion-style interface. Users can click on a question to expand it and see the answer.
+ *
+ * @returns {JSX.Element} The rendered FAQ page.
+ */
 const FAQPage = () => {
   const [expandedItems, setExpandedItems] = useState<number[]>([]);
 
+  /**
+   * @function toggleExpanded
+   * @description Toggles the expanded state of an FAQ item. If the item is already expanded,
+   * it will be collapsed. If it's collapsed, it will be expanded.
+   * @param {number} index - The index of the FAQ item to toggle.
+   */
   const toggleExpanded = (index: number) => {
     setExpandedItems(prev => 
       prev.includes(index) 

@@ -3,12 +3,25 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Plus, Search } from "lucide-react";
 
+/**
+ * @interface PuppySearchBarProps
+ * @description Defines the props for the PuppySearchBar component.
+ */
 interface PuppySearchBarProps {
+  /** The current value of the search input. */
   searchQuery: string;
+  /** Callback function to be invoked when the search query changes. */
   onSearchChange: (query: string) => void;
+  /** Callback function to be invoked when the 'Add New Puppy' button is clicked. */
   onAddPuppy: () => void;
 }
 
+/**
+ * @component PuppySearchBar
+ * @description A component that provides a search input and an 'Add New Puppy' button for the puppy management interface.
+ * @param {PuppySearchBarProps} props - The props for the component.
+ * @returns {React.ReactElement} The rendered search bar and action button section.
+ */
 const PuppySearchBar: React.FC<PuppySearchBarProps> = ({ 
   searchQuery, 
   onSearchChange, 

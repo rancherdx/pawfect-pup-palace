@@ -14,6 +14,10 @@ import {
 } from 'npm:@react-email/components@0.0.22';
 import * as React from 'npm:react@18.3.1';
 
+/**
+ * @interface PaymentConfirmationEmailProps
+ * @description Defines the props for the PaymentConfirmationEmail component.
+ */
 interface PaymentConfirmationEmailProps {
   customerName: string;
   puppyName: string;
@@ -22,6 +26,14 @@ interface PaymentConfirmationEmailProps {
   nextSteps: string[];
 }
 
+/**
+ * @component PaymentConfirmationEmail
+ * @description Renders the email template for a payment confirmation. This email is sent to the
+ * customer after a successful payment, confirming their puppy reservation and providing
+ * important next steps.
+ * @param {PaymentConfirmationEmailProps} props - The props for the component.
+ * @returns {JSX.Element} The rendered email template.
+ */
 export const PaymentConfirmationEmail = ({
   customerName,
   puppyName,
@@ -146,6 +158,10 @@ export const PaymentConfirmationEmail = ({
 
 export default PaymentConfirmationEmail;
 
+/**
+ * @description A collection of style objects used for inline styling of the email components.
+ * This approach is used for maximum compatibility across different email clients.
+ */
 const main = {
   backgroundColor: '#f6f9fc',
   fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',

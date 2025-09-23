@@ -1,11 +1,24 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+/**
+ * @constant corsHeaders
+ * @description Defines the CORS headers for the function, allowing cross-origin requests.
+ */
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+/**
+ * The main handler for the Square webhook serverless function.
+ * This function listens for incoming webhook events from Square, such as payment and order updates.
+ * It processes these events to update the application's database, for example, by marking
+ * a puppy as 'Sold' upon successful payment.
+ *
+ * @param {Request} req - The incoming HTTP request from Square, containing the webhook payload.
+ * @returns {Promise<Response>} A response to acknowledge receipt of the webhook.
+ */
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -69,6 +82,11 @@ serve(async (req) => {
   }
 });
 
+/**
+ * Handles payment-related webhook events from Square.
+ * @param {any} supabase - The Supabase client instance.
+ * @param {any} paymentData - The payment data from the webhook event.
+ */
 async function handlePaymentEvent(supabase: any, paymentData: any) {
   console.log('Processing payment event:', paymentData);
   
@@ -99,6 +117,11 @@ async function handlePaymentEvent(supabase: any, paymentData: any) {
   }
 }
 
+/**
+ * Handles order-related webhook events from Square.
+ * @param {any} supabase - The Supabase client instance.
+ * @param {any} orderData - The order data from the webhook event.
+ */
 async function handleOrderEvent(supabase: any, orderData: any) {
   console.log('Processing order event:', orderData);
   
@@ -121,6 +144,12 @@ async function handleOrderEvent(supabase: any, orderData: any) {
   }
 }
 
+/**
+ * Completes the puppy adoption process after a successful payment.
+ * This includes updating the puppy's status to 'Sold' and associating it with the new owner.
+ * @param {any} supabase - The Supabase client instance.
+ * @param {any} payment - The completed payment object from Square.
+ */
 async function completePuppyAdoption(supabase: any, payment: any) {
   try {
     // Get the payment session to find the puppy

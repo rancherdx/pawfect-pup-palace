@@ -8,6 +8,12 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
+/**
+ * @constant supabase
+ * @description The Supabase client instance for interacting with the Supabase backend.
+ * It is configured with the project URL and the public anonymous key.
+ * Authentication state is persisted in localStorage.
+ */
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     storage: localStorage,

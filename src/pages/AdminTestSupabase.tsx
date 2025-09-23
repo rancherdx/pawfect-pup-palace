@@ -28,11 +28,19 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import Section from "@/components/Section";
 
+/**
+ * @interface User
+ * @description Defines the structure for a simplified user object for display purposes.
+ */
 interface User {
   id: string;
   name: string;
 }
 
+/**
+ * @interface TestLog
+ * @description Defines the structure for a log entry of a Supabase operation test.
+ */
 interface TestLog {
   id: string;
   operation: string;
@@ -44,6 +52,11 @@ interface TestLog {
   createdAt: string;
 }
 
+/**
+ * @interface SupabaseOperation
+ * @description Defines the structure for a Supabase operation that can be tested.
+ * It includes metadata and the actual function to execute.
+ */
 interface SupabaseOperation {
   name: string;
   description: string;
@@ -53,6 +66,18 @@ interface SupabaseOperation {
   method: () => Promise<any>;
 }
 
+/**
+ * @component AdminTestSupabase
+ * @description A specialized testing suite for administrators to directly interact with and test Supabase operations.
+ * This component allows for:
+ * - Executing predefined Supabase queries and admin-specific API calls.
+ * - Viewing detailed results of each operation, including response data, status, and latency.
+ * - A simple system status check for core services like database and authentication.
+ *
+ * It helps in diagnosing issues with the backend and ensuring that Supabase rules and functions are working as expected.
+ *
+ * @returns {JSX.Element} The rendered Supabase test suite component.
+ */
 const AdminTestSupabase = () => {
   const [selectedUser, setSelectedUser] = useState<string>("");
   const [selectedOperation, setSelectedOperation] = useState<string>("");
@@ -60,7 +85,11 @@ const AdminTestSupabase = () => {
   const [testResults, setTestResults] = useState<TestLog[]>([]);
   const queryClient = useQueryClient();
 
-  // Supabase Operations for testing
+  /**
+   * @constant supabaseOperations
+   * @description A list of predefined Supabase operations that can be executed from the test suite.
+   * Each operation is defined with its name, description, category, and the method to be executed.
+   */
   const supabaseOperations: SupabaseOperation[] = [
     // Public operations
     { 
@@ -239,6 +268,12 @@ const AdminTestSupabase = () => {
     executeSupabaseTest.mutate({ operationName: selectedOperation });
   };
 
+  /**
+   * @function getStatusBadge
+   * @description Returns a styled Badge component based on the HTTP status code of the operation result.
+   * @param {number} status - The status code from the test result.
+   * @returns {JSX.Element} A Badge component indicating the status.
+   */
   const getStatusBadge = (status: number) => {
     if (status >= 200 && status < 300) {
       return <Badge variant="default" className="bg-green-500">Success</Badge>;
@@ -250,6 +285,10 @@ const AdminTestSupabase = () => {
     return <Badge variant="outline">Unknown</Badge>;
   };
 
+  /**
+   * @function clearResults
+   * @description Clears all the test results from the state.
+   */
   const clearResults = () => {
     setTestResults([]);
   };

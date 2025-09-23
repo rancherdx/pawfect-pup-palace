@@ -12,6 +12,15 @@ import { Button } from "@/components/ui/button";
 import { Loader2, CalendarClock, PawPrint, Award, HeartHandshake } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
+/**
+ * @component StudPage
+ * @description This page showcases the available stud dogs for breeding services. It fetches
+ * a list of stud dogs from the database, allows users to filter them by breed and search
+ * by name, and displays the results in a card format. It also provides information
+ * about the stud service process.
+ *
+ * @returns {JSX.Element} The rendered stud service page.
+ */
 const StudPage = () => {
   const [selectedBreed, setSelectedBreed] = useState<string | undefined>();
   const [searchTerm, setSearchTerm] = useState("");
@@ -44,7 +53,10 @@ const StudPage = () => {
   
   const breeds = studDogs ? Array.from(new Set(studDogs.map(dog => dog.breed))) : [];
   
-  // Filter stud dogs based on selected filters
+  /**
+   * @constant filteredDogs
+   * @description An array of stud dogs filtered based on the selected breed and search term.
+   */
   const filteredDogs = studDogs?.filter(dog => {
     const matchesBreed = !selectedBreed || dog.breed === selectedBreed;
     const matchesSearch = !searchTerm || 

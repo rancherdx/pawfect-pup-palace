@@ -10,6 +10,10 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { adminApi } from '@/api';
 
+/**
+ * @interface SquareConfig
+ * @description Defines the structure for the Square API configuration object.
+ */
 interface SquareConfig {
   environment: 'sandbox' | 'production';
   application_id: string;
@@ -19,6 +23,12 @@ interface SquareConfig {
   configured: boolean;
 }
 
+/**
+ * @component SquareAPISetup
+ * @description A component for configuring the Square API integration, including setting credentials
+ * for different environments and testing the connection.
+ * @returns {React.ReactElement} The rendered Square API setup component.
+ */
 const SquareAPISetup = () => {
   const { toast } = useToast();
   const [config, setConfig] = useState<SquareConfig>({
@@ -37,6 +47,9 @@ const SquareAPISetup = () => {
     loadSquareConfig();
   }, []);
 
+  /**
+   * Loads the current Square configuration from the backend.
+   */
   const loadSquareConfig = async () => {
     try {
       setLoading(true);
@@ -61,6 +74,9 @@ const SquareAPISetup = () => {
     }
   };
 
+  /**
+   * Saves the current configuration to the backend.
+   */
   const saveConfiguration = async () => {
     if (!config.application_id || !config.access_token) {
       toast({
@@ -95,6 +111,9 @@ const SquareAPISetup = () => {
     }
   };
 
+  /**
+   * Tests the connection to the Square API with the provided credentials.
+   */
   const testConnection = async () => {
     if (!config.application_id || !config.access_token) {
       toast({

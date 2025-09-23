@@ -9,6 +9,10 @@ import { Upload, Image, Palette, Smartphone } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import ImageUploadWithCrop from '@/components/media/ImageUploadWithCrop';
 
+/**
+ * @interface BrandAsset
+ * @description Represents the structure of a brand asset object in the database.
+ */
 interface BrandAsset {
   id: string;
   asset_type: 'favicon' | 'logo_light' | 'logo_dark' | 'logo_mobile' | 'watermark';
@@ -18,6 +22,12 @@ interface BrandAsset {
   updated_at: string;
 }
 
+/**
+ * @component BrandAssetManager
+ * @description A component for managing brand assets, including logos, favicons, and watermarks,
+ * as well as company branding information like name and tagline.
+ * @returns {React.ReactElement} The rendered brand asset management interface.
+ */
 const BrandAssetManager: React.FC = () => {
   const [activeUpload, setActiveUpload] = useState<string | null>(null);
   const queryClient = useQueryClient();
@@ -101,12 +111,21 @@ const BrandAssetManager: React.FC = () => {
     },
   });
 
+  /**
+   * Creates a handler function for uploading a specific type of asset.
+   * @param {string} assetType - The type of the asset to be uploaded.
+   * @returns {(urls: string[]) => void} A function that takes an array of URLs and triggers the upload mutation.
+   */
   const handleAssetUpload = (assetType: string) => (urls: string[]) => {
     if (urls.length > 0) {
       uploadAssetMutation.mutate({ assetType, assetUrl: urls[0] });
     }
   };
 
+  /**
+   * Handles the submission of the company branding information form.
+   * @param {React.FormEvent<HTMLFormElement>} e - The form submission event.
+   */
   const handleBrandingSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -149,6 +168,11 @@ const BrandAssetManager: React.FC = () => {
     },
   ];
 
+  /**
+   * Finds the currently active asset for a given type.
+   * @param {string} type - The asset type to search for.
+   * @returns {BrandAsset | undefined} The brand asset object if found, otherwise undefined.
+   */
   const getCurrentAsset = (type: string) => {
     return brandAssets?.find(asset => asset.asset_type === type);
   };

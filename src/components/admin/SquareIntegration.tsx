@@ -7,6 +7,10 @@ import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import SquareAPISetup from './SquareAPISetup';
 
+/**
+ * @interface Integration
+ * @description Defines the structure of a generic integration object.
+ */
 interface Integration {
   id: string;
   service_name: string;
@@ -18,6 +22,12 @@ interface Integration {
 import SquareEnvironmentToggle from './SquareEnvironmentToggle';
 import ApplePaySetup from './ApplePaySetup';
 
+/**
+ * @component SquareIntegration
+ * @description A high-level component for managing the Square integration. It composes other components
+ * for API setup, environment toggling, and Apple Pay configuration, providing a centralized dashboard.
+ * @returns {React.ReactElement} The rendered Square integration management page.
+ */
 const SquareIntegration = () => {
   const queryClient = useQueryClient();
 
@@ -53,6 +63,10 @@ const SquareIntegration = () => {
     }
   });
 
+  /**
+   * Toggles the activation status of the Square integration.
+   * It checks if the integration is configured before attempting to activate or deactivate it.
+   */
   const handleToggleSquareActivation = () => {
     if (!squareIntegration) {
       toast.error('Square integration details not found.');

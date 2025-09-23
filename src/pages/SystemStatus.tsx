@@ -15,8 +15,16 @@ import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/api/client";
 import { useQuery } from '@tanstack/react-query';
 
+/**
+ * @typedef {"healthy" | "degraded" | "offline" | "loading"} StatusType
+ * @description Represents the possible status of a system service.
+ */
 type StatusType = "healthy" | "degraded" | "offline" | "loading";
 
+/**
+ * @interface ServiceStatus
+ * @description Defines the structure for an object representing the status of a single service.
+ */
 interface ServiceStatus {
   id: string;
   name: string;
@@ -27,12 +35,24 @@ interface ServiceStatus {
   uptime?: number;
 }
 
+/**
+ * @interface SystemHealth
+ * @description Defines the structure for the overall system health object, including all services.
+ */
 interface SystemHealth {
   services: ServiceStatus[];
   overallStatus: StatusType;
   lastUpdated: string;
 }
 
+/**
+ * @component SystemStatus
+ * @description A page that displays the real-time operational status of the application's
+ * various backend services. It simulates health checks for API, database, storage, etc.,
+ * and presents the information in a clear, user-friendly dashboard.
+ *
+ * @returns {JSX.Element} The rendered system status page.
+ */
 const SystemStatus = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   
@@ -63,6 +83,11 @@ const SystemStatus = () => {
     staleTime: 15000 // Consider data stale after 15 seconds
   });
 
+  /**
+   * @function checkApiHealth
+   * @description Simulates a health check for the API endpoints.
+   * @returns {Promise<ServiceStatus>} A promise that resolves to the status of the API service.
+   */
   const checkApiHealth = async (): Promise<ServiceStatus> => {
     try {
       const startTime = Date.now();
@@ -90,6 +115,11 @@ const SystemStatus = () => {
     }
   };
 
+  /**
+   * @function checkDatabaseHealth
+   * @description Simulates a health check for the database.
+   * @returns {Promise<ServiceStatus>} A promise that resolves to the status of the database service.
+   */
   const checkDatabaseHealth = async (): Promise<ServiceStatus> => {
     try {
       const startTime = Date.now();
@@ -117,6 +147,11 @@ const SystemStatus = () => {
     }
   };
 
+  /**
+   * @function checkStorageHealth
+   * @description Simulates a health check for the storage service.
+   * @returns {Promise<ServiceStatus>} A promise that resolves to the status of the storage service.
+   */
   const checkStorageHealth = async (): Promise<ServiceStatus> => {
     const latency = Math.random() * 200 + 30;
     return {
@@ -129,6 +164,11 @@ const SystemStatus = () => {
     };
   };
 
+  /**
+   * @function checkAuthHealth
+   * @description Simulates a health check for the authentication service.
+   * @returns {Promise<ServiceStatus>} A promise that resolves to the status of the auth service.
+   */
   const checkAuthHealth = async (): Promise<ServiceStatus> => {
     const latency = Math.random() * 150 + 40;
     return {
@@ -141,6 +181,11 @@ const SystemStatus = () => {
     };
   };
 
+  /**
+   * @function checkPaymentHealth
+   * @description Simulates a health check for the payment processing service.
+   * @returns {Promise<ServiceStatus>} A promise that resolves to the status of the payment service.
+   */
   const checkPaymentHealth = async (): Promise<ServiceStatus> => {
     const latency = Math.random() * 300 + 80;
     return {
@@ -153,12 +198,22 @@ const SystemStatus = () => {
     };
   };
 
+  /**
+   * @function handleRefresh
+   * @description Manually triggers a refresh of the system health status.
+   */
   const handleRefresh = async () => {
     setIsRefreshing(true);
     await refetch();
     setIsRefreshing(false);
   };
 
+  /**
+   * @function getStatusIcon
+   * @description Returns an icon component based on the service status.
+   * @param {StatusType} status - The status of the service.
+   * @returns {JSX.Element} The corresponding status icon.
+   */
   const getStatusIcon = (status: StatusType) => {
     switch (status) {
       case "healthy":
@@ -173,6 +228,12 @@ const SystemStatus = () => {
     }
   };
   
+  /**
+   * @function getStatusBadge
+   * @description Returns a styled Badge component based on the service status.
+   * @param {StatusType} status - The status of the service.
+   * @returns {JSX.Element} The corresponding status badge.
+   */
   const getStatusBadge = (status: StatusType) => {
     switch (status) {
       case "healthy":
@@ -187,6 +248,12 @@ const SystemStatus = () => {
     }
   };
 
+  /**
+   * @function getStatusColor
+   * @description Returns a Tailwind CSS class for the progress bar color based on latency.
+   * @param {number} latency - The latency of the service in milliseconds.
+   * @returns {string} The CSS class for the progress bar color.
+   */
   const getStatusColor = (latency: number) => {
     if (latency < 100) return "bg-green-500";
     if (latency < 300) return "bg-green-400";
@@ -194,6 +261,12 @@ const SystemStatus = () => {
     return "bg-red-500";
   };
 
+  /**
+   * @function getServiceIcon
+   * @description Returns an icon component for a specific service based on its ID.
+   * @param {string} serviceId - The ID of the service.
+   * @returns {JSX.Element} The corresponding service icon.
+   */
   const getServiceIcon = (serviceId: string) => {
     switch (serviceId) {
       case "api": return <Server className="h-5 w-5" />;

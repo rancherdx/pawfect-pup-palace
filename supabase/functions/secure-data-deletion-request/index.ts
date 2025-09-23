@@ -1,11 +1,19 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
+/**
+ * @constant corsHeaders
+ * @description Defines the CORS headers for the function, allowing cross-origin requests.
+ */
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+/**
+ * @interface DataDeletionRequestBody
+ * @description Defines the structure for the JSON body of a data deletion request.
+ */
 interface DataDeletionRequestBody {
   name?: string;
   email: string;
@@ -14,6 +22,15 @@ interface DataDeletionRequestBody {
   additional_details: string;
 }
 
+/**
+ * The main handler for the secure data deletion request serverless function.
+ * This function provides a secure endpoint for authenticated users to submit a request
+ * to have their personal data deleted. It validates the request, records it in the
+ * database for an admin to review, and logs the action as a security event.
+ *
+ * @param {Request} req - The incoming HTTP request, containing user auth and the request body.
+ * @returns {Promise<Response>} A promise that resolves to the HTTP response, indicating success or failure.
+ */
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
