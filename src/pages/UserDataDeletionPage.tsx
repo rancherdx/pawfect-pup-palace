@@ -1,5 +1,6 @@
 import React from 'react';
 import Section from "@/components/Section";
+import { Card, CardContent } from "@/components/ui/card";
 import { Trash2 } from 'lucide-react';
 
 /**

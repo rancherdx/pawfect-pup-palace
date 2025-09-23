@@ -1,5 +1,6 @@
 import React from 'react';
 import Section from "@/components/Section"; // Assuming this component provides consistent padding and layout
+import { Card, CardContent } from "@/components/ui/card";
 import { FileText } from 'lucide-react'; // Optional icon
 
 /**

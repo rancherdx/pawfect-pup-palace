@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { requireAdmin } from "./client";
+import { Parent } from "@/types/parent";
 
 /**
  * @namespace adminApi
@@ -325,6 +326,78 @@ export const adminApi = {
     await requireAdmin();
     const { error } = await supabase
       .from('litters')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+    return { success: true };
+  },
+
+  // Parents
+  /**
+   * Fetches all parents from the database.
+   */
+  getAllParents: async () => {
+    await requireAdmin();
+    const { data, error } = await supabase
+      .from('parents')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    const transformedData: Parent[] = data?.map(item => ({
+      id: item.id,
+      name: item.name,
+      breed: item.breed,
+      gender: item.gender as 'Male' | 'Female',
+      description: item.description,
+      image_urls: item.image_urls || [],
+      certifications: item.certifications || [],
+      bloodline_info: item.bloodline_info,
+      health_clearances: item.health_clearances || [],
+      is_active: item.is_active,
+      created_at: item.created_at,
+      updated_at: item.updated_at
+    })) || [];
+  },
+
+  /**
+   * Creates a new parent entry in the database.
+   */
+  createParent: async (parentData: any) => {
+    await requireAdmin();
+    const { data, error } = await supabase
+      .from('parents')
+      .insert(parentData)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  /**
+   * Updates an existing parent's data.
+   */
+  updateParent: async (id: string, parentData: any) => {
+    await requireAdmin();
+    const { data, error } = await supabase
+      .from('parents')
+      .update(parentData)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  /**
+   * Deletes a parent from the database.
+   */
+  deleteParent: async (id: string) => {
+    await requireAdmin();
+    const { error } = await supabase
+      .from('parents')
       .delete()
       .eq('id', id);
     

@@ -1,5 +1,6 @@
 import React from 'react';
 import Section from "@/components/Section";
+import { Card, CardContent } from "@/components/ui/card";
 import { RotateCcw } from 'lucide-react'; // Icon for refunds/returns
 
 /**

@@ -6,3 +6,4 @@ export * from './auth';
 export * from './breedTemplate';
 export * from './blogPost';
 export * from './studDog';
+export * from './parent';
