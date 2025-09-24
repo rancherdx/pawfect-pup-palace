@@ -3,8 +3,8 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  PawPrint, Dog, Receipt, Settings, CreditCard, Layers, FileText, Globe, Users, PlugZap, Mail, ShieldCheck, MessageSquare, MoreHorizontal, Bell
-} from "lucide-react"; // Added MoreHorizontal and Bell
+  PawPrint, Dog, Receipt, Settings, CreditCard, Layers, FileText, Globe, Users, PlugZap, Mail, ShieldCheck, MessageSquare, MoreHorizontal, Bell, Heart
+} from "lucide-react"; // Added MoreHorizontal, Bell, and Heart
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -33,6 +33,7 @@ import NotificationCenter from '@/components/admin/NotificationCenter';
 import SettingsHub from '@/components/admin/SettingsHub';
 import SwaggerDoc from "@/components/admin/SwaggerUI";
 import ReDocDoc from "@/components/admin/ReDocUI";
+import ParentManagement from '@/components/admin/ParentManagement';
 import { Code } from "lucide-react";
 
 /**
@@ -43,6 +44,7 @@ import { Code } from "lucide-react";
 const allAdminTabs = [
   // Core Management
   { value: "hub", label: "Management Hub", icon: PawPrint, component: <UnifiedManagementHub /> },
+  { value: "parents", label: "Parents", icon: Heart, component: <ParentManagement /> },
   
   // Content & Marketing
   { value: "blog", label: "Blog", icon: FileText, component: <BlogManager /> },

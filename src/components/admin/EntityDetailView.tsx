@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Puppy, Litter, StudDog } from '@/types';
+import { Puppy, Litter, StudDog, Parent } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Pencil, PlusCircle } from 'lucide-react';
+import { Pencil, PlusCircle, Heart } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { adminApi } from '@/api';
 import PuppyForm from './PuppyForm';
 import LitterForm from './LitterForm';
+import ParentDetailView from './ParentDetailView';
 
 /**
  * @interface EntityDetailViewProps
@@ -14,14 +17,16 @@ import LitterForm from './LitterForm';
 interface EntityDetailViewProps {
   /** The ID of the entity to display. */
   entityId: string;
-  /** The type of the entity ('puppy', 'litter', or 'stud'). */
-  entityType: 'puppy' | 'litter' | 'stud';
+  /** The type of the entity ('puppy', 'litter', 'stud', or 'parent'). */
+  entityType: 'puppy' | 'litter' | 'stud' | 'parent';
   /** An array of all available puppies. */
   puppies: Puppy[];
   /** An array of all available litters. */
   litters: Litter[];
   /** An array of all available stud dogs. */
   studDogs: StudDog[];
+  /** An array of all available parents. */
+  parents?: Parent[];
   /** Callback function to trigger the bulk add puppies flow for a litter. */
   onBulkAddPuppies: (litterId: string) => void;
 }
@@ -73,6 +78,17 @@ const PuppyDetailsView: React.FC<{ puppy: Puppy, onEdit: () => void }> = ({ pupp
  */
 const LitterDetailsView: React.FC<{ litter: Litter, puppies: Puppy[], onEdit: () => void, onBulkAdd: () => void }> = ({ litter, puppies, onEdit, onBulkAdd }) => {
     const litterPuppies = puppies.filter(p => p.litter_id === litter.id);
+    
+    // Fetch parent details if we have parent IDs
+    const { data: parentsData } = useQuery({
+      queryKey: ['parents'],
+      queryFn: () => adminApi.getAllParents(),
+      enabled: !!(litter as any)?.dam_id || !!(litter as any)?.sire_id,
+    });
+    
+    const dam = parentsData?.parents?.find(p => p.id === (litter as any)?.dam_id);
+    const sire = parentsData?.parents?.find(p => p.id === (litter as any)?.sire_id);
+    
     return (
         <Card>
             <CardHeader className="flex flex-row items-center justify-between">
@@ -97,11 +113,17 @@ const LitterDetailsView: React.FC<{ litter: Litter, puppies: Puppy[], onEdit: ()
                 </div>
                 <div className="flex justify-between">
                     <strong>Dam:</strong>
-                    <span>{litter.damName}</span>
+                    <div className="flex items-center gap-2">
+                      <span>{dam ? dam.name : litter.damName}</span>
+                      {dam && <Heart className="h-4 w-4 text-pink-500" />}
+                    </div>
                 </div>
                 <div className="flex justify-between">
                     <strong>Sire:</strong>
-                    <span>{litter.sireName}</span>
+                    <div className="flex items-center gap-2">
+                      <span>{sire ? sire.name : litter.sireName}</span>
+                      {sire && <Heart className="h-4 w-4 text-blue-500" />}
+                    </div>
                 </div>
                 <div className="flex justify-between">
                     <strong>DOB:</strong>
@@ -126,7 +148,7 @@ const LitterDetailsView: React.FC<{ litter: Litter, puppies: Puppy[], onEdit: ()
  * @param {EntityDetailViewProps} props - The props for the component.
  * @returns {React.ReactElement} The rendered detail view or edit form for the specified entity.
  */
-const EntityDetailView: React.FC<EntityDetailViewProps> = ({ entityId, entityType, puppies, litters, studDogs, onBulkAddPuppies }) => {
+const EntityDetailView: React.FC<EntityDetailViewProps> = ({ entityId, entityType, puppies, litters, studDogs, parents, onBulkAddPuppies }) => {
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
@@ -191,15 +213,11 @@ const StudDogDetailsView: React.FC<{ studDog: StudDog, onEdit: () => void }> = (
     </Card>
 );
 
-  if (entityType === 'stud') {
-    const studDog = studDogs.find(s => s.id === entityId);
-    if (!studDog) return <div>Stud dog not found.</div>;
+  if (entityType === 'parent') {
+    const parent = (parents as Parent[])?.find(p => p.id === entityId);
+    if (!parent) return <div>Parent not found.</div>;
 
-    return isEditing ? (
-      <div>StudDogForm component needed</div>
-    ) : (
-      <StudDogDetailsView studDog={studDog} onEdit={() => setIsEditing(true)} />
-    );
+    return <ParentDetailView parent={parent} onClose={() => {}} />;
   }
 
   return <div>Unknown entity type.</div>;

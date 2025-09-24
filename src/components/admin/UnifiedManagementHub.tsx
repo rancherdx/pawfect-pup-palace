@@ -6,7 +6,7 @@ import { adminApi } from '@/api';
 import { Puppy, Litter } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle, ListTree, Dog, ChevronsRight, Trash2, Edit, PlusCircle } from 'lucide-react';
+import { AlertTriangle, Heart, ListTree, Dog, ChevronsRight, Trash2, Edit, PlusCircle } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,6 +20,7 @@ import BulkPuppyCreator from './BulkPuppyCreator';
 import LitterForm from './LitterForm';
 import StudDogForm from './StudDogForm';
 import PuppyForm from './PuppyForm';
+import ParentForm from './ParentForm';
 import { PuppyStatus } from '@/types';
 
 /**
@@ -38,8 +39,8 @@ interface LitterWithPuppies extends Litter {
  * @returns {React.ReactElement} The rendered unified management hub.
  */
 const UnifiedManagementHub = () => {
-  const [selectedEntity, setSelectedEntity] = useState<{ type: 'puppy' | 'litter' | 'stud', id: string } | null>(null);
-  const [creationMode, setCreationMode] = useState<'litter' | 'stud_dog' | 'puppy' | null>(null);
+  const [selectedEntity, setSelectedEntity] = useState<{ type: 'puppy' | 'litter' | 'stud' | 'parent', id: string } | null>(null);
+  const [creationMode, setCreationMode] = useState<'litter' | 'stud_dog' | 'puppy' | 'parent' | null>(null);
   const [selectedPuppyIds, setSelectedPuppyIds] = useState<Set<string>>(new Set());
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
   const [isBulkAddDialogOpen, setIsBulkAddDialogOpen] = useState(false);
@@ -63,6 +64,12 @@ const UnifiedManagementHub = () => {
       queryKey: ['stud_dogs'],
       queryFn: () => adminApi.getStudDogs(),
       staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: parentsData, isLoading: parentsLoading, isError: parentsIsError } = useQuery({
+    queryKey: ['parents'],
+    queryFn: () => adminApi.getAllParents(),
+    staleTime: 5 * 60 * 1000,
   });
 
   const bulkUpdateMutation = useMutation({
@@ -115,8 +122,8 @@ const UnifiedManagementHub = () => {
     return { hierarchicalData: littersWithPuppies, unassignedPuppies: unassigned };
   }, [puppiesData, littersData]);
 
-  const isLoading = puppiesLoading || littersLoading || studDogsLoading;
-  const isError = puppiesIsError || littersIsError || studDogsIsError;
+  const isLoading = puppiesLoading || littersLoading || studDogsLoading || parentsLoading;
+  const isError = puppiesIsError || littersIsError || studDogsIsError || parentsIsError;
 
   useEffect(() => {
     const channel = supabase.channel('public-tables');
@@ -257,6 +264,11 @@ const UnifiedManagementHub = () => {
         setCreationMode('puppy');
     }
 
+    const handleAddNewParent = () => {
+        setSelectedEntity(null);
+        setCreationMode('parent');
+    }
+
     return (
       <div className="p-2 space-y-2">
         <div className="flex justify-between items-center px-2">
@@ -312,6 +324,24 @@ const UnifiedManagementHub = () => {
               </Collapsible>
             )
         })}
+         <div className="flex justify-between items-center px-2 pt-4">
+            <h3 className="font-semibold text-lg flex items-center"><Heart className="w-5 h-5 mr-2" /> Parents</h3>
+            <Button variant="ghost" size="icon" onClick={() => setSelectedEntity({ type: 'parent', id: 'new' })}>
+                <PlusCircle className="h-5 w-5" />
+            </Button>
+        </div>
+        {(parentsData?.parents || []).map((parent) => (
+            <Button
+                key={parent.id}
+                variant={selectedEntity?.id === parent.id ? "secondary" : "ghost"}
+                className="w-full justify-start ml-2"
+                onClick={() => setSelectedEntity({ type: 'parent', id: parent.id })}
+            >
+                <Heart className={`w-4 h-4 mr-2 ${parent.gender === 'Female' ? 'text-pink-500' : 'text-blue-500'}`} />
+                {parent.name} ({parent.gender})
+            </Button>
+        ))}
+
          <div className="flex justify-between items-center px-2 pt-4">
             <h3 className="font-semibold text-lg flex items-center"><Dog className="w-5 h-5 mr-2" /> Stud Dogs</h3>
             <Button variant="ghost" size="icon" onClick={handleAddNewStudDog}>
@@ -382,6 +412,24 @@ const UnifiedManagementHub = () => {
                 <div className="h-full overflow-y-auto p-4">
                 {creationMode === 'litter' && <LitterForm onClose={() => setCreationMode(null)} isEditMode={false} />}
                 {creationMode === 'stud_dog' && <StudDogForm onClose={() => setCreationMode(null)} isEditMode={false} />}
+                {creationMode === 'parent' && <ParentForm 
+                  formData={{
+                    name: '',
+                    breed: '',
+                    gender: 'Male',
+                    description: '',
+                    image_urls: [],
+                    certifications: [],
+                    bloodline_info: '',
+                    health_clearances: [],
+                    is_active: true
+                  }}
+                  onInputChange={() => {}}
+                  onSelectChange={() => {}}
+                  onSubmit={() => {}}
+                  onCancel={() => setCreationMode(null)}
+                  isEditing={false}
+                />}
                 {creationMode === 'puppy' ? (
                   <PuppyForm onClose={() => setCreationMode(null)} isEditMode={false} />
                 ) : puppiesToCreate > 0 && bulkAddLitterId ? (
@@ -403,6 +451,7 @@ const UnifiedManagementHub = () => {
                     puppies={puppiesData?.puppies || []}
                     litters={littersData?.litters || []}
                     studDogs={studDogsData?.data || []}
+                    parents={parentsData?.parents || []}
                     onBulkAddPuppies={(litterId) => {
                       setBulkAddLitterId(litterId);
                       setIsBulkAddDialogOpen(true);

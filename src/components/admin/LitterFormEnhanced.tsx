@@ -8,21 +8,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { adminApi } from "@/api";
-import { Litter, LitterCreationData, LitterUpdateData, LitterStatus } from "@/types/litter";
+import { Litter, LitterCreationData, LitterUpdateData, LitterStatus, Parent } from "@/types";
 import { Loader2 } from "lucide-react";
 import ImageUploadWithCrop from "@/components/media/ImageUploadWithCrop";
 import VideoUpload from "@/components/media/VideoUpload";
 
 /**
- * @typedef {Omit<LitterCreationData, "status"> & { status: LitterStatus; image_urls?: string[]; video_urls?: string[]; }} LitterFormData
- * @description Defines the shape of the form data for the enhanced litter form, including media URLs.
+ * @typedef {Omit<LitterCreationData, "status"> & { status: LitterStatus; image_urls?: string[]; video_urls?: string[]; dam_id?: string; sire_id?: string; }} LitterFormData
+ * @description Defines the shape of the form data for the enhanced litter form, including media URLs and parent IDs.
  */
-type LitterFormData = Omit<LitterCreationData, "status"> & {
-  status: LitterStatus;
-  image_urls?: string[];
+type LitterFormData = Omit<LitterCreationData, "status"> & { 
+  status: LitterStatus; 
+  image_urls?: string[]; 
   video_urls?: string[];
+  dam_id?: string;
+  sire_id?: string;
 };
 
 /**
@@ -74,6 +76,12 @@ const LitterFormEnhanced: React.FC<LitterFormEnhancedProps> = ({ litter, onClose
 
   const [isLoading, setIsLoading] = useState(false);
   const queryClient = useQueryClient();
+  
+  // Fetch available parents
+  const { data: parentsData } = useQuery({
+    queryKey: ['parents'],
+    queryFn: () => adminApi.getAllParents(),
+  });
 
   const mutation = useMutation<unknown, Error, { id?: string; data: LitterFormData }>({
     mutationFn: ({ id, data }) => {
@@ -182,22 +190,30 @@ const LitterFormEnhanced: React.FC<LitterFormEnhancedProps> = ({ litter, onClose
                   />
                 </div>
                 <div>
-                  <Label htmlFor="damName">Dam (Mother) Name</Label>
-                  <Input
-                    id="damName"
-                    name="damName"
-                    value={formData.damName}
-                    onChange={handleChange}
-                  />
+                  <Label htmlFor="dam_id">Dam (Mother)</Label>
+                  <Select name="dam_id" value={formData.dam_id} onValueChange={value => setFormData(prev => ({ ...prev, dam_id: value }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select dam" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {parentsData?.parents?.filter(p => p.gender === 'Female').map(parent => (
+                        <SelectItem key={parent.id} value={parent.id}>{parent.name} ({parent.breed})</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
-                  <Label htmlFor="sireName">Sire (Father) Name</Label>
-                  <Input
-                    id="sireName"
-                    name="sireName"
-                    value={formData.sireName}
-                    onChange={handleChange}
-                  />
+                  <Label htmlFor="sire_id">Sire (Father)</Label>
+                  <Select name="sire_id" value={formData.sire_id} onValueChange={value => setFormData(prev => ({ ...prev, sire_id: value }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select sire" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {parentsData?.parents?.filter(p => p.gender === 'Male').map(parent => (
+                        <SelectItem key={parent.id} value={parent.id}>{parent.name} ({parent.breed})</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label htmlFor="dateOfBirth">Date of Birth</Label>

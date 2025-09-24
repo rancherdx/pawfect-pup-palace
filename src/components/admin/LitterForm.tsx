@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { adminApi } from '@/api';
-import { Litter, LitterStatus, LitterCreationData, LitterUpdateData } from "@/types";
+import { Litter, LitterStatus, LitterCreationData, LitterUpdateData, Parent } from "@/types";
 import { Loader2 } from 'lucide-react';
 
 /**
@@ -22,7 +22,7 @@ const LITTER_STATUS_VALUES: LitterStatus[] = ["Active", "Available Soon", "All R
  * @typedef {Omit<LitterCreationData, "status"> & { status: LitterStatus }} LitterFormData
  * @description Defines the shape of the form data for creating or editing a litter.
  */
-type LitterFormData = Omit<LitterCreationData, "status"> & { status: LitterStatus };
+type LitterFormData = Omit<LitterCreationData, "status"> & { status: LitterStatus; dam_id?: string; sire_id?: string };
 
 /**
  * @interface LitterFormProps
@@ -61,11 +61,20 @@ const LitterForm: React.FC<LitterFormProps> = ({
   // Use legacy props if provided
   const actualOnClose = onClose || onCancel || (() => {});
   const actualIsEditMode = isEditMode !== undefined ? isEditMode : !!isEditing;
+  
+  // Fetch available parents
+  const { data: parentsData } = useQuery({
+    queryKey: ['parents'],
+    queryFn: () => adminApi.getAllParents(),
+  });
+  
   const [formData, setFormData] = useState<LitterFormData>({
     name: litter?.name || "",
     breed: litter?.breed || "",
     damName: litter?.damName || "",
     sireName: litter?.sireName || "",
+    dam_id: (litter as any)?.dam_id || "",
+    sire_id: (litter as any)?.sire_id || "",
     dateOfBirth: litter?.dateOfBirth ? new Date(litter.dateOfBirth).toISOString().split('T')[0] : "",
     status: litter?.status || "Active",
     description: litter?.description || "",
@@ -111,6 +120,8 @@ const LitterForm: React.FC<LitterFormProps> = ({
         breed: litter.breed || "",
         damName: litter.damName || "",
         sireName: litter.sireName || "",
+        dam_id: (litter as any)?.dam_id || "",
+        sire_id: (litter as any)?.sire_id || "",
         dateOfBirth: litter.dateOfBirth ? new Date(litter.dateOfBirth).toISOString().split('T')[0] : "",
         status: litter.status || "Active",
         description: litter.description || "",
@@ -165,12 +176,30 @@ const LitterForm: React.FC<LitterFormProps> = ({
               <Input id="breed" name="breed" value={formData.breed} onChange={handleChange} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="damName">Dam (Mother's Name)</Label>
-              <Input id="damName" name="damName" value={formData.damName} onChange={handleChange} required />
+              <Label htmlFor="dam_id">Dam (Mother)</Label>
+              <Select name="dam_id" value={formData.dam_id} onValueChange={value => handleSelectChange('dam_id', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select dam" />
+                </SelectTrigger>
+                <SelectContent>
+                  {parentsData?.parents?.filter(p => p.gender === 'Female').map(parent => (
+                    <SelectItem key={parent.id} value={parent.id}>{parent.name} ({parent.breed})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="sireName">Sire (Father's Name)</Label>
-              <Input id="sireName" name="sireName" value={formData.sireName} onChange={handleChange} required />
+              <Label htmlFor="sire_id">Sire (Father)</Label>
+              <Select name="sire_id" value={formData.sire_id} onValueChange={value => handleSelectChange('sire_id', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select sire" />
+                </SelectTrigger>
+                <SelectContent>
+                  {parentsData?.parents?.filter(p => p.gender === 'Male').map(parent => (
+                    <SelectItem key={parent.id} value={parent.id}>{parent.name} ({parent.breed})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="dateOfBirth">Date of Birth</Label>
