@@ -344,6 +344,8 @@ export const adminApi = {
       .select('*')
       .order('created_at', { ascending: false });
     
+    if (error) throw error;
+    
     const transformedData: Parent[] = data?.map(item => ({
       id: item.id,
       name: item.name,
@@ -358,6 +360,8 @@ export const adminApi = {
       created_at: item.created_at,
       updated_at: item.updated_at
     })) || [];
+    
+    return { parents: transformedData };
   },
 
   /**
