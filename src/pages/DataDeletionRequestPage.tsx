@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,20 +8,31 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, AlertTriangle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Loader2, CheckCircle, AlertTriangle, Shield } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { z } from "zod";
+
+// Input validation schema
+const dataDeletionSchema = z.object({
+  name: z.string().trim().max(255, "Name must be less than 255 characters").optional().or(z.literal("")),
+  email: z.string().trim().email("Invalid email address").max(255, "Email must be less than 255 characters"),
+  account_creation_timeframe: z.string().max(100, "Timeframe must be less than 100 characters").optional().or(z.literal("")),
+  puppy_ids: z.string().trim().max(500, "Puppy IDs must be less than 500 characters").optional().or(z.literal("")),
+  additional_details: z.string().trim().max(2000, "Additional details must be less than 2000 characters").optional().or(z.literal(""))
+});
 
 /**
  * @component DataDeletionRequestPage
- * @description A page containing a form for users to submit a request for the deletion of their personal data.
+ * @description A secure page for authenticated users to submit requests for the deletion of their personal data.
+ * Includes comprehensive input validation, authentication checks, and proper error handling.
  * The form collects information to help identify the user's data and submits the request to a secure
- * Supabase edge function. The component manages form state, submission logic, and provides feedback
- * to the user on success, loading, or error.
+ * Supabase edge function with enhanced security measures.
  *
  * @returns {JSX.Element} The rendered data deletion request page.
  */
 const DataDeletionRequestPage = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -32,14 +43,42 @@ const DataDeletionRequestPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+
+  // Check authentication status on component mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Auth check error:', error);
+          setIsAuthenticated(false);
+        } else {
+          setIsAuthenticated(!!session);
+        }
+      } catch (err) {
+        console.error('Auth check failed:', err);
+        setIsAuthenticated(false);
+      }
+    };
+    
+    checkAuth();
+  }, []);
 
   /**
    * @function handleChange
-   * @description Handles changes for the input and textarea elements in the form.
+   * @description Handles changes for the input and textarea elements in the form with real-time validation.
    * @param {React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>} e - The event object.
    */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    
+    // Clear validation error when user starts typing
+    if (validationErrors[name]) {
+      setValidationErrors(prev => ({ ...prev, [name]: "" }));
+    }
   };
 
   /**
@@ -53,8 +92,7 @@ const DataDeletionRequestPage = () => {
 
   /**
    * @function handleSubmit
-   * @description Handles the form submission for the data deletion request.
-   * It performs validation, calls a Supabase edge function, and handles success/error feedback.
+   * @description Handles the secure form submission for the data deletion request with comprehensive validation.
    * @param {React.FormEvent<HTMLFormElement>} e - The form event object.
    */
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -62,16 +100,61 @@ const DataDeletionRequestPage = () => {
     setIsLoading(true);
     setError(null);
     setIsSuccess(false);
+    setValidationErrors({});
 
-    if (!formData.email || (!formData.name && !formData.additional_details)) {
-        setError("Email and either Name or Additional Details are required to help us identify your data.");
+    // Check authentication before proceeding
+    if (!isAuthenticated) {
+      setError("You must be logged in to submit a data deletion request. Please log in and try again.");
+      setIsLoading(false);
+      toast({
+        variant: "destructive",
+        title: "Authentication Required",
+        description: "Please log in to submit a data deletion request.",
+        action: (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigate('/login')}
+          >
+            Login
+          </Button>
+        ),
+      });
+      return;
+    }
+
+    // Validate form data using zod schema
+    try {
+      dataDeletionSchema.parse(formData);
+    } catch (validationError) {
+      if (validationError instanceof z.ZodError) {
+        const errors: Record<string, string> = {};
+        validationError.errors.forEach((err) => {
+          if (err.path[0]) {
+            errors[err.path[0] as string] = err.message;
+          }
+        });
+        setValidationErrors(errors);
         setIsLoading(false);
         toast({
-            variant: "destructive",
-            title: "Validation Error",
-            description: "Email and either Name or Additional Details are required.",
+          variant: "destructive",
+          title: "Validation Error",
+          description: "Please fix the errors in the form and try again.",
         });
         return;
+      }
+    }
+
+    // Business logic validation
+    if (!formData.email || (!formData.name && !formData.additional_details)) {
+      setError("Email and either Name or Additional Details are required to help us identify your data.");
+      setIsLoading(false);
+      toast({
+        variant: "destructive",
+        title: "Validation Error",
+        description: "Email and either Name or Additional Details are required.",
+      });
+      return;
     }
 
     try {
@@ -84,12 +167,22 @@ const DataDeletionRequestPage = () => {
       setIsSuccess(true);
       toast({
         title: "Request Submitted",
-        description: "Your data deletion request has been successfully submitted.",
+        description: "Your data deletion request has been successfully submitted and logged for security.",
         className: "bg-green-500 text-white",
       });
-      setFormData({ name: "", email: "", account_creation_timeframe: "", puppy_ids: "", additional_details: "" }); // Reset form
+      setFormData({ name: "", email: "", account_creation_timeframe: "", puppy_ids: "", additional_details: "" });
     } catch (err: any) {
-      const errorMsg = err.response?.data?.details?.[0] || err.response?.data?.error || err.message || "An unexpected error occurred.";
+      let errorMsg = "An unexpected error occurred.";
+      
+      if (err.message?.includes("JWT")) {
+        errorMsg = "Session expired. Please log in again.";
+        setTimeout(() => navigate('/login'), 2000);
+      } else if (err.message?.includes("rate")) {
+        errorMsg = "Too many requests. Please wait before submitting again.";
+      } else {
+        errorMsg = err.response?.data?.details?.[0] || err.response?.data?.error || err.message || errorMsg;
+      }
+      
       setError(errorMsg);
       toast({
         variant: "destructive",
@@ -119,23 +212,83 @@ const DataDeletionRequestPage = () => {
     );
   }
 
+  // Show loading state while checking authentication
+  if (isAuthenticated === null) {
+    return (
+      <div className="container mx-auto max-w-2xl py-12 px-4 flex items-center justify-center">
+        <Card className="w-full">
+          <CardContent className="flex items-center justify-center p-8">
+            <Loader2 className="h-6 w-6 animate-spin mr-2" />
+            <span>Verifying authentication...</span>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Show login requirement if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="container mx-auto max-w-2xl py-12 px-4">
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-center text-brand-blue flex items-center justify-center gap-2">
+              <Shield className="h-6 w-6" />
+              Authentication Required
+            </CardTitle>
+            <CardDescription className="text-center text-muted-foreground">
+              You must be logged in to submit a data deletion request for security purposes.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <Alert className="mb-6">
+              <Shield className="h-4 w-4" />
+              <AlertTitle>Security Notice</AlertTitle>
+              <AlertDescription>
+                Data deletion requests require authentication to prevent unauthorized access to personal information and ensure request legitimacy.
+              </AlertDescription>
+            </Alert>
+            
+            <div className="space-y-4">
+              <Button asChild className="w-full">
+                <Link to="/login">Login to Submit Request</Link>
+              </Button>
+              
+              <p className="text-sm text-muted-foreground">
+                Don't have an account? <Link to="/register" className="text-brand-red hover:underline">Create one here</Link>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto max-w-2xl py-12 px-4">
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center text-brand-blue">Request Data Deletion</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center text-brand-blue flex items-center justify-center gap-2">
+            <Shield className="h-6 w-6" />
+            Request Data Deletion
+          </CardTitle>
           <CardDescription className="text-center text-muted-foreground">
-            Submit a request to have your personal data removed from our systems.
+            Submit a secure, authenticated request to have your personal data removed from our systems.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-700">
-            <h4 className="font-semibold mb-2 text-blue-800">Important Information:</h4>
+            <h4 className="font-semibold mb-2 text-blue-800 flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              Secure Data Deletion Process:
+            </h4>
             <ul className="list-disc list-inside space-y-1">
-              <li>Submitting this form initiates a request for the deletion of your personal data, such as your name, email, address, and phone number.</li>
-              <li>This process is manual. An administrator will review your request and may contact you for verification.</li>
-              <li>Please provide as much accurate information as possible to help us locate your data.</li>
-              <li>Transactional records related to purchases (e.g., adoption payments) may be retained for legal and financial auditing purposes with personal identifiers removed or anonymized where feasible.</li>
+              <li>This form is secure and requires authentication to prevent unauthorized requests.</li>
+              <li>All submissions are automatically logged for security audit purposes.</li>
+              <li>An administrator will review your request and may contact you for identity verification.</li>
+              <li>Please provide accurate information to help us locate your data efficiently.</li>
+              <li>Transactional records may be retained for legal/financial auditing with personal identifiers anonymized.</li>
+              <li>You will receive confirmation once your request has been processed.</li>
             </ul>
           </div>
 
@@ -156,8 +309,12 @@ const DataDeletionRequestPage = () => {
                 value={formData.name}
                 onChange={handleChange}
                 placeholder="Your full name"
-                maxLength={250}
+                maxLength={255}
+                className={validationErrors.name ? "border-red-500" : ""}
               />
+              {validationErrors.name && (
+                <p className="text-sm text-red-500 mt-1">{validationErrors.name}</p>
+              )}
             </div>
 
             <div>
@@ -170,8 +327,12 @@ const DataDeletionRequestPage = () => {
                 onChange={handleChange}
                 placeholder="your.email@example.com"
                 required
-                maxLength={250}
+                maxLength={255}
+                className={validationErrors.email ? "border-red-500" : ""}
               />
+              {validationErrors.email && (
+                <p className="text-sm text-red-500 mt-1">{validationErrors.email}</p>
+              )}
             </div>
 
             <div>
@@ -198,9 +359,13 @@ const DataDeletionRequestPage = () => {
                 value={formData.puppy_ids}
                 onChange={handleChange}
                 placeholder="e.g., puppy-001, puppy-002 (IDs of puppies you inquired about or adopted)"
-                maxLength={490}
+                maxLength={500}
+                className={validationErrors.puppy_ids ? "border-red-500" : ""}
               />
-               <p className="text-xs text-muted-foreground mt-1">Comma-separated list if multiple.</p>
+              {validationErrors.puppy_ids && (
+                <p className="text-sm text-red-500 mt-1">{validationErrors.puppy_ids}</p>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">Comma-separated list if multiple.</p>
             </div>
 
             <div>
@@ -212,14 +377,28 @@ const DataDeletionRequestPage = () => {
                 onChange={handleChange}
                 rows={4}
                 placeholder="Please provide any other information that could help us locate your account, especially if you used multiple emails or are unsure of the exact email used. E.g., other email addresses, specific puppy names you inquired about, approximate dates of interaction."
-                required={!formData.name} // Required if name is not provided
-                maxLength={1900}
+                required={!formData.name}
+                maxLength={2000}
+                className={validationErrors.additional_details ? "border-red-500" : ""}
               />
+              {validationErrors.additional_details && (
+                <p className="text-sm text-red-500 mt-1">{validationErrors.additional_details}</p>
+              )}
               <p className="text-xs text-muted-foreground mt-1">This field is required if Name is not provided.</p>
             </div>
 
             <Button type="submit" className="w-full bg-brand-red hover:bg-red-700 text-white" disabled={isLoading}>
-              {isLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : "Submit Deletion Request"}
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Submitting Secure Request...
+                </>
+              ) : (
+                <>
+                  <Shield className="h-4 w-4 mr-2" />
+                  Submit Secure Deletion Request
+                </>
+              )}
             </Button>
           </form>
         </CardContent>
