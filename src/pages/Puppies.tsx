@@ -200,9 +200,11 @@ const Puppies = () => {
                       breed={puppy.breed}
                       age={calculateAge(puppy.birth_date)}
                       gender={puppy.gender}
-                      imageSrc={puppy.photo_url || "https://images.unsplash.com/photo-1591160690555-5debfba289f0?ixlib=rb-4.0.3"}
+                      imageSrc={puppy.photo_url}
+                      imageUrls={puppy.image_urls}
                       price={puppy.price}
                       status={puppy.status}
+                      slug={puppy.slug}
                     />
                   ))}
               </div>

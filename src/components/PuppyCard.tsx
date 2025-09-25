@@ -14,6 +14,7 @@ interface PuppyCardProps {
   age: string;
   gender?: string; // Made optional as per instruction
   imageSrc?: string; // Made optional as per instruction
+  imageUrls?: string[]; // New array of image URLs
   price: number;
   status: PuppyStatus;
   slug?: string; // Added for slug-based routing
@@ -26,6 +27,7 @@ const PuppyCard = ({
   age,
   gender,
   imageSrc,
+  imageUrls,
   price,
   status,
   slug,
@@ -33,6 +35,9 @@ const PuppyCard = ({
   const [isFavorite, setIsFavorite] = useState(false);
   const { toast } = useToast();
 
+  // Use image_urls[0] first, then fallback to imageSrc, then placeholder
+  const displayImage = imageUrls?.[0] || imageSrc || "https://images.unsplash.com/photo-1591160690555-5debfba289f0?ixlib=rb-4.0.3";
+  
   const available = status === 'Available';
 
   const toggleFavorite = (e: React.MouseEvent) => {
@@ -53,7 +58,7 @@ const PuppyCard = ({
     <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
       <div className="relative">
         <img 
-          src={imageSrc} 
+          src={displayImage} 
           alt={name} 
           className="w-full h-48 object-cover"
         />

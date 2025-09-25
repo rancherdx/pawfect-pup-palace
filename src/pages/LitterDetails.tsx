@@ -262,7 +262,8 @@ const LitterDetails = () => {
                       breed={puppy.breed}
                       age={puppy.birth_date}
                       price={puppy.price || 0}
-                      imageSrc={puppy.image_urls?.[0] || puppy.photo_url || '/placeholder.svg'}
+                      imageSrc={puppy.photo_url}
+                      imageUrls={puppy.image_urls}
                       status={puppy.status}
                       slug={puppy.slug}
                     />

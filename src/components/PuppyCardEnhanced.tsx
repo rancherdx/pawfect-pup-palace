@@ -39,8 +39,8 @@ const PuppyCardEnhanced: React.FC<PuppyCardEnhancedProps> = ({
   slug,
 }) => {
   // Use the first image from imageUrls, fallback to imageSrc, then placeholder
-  const displayImage = imageUrls[0] || imageSrc || '/placeholder.svg';
-  const hasMultipleImages = imageUrls.length > 1;
+  const displayImage = imageUrls?.[0] || imageSrc || '/placeholder.svg';
+  const hasMultipleImages = (imageUrls?.length || 0) > 1;
   const hasVideos = videoUrls.length > 0;
 
   const statusColors = {
@@ -67,13 +67,13 @@ const PuppyCardEnhanced: React.FC<PuppyCardEnhancedProps> = ({
           {hasMultipleImages && (
             <div className="bg-black/60 backdrop-blur-sm rounded-full px-2 py-1 text-white text-xs flex items-center gap-1">
               <ImageIcon className="h-3 w-3" />
-              {imageUrls.length}
+              {imageUrls?.length || 0}
             </div>
           )}
           {hasVideos && (
             <div className="bg-black/60 backdrop-blur-sm rounded-full px-2 py-1 text-white text-xs flex items-center gap-1">
               <Video className="h-3 w-3" />
-              {videoUrls.length}
+              {videoUrls?.length || 0}
             </div>
           )}
         </div>
