@@ -2,12 +2,13 @@
 import React, { createContext, useContext, useMemo } from "react";
 
 /**
- * @typedef {'juneteenth' | 'fathersday' | 'none'} Holiday
+ * @typedef {'juneteenth' | 'fathersday' | 'halloween' | 'none'} Holiday
  * @description A type representing the possible holiday themes.
  */
 export type Holiday =
   | "juneteenth"
   | "fathersday"
+  | "halloween"
   | "none";
 
 /**
@@ -33,6 +34,20 @@ function getHolidayAndColors(): HolidayThemeContextType {
   const today = new Date();
   const month = today.getMonth() + 1; // January = 0
   const date = today.getDate();
+
+  // --- Halloween: October ---
+  if (month === 10) {
+    return {
+      holiday: "halloween",
+      colors: {
+        primary: "#FF6B1A", // Pumpkin orange
+        secondary: "#2D1B69", // Midnight purple
+        accent: "#39FF14", // Spooky green
+        text: "#F8F8FF", // Ghost white
+        background: "#1A0B2E", // Dark purple night
+      }
+    };
+  }
 
   // --- Juneteenth: June 19 ---
   if (month === 6 && date === 19) {
@@ -75,11 +90,11 @@ function getHolidayAndColors(): HolidayThemeContextType {
   return {
     holiday: "none",
     colors: {
-      primary: "#E53E3E",
+      primary: "#FF6B1A", // Halloween orange as default
       secondary: "#1A1A1A",
       accent: "#FFD700",
       text: "#FFF",
-      background: "#E53E3E"
+      background: "#FF6B1A"
     },
   };
 }
@@ -87,11 +102,11 @@ function getHolidayAndColors(): HolidayThemeContextType {
 const HolidayThemeContext = createContext<HolidayThemeContextType>({
   holiday: "none",
   colors: {
-    primary: "#E53E3E",
+    primary: "#FF6B1A", // Halloween orange as default
     secondary: "#1A1A1A",
     accent: "#FFD700",
     text: "#FFF",
-    background: "#E53E3E",
+    background: "#FF6B1A",
   }
 });
 

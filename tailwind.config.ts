@@ -30,8 +30,18 @@ export default {
 				foreground: 'hsl(var(--foreground))',
 				brand: {
 					red: '#E53E3E',
+					orange: '#FF6B1A', // Halloween orange
+					purple: '#2D1B69', // Midnight purple
+					green: '#39FF14', // Spooky green
 					black: '#1A1A1A',
 					white: '#FFFFFF',
+				},
+				halloween: {
+					orange: '#FF6B1A',
+					purple: '#2D1B69',
+					green: '#39FF14',
+					black: '#1A0B2E',
+					ghost: '#F8F8FF',
 				},
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
@@ -75,6 +85,38 @@ export default {
 				'accordion-up': {
 					from: { height: 'var(--radix-accordion-content-height)' },
 					to: { height: '0' }
+				},
+				// Halloween animations
+				'float-ghost': {
+					'0%, 100%': { transform: 'translateY(0) translateX(0)' },
+					'25%': { transform: 'translateY(-10px) translateX(5px)' },
+					'50%': { transform: 'translateY(-5px) translateX(-3px)' },
+					'75%': { transform: 'translateY(-15px) translateX(2px)' },
+				},
+				'spin-pumpkin': {
+					'0%': { transform: 'rotate(0deg) scale(1)' },
+					'50%': { transform: 'rotate(180deg) scale(1.1)' },
+					'100%': { transform: 'rotate(360deg) scale(1)' },
+				},
+				'flicker-candle': {
+					'0%, 100%': { opacity: '1', filter: 'brightness(1)' },
+					'50%': { opacity: '0.8', filter: 'brightness(0.9)' },
+				},
+				'fly-bat': {
+					'0%': { transform: 'translateX(-100vw) translateY(20px)' },
+					'50%': { transform: 'translateX(50vw) translateY(-10px)' },
+					'100%': { transform: 'translateX(100vw) translateY(30px)' },
+				},
+				'spider-crawl': {
+					'0%': { transform: 'translateX(0) translateY(0)' },
+					'25%': { transform: 'translateX(20px) translateY(-5px)' },
+					'50%': { transform: 'translateX(40px) translateY(0)' },
+					'75%': { transform: 'translateX(60px) translateY(-3px)' },
+					'100%': { transform: 'translateX(80px) translateY(0)' },
+				},
+				'glow-eyes': {
+					'0%, 100%': { boxShadow: '0 0 5px #39FF14' },
+					'50%': { boxShadow: '0 0 20px #39FF14, 0 0 30px #39FF14' },
 				},
 				'float': {
 					'0%, 100%': { transform: 'translateY(0)' },
@@ -156,6 +198,13 @@ export default {
 				'scale-in': 'scale-in 0.2s ease-out',
 				'scale-out': 'scale-out 0.2s ease-out',
 				'heart-beat': 'heart-beat 1s ease-in-out infinite',
+				// Halloween animations
+				'float-ghost': 'float-ghost 4s ease-in-out infinite',
+				'spin-pumpkin': 'spin-pumpkin 3s ease-in-out infinite',
+				'flicker-candle': 'flicker-candle 2s ease-in-out infinite',
+				'fly-bat': 'fly-bat 15s linear infinite',
+				'spider-crawl': 'spider-crawl 8s ease-in-out infinite',
+				'glow-eyes': 'glow-eyes 2s ease-in-out infinite',
 			},
 			backgroundImage: {
 				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
@@ -163,6 +212,8 @@ export default {
 			},
 			boxShadow: {
 				'puppy': '0 10px 25px -5px rgba(229, 62, 62, 0.1), 0 5px 10px -5px rgba(229, 62, 62, 0.05)',
+				'halloween': '0 10px 25px -5px rgba(255, 107, 26, 0.3), 0 5px 10px -5px rgba(45, 27, 105, 0.2)',
+				'spooky': '0 0 20px rgba(57, 255, 20, 0.5), inset 0 0 20px rgba(45, 27, 105, 0.3)',
 			},
 			textShadow: {
 				'sm': '0 1px 2px rgba(0, 0, 0, 0.1)',

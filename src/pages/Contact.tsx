@@ -112,7 +112,7 @@ const Contact = () => {
     "@type": "ContactPage",
     "mainEntity": {
       "@type": "Organization",
-      "name": "Golden Dreams Kennels",
+      "name": "GDS Puppies",
       "contactPoint": {
         "@type": "ContactPoint",
         "telephone": "+1-555-123-4567",
@@ -134,9 +134,9 @@ const Contact = () => {
   return (
     <div>
       <Helmet>
-        <title>Contact GDS Puppies - Get in Touch | Golden Dreams Kennels</title>
-        <meta name="description" content="Contact Golden Dreams Kennels for puppy adoption inquiries, breeding questions, or to schedule a visit. Phone: (555) 123-4567, Email: woof@gdspuppies.com" />
-        <meta name="keywords" content="contact GDS Puppies, puppy adoption contact, dog breeder contact, Golden Dreams Kennels phone, puppy inquiry, schedule visit" />
+        <title>Contact GDS Puppies - Get in Touch | GDS Puppies</title>
+        <meta name="description" content="Contact GDS Puppies for puppy adoption inquiries, breeding questions, or to schedule a visit. Phone: (555) 123-4567, Email: woof@gdspuppies.com" />
+        <meta name="keywords" content="contact GDS Puppies, puppy adoption contact, dog breeder contact, GDS Puppies phone, puppy inquiry, schedule visit" />
         <link rel="canonical" href="https://gdspuppies.com/contact" />
         
         {/* Open Graph */}

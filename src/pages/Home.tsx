@@ -47,7 +47,7 @@ const Home = () => {
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    "name": "Golden Dreams Kennels",
+    "name": "GDS Puppies",
     "alternateName": "GDS Puppies",
     "url": "https://gdspuppies.com",
     "logo": "https://gdspuppies.com/logo.jpg",
@@ -76,23 +76,23 @@ const Home = () => {
   return (
     <div>
       <Helmet>
-        <title>Golden Dreams Kennels - Premium Puppy Breeder | Healthy, Happy Puppies</title>
-        <meta name="description" content="Welcome to Golden Dreams Kennels, where every puppy finds their perfect family. Champion bloodlines, health guarantees, and lifetime support. Browse available puppies today." />
-        <meta name="keywords" content="puppy breeder, dog breeder, puppies for sale, champion bloodlines, healthy puppies, Golden Dreams Kennels, GDS Puppies" />
+    <title>GDS Puppies - Premium Puppy Breeder | Healthy, Happy Puppies</title>
+    <meta name="description" content="Welcome to GDS Puppies, where every puppy finds their perfect family. Champion bloodlines, health guarantees, and lifetime support. Browse available puppies today." />
+    <meta name="keywords" content="puppy breeder, dog breeder, puppies for sale, champion bloodlines, healthy puppies, GDS Puppies" />
         <link rel="canonical" href="https://gdspuppies.com/" />
         
         {/* Open Graph */}
-        <meta property="og:title" content="Golden Dreams Kennels - Premium Puppy Breeder" />
-        <meta property="og:description" content="Where every puppy finds their perfect family and every family finds their perfect companion. Champion bloodlines with health guarantees." />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://gdspuppies.com/" />
-        <meta property="og:image" content="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=630" />
-        <meta property="og:site_name" content="Golden Dreams Kennels" />
+    <meta property="og:title" content="GDS Puppies - Premium Puppy Breeder" />
+    <meta property="og:description" content="Where every puppy finds their perfect family and every family finds their perfect companion. Champion bloodlines with health guarantees." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://gdspuppies.com/" />
+    <meta property="og:image" content="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=630" />
+    <meta property="og:site_name" content="GDS Puppies" />
         
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Golden Dreams Kennels - Premium Puppy Breeder" />
-        <meta name="twitter:description" content="Where every puppy finds their perfect family. Champion bloodlines, health guarantees, and lifetime support." />
+    <meta name="twitter:title" content="GDS Puppies - Premium Puppy Breeder" />
+    <meta name="twitter:description" content="Where every puppy finds their perfect family. Champion bloodlines, health guarantees, and lifetime support." />
         <meta name="twitter:image" content="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=630" />
         
         {/* Structured Data */}
@@ -101,7 +101,7 @@ const Home = () => {
         </script>
       </Helmet>
       <HeroSection
-        title="Welcome to Golden Dreams Kennels"
+        title="Welcome to GDS Puppies"
         subtitle="Where every puppy finds their perfect family and every family finds their perfect companion"
         imageSrc="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1169&q=80"
         ctaText="View Available Puppies"
@@ -114,7 +114,7 @@ const Home = () => {
       {/* Why Choose Us Section */}
       <Section>
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4">Why Choose Golden Dreams Kennels?</h2>
+          <h2 className="text-3xl font-bold mb-4">Why Choose GDS Puppies?</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             We're passionate about raising healthy, happy puppies and connecting them with loving families
           </p>
@@ -199,7 +199,7 @@ const Home = () => {
         )}
         
         <div className="text-center">
-          <Button asChild size="lg" className="bg-brand-red hover:bg-red-700">
+          <Button asChild size="lg" className="bg-brand-orange hover:bg-halloween-orange shadow-halloween">
             <Link to="/puppies">
               View All Puppies <ArrowRight className="ml-2 h-5 w-5" />
             </Link>

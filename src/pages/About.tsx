@@ -16,7 +16,7 @@ const About = () => {
     "@type": "AboutPage",
     "mainEntity": {
       "@type": "Organization",
-      "name": "Golden Dreams Kennels",
+      "name": "GDS Puppies",
       "foundingDate": "2010",
       "founder": {
         "@type": "Person",
@@ -29,9 +29,9 @@ const About = () => {
   return (
     <div>
       <Helmet>
-        <title>About GDS Puppies - Our Story & Mission | Golden Dreams Kennels</title>
+        <title>About GDS Puppies - Our Story & Mission | GDS Puppies</title>
         <meta name="description" content="Learn about GDS Puppies' story, ethical breeding practices, and commitment to raising healthy, well-socialized puppies. Meet our experienced team and tour our facilities." />
-        <meta name="keywords" content="about GDS Puppies, dog breeder story, ethical breeding, puppy breeding facility, John Davis breeder, Golden Dreams Kennels history" />
+        <meta name="keywords" content="about GDS Puppies, dog breeder story, ethical breeding, puppy breeding facility, John Davis breeder, GDS Puppies history" />
         <link rel="canonical" href="https://gdspuppies.com/about" />
         
         {/* Open Graph */}
