@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 /**
  * @constant corsHeaders
@@ -170,7 +170,7 @@ const generateEmailHTML = (template: string, data: Record<string, any>): string 
  * @param {Request} req - The incoming request, expected to contain an EmailRequest payload.
  * @returns {Promise<Response>} A response indicating the success or failure of the email sending operation.
  */
-const handler = async (req: Request): Promise<Response> => {
+Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -267,6 +267,4 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
   }
-};
-
-serve(handler);
+});

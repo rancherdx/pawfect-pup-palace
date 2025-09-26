@@ -28,7 +28,7 @@ serve(async (req) => {
 
   try {
     const { service, environment, data: partialData } = await req.json();
-    if (!service || !environment || !data) {
+    if (!service || !environment || !partialData) {
       return new Response(JSON.stringify({ error: "Missing service, environment, or data" }), {
         status: 400,
         headers: { "Content-Type": "application/json", ...corsHeaders },

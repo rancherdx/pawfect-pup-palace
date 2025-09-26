@@ -60,31 +60,6 @@ Deno.serve(async (req) => {
       )
     }
 
-    // If this is the second admin, validate the details
-    if (adminCount === 1) {
-      const expectedName = "Girard Sawyer";
-      const expectedEmail = "girard@gdspuppies.com";
-      if (name.toLowerCase() !== expectedName.toLowerCase() || email.toLowerCase() !== expectedEmail.toLowerCase()) {
-        return new Response(
-          JSON.stringify({ error: `Invalid details for the second administrator account. Please use the designated name and email.` }),
-          {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          }
-        )
-      }
-    }
-
-    if (password.length < 8) {
-      return new Response(
-        JSON.stringify({ error: 'Password must be at least 8 characters long' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
-
     // Create Supabase client with service role key
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -113,6 +88,21 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       )
+    }
+
+    // If this is the second admin, validate the details
+    if (adminCount === 1) {
+      const expectedName = "Girard Sawyer";
+      const expectedEmail = "girard@gdspuppies.com";
+      if (name.toLowerCase() !== expectedName.toLowerCase() || email.toLowerCase() !== expectedEmail.toLowerCase()) {
+        return new Response(
+          JSON.stringify({ error: `Invalid details for the second administrator account. Please use the designated name and email.` }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        )
+      }
     }
 
     // Create the user via Supabase Auth
