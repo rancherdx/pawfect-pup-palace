@@ -20,6 +20,9 @@ export default {
 		},
 		extend: {
 			fontFamily: {
+				'fredoka': ['Fredoka One', 'cursive'],
+				'nunito': ['Nunito', 'sans-serif'],
+				'comfortaa': ['Comfortaa', 'cursive'],
 				'quicksand': ['Quicksand', 'sans-serif'],
 			},
 			colors: {

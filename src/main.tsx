@@ -4,10 +4,10 @@ import App from './App.tsx'
 import './index.css'
 import { HelmetProvider } from 'react-helmet-async'
 
-// Add puppy-themed font (Quicksand)
+// Add playful puppy-themed fonts
 const fontLink = document.createElement('link');
 fontLink.rel = 'stylesheet';
-fontLink.href = 'https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap';
+fontLink.href = 'https://fonts.googleapis.com/css2?family=Fredoka+One:wght@400&family=Nunito:wght@300;400;500;600;700;800&family=Comfortaa:wght@300;400;500;600;700&family=Quicksand:wght@400;500;600;700&display=swap';
 document.head.appendChild(fontLink);
 
 // Add favicon

@@ -4,10 +4,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { ThemeProvider } from "@/components/ThemeProvider";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import AnimatedLayout from "@/components/AnimatedLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Setup from "./pages/Setup";
 import CorsConfig from "@/components/CorsConfig";
@@ -24,8 +23,8 @@ const Adopt = lazy(() => import("./pages/Adopt"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const RedesignedDashboard = lazy(() => import("./pages/RedesignedDashboard"));
+const RedesignedAdminDashboard = lazy(() => import("./pages/RedesignedAdminDashboard"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
 const Health = lazy(() => import("./pages/Health"));
@@ -48,7 +47,7 @@ const queryClient = new QueryClient();
 const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="system" storageKey="gds-theme">
+      <ThemeProvider>
         <Toaster />
         <Sonner />
         <CorsConfig />
@@ -57,68 +56,68 @@ const App: React.FC = () => {
             <AuthProvider>
             <div className="min-h-screen flex flex-col">
               <Routes>
-                {/* Setup route (no navbar/footer) */}
+                {/* Setup route (no layout) */}
                 <Route 
                   path="/setup" 
                   element={<Setup />} 
                 />
                 
-                {/* All other routes with navbar/footer */}
+                {/* All other routes with animated layout */}
                 <Route 
                   path="/*" 
                   element={
-                    <>
-                      <Navbar />
-                      <main className="flex-1">
-                        <Suspense fallback={<div>Loading...</div>}>
-                          <Routes>
-                            <Route path="/" element={<Index />} />
-                            <Route path="/puppies" element={<Puppies />} />
-                            <Route path="/puppy/:slug" element={<PuppyDetails />} />
-                            <Route path="/litter/:slug" element={<LitterDetails />} />
-                            <Route path="/litters" element={<Litters />} />
-                            <Route path="/about" element={<About />} />
-                            <Route path="/contact" element={<Contact />} />
-                            <Route path="/adopt" element={<Adopt />} />
-                            <Route path="/checkout" element={<Checkout />} />
-                            <Route path="/login" element={<Login />} />
-                            <Route path="/register" element={<Register />} />
-                            <Route path="/blog" element={<Blog />} />
-                            <Route path="/blog/:slug" element={<BlogPost />} />
-                            <Route path="/health" element={<Health />} />
-                            <Route path="/financing" element={<Financing />} />
-                            <Route path="/reviews" element={<Reviews />} />
-                            <Route path="/stud-service" element={<StudService />} />
-                            <Route path="/stud" element={<StudPage />} />
-                            <Route path="/faq" element={<FAQPage />} />
-                            <Route path="/privacy" element={<PrivacyPolicyPage />} />
-                            <Route path="/terms" element={<TermsOfServicePage />} />
-                            <Route path="/refund" element={<RefundPolicyPage />} />
-                            <Route path="/system-status" element={<SystemStatus />} />
-                            <Route path="/api-docs" element={<ApiDocs />} />
-                            <Route path="/test" element={<TestPage />} />
-                            <Route 
-                              path="/dashboard" 
-                              element={
-                                <ProtectedRoute>
-                                  <Dashboard />
-                                </ProtectedRoute>
-                              } 
-                            />
-                            <Route 
-                              path="/admin/*" 
-                              element={
-                                <ProtectedRoute requiredRole="admin">
-                                  <AdminDashboard />
-                                </ProtectedRoute>
-                              } 
-                            />
-                            <Route path="*" element={<NotFound />} />
-                          </Routes>
-                        </Suspense>
-                      </main>
-                      <Footer />
-                    </>
+                    <AnimatedLayout>
+                      <Suspense fallback={
+                        <div className="flex items-center justify-center min-h-screen">
+                          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+                        </div>
+                      }>
+                        <Routes>
+                          <Route path="/" element={<Index />} />
+                          <Route path="/puppies" element={<Puppies />} />
+                          <Route path="/puppy/:slug" element={<PuppyDetails />} />
+                          <Route path="/litter/:slug" element={<LitterDetails />} />
+                          <Route path="/litters" element={<Litters />} />
+                          <Route path="/about" element={<About />} />
+                          <Route path="/contact" element={<Contact />} />
+                          <Route path="/adopt" element={<Adopt />} />
+                          <Route path="/checkout" element={<Checkout />} />
+                          <Route path="/login" element={<Login />} />
+                          <Route path="/register" element={<Register />} />
+                          <Route path="/blog" element={<Blog />} />
+                          <Route path="/blog/:slug" element={<BlogPost />} />
+                          <Route path="/health" element={<Health />} />
+                          <Route path="/financing" element={<Financing />} />
+                          <Route path="/reviews" element={<Reviews />} />
+                          <Route path="/stud-service" element={<StudService />} />
+                          <Route path="/stud" element={<StudPage />} />
+                          <Route path="/faq" element={<FAQPage />} />
+                          <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                          <Route path="/terms" element={<TermsOfServicePage />} />
+                          <Route path="/refund" element={<RefundPolicyPage />} />
+                          <Route path="/system-status" element={<SystemStatus />} />
+                          <Route path="/api-docs" element={<ApiDocs />} />
+                          <Route path="/test" element={<TestPage />} />
+                          <Route 
+                            path="/dashboard" 
+                            element={
+                              <ProtectedRoute>
+                                <RedesignedDashboard />
+                              </ProtectedRoute>
+                            } 
+                          />
+                          <Route 
+                            path="/admin/*" 
+                            element={
+                              <ProtectedRoute requiredRole="admin">
+                                <RedesignedAdminDashboard />
+                              </ProtectedRoute>
+                            } 
+                          />
+                          <Route path="*" element={<NotFound />} />
+                        </Routes>
+                      </Suspense>
+                    </AnimatedLayout>
                   } 
                 />
               </Routes>
