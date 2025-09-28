@@ -8,7 +8,7 @@ import { encryptJson, decryptJson } from "../_shared/crypto.ts";
  */
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content--type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 /**
@@ -96,7 +96,7 @@ serve(async (req) => {
     const upsertRes = await supabase
       .from("third_party_integrations")
       .upsert(
-        [{ service, environment, name: service, data_ciphertext }],
+        [{ service, environment, data_ciphertext }],
         { onConflict: "service,environment" }
       )
       .select("id, updated_at")

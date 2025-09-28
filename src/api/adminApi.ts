@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { requireAdmin } from "./client";
 import { Parent } from "@/types/parent";
+import { PuppyCreationData, PuppyUpdateData } from "@/types";
 
 /**
  * @namespace adminApi
@@ -108,7 +109,7 @@ export const adminApi = {
    * @returns {Promise<object>} A promise that resolves to the newly created puppy object.
    * @throws Will throw an error if the user is not an admin or if the Supabase query fails.
    */
-  createPuppy: async (puppyData: any) => {
+  createPuppy: async (puppyData: PuppyCreationData) => {
     await requireAdmin();
     const { data, error } = await supabase
       .from('puppies')
@@ -127,7 +128,7 @@ export const adminApi = {
    * @returns {Promise<object>} A promise that resolves to the updated puppy object.
    * @throws Will throw an error if the user is not an admin or if the Supabase query fails.
    */
-  updatePuppy: async (id: string, puppyData: any) => {
+  updatePuppy: async (id: string, puppyData: PuppyUpdateData) => {
     await requireAdmin();
     const { data, error } = await supabase
       .from('puppies')
