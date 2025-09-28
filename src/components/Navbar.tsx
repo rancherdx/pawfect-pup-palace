@@ -5,7 +5,7 @@ import { Menu, X, Sun, Moon, PawPrint, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { useTheme } from "@/components/ThemeProvider";
+import { useTheme } from "@/contexts/ThemeContext";
 import { motion } from "framer-motion";
 import GlobalSearch from "@/components/search/GlobalSearch";
 import NotificationDropdown from "@/components/NotificationDropdown";

@@ -2,12 +2,13 @@ import * as React from "react"
 import { motion, MotionProps } from "framer-motion"
 import { cn } from "@/lib/utils"
 
-interface AnimatedCardProps extends Omit<MotionProps, "ref"> {
+interface AnimatedCardProps extends Omit<MotionProps, "ref" | "onAnimationStart"> {
   delay?: number
   hoverScale?: boolean
   clickScale?: boolean
   className?: string
   children?: React.ReactNode
+  onClick?: () => void
 }
 
 const AnimatedCard = React.forwardRef<HTMLDivElement, AnimatedCardProps>(

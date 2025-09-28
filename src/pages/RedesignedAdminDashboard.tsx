@@ -77,7 +77,7 @@ const containerVariants = {
       staggerChildren: 0.1
     }
   }
-};
+} as const;
 
 const itemVariants = {
   hidden: { y: 20, opacity: 0 },
@@ -90,7 +90,7 @@ const itemVariants = {
       stiffness: 200
     }
   }
-};
+} as const;
 
 /**
  * @component RedesignedAdminDashboard
@@ -213,7 +213,7 @@ const RedesignedAdminDashboard = () => {
                 <AnimatedCardHeader className="bg-gradient-to-r from-primary/10 to-accent/10 border-b">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-primary/20 rounded-2xl">
-                      <activeTabData.icon className="h-6 w-6 text-primary" />
+                      {activeTabData?.icon && <activeTabData.icon className="h-6 w-6 text-primary" />}
                     </div>
                     <div>
                       <AnimatedCardTitle className="text-2xl">
