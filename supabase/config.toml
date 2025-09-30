@@ -53,6 +53,9 @@ verify_jwt = false
 [functions.integrations-upsert]
 verify_jwt = false
 
+[functions.integrations-list]
+verify_jwt = false
+
 [functions.secure-data-deletion-request]
 verify_jwt = false
 

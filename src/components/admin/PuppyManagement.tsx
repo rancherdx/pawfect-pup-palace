@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '@/api';
 import { toast } from 'sonner';
-import { Puppy } from "@/types";
+import { Puppy, PuppyCreationData, PuppyUpdateData } from "@/types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import PuppyForm from "@/components/admin/PuppyForm";
 import PuppyTable from "./PuppyTable";
@@ -33,7 +33,7 @@ const PuppyManagement = () => {
   const puppies: Puppy[] = data?.puppies || [];
 
   const createPuppyMutation = useMutation({
-    mutationFn: (puppyData: Record<string, unknown>) => adminApi.createPuppy(puppyData),
+    mutationFn: (puppyData: PuppyCreationData) => adminApi.createPuppy(puppyData),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: ['puppies'] });
       toast.success('Puppy created successfully!');
@@ -51,7 +51,7 @@ const PuppyManagement = () => {
   });
 
   const updatePuppyMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) => adminApi.updatePuppy(id, data),
+    mutationFn: ({ id, data }: { id: string; data: PuppyUpdateData }) => adminApi.updatePuppy(id, data),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: ['puppies'] });
       toast.success('Puppy updated successfully!');
