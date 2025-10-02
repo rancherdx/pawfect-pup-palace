@@ -65,97 +65,119 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         supabase.from('user_roles').select('role').eq('user_id', userId)
       ]);
 
-      if (profileRes.error) console.error('Error fetching profile:', profileRes.error);
-      if (rolesRes.error) console.error('Error fetching roles:', rolesRes.error);
+      if (process.env.NODE_ENV === 'development') {
+        if (profileRes.error) console.error('[DEV] Error fetching profile:', profileRes.error);
+        if (rolesRes.error) console.error('[DEV] Error fetching roles:', rolesRes.error);
+      }
 
       const roles = rolesRes.data ? rolesRes.data.map(ur => ur.role) : [];
       
       return { profile: profileRes.data, roles };
     } catch (error) {
-      console.error('Error fetching user profile:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[DEV] Error fetching user profile:', error);
+      }
       return { profile: null, roles: [] };
     }
   };
 
   useEffect(() => {
-    // Clear any existing timeout
-    if (authTimeoutRef.current) {
-      clearTimeout(authTimeoutRef.current);
-    }
-
+    let isMounted = true;
+    
     // Set safety timeout (10 seconds)
-    authTimeoutRef.current = setTimeout(() => {
-      console.warn('Auth initialization timed out');
-      setAuthStatus('timeout');
-      setIsLoading(false);
+    const timeoutId = setTimeout(() => {
+      if (isMounted) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('[DEV] Auth initialization timed out');
+        }
+        setAuthStatus('timeout');
+        setIsLoading(false);
+      }
     }, 10000);
 
-    const handleAuthStateChange = (session: any) => {
-      // Clear timeout since we got a response
-      if (authTimeoutRef.current) {
-        clearTimeout(authTimeoutRef.current);
-      }
-
-      if (session?.user) {
-        setAuthStatus('loading');
-        // Defer the async operations
-        setTimeout(async () => {
-          try {
-            const { profile, roles } = await fetchUserProfile(session.user.id);
-
-            setUser({
-              id: session.user.id,
-              email: session.user.email!,
-              name: profile?.name || session.user.user_metadata?.name || '',
-              roles,
-              createdAt: session.user.created_at
-            });
-
-            setToken(session.access_token);
-            setRefreshToken(session.refresh_token);
-            setAuthStatus('loaded');
-          } catch (error) {
-            console.error('Error loading user profile:', error);
-            setUser(null);
-            setToken(null);
-            setRefreshToken(null);
-            setAuthStatus('error');
-          } finally {
-            setIsLoading(false);
+    const loadSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!isMounted) return;
+        
+        if (session?.user) {
+          const { profile, roles } = await fetchUserProfile(session.user.id);
+          
+          if (!isMounted) return;
+          
+          setUser({
+            id: session.user.id,
+            email: session.user.email!,
+            name: profile?.name || session.user.user_metadata?.name || '',
+            roles,
+            createdAt: session.user.created_at
+          });
+          setToken(session.access_token);
+          setRefreshToken(session.refresh_token);
+        }
+        
+        if (isMounted) {
+          setAuthStatus('loaded');
+          setIsLoading(false);
+          clearTimeout(timeoutId);
+        }
+      } catch (error) {
+        if (isMounted) {
+          if (process.env.NODE_ENV === 'development') {
+            console.error('[DEV] Error loading session:', error);
           }
-        }, 0);
-      } else {
-        setUser(null);
-        setToken(null);
-        setRefreshToken(null);
-        setAuthStatus('loaded');
-        setIsLoading(false);
+          setAuthStatus('error');
+          setIsLoading(false);
+          clearTimeout(timeoutId);
+        }
       }
     };
 
     setIsLoading(true);
     setAuthStatus('loading');
-    
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      handleAuthStateChange(session);
-    });
+    loadSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        // Only set loading true for sign-in/sign-out events
+      async (event, session) => {
+        if (!isMounted) return;
+        
         if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
           setIsLoading(true);
           setAuthStatus('loading');
         }
-        handleAuthStateChange(session);
+
+        if (session?.user) {
+          const { profile, roles } = await fetchUserProfile(session.user.id);
+          
+          if (!isMounted) return;
+          
+          setUser({
+            id: session.user.id,
+            email: session.user.email!,
+            name: profile?.name || session.user.user_metadata?.name || '',
+            roles,
+            createdAt: session.user.created_at
+          });
+          setToken(session.access_token);
+          setRefreshToken(session.refresh_token);
+        } else {
+          setUser(null);
+          setToken(null);
+          setRefreshToken(null);
+        }
+        
+        if (isMounted) {
+          setAuthStatus('loaded');
+          setIsLoading(false);
+        }
       }
     );
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
-      if (authTimeoutRef.current) {
-        clearTimeout(authTimeoutRef.current);
-      }
+      clearTimeout(timeoutId);
     };
   }, []);
 

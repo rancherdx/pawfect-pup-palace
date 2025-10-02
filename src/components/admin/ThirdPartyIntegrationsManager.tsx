@@ -33,7 +33,6 @@ import { toast } from 'sonner';
  * @description Defines the structure of an integration object as used within this component.
  */
 interface Integration {
-  id: string; // This will be deprecated, but we'll keep it for now for keys
   service_name: string;
   environment: 'production' | 'sandbox';
   is_active: boolean;
@@ -119,7 +118,8 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
   });
 
   const updateIntegrationMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: IntegrationApiPayload }) => adminApi.updateIntegration(id, data),
+    mutationFn: ({ data }: { data: IntegrationApiPayload }) => 
+      adminApi.updateIntegration('unused', data),
     ...commonMutationOptions,
     onSuccess: () => {
       commonMutationOptions.onSuccess();
@@ -151,8 +151,7 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
       service_name: integration.service_name,
       environment: integration.environment,
     };
-    // The `id` is vestigial but kept for now to match the mutationFn signature
-    updateIntegrationMutation.mutate({ id: integration.id, data: updatedData });
+    updateIntegrationMutation.mutate({ data: updatedData });
   };
 
   /**
@@ -221,7 +220,7 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
     }
 
     if (editingIntegration) {
-      updateIntegrationMutation.mutate({ id: editingIntegration.id, data: payload });
+      updateIntegrationMutation.mutate({ data: payload });
     } else {
       addIntegrationMutation.mutate(payload);
     }
@@ -240,7 +239,6 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
       <div className="p-4 md:p-6">
         <IntegrationForm
           integration={editingIntegration ? {
-            id: editingIntegration.id,
             serviceName: editingIntegration.service_name,
             apiKey: '', // API key is always write-only
             otherConfig: typeof editingIntegration.other_config === 'object'
@@ -336,7 +334,7 @@ const ThirdPartyIntegrationsManager: React.FC = () => {
                       size="icon"
                       onClick={() => handleToggleActive(integration)}
                       title={integration.is_active ? 'Deactivate' : 'Activate'}
-                      disabled={updateIntegrationMutation.isPending && updateIntegrationMutation.variables?.id === integration.id}
+                      disabled={updateIntegrationMutation.isPending}
                     >
                       {integration.is_active ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
                     </Button>

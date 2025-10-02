@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { AdminErrorBoundary } from "@/components/ErrorBoundary/AdminErrorBoundary";
+import { CheckoutErrorBoundary } from "@/components/ErrorBoundary/CheckoutErrorBoundary";
 import AnimatedLayout from "@/components/AnimatedLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Setup from "./pages/Setup";
@@ -81,7 +83,14 @@ const App: React.FC = () => {
                           <Route path="/about" element={<About />} />
                           <Route path="/contact" element={<Contact />} />
                           <Route path="/adopt" element={<Adopt />} />
-                          <Route path="/checkout" element={<Checkout />} />
+                          <Route 
+                            path="/checkout" 
+                            element={
+                              <CheckoutErrorBoundary>
+                                <Checkout />
+                              </CheckoutErrorBoundary>
+                            } 
+                          />
                           <Route path="/login" element={<Login />} />
                           <Route path="/register" element={<Register />} />
                           <Route path="/blog" element={<Blog />} />
@@ -108,11 +117,13 @@ const App: React.FC = () => {
                           />
                           <Route 
                             path="/admin/*" 
-                            element={
+                             element={
                               <ProtectedRoute requiredRole="admin">
-                                <RedesignedAdminDashboard />
+                                <AdminErrorBoundary>
+                                  <RedesignedAdminDashboard />
+                                </AdminErrorBoundary>
                               </ProtectedRoute>
-                            } 
+                            }
                           />
                           <Route path="*" element={<NotFound />} />
                         </Routes>

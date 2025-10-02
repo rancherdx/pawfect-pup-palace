@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Users, Search, ArrowLeft, ArrowRight, Edit2, Trash2, Loader2, X } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Dialog,
   DialogContent,
@@ -192,7 +193,8 @@ const AdminUserManager: React.FC = () => {
   const handleSaveRoles = () => {
     if (selectedUser) {
       // Security: Prevent privilege escalation attempts
-      const currentUserMaxRole = getCurrentUserMaxRole(['admin']); // TODO: Get actual current user roles from auth context
+      const { user: currentUser } = useAuth();
+      const currentUserMaxRole = getCurrentUserMaxRole(currentUser?.roles || []);
       const targetMaxRole = getCurrentUserMaxRole(editingRoles);
       
       if (targetMaxRole > currentUserMaxRole) {
@@ -201,12 +203,14 @@ const AdminUserManager: React.FC = () => {
       }
       
       // Audit log the role change
-      console.log('Role change attempt:', {
-        targetUser: selectedUser.id,
-        oldRoles: selectedUser.roles,
-        newRoles: editingRoles,
-        timestamp: new Date().toISOString()
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[DEV] Role change attempt:', {
+          targetUser: selectedUser.id,
+          oldRoles: selectedUser.roles,
+          newRoles: editingRoles,
+          timestamp: new Date().toISOString()
+        });
+      }
       
       editUserMutation.mutate({ userId: selectedUser.id, roles: editingRoles });
     }

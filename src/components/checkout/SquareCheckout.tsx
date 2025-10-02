@@ -115,7 +115,9 @@ const SquareCheckout = ({
         billingInfo
       };
 
-      console.log('Processing payment with Square:', paymentPayload);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[DEV] Processing payment with Square:', paymentPayload);
+      }
       
       // Call the Square checkout edge function
       const response = await fetch('https://dpmyursjpbscrfbljtha.functions.supabase.co/square-checkout', {

@@ -41,7 +41,7 @@ serve(async (_req) => {
 
     const { data: records, error } = await supabase
       .from("third_party_integrations")
-      .select("id, service, environment, updated_at, data_ciphertext");
+      .select("service, environment, updated_at, data_ciphertext, is_active, other_config");
 
     if (error) throw error;
 
@@ -58,7 +58,6 @@ serve(async (_req) => {
         }
 
         return {
-          id: record.id, // Keep the id for now as the UI uses it for keys
           service_name: record.service,
           environment: record.environment,
           updated_at: record.updated_at,
