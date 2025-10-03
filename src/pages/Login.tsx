@@ -1,6 +1,6 @@
 
 import { useState, ChangeEvent, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserLoginData } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,16 @@ export default function Login() {
   const [credentials, setCredentials] = useState<UserLoginData>({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const location = useLocation();
+
+  // Show a toast message if redirected with one
+  useEffect(() => {
+    if (location.state?.message) {
+      toast.info(location.state.message);
+      // Clear the state to prevent the toast from showing again on refresh
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location, navigate]);
 
   // Redirect if already authenticated and roles are loaded
   useEffect(() => {
