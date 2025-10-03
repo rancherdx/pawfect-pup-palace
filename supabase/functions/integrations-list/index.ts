@@ -57,13 +57,14 @@ serve(async (_req) => {
           // Return default values if decryption fails
         }
 
-        return {
-          service_name: record.service,
-          environment: record.environment,
-          updated_at: record.updated_at,
-          is_active: decryptedData.is_active || false,
-          api_key_set: !!decryptedData.api_key,
-        };
+      return {
+        service_name: record.service,
+        environment: record.environment,
+        updated_at: record.updated_at,
+        is_active: decryptedData.is_active || false,
+        api_key_set: !!decryptedData.api_key,
+        other_config: record.other_config || {},
+      };
       })
     );
 

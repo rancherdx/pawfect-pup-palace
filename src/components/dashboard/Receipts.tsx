@@ -122,7 +122,9 @@ const ReceiptDetail = ({ transaction, onClose }: { transaction: Transaction, onC
    * @param {Transaction} currentTransaction - The transaction for which to download the PDF.
    */
   const handleDownloadPdf = (currentTransaction: Transaction) => {
-    console.log("Download PDF requested for receipt:", currentTransaction.id);
+    if (process.env.NODE_ENV === 'development') {
+      console.log("[DEV] Download PDF requested for receipt:", currentTransaction.id);
+    }
     toast.info(`PDF generation for receipt ${currentTransaction.square_payment_id || currentTransaction.id} is not yet implemented. This feature is coming soon!`);
   };
 

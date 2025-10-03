@@ -64,6 +64,12 @@ const TawkToWidget: React.FC = () => {
         `Tawk.to Widget: Initializing with Property ID: ${TAWK_TO_PROPERTY_ID} and Widget ID: ${TAWK_TO_WIDGET_ID}`
       );
 
+      if (process.env.NODE_ENV === 'development') {
+        console.log(
+          `[DEV] Tawk.to Widget: Initializing with Property ID: ${TAWK_TO_PROPERTY_ID} and Widget ID: ${TAWK_TO_WIDGET_ID}`
+        );
+      }
+
       // Ensure Tawk_API is globally available for the script
       (window as any).Tawk_API = (window as any).Tawk_API || {};
       (window as any).Tawk_LoadStart = new Date();

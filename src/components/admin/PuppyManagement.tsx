@@ -41,7 +41,9 @@ const PuppyManagement = () => {
       setSelectedPuppy(null);
       
       if (response && typeof response === 'object' && 'squareItemId' in response) {
-        console.log('Square item created:', response.squareItemId);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[DEV] Square item created:', response.squareItemId);
+        }
       }
     },
     onError: (err: any) => {
@@ -59,7 +61,9 @@ const PuppyManagement = () => {
       setSelectedPuppy(null);
       
       if (response && typeof response === 'object' && 'squareItemId' in response) {
-        console.log('Square item updated:', response.squareItemId);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[DEV] Square item updated:', response.squareItemId);
+        }
       }
     },
     onError: (err: any) => {

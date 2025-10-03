@@ -92,7 +92,9 @@ const SettingsPanel = () => {
         const response = await adminApi.getSiteSettings();
         return response;
       } catch (error) {
-        console.log('No existing settings found, using defaults');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[DEV] No existing settings found, using defaults');
+        }
         return defaultSettings;
       }
     }

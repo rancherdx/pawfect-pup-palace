@@ -80,8 +80,8 @@ const TestimonialManagement = () => {
       setSelectedTestimonial(null);
       
       // Handle optional response data
-      if (response?.data) {
-        console.log('Testimonial created:', response.data);
+      if (response?.data && process.env.NODE_ENV === 'development') {
+        console.log('[DEV] Testimonial created:', response.data);
       }
     },
     onError: (err: Error) => {

@@ -100,7 +100,9 @@ const Adopt = () => {
   const hasPetsValue = watch("hasPets");
 
   const onSubmit = (data: AdoptionFormData) => {
-    console.log("Form submitted:", data);
+    if (process.env.NODE_ENV === 'development') {
+      console.log("[DEV] Adoption form submitted:", data);
+    }
     toast({
       title: "Application Submitted!",
       description: "We've received your adoption application and will be in touch soon.",

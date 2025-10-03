@@ -89,7 +89,9 @@ const EmailTemplatesManager: React.FC = () => {
    * Placeholder function for adding a new template. Currently shows an info toast.
    */
   const handleAddNewTemplate = () => {
-    console.log('Add new custom template clicked - Placeholder');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[DEV] Add new custom template clicked - Placeholder');
+    }
     toast.info("Adding new custom templates via the UI is not currently supported. Custom templates are typically added by developers.");
   };
 

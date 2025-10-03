@@ -137,7 +137,10 @@ const PaymentMethods = ({
         });
 
         if (error) throw error;
-        console.log('Square checkout response:', data);
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[DEV] Square checkout response:', data);
+        }
 
         if (data && !error) {
           onComplete(data);
@@ -158,12 +161,36 @@ const PaymentMethods = ({
         setIsProcessing(false);
         return;
       }
-      console.log(`TODO: Implement backend call for Email Invoice to: ${invoiceEmail}`);
-      toast.info(`Invoice will be sent to ${invoiceEmail}. (This is a placeholder)`);
-      onComplete({ paymentMethod: 'invoice', email: invoiceEmail, status: 'pending' });
-      setIsProcessing(false);
+      
+      try {
+        const { data, error } = await supabase.functions.invoke('create-square-invoice', {
+          body: {
+            customerEmail: invoiceEmail,
+            amount: Math.round(totalAmount * 100),
+            currency: 'USD',
+            puppyId,
+            userId
+          }
+        });
+
+        if (error) throw error;
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[DEV] Invoice created:', data);
+        }
+        
+        toast.success(`Invoice sent to ${invoiceEmail}`);
+        onComplete({ paymentMethod: 'invoice', email: invoiceEmail, status: 'pending', invoiceData: data });
+      } catch (error: any) {
+        console.error('[ERROR] Failed to create invoice:', error);
+        toast.error(`Failed to send invoice: ${error.message}`);
+      } finally {
+        setIsProcessing(false);
+      }
     } else {
-      console.log(`TODO: Implement backend call for ${paymentMethod}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[DEV] Payment method ${paymentMethod} not yet implemented`);
+      }
       toast.info(`Processing for ${paymentMethod} is not yet implemented.`);
       onComplete({ paymentMethod, status: 'pending_action_required' });
       setIsProcessing(false);

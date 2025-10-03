@@ -109,7 +109,9 @@ const AffiliateManager = () => {
     }
 
     // Creation functionality - would save to Supabase for production
-    console.log("Creating affiliate:", newAffiliate);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[DEV] Creating affiliate:', newAffiliate);
+    }
     setNewAffiliate({
       name: "",
       email: "",
@@ -137,7 +139,9 @@ const AffiliateManager = () => {
     }
 
     // Creation functionality - would save to Supabase for production
-    console.log("Creating promo code:", newPromo);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[DEV] Creating promo code:', newPromo);
+    }
     setNewPromo({
       code: "",
       discount: "",

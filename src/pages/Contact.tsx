@@ -54,7 +54,9 @@ const Contact = () => {
   });
 
   const onSubmit = (data: ContactFormData) => {
-    console.log("Form submitted:", data);
+    if (process.env.NODE_ENV === 'development') {
+      console.log("[DEV] Contact form submitted:", data);
+    }
     toast({
       title: "Message Sent!",
       description: "We'll get back to you as soon as possible.",

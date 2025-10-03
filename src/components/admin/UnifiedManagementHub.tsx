@@ -132,7 +132,9 @@ const UnifiedManagementHub = () => {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'puppies' },
         (payload) => {
-          console.log('Puppy change received!', payload);
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[DEV] Puppy change received!', payload);
+          }
           queryClient.invalidateQueries({ queryKey: ['puppies'] });
         }
       )
@@ -140,7 +142,9 @@ const UnifiedManagementHub = () => {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'litters' },
         (payload) => {
-          console.log('Litter change received!', payload);
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[DEV] Litter change received!', payload);
+          }
           queryClient.invalidateQueries({ queryKey: ['litters'] });
         }
       )
@@ -148,7 +152,9 @@ const UnifiedManagementHub = () => {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'stud_dogs' },
         (payload) => {
-          console.log('Stud dog change received!', payload);
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[DEV] Stud dog change received!', payload);
+          }
           queryClient.invalidateQueries({ queryKey: ['stud_dogs'] });
         }
       )

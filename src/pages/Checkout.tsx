@@ -159,7 +159,9 @@ const Checkout = () => {
       });
       
       // Create a creature profile
-      console.log("Creating creature profile for:", adoptionData.puppy?.name);
+      if (process.env.NODE_ENV === 'development') {
+        console.log("[DEV] Creating creature profile for:", adoptionData.puppy?.name);
+      }
       
       // Reset processing state
       setIsProcessing(false);
