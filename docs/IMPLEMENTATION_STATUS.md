@@ -150,7 +150,7 @@
 **Plan:**
 - Add `browser-image-compression` package
 - Update `ImageUploadWithCrop.tsx`
-- Compress images before upload (max 1MB, 1920px max dimension)
+- Compress images before upload (max 10MB, 1920px max dimension)
 
 ---
 
@@ -160,7 +160,7 @@
 
 **a) Payment Methods Backend (2 hours)**
 - Create edge function for invoice generation
-- Add Stripe/PayPal integration stubs
+- use curent Square integration 
 
 **b) Multiple Conversations UI (2 hours)**
 - Add conversation selector dropdown
