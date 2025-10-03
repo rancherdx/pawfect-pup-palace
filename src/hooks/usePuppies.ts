@@ -19,7 +19,7 @@ export const usePuppies = (filters: {
   return useQuery({
     queryKey: ['puppies', filters],
     queryFn: () => publicApi.getAllPuppies(filters),
-    staleTime: 2 * 60 * 1000, // Cache for 2 minutes
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 };
 
@@ -33,7 +33,7 @@ export const useFeaturedPuppies = (limit: number = 3) => {
   return useQuery({
     queryKey: ['featured-puppies', limit],
     queryFn: () => publicApi.getFeaturedPuppies(limit),
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    staleTime: 15 * 60 * 1000, // Cache for 15 minutes
   });
 };
 
@@ -48,7 +48,7 @@ export const usePuppy = (id: string | undefined) => {
     queryKey: ['puppy', id],
     queryFn: () => id ? publicApi.getPuppyById(id) : null,
     enabled: !!id,
-    staleTime: 1 * 60 * 1000, // Cache for 1 minute
+    staleTime: 10 * 60 * 1000, // Cache for 10 minutes
   });
 };
 
@@ -61,7 +61,8 @@ export const useAvailableBreeds = () => {
   return useQuery({
     queryKey: ['available-breeds'],
     queryFn: () => publicApi.getAvailableBreeds(),
-    staleTime: 10 * 60 * 1000, // Cache for 10 minutes
+    staleTime: 30 * 60 * 1000, // Cache for 30 minutes
+    refetchOnWindowFocus: false,
   });
 };
 

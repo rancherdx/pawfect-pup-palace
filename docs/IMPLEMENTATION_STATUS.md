@@ -133,42 +133,85 @@
 
 ---
 
-## 📋 PHASE 3: MEDIUM PRIORITY (NOT STARTED)
+## ✅ PHASE 3: MEDIUM PRIORITY (COMPLETED)
 
-### 3.1 Remove Redundant Code
-**Status:** NOT STARTED  
-**Duration:** 1 hour  
-
----
-
-### 3.2 Optimize Query Caching
-**Status:** NOT STARTED  
-**Duration:** 1 hour  
-
----
-
-### 3.3 Add ARIA Labels & Keyboard Navigation
-**Status:** NOT STARTED  
-**Duration:** 2 hours  
+### 3.1 Remove Redundant Code ✅
+**Status:** COMPLETED
+**Duration:** 30 minutes
+**Changes Made:**
+- ✅ Identified and consolidated two redundant puppy card components (`PuppyCard.tsx` and `PuppyCardEnhanced.tsx`) into a single, more flexible component.
+- ✅ The new `PuppyCard.tsx` now accepts a `variant` prop ('default' or 'enhanced') to switch between layouts, combining the features of both original components.
+- ✅ This refactoring removes duplicate code, simplifies maintenance, and ensures a consistent UI.
+**Files Modified:**
+- `src/components/PuppyCard.tsx`
+**Files Deleted:**
+- `src/components/PuppyCardEnhanced.tsx`
 
 ---
 
-### 3.4 Fix Mobile Touch Targets
-**Status:** NOT STARTED  
-**Duration:** 1 hour  
+### 3.2 Optimize Query Caching ✅
+**Status:** COMPLETED
+**Duration:** 45 minutes
+**Changes Made:**
+- ✅ Reviewed and optimized React Query caching strategies across the application to reduce unnecessary API calls and improve performance.
+- ✅ Increased `staleTime` for puppy, litter, and testimonial data hooks (`usePuppies.ts`, `useLitters.ts`, `useTestimonials.ts`) to better cache data that does not change frequently.
+- ✅ Disabled `refetchOnWindowFocus` for highly static data like available breeds and testimonials to prevent redundant refetching.
+**Files Modified:**
+- `src/hooks/usePuppies.ts`
+- `src/hooks/useLitters.ts`
+- `src/hooks/useTestimonials.ts`
 
 ---
 
-### 3.5 Improve 404 Handling
-**Status:** PARTIALLY COMPLETE  
-**Note:** Already has catch-all 404 route, may need enhancement
+### 3.3 Add ARIA Labels & Keyboard Navigation ✅
+**Status:** COMPLETED
+**Duration:** 45 minutes
+**Changes Made:**
+- ✅ Conducted an accessibility audit on key interactive components.
+- ✅ Added descriptive `aria-label` attributes to all icon-only buttons in `PuppyCard.tsx` and `Navbar.tsx` to ensure their purpose is clear to screen reader users.
+- ✅ Marked decorative icons in those components with `aria-hidden="true"` to prevent redundant announcements.
+- ✅ Enhanced media indicators in `PuppyCard.tsx` to be announced by screen readers.
+**Files Modified:**
+- `src/components/PuppyCard.tsx`
+- `src/components/Navbar.tsx`
 
 ---
 
-### 3.6 Add Redirect Feedback
-**Status:** NOT STARTED  
-**Duration:** 20 minutes  
-**File:** `src/components/ProtectedRoute.tsx`
+### 3.4 Fix Mobile Touch Targets ✅
+**Status:** COMPLETED
+**Duration:** 30 minutes
+**Changes Made:**
+- ✅ Audited and improved the size of interactive elements on key components to meet mobile accessibility standards (44x44px).
+- ✅ Increased the size of icon buttons in `Navbar.tsx` from 40px to 44px (`h-10 w-10` to `h-11 w-11`).
+- ✅ Increased the padding for the "favorite" buttons in `PuppyCard.tsx` to create larger touch areas.
+**Files Modified:**
+- `src/components/Navbar.tsx`
+- `src/components/PuppyCard.tsx`
+
+---
+
+### 3.5 Improve 404 Handling ✅
+**Status:** COMPLETED
+**Duration:** 30 minutes
+**Changes Made:**
+- ✅ Replaced the basic 404 page with a visually engaging and user-friendly "Not Found" component.
+- ✅ Added a playful, on-brand illustration and improved messaging to enhance the user experience.
+- ✅ Included additional navigation options, such as a link to the "Puppies" page, to help guide lost users.
+**Files Modified:**
+- `src/pages/NotFound.tsx`
+
+---
+
+### 3.6 Add Redirect Feedback ✅
+**Status:** COMPLETED
+**Duration:** 20 minutes
+**Changes Made:**
+- ✅ Implemented a feedback mechanism to inform users why they were redirected to the login page.
+- ✅ Modified `ProtectedRoute.tsx` to pass a message in the navigation state when redirecting unauthenticated users.
+- ✅ Updated `Login.tsx` to display this message as a toast notification upon page load, improving user context.
+**Files Modified:**
+- `src/components/ProtectedRoute.tsx`
+- `src/pages/Login.tsx`
 
 ---
 
@@ -195,14 +238,14 @@
 ## Summary Statistics
 
 **Total Phases:** 5  
-**Completed Phases:** 2/5
+**Completed Phases:** 3/5 ✅
 **Total Estimated Time:** ~40 hours  
-**Time Spent:** ~12.5 hours (Phase 1 & 2)
-**Remaining Time:** ~27.5 hours
+**Time Spent:** ~15.8 hours (Phases 1-3)
+**Remaining Time:** ~24.2 hours
 
 **Critical Issues Fixed:** 5/5 ✅  
 **High Priority Issues:** 5/5 ✅
-**Medium Priority Issues:** 0/6  
+**Medium Priority Issues:** 6/6 ✅
 **Low Priority Issues:** 0/20+  
 
 ---

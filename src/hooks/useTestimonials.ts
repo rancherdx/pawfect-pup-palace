@@ -13,7 +13,8 @@ export const useTestimonials = (limit: number = 6) => {
   return useQuery({
     queryKey: ['testimonials', limit],
     queryFn: () => publicApi.getTestimonials(limit),
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    staleTime: 60 * 60 * 1000, // Cache for 60 minutes
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -27,7 +28,8 @@ export const useFeaturedTestimonials = (limit: number = 3) => {
   return useQuery({
     queryKey: ['featured-testimonials', limit],
     queryFn: () => publicApi.getFeaturedTestimonials(limit),
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    staleTime: 60 * 60 * 1000, // Cache for 60 minutes
+    refetchOnWindowFocus: false,
   });
 };
 

@@ -12,6 +12,7 @@ export const useLitters = (filters = {}) => {
   return useQuery({
     queryKey: ['litters', filters],
     queryFn: () => littersApi.getAll(filters),
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 };
 
@@ -26,6 +27,7 @@ export const useLitter = (litterId: string | undefined) => {
     queryKey: ['litter', litterId],
     queryFn: () => litterId ? littersApi.getLitterById(litterId) : null,
     enabled: !!litterId,
+    staleTime: 10 * 60 * 1000, // Cache for 10 minutes
   });
 };
 

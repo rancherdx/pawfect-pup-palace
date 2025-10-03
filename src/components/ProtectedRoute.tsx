@@ -1,6 +1,6 @@
 
 import { ReactNode } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, AlertCircle, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,6 +12,7 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   const { isAuthenticated, isLoading, user, authStatus } = useAuth();
+  const location = useLocation();
 
   // Show different loading states based on auth status
   if (isLoading) {
@@ -62,7 +63,7 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" replace state={{ from: location, message: "You must be logged in to view this page." }} />;
   }
 
   // If a specific role is required, check for permission

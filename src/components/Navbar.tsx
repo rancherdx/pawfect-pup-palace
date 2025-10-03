@@ -35,9 +35,10 @@ const Navbar = () => {
             {/* Logo */}
             <Link 
               to="/" 
+              aria-label="Pawfect Pup Palace, Homepage"
               className="flex items-center gap-2 text-xl font-bold text-foreground hover:text-primary transition-colors"
             >
-              <PawPrint className="h-6 w-6 text-primary" />
+              <PawPrint className="h-6 w-6 text-primary" aria-hidden="true" />
               <span className="hidden sm:inline">Pawfect Pup Palace</span>
             </Link>
 
@@ -64,9 +65,10 @@ const Navbar = () => {
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsSearchOpen(true)}
-                className="h-10 w-10"
+                className="h-11 w-11"
+                aria-label="Open search"
               >
-                <Search className="h-5 w-5" />
+                <Search className="h-5 w-5" aria-hidden="true" />
               </Button>
 
               <NotificationDropdown />
@@ -75,20 +77,21 @@ const Navbar = () => {
                 variant="ghost"
                 size="icon"
                 onClick={toggleTheme}
-                className="h-10 w-10"
+                className="h-11 w-11"
+                aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
               >
                 {theme === "light" ? (
-                  <Moon className="h-5 w-5" />
+                  <Moon className="h-5 w-5" aria-hidden="true" />
                 ) : (
-                  <Sun className="h-5 w-5" />
+                  <Sun className="h-5 w-5" aria-hidden="true" />
                 )}
               </Button>
 
               {/* Mobile Menu */}
               <Sheet>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="md:hidden h-10 w-10">
-                    <Menu className="h-6 w-6" />
+                  <Button variant="ghost" size="icon" className="md:hidden h-11 w-11" aria-label="Open menu">
+                    <Menu className="h-6 w-6" aria-hidden="true" />
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="right" className="w-[280px] sm:w-[350px]">
