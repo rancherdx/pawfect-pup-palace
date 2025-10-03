@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { adminApi } from '@/api';
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -6,146 +7,72 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Edit3, Eye, CheckCircle, XCircle, Hourglass, Filter } from "lucide-react";
 import { format } from 'date-fns';
+import { DataDeletionRequest, DataDeletionRequestStatus } from "@/types/api";
 
-/**
- * @interface DeletionRequest
- * @description Represents the structure of a data deletion request.
- */
-interface DeletionRequest {
-  id: string;
-  name?: string;
-  email?: string;
-  account_creation_timeframe?: string;
-  puppy_ids?: string;
-  additional_details?: string;
-  status: 'pending' | 'processing' | 'completed' | 'rejected';
-  requested_at: string;
-  processed_at?: string | null;
-  admin_notes?: string | null;
-}
-
-/**
- * @interface ApiResponse
- * @description Defines the shape of the API response for fetching data deletion requests.
- */
-interface ApiResponse {
-  requests: DeletionRequest[];
-  pagination: {
-    currentPage: number;
-    totalPages: number;
-    totalRequests: number;
-    limit: number;
-  };
-}
+const STATUS_OPTIONS: DataDeletionRequestStatus[] = ['pending', 'processing', 'completed', 'rejected'];
 
 /**
  * @component DataDeletionRequestsManager
- * @description A component for admins to manage user data deletion requests,
- * allowing them to view details, update status, and add notes.
+ * @description A component for admins to manage user data deletion requests.
  * @returns {React.ReactElement} The rendered data deletion request management interface.
  */
 const DataDeletionRequestsManager = () => {
   const { toast } = useToast();
-  const [requests, setRequests] = useState<DeletionRequest[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedRequest, setSelectedRequest] = useState<DeletionRequest | null>(null);
+  const queryClient = useQueryClient();
+  const [selectedRequest, setSelectedRequest] = useState<DataDeletionRequest | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editStatus, setEditStatus] = useState<DeletionRequest['status']>('pending');
+  const [editStatus, setEditStatus] = useState<DataDeletionRequestStatus>('pending');
   const [editAdminNotes, setEditAdminNotes] = useState("");
-  const [filterStatus, setFilterStatus] = useState<string>("");
-
+  const [filterStatus, setFilterStatus] = useState<DataDeletionRequestStatus | "all">("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
   const limit = 10;
 
-  /**
-   * Fetches data deletion requests from the API.
-   * @param {number} [page=1] - The page number to fetch.
-   * @param {string} [status=""] - The status to filter requests by.
-   */
-  const fetchRequests = useCallback(async (page = 1, status = "") => {
-    setIsLoading(true);
-    try {
-      let url = `/admin/data-deletion-requests?page=${page}&limit=${limit}`;
-      if (status) {
-        url += `&status=${status}`;
-      }
-      const response = await adminApi.getDataDeletionRequests();
-      setRequests(response.data || []);
-      setCurrentPage(1);
-      setTotalPages(1);
-      setTotalItems(response.data?.length || 0);
-    } catch (error: unknown) {
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ['dataDeletionRequests', { page: currentPage, limit, status: filterStatus === 'all' ? undefined : filterStatus }],
+    queryFn: () => adminApi.getDataDeletionRequests({ page: currentPage, limit, status: filterStatus === 'all' ? undefined : filterStatus }),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, status, admin_notes }: { id: string; status: DataDeletionRequestStatus; admin_notes: string }) =>
+      adminApi.updateDataDeletionRequestStatus(id, status, { admin_notes }),
+    onSuccess: (updatedRequest) => {
+      queryClient.invalidateQueries({ queryKey: ['dataDeletionRequests'] });
+      setIsEditModalOpen(false);
+      toast({ title: "Status Updated", description: `Request ${updatedRequest.id.substring(0,8)} status updated to ${updatedRequest.status}.`, className: "bg-green-500 text-white" });
+    },
+    onError: (err: Error) => {
       toast({
         variant: "destructive",
-        title: "Failed to fetch requests",
-        description: error instanceof Error ? error.message : "An unexpected error occurred.",
+        title: "Failed to update status",
+        description: err.message || "An unexpected error occurred.",
       });
-    } finally {
-      setIsLoading(false);
     }
-  }, [toast]);
+  });
 
-  useEffect(() => {
-    fetchRequests(currentPage, filterStatus);
-  }, [fetchRequests, currentPage, filterStatus]);
-
-  /**
-   * Opens the detail modal for a specific request.
-   * @param {DeletionRequest} request - The request to view.
-   */
-  const handleViewDetails = (request: DeletionRequest) => {
+  const handleViewDetails = (request: DataDeletionRequest) => {
     setSelectedRequest(request);
     setIsDetailModalOpen(true);
   };
 
-  /**
-   * Opens the edit modal for a specific request.
-   * @param {DeletionRequest} request - The request to edit.
-   */
-  const handleEditRequest = (request: DeletionRequest) => {
+  const handleEditRequest = (request: DataDeletionRequest) => {
     setSelectedRequest(request);
     setEditStatus(request.status);
     setEditAdminNotes(request.admin_notes || "");
     setIsEditModalOpen(true);
   };
 
-  /**
-   * Handles the submission of a status update for a request.
-   */
-  const handleStatusUpdate = async () => {
+  const handleStatusUpdate = () => {
     if (!selectedRequest) return;
-    setIsLoading(true);
-    try {
-      const updatedRequest = await adminApi.updateDataDeletionRequestStatus(selectedRequest.id, editStatus);
-      setRequests(prev => prev.map(r => (r.id === updatedRequest.id ? updatedRequest : r)));
-      setIsEditModalOpen(false);
-      toast({ title: "Status Updated", description: `Request ${selectedRequest.id} status updated to ${editStatus}.`, className: "bg-green-500 text-white" });
-      fetchRequests(currentPage, filterStatus);
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Failed to update status",
-        description: error.message || "An unexpected error occurred.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    updateStatusMutation.mutate({ id: selectedRequest.id, status: editStatus, admin_notes: editAdminNotes });
   };
 
-  /**
-   * Determines the badge variant based on the request status.
-   * @param {DeletionRequest['status']} status - The status of the request.
-   * @returns {'secondary' | 'default' | 'destructive'} The corresponding badge variant.
-   */
-  const getStatusBadgeVariant = (status: DeletionRequest['status']) => {
+  const getStatusBadgeVariant = (status: DataDeletionRequestStatus) => {
     switch (status) {
       case 'pending': return 'secondary';
       case 'processing': return 'secondary';
@@ -155,24 +82,16 @@ const DataDeletionRequestsManager = () => {
     }
   };
 
-  /**
-   * Renders the pagination controls for the requests table.
-   * @returns {React.ReactElement | null} The pagination component, or null if not needed.
-   */
   const renderPagination = () => {
-    if (totalPages <= 1) return null;
+    if (!data || data.totalPages <= 1) return null;
     return (
       <div className="flex justify-center items-center space-x-2 mt-4">
-        <Button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>Previous</Button>
-        <span>Page {currentPage} of {totalPages} ({totalItems} items)</span>
-        <Button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>Next</Button>
+        <Button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={data.currentPage === 1}>Previous</Button>
+        <span>Page {data.currentPage} of {data.totalPages} ({data.total} items)</span>
+        <Button onClick={() => setCurrentPage(p => Math.min(data.totalPages, p + 1))} disabled={data.currentPage === data.totalPages}>Next</Button>
       </div>
     );
   };
-
-  if (isLoading && requests.length === 0) {
-    return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin text-brand-red" /><p className="ml-2">Loading requests...</p></div>;
-  }
 
   return (
     <div className="p-4 md:p-6">
@@ -180,40 +99,27 @@ const DataDeletionRequestsManager = () => {
 
       <div className="mb-4 flex items-center space-x-2">
         <Label htmlFor="status-filter">Filter by status:</Label>
-        <Select value={filterStatus} onValueChange={(value) => { setFilterStatus(value === "all" ? "" : value); setCurrentPage(1); }}>
+        <Select value={filterStatus} onValueChange={(value: DataDeletionRequestStatus | "all") => { setFilterStatus(value); setCurrentPage(1); }}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="All Statuses" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="processing">Processing</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="rejected">Rejected</SelectItem>
+            {STATUS_OPTIONS.map(status => <SelectItem key={status} value={status} className="capitalize">{status}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Button onClick={() => fetchRequests(1, filterStatus)} variant="outline" size="icon" title="Refresh">
-            <Filter className="h-4 w-4"/>
-        </Button>
       </div>
 
       <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>ID</TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Requested At</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
+        <TableHeader><TableRow>
+          <TableHead>ID</TableHead><TableHead>Name</TableHead><TableHead>Email</TableHead>
+          <TableHead>Requested At</TableHead><TableHead>Status</TableHead><TableHead>Actions</TableHead>
+        </TableRow></TableHeader>
         <TableBody>
-          {isLoading && <tr><TableCell colSpan={6} className="text-center"><Loader2 className="mx-auto h-6 w-6 animate-spin" /></TableCell></tr>}
-          {!isLoading && requests.length === 0 && (
-            <TableRow><TableCell colSpan={6} className="text-center">No data deletion requests found.</TableCell></TableRow>
-          )}
-          {!isLoading && requests.map((req) => (
+          {isLoading ? (<tr><TableCell colSpan={6} className="text-center"><Loader2 className="mx-auto h-6 w-6 animate-spin" /></TableCell></tr>)
+          : isError ? (<tr><TableCell colSpan={6} className="text-center text-red-500">Error: {error.message}</TableCell></tr>)
+          : data?.data.length === 0 ? (<tr><TableCell colSpan={6} className="text-center">No data deletion requests found.</TableCell></tr>)
+          : data?.data.map((req) => (
             <TableRow key={req.id}>
               <TableCell className="font-mono text-xs">{req.id.substring(0,8)}...</TableCell>
               <TableCell>{req.name || "N/A"}</TableCell>
@@ -230,12 +136,9 @@ const DataDeletionRequestsManager = () => {
       </Table>
       {renderPagination()}
 
-      {/* View Details Modal */}
       <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
         <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Request Details (ID: {selectedRequest?.id.substring(0,8)}...)</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Request Details (ID: {selectedRequest?.id.substring(0,8)}...)</DialogTitle></DialogHeader>
           {selectedRequest && (
             <div className="space-y-3 py-4 max-h-[70vh] overflow-y-auto">
               <p><strong>Name:</strong> {selectedRequest.name || "N/A"}</p>
@@ -249,13 +152,10 @@ const DataDeletionRequestsManager = () => {
               <div><strong>Admin Notes:</strong> <div className="mt-1 p-2 border rounded-md bg-gray-50 text-sm whitespace-pre-wrap">{selectedRequest.admin_notes || "No notes yet."}</div></div>
             </div>
           )}
-          <DialogFooter>
-            <DialogClose asChild><Button variant="outline">Close</Button></DialogClose>
-          </DialogFooter>
+          <DialogFooter><DialogClose asChild><Button variant="outline">Close</Button></DialogClose></DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Edit Status/Notes Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -266,34 +166,31 @@ const DataDeletionRequestsManager = () => {
             <div className="space-y-4 py-4">
               <div>
                 <Label htmlFor="edit-status">Status</Label>
-                <Select value={editStatus} onValueChange={(value: DeletionRequest['status']) => setEditStatus(value)}>
-                  <SelectTrigger id="edit-status">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
+                <Select value={editStatus} onValueChange={(value: DataDeletionRequestStatus) => setEditStatus(value)}>
+                  <SelectTrigger id="edit-status"><SelectValue placeholder="Select status" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pending"><Hourglass className="h-4 w-4 mr-2 inline-block"/>Pending</SelectItem>
-                    <SelectItem value="processing"><Loader2 className="h-4 w-4 mr-2 inline-block animate-spin"/>Processing</SelectItem>
-                    <SelectItem value="completed"><CheckCircle className="h-4 w-4 mr-2 inline-block text-green-600"/>Completed</SelectItem>
-                    <SelectItem value="rejected"><XCircle className="h-4 w-4 mr-2 inline-block text-red-600"/>Rejected</SelectItem>
+                    {STATUS_OPTIONS.map(status => (
+                      <SelectItem key={status} value={status} className="capitalize">
+                        {status === 'pending' && <Hourglass className="h-4 w-4 mr-2 inline-block"/>}
+                        {status === 'processing' && <Loader2 className="h-4 w-4 mr-2 inline-block animate-spin"/>}
+                        {status === 'completed' && <CheckCircle className="h-4 w-4 mr-2 inline-block text-green-600"/>}
+                        {status === 'rejected' && <XCircle className="h-4 w-4 mr-2 inline-block text-red-600"/>}
+                        {status}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
                 <Label htmlFor="admin-notes">Admin Notes</Label>
-                <Textarea
-                  id="admin-notes"
-                  value={editAdminNotes}
-                  onChange={(e) => setEditAdminNotes(e.target.value)}
-                  rows={4}
-                  placeholder="Internal notes about the request processing..."
-                />
+                <Textarea id="admin-notes" value={editAdminNotes} onChange={(e) => setEditAdminNotes(e.target.value)} rows={4} placeholder="Internal notes..."/>
               </div>
             </div>
           )}
           <DialogFooter>
             <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-            <Button onClick={handleStatusUpdate} disabled={isLoading}>
-              {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2"/> : null}
+            <Button onClick={handleStatusUpdate} disabled={updateStatusMutation.isPending}>
+              {updateStatusMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2"/>}
               Save Changes
             </Button>
           </DialogFooter>

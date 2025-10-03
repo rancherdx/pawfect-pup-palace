@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MessageCircle, Send, PawPrint, ChevronDown, ChevronUp, AlertCircle, Loader2, PlusCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -348,8 +349,19 @@ const ChatHistory = () => {
           {activeConversation ? (
             <>
               <div className="bg-muted/30 p-3 border-b">
-                <h3 className="font-semibold text-md">{activeConversation.title}</h3>
-                <p className="text-xs text-muted-foreground">Last activity: {formatDate(activeConversation.last_message_at || activeConversation.updated_at)}</p>
+                <Select value={activeConversation?.id} onValueChange={(id) => setActiveConversation(conversations.find(c => c.id === id) || null)}>
+                  <SelectTrigger className="w-full font-semibold text-md">
+                    <SelectValue placeholder="Select a conversation" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {conversations.map(convo => (
+                      <SelectItem key={convo.id} value={convo.id}>
+                        {convo.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">Last activity: {formatDate(activeConversation.last_message_at || activeConversation.updated_at)}</p>
               </div>
 
               <div className="flex-grow overflow-y-auto p-4 space-y-3">

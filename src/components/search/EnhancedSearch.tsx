@@ -84,10 +84,14 @@ export const EnhancedSearch = ({ onFiltersChange, initialFilters, className }: E
 
   // Update filters when debounced search changes
   useEffect(() => {
-    const updatedFilters = { ...filters, search: debouncedSearch };
-    setFilters(updatedFilters);
-    onFiltersChange(updatedFilters);
-  }, [debouncedSearch]);
+    // Use a functional update to avoid depending on `filters` directly.
+    // This effect now correctly updates the parent component with the debounced search term.
+    setFilters(prevFilters => {
+      const updatedFilters = { ...prevFilters, search: debouncedSearch };
+      onFiltersChange(updatedFilters);
+      return updatedFilters;
+    });
+  }, [debouncedSearch, onFiltersChange]);
 
   const updateFilter = <K extends keyof SearchFilters>(
     key: K, 

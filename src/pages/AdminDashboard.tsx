@@ -138,7 +138,7 @@ const AdminDashboard = () => {
 
     window.addEventListener("resize", calculateTabsLayout);
     return () => window.removeEventListener("resize", calculateTabsLayout);
-  }, [allAdminTabs]);
+  }, []);
 
   const handleTabChange = (value: string) => {
     setActiveTabValue(value);

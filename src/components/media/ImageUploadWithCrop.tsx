@@ -5,9 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { Upload, X, Crop, Image as ImageIcon, Library } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, Library } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import ImageGalleryDialog from '../admin/ImageGalleryDialog';
+import imageCompression from 'browser-image-compression';
 
 interface ImageUploadWithCropProps {
   onImagesUploaded: (urls: string[]) => void;
@@ -35,7 +36,6 @@ const ImageUploadWithCrop: React.FC<ImageUploadWithCropProps> = ({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const handleFileSelect = useCallback((files: FileList) => {
     const validFiles = Array.from(files).filter(file => {
@@ -64,44 +64,6 @@ const ImageUploadWithCrop: React.FC<ImageUploadWithCropProps> = ({
     setImages(prev => [...prev, ...newImages]);
   }, [images.length, maxImages]);
 
-  const compressImage = useCallback((file: File, quality = 0.8): Promise<Blob> => {
-    return new Promise((resolve) => {
-      const canvas = canvasRef.current!;
-      const ctx = canvas.getContext('2d')!;
-      const img = new Image();
-      
-      img.onload = () => {
-        const maxWidth = 1920;
-        const maxHeight = 1920;
-        
-        let { width, height } = img;
-        
-        if (width > height) {
-          if (width > maxWidth) {
-            height = (height * maxWidth) / width;
-            width = maxWidth;
-          }
-        } else {
-          if (height > maxHeight) {
-            width = (width * maxHeight) / height;
-            height = maxHeight;
-          }
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, width, height);
-        ctx.drawImage(img, 0, 0, width, height);
-        
-        canvas.toBlob(resolve as BlobCallback, 'image/webp', quality);
-      };
-      
-      img.src = URL.createObjectURL(file);
-    });
-  }, []);
-
   const uploadImages = useCallback(async () => {
     if (images.length === 0) return;
 
@@ -109,28 +71,31 @@ const ImageUploadWithCrop: React.FC<ImageUploadWithCropProps> = ({
     setUploadProgress(0);
     const uploadedUrls: string[] = [];
 
+    const compressionOptions = {
+      maxSizeMB: 10,
+      maxWidthOrHeight: 1920,
+      useWebWorker: true,
+      fileType: 'image/webp',
+    };
+
     try {
       for (let i = 0; i < images.length; i++) {
         const imageFile = images[i];
         
-        // Compress image
-        const compressedBlob = await compressImage(imageFile.file);
+        const compressedFile = await imageCompression(imageFile.file, compressionOptions);
         
-        // Generate unique filename
         const fileExt = 'webp';
         const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
         
-        // Upload to Supabase Storage
         const { data, error } = await supabase.storage
           .from(bucket)
-          .upload(fileName, compressedBlob, {
+          .upload(fileName, compressedFile, {
             contentType: 'image/webp',
             cacheControl: '3600',
           });
 
         if (error) throw error;
 
-        // Get public URL
         const { data: { publicUrl } } = supabase.storage
           .from(bucket)
           .getPublicUrl(fileName);
@@ -139,11 +104,9 @@ const ImageUploadWithCrop: React.FC<ImageUploadWithCropProps> = ({
         setUploadProgress(((i + 1) / images.length) * 100);
       }
 
-      // Clean up
       images.forEach(img => URL.revokeObjectURL(img.preview));
       setImages([]);
       
-      // Combine with existing images
       const allUrls = [...existingImages, ...uploadedUrls];
       onImagesUploaded(allUrls);
       
@@ -155,7 +118,7 @@ const ImageUploadWithCrop: React.FC<ImageUploadWithCropProps> = ({
       setUploading(false);
       setUploadProgress(0);
     }
-  }, [images, bucket, existingImages, onImagesUploaded, compressImage]);
+  }, [images, bucket, existingImages, onImagesUploaded]);
 
   const removeImage = useCallback((id: string) => {
     setImages(prev => {
@@ -174,10 +137,7 @@ const ImageUploadWithCrop: React.FC<ImageUploadWithCropProps> = ({
 
   return (
     <div className="space-y-4">
-      <canvas ref={canvasRef} style={{ display: 'none' }} />
-      
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-        {/* Existing images */}
         {existingImages.map((url, index) => (
           <Card key={`existing-${index}`} className="relative group">
             <CardContent className="p-2">
@@ -200,7 +160,6 @@ const ImageUploadWithCrop: React.FC<ImageUploadWithCropProps> = ({
           </Card>
         ))}
 
-        {/* New images */}
         {images.map((image) => (
           <Card key={image.id} className="relative group">
             <CardContent className="p-2">
@@ -223,7 +182,6 @@ const ImageUploadWithCrop: React.FC<ImageUploadWithCropProps> = ({
           </Card>
         ))}
 
-        {/* Upload button */}
         {images.length + existingImages.length < maxImages && (
           <Card className="border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50 transition-colors">
             <CardContent className="p-4">

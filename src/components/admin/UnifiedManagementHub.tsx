@@ -157,7 +157,7 @@ const UnifiedManagementHub = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [supabase, queryClient]);
+  }, [queryClient]);
 
   /**
    * Handles the selection or deselection of a single puppy.

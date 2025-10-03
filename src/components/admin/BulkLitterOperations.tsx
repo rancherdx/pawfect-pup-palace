@@ -4,10 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { CheckCircle, Circle, Package, ArrowRight } from "lucide-react";
-import { Litter, Puppy } from "@/types";
+import { Litter, Puppy, PuppyStatus } from "@/types/api";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '@/api';
 import { toast } from 'sonner';
+import { PuppyCreationData } from '@/api/adminApi';
 
 interface BulkLitterOperationsProps {
   litter: Litter;
@@ -17,22 +18,27 @@ interface BulkLitterOperationsProps {
 const BulkLitterOperations: React.FC<BulkLitterOperationsProps> = ({ litter, puppies }) => {
   const queryClient = useQueryClient();
 
-  // Find puppies in this litter
-  const litterPuppies = puppies.filter(puppy => (puppy as any).litter_id === litter.id);
+  const litterPuppies = puppies.filter(puppy => puppy.litter_id === litter.id);
   const notReadyPuppies = litterPuppies.filter(puppy => puppy.status === 'Not For Sale');
   const availablePuppies = litterPuppies.filter(puppy => puppy.status === 'Available');
 
   const publishAllMutation = useMutation({
     mutationFn: async () => {
       const puppyIds = notReadyPuppies.map(p => p.id);
-      return adminApi.bulkUpdatePuppiesStatus(puppyIds, 'Available');
+      if (puppyIds.length === 0) {
+        toast.info("No puppies are marked as 'Not For Sale' to publish.");
+        return { updatedCount: 0 };
+      }
+      return adminApi.bulkUpdatePuppiesStatus(puppyIds, 'Available' as PuppyStatus);
     },
     onSuccess: (data) => {
-      toast.success(`${data.updatedCount} puppies have been published and are now available!`);
-      queryClient.invalidateQueries({ queryKey: ['puppies'] });
-      queryClient.invalidateQueries({ queryKey: ['litters'] });
+      if (data.updatedCount > 0) {
+        toast.success(`${data.updatedCount} puppies have been published and are now available!`);
+        queryClient.invalidateQueries({ queryKey: ['puppies'] });
+        queryClient.invalidateQueries({ queryKey: ['litters'] });
+      }
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast.error(`Failed to publish puppies: ${error.message}`);
     },
   });
@@ -42,15 +48,16 @@ const BulkLitterOperations: React.FC<BulkLitterOperationsProps> = ({ litter, pup
       const baseData = {
         breed: litter.breed,
         litter_id: litter.id,
-        status: 'Available',
-        birth_date: litter.dateOfBirth,
+        status: 'Available' as PuppyStatus,
+        birth_date: litter.date_of_birth,
       };
       
-      const puppiesData = Array.from({ length: count }, (_, index) => ({
+      const puppiesData: PuppyCreationData[] = Array.from({ length: count }, (_, index) => ({
         ...baseData,
         name: `${litter.name} Puppy ${index + 1}`,
         gender: index % 2 === 0 ? 'Male' : 'Female',
-        description: `Beautiful ${litter.breed} puppy from the ${litter.name} litter`,
+        description: `Beautiful ${litter.breed} puppy from the ${litter.name} litter.`,
+        price: 1500, // Example price
       }));
 
       return adminApi.bulkCreatePuppies(puppiesData);
@@ -60,7 +67,7 @@ const BulkLitterOperations: React.FC<BulkLitterOperationsProps> = ({ litter, pup
       queryClient.invalidateQueries({ queryKey: ['puppies'] });
       queryClient.invalidateQueries({ queryKey: ['litters'] });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast.error(`Failed to create puppies: ${error.message}`);
     },
   });

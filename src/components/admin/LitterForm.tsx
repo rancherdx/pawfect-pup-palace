@@ -1,5 +1,7 @@
-
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Button } from "@/components/ui/button";
@@ -9,240 +11,126 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { adminApi } from '@/api';
-import { Litter, LitterStatus, LitterCreationData, LitterUpdateData, Parent } from "@/types";
+import { Litter, LitterStatus, LitterCreationData, LitterUpdateData } from "@/types/api";
 import { Loader2 } from 'lucide-react';
 
-/**
- * @constant LITTER_STATUS_VALUES
- * @description An array of possible statuses for a litter.
- */
-const LITTER_STATUS_VALUES: LitterStatus[] = ["Active", "Available Soon", "All Reserved", "All Sold", "Archived"];
+const LITTER_STATUS_VALUES: LitterStatus[] = ["Active", "Available Soon", "All Reserved", "All Sold", "Archived", "Upcoming", "Past"];
 
-/**
- * @typedef {Omit<LitterCreationData, "status"> & { status: LitterStatus }} LitterFormData
- * @description Defines the shape of the form data for creating or editing a litter.
- */
-type LitterFormData = Omit<LitterCreationData, "status"> & { status: LitterStatus; dam_id?: string; sire_id?: string };
+const litterFormSchema = z.object({
+  name: z.string().min(2, "Litter name is required."),
+  breed: z.string().min(2, "Breed is required."),
+  dam_id: z.string().optional(),
+  sire_id: z.string().optional(),
+  date_of_birth: z.string().refine((val) => val && !isNaN(Date.parse(val)), { message: "A valid birth date is required." }),
+  puppy_count: z.preprocess((a) => parseInt(z.string().parse(a), 10), z.number().int().min(0, "Puppy count cannot be negative.")),
+  status: z.enum(LITTER_STATUS_VALUES),
+  expected_date: z.string().optional(),
+  description: z.string().optional(),
+  cover_image_url: z.string().url("Must be a valid URL.").optional().or(z.literal('')),
+});
 
-/**
- * @interface LitterFormProps
- * @description Defines the props for the LitterForm component, including legacy props for backward compatibility.
- */
+type LitterFormData = z.infer<typeof litterFormSchema>;
+
 interface LitterFormProps {
   litter?: Litter;
-  onClose?: () => void;
-  isEditMode?: boolean;
-  // Legacy props for compatibility with LitterManagement
-  formData?: any;
-  onInputChange?: any;
-  onSubmit?: any;
-  onCancel?: any;
-  isEditing?: boolean;
+  onClose: () => void;
 }
 
-/**
- * @component LitterForm
- * @description A form component for creating and editing litter information.
- * It supports both creating a new litter and updating an existing one.
- * @param {LitterFormProps} props - The props for the component.
- * @returns {React.ReactElement} The rendered litter form.
- */
-const LitterForm: React.FC<LitterFormProps> = ({ 
-  litter, 
-  onClose, 
-  isEditMode,
-  // Legacy props
-  formData: legacyFormData,
-  onInputChange,
-  onSubmit: legacyOnSubmit,
-  onCancel,
-  isEditing
-}) => {
-  // Use legacy props if provided
-  const actualOnClose = onClose || onCancel || (() => {});
-  const actualIsEditMode = isEditMode !== undefined ? isEditMode : !!isEditing;
-  
-  // Fetch available parents
+const LitterForm: React.FC<LitterFormProps> = ({ litter, onClose }) => {
+  const queryClient = useQueryClient();
   const { data: parentsData } = useQuery({
     queryKey: ['parents'],
     queryFn: () => adminApi.getAllParents(),
   });
-  
-  const [formData, setFormData] = useState<LitterFormData>({
-    name: litter?.name || "",
-    breed: litter?.breed || "",
-    damName: litter?.damName || "",
-    sireName: litter?.sireName || "",
-    dam_id: (litter as any)?.dam_id || "",
-    sire_id: (litter as any)?.sire_id || "",
-    dateOfBirth: litter?.dateOfBirth ? new Date(litter.dateOfBirth).toISOString().split('T')[0] : "",
-    status: litter?.status || "Active",
-    description: litter?.description || "",
-    coverImageUrl: litter?.coverImageUrl || "",
-    puppyCount: litter?.puppyCount || 0,
-    expectedDate: litter?.expectedDate ? new Date(litter.expectedDate).toISOString().split('T')[0] : "",
+
+  const { register, handleSubmit, control, formState: { errors } } = useForm<LitterFormData>({
+    resolver: zodResolver(litterFormSchema),
+    defaultValues: {
+      name: litter?.name || "",
+      breed: litter?.breed || "",
+      dam_id: litter?.dam_id || "",
+      sire_id: litter?.sire_id || "",
+      date_of_birth: litter?.date_of_birth ? new Date(litter.date_of_birth).toISOString().split('T')[0] : "",
+      puppy_count: litter?.puppy_count || 0,
+      status: litter?.status || "Active",
+      expected_date: litter?.expected_date ? new Date(litter.expected_date).toISOString().split('T')[0] : "",
+      description: litter?.description || "",
+      cover_image_url: litter?.cover_image_url || "",
+    },
   });
 
-  const queryClient = useQueryClient();
-
-  const mutation = useMutation<unknown, Error, { id?: string; data: LitterFormData }>({
-    mutationFn: ({ id, data }) => {
-      const apiData = {
-        ...data,
-        dam_name: data.damName,
-        sire_name: data.sireName,
-        date_of_birth: data.dateOfBirth,
-        cover_image_url: data.coverImageUrl,
-        puppy_count: data.puppyCount,
-        expected_date: data.expectedDate,
-      };
-
-      if (actualIsEditMode && id) {
-        return adminApi.updateLitter(id, apiData as LitterUpdateData);
-      } else {
-        return adminApi.createLitter(apiData as LitterCreationData);
+  const mutation = useMutation({
+    mutationFn: (data: LitterFormData) => {
+      const apiData = { ...data };
+      if (litter?.id) {
+        return adminApi.updateLitter(litter.id, apiData as LitterUpdateData);
       }
+      return adminApi.createLitter(apiData as LitterCreationData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["litters"] });
-      toast.success(`Litter ${actualIsEditMode ? "updated" : "created"} successfully!`);
-      actualOnClose();
+      toast.success(`Litter ${litter ? "updated" : "created"} successfully!`);
+      onClose();
     },
-    onError: (error) => {
-      toast.error(`Failed to ${actualIsEditMode ? "update" : "create"} litter: ${error.message}`);
+    onError: (error: Error) => {
+      toast.error(`Failed to ${litter ? "update" : "create"} litter: ${error.message}`);
     },
   });
 
-  useEffect(() => {
-    if (litter) {
-      setFormData({
-        name: litter.name || "",
-        breed: litter.breed || "",
-        damName: litter.damName || "",
-        sireName: litter.sireName || "",
-        dam_id: (litter as any)?.dam_id || "",
-        sire_id: (litter as any)?.sire_id || "",
-        dateOfBirth: litter.dateOfBirth ? new Date(litter.dateOfBirth).toISOString().split('T')[0] : "",
-        status: litter.status || "Active",
-        description: litter.description || "",
-        coverImageUrl: litter.coverImageUrl || "",
-        puppyCount: litter.puppyCount || 0,
-        expectedDate: litter.expectedDate ? new Date(litter.expectedDate).toISOString().split('T')[0] : "",
-      });
-    }
-  }, [litter]);
-
-  /**
-   * Handles changes to standard input and textarea elements.
-   * @param {React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>} e - The change event.
-   */
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  /**
-   * Handles changes to the status select element.
-   * @param {keyof LitterFormData} name - The name of the form field to update.
-   * @param {string} value - The new value from the select input.
-   */
-  const handleSelectChange = (name: keyof LitterFormData, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value as LitterStatus }));
-  };
-
-  /**
-   * Handles the form submission.
-   * @param {React.FormEvent} e - The form submission event.
-   */
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    mutation.mutate({ id: litter?.id, data: formData });
+  const onSubmit = (data: LitterFormData) => {
+    mutation.mutate(data);
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{actualIsEditMode ? `Edit Litter: ${litter?.name}` : "Add New Litter"}</CardTitle>
+        <CardTitle>{litter ? `Edit Litter: ${litter.name}` : "Add New Litter"}</CardTitle>
       </CardHeader>
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <CardContent className="space-y-4 max-h-[70vh] overflow-y-auto p-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Litter Name</Label>
-              <Input id="name" name="name" value={formData.name} onChange={handleChange} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="breed">Breed</Label>
-              <Input id="breed" name="breed" value={formData.breed} onChange={handleChange} required />
-            </div>
-            <div className="space-y-2">
+            <div><Label htmlFor="name">Litter Name</Label><Input id="name" {...register("name")} />{errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}</div>
+            <div><Label htmlFor="breed">Breed</Label><Input id="breed" {...register("breed")} />{errors.breed && <p className="text-red-500 text-sm">{errors.breed.message}</p>}</div>
+            <div>
               <Label htmlFor="dam_id">Dam (Mother)</Label>
-              <Select name="dam_id" value={formData.dam_id} onValueChange={value => handleSelectChange('dam_id', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select dam" />
-                </SelectTrigger>
-                <SelectContent>
-                  {parentsData?.parents?.filter(p => p.gender === 'Female').map(parent => (
-                    <SelectItem key={parent.id} value={parent.id}>{parent.name} ({parent.breed})</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Controller name="dam_id" control={control} render={({ field }) => (
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <SelectTrigger><SelectValue placeholder="Select dam" /></SelectTrigger>
+                  <SelectContent>{parentsData?.parents?.filter(p => p.gender === 'Female').map(parent => <SelectItem key={parent.id} value={parent.id}>{parent.name} ({parent.breed})</SelectItem>)}</SelectContent>
+                </Select>
+              )} />
             </div>
-            <div className="space-y-2">
+            <div>
               <Label htmlFor="sire_id">Sire (Father)</Label>
-              <Select name="sire_id" value={formData.sire_id} onValueChange={value => handleSelectChange('sire_id', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select sire" />
-                </SelectTrigger>
-                <SelectContent>
-                  {parentsData?.parents?.filter(p => p.gender === 'Male').map(parent => (
-                    <SelectItem key={parent.id} value={parent.id}>{parent.name} ({parent.breed})</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Controller name="sire_id" control={control} render={({ field }) => (
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <SelectTrigger><SelectValue placeholder="Select sire" /></SelectTrigger>
+                  <SelectContent>{parentsData?.parents?.filter(p => p.gender === 'Male').map(parent => <SelectItem key={parent.id} value={parent.id}>{parent.name} ({parent.breed})</SelectItem>)}</SelectContent>
+                </Select>
+              )} />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="dateOfBirth">Date of Birth</Label>
-              <Input id="dateOfBirth" name="dateOfBirth" type="date" value={formData.dateOfBirth} onChange={handleChange} required />
-            </div>
-             <div className="space-y-2">
-              <Label htmlFor="puppyCount">Number of Puppies</Label>
-              <Input id="puppyCount" name="puppyCount" type="number" value={formData.puppyCount} onChange={handleChange} required />
-            </div>
-            <div className="space-y-2">
+            <div><Label htmlFor="date_of_birth">Date of Birth</Label><Input id="date_of_birth" type="date" {...register("date_of_birth")} />{errors.date_of_birth && <p className="text-red-500 text-sm">{errors.date_of_birth.message}</p>}</div>
+            <div><Label htmlFor="puppy_count">Number of Puppies</Label><Input id="puppy_count" type="number" {...register("puppy_count")} />{errors.puppy_count && <p className="text-red-500 text-sm">{errors.puppy_count.message}</p>}</div>
+            <div>
               <Label htmlFor="status">Status</Label>
-              <Select name="status" value={formData.status} onValueChange={value => handleSelectChange('status', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  {LITTER_STATUS_VALUES.map(statusValue => (
-                    <SelectItem key={statusValue} value={statusValue}>{statusValue}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Controller name="status" control={control} render={({ field }) => (
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
+                  <SelectContent>{LITTER_STATUS_VALUES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                </Select>
+              )} />
+              {errors.status && <p className="text-red-500 text-sm">{errors.status.message}</p>}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="expectedDate">Expected Date (Optional)</Label>
-              <Input id="expectedDate" name="expectedDate" type="date" value={formData.expectedDate} onChange={handleChange} />
-            </div>
+            <div><Label htmlFor="expected_date">Expected Date (Optional)</Label><Input id="expected_date" type="date" {...register("expected_date")} /></div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea id="description" name="description" value={formData.description} onChange={handleChange} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="coverImageUrl">Cover Image URL (Optional)</Label>
-            <Input id="coverImageUrl" name="coverImageUrl" value={formData.coverImageUrl} onChange={handleChange} />
-          </div>
+          <div><Label htmlFor="description">Description</Label><Textarea id="description" {...register("description")} /></div>
+          <div><Label htmlFor="cover_image_url">Cover Image URL (Optional)</Label><Input id="cover_image_url" {...register("cover_image_url")} />{errors.cover_image_url && <p className="text-red-500 text-sm">{errors.cover_image_url.message}</p>}</div>
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button type="button" variant="outline" onClick={actualOnClose}>
-            Cancel
-          </Button>
+          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
           <Button type="submit" disabled={mutation.isPending}>
             {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {actualIsEditMode ? "Update Litter" : "Create Litter"}
+            {litter ? "Update Litter" : "Create Litter"}
           </Button>
         </CardFooter>
       </form>
