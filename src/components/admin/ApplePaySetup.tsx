@@ -1,27 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CheckCircle, AlertTriangle, Download, Upload, ExternalLink, Copy } from "lucide-react";
+import { CheckCircle, AlertTriangle, Upload, ExternalLink, Copy } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '@/api/adminApi';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-/**
- * @interface ApplePayConfig
- * @description Defines the structure for the Apple Pay configuration object.
- */
-interface ApplePayConfig {
-  merchant_id: string;
-  domain_verified: boolean;
-  certificate_uploaded: boolean;
-  processing_certificate_id?: string;
-  last_verified: string;
-  domains: string[];
-}
+import { ApplePayConfig } from '@/types/api';
 
 /**
  * @component ApplePaySetup
@@ -35,14 +23,20 @@ const ApplePaySetup = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const queryClient = useQueryClient();
 
-  const { data: applePayConfig, isLoading } = useQuery({
+  const { data: applePayConfig, isLoading } = useQuery<ApplePayConfig, Error>({
     queryKey: ['apple-pay-config'],
     queryFn: () => adminApi.getApplePayConfig(),
     staleTime: 5 * 60 * 1000,
   });
 
+  useEffect(() => {
+    if (applePayConfig?.merchant_id) {
+      setMerchantId(applePayConfig.merchant_id);
+    }
+  }, [applePayConfig]);
+
   const updateConfigMutation = useMutation({
-    mutationFn: (config: { merchant_id: string }) => 
+    mutationFn: (config: Partial<ApplePayConfig>) =>
       adminApi.updateApplePayConfig(config),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['apple-pay-config'] });
@@ -78,9 +72,6 @@ const ApplePaySetup = () => {
     }
   });
 
-  /**
-   * Handles saving the merchant ID configuration.
-   */
   const handleSaveConfig = () => {
     if (!merchantId.trim()) {
       toast.error('Please enter a valid Merchant ID');
@@ -89,10 +80,6 @@ const ApplePaySetup = () => {
     updateConfigMutation.mutate({ merchant_id: merchantId });
   };
 
-  /**
-   * Handles the selection of a certificate file from the file input.
-   * @param {React.ChangeEvent<HTMLInputElement>} event - The file input change event.
-   */
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -104,9 +91,6 @@ const ApplePaySetup = () => {
     }
   };
 
-  /**
-   * Handles the upload of the selected certificate file.
-   */
   const handleUploadCertificate = () => {
     if (!selectedFile) {
       toast.error('Please select a certificate file first');
@@ -118,10 +102,6 @@ const ApplePaySetup = () => {
     uploadCertificateMutation.mutate(formData);
   };
 
-  /**
-   * Copies the content of the domain verification file to the clipboard.
-   * This is a placeholder as the file content is typically provided by Apple.
-   */
   const handleCopyDomainVerificationFile = () => {
     const verificationContent = `This file verifies domain ownership for Apple Pay.`;
     navigator.clipboard.writeText(verificationContent);
@@ -160,6 +140,7 @@ const ApplePaySetup = () => {
               <CardTitle>Apple Pay Integration Status</CardTitle>
             </CardHeader>
             <CardContent>
+              {isLoading ? <p>Loading configuration...</p> :
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div>
@@ -203,7 +184,7 @@ const ApplePaySetup = () => {
                   )}
                 </div>
               </div>
-
+              }
               {applePayConfig?.last_verified && (
                 <div className="mt-4 text-sm text-muted-foreground">
                   Last verified: {new Date(applePayConfig.last_verified).toLocaleString()}
@@ -223,7 +204,7 @@ const ApplePaySetup = () => {
                 <Label htmlFor="merchantId">Merchant Identifier</Label>
                 <Input
                   id="merchantId"
-                  value={merchantId || applePayConfig?.merchant_id || ''}
+                  value={merchantId}
                   onChange={(e) => setMerchantId(e.target.value)}
                   placeholder="merchant.com.yourcompany.appname"
                   className="font-mono"

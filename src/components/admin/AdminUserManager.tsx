@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Users, Search, ArrowLeft, ArrowRight, Edit2, Trash2, Loader2, X } from 'lucide-react';
+import { Users, Search, ArrowLeft, ArrowRight, Edit2, Trash2, Loader2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,67 +14,45 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogClose,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { adminApi } from '@/api';
+import { Profile, AppRole } from '@/types/api';
 
-/**
- * @interface User
- * @description Represents the structure of a user object in the admin management context.
- */
-interface User {
-  id: string;
-  name: string | null;
+// Extends the base Profile for UI-specific data like constructed emails and assigned roles.
+interface AdminViewUser extends Profile {
   email: string;
-  roles: string[];
-  created_at: string;
-  updated_at: string;
+  roles: AppRole[];
 }
 
-/**
- * @interface UsersApiResponse
- * @description Defines the shape of the API response when fetching a list of users.
- */
 interface UsersApiResponse {
-  users: User[];
+  users: AdminViewUser[];
   currentPage: number;
   totalPages: number;
   totalUsers: number;
   limit: number;
 }
 
-const AVAILABLE_ROLES = ['user', 'admin', 'editor', 'super-admin'];
+const AVAILABLE_ROLES: AppRole[] = ['user', 'admin', 'super-admin'];
 
-/**
- * @constant ROLE_HIERARCHY
- * @description Defines a numeric hierarchy for user roles to prevent privilege escalation.
- * Higher numbers indicate higher privilege.
- */
-const ROLE_HIERARCHY = {
+const ROLE_HIERARCHY: Record<AppRole, number> = {
   'user': 1,
-  'editor': 2, 
-  'admin': 3,
-  'super-admin': 4
+  'admin': 2,
+  'super-admin': 3,
 };
 
-/**
- * Calculates the maximum role level for a given set of roles.
- * @param {string[]} userRoles - An array of role strings.
- * @returns {number} The highest numeric value from the ROLE_HIERARCHY for the given roles.
- */
-const getCurrentUserMaxRole = (userRoles: string[]): number => {
-  return Math.max(...userRoles.map(role => ROLE_HIERARCHY[role as keyof typeof ROLE_HIERARCHY] || 0));
+const getCurrentUserMaxRole = (userRoles: AppRole[]): number => {
+  if (!userRoles || userRoles.length === 0) return 0;
+  return Math.max(...userRoles.map(role => ROLE_HIERARCHY[role] || 0));
 };
 
 /**
  * @component AdminUserManager
  * @description A component for managing users, including viewing, searching, editing roles, and deleting users.
- * It includes security features to prevent privilege escalation.
- * @returns {React.ReactElement} The rendered user management interface.
  */
 const AdminUserManager: React.FC = () => {
+  const { user: currentUser } = useAuth();
   const [searchUserQuery, setSearchUserQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -82,8 +60,8 @@ const AdminUserManager: React.FC = () => {
 
   const [showEditRoleModal, setShowEditRoleModal] = useState(false);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [editingRoles, setEditingRoles] = useState<string[]>([]);
+  const [selectedUser, setSelectedUser] = useState<AdminViewUser | null>(null);
+  const [editingRoles, setEditingRoles] = useState<AppRole[]>([]);
 
   const queryClient = useQueryClient();
 
@@ -95,43 +73,37 @@ const AdminUserManager: React.FC = () => {
     return () => clearTimeout(handler);
   }, [searchUserQuery]);
 
-  /**
-   * Fetches users from the API based on pagination and search query.
-   * @param {object} context - The react-query context.
-   * @param {any[]} context.queryKey - The query key.
-   * @returns {Promise<UsersApiResponse>} A promise that resolves with the list of users and pagination info.
-   */
   const fetchUsers = async ({ queryKey }: { queryKey: [string, number, number, string] }): Promise<UsersApiResponse> => {
     const [_key, page, limit, search] = queryKey;
-    const params = {
-      page: page,
-      limit: limit,
-      search: search || undefined
-    };
-    const response = await adminApi.getAllUsers(params);
+    const response = await adminApi.getAllUsers({ page, limit, search });
+
+    // The `user_roles` are not joined in this query, so we have to simulate them for the UI.
+    // We also fabricate an email. This logic should be updated if the backend API changes.
+    const users: AdminViewUser[] = (response.data || []).map(profile => ({
+      ...profile,
+      email: `${profile.name?.toLowerCase().replace(/\s+/g, '.')}@example.com`,
+      roles: ['user'] // Default role, as the API doesn't provide it.
+    }));
+
     return {
-      users: response.data?.map(user => ({
-        ...user,
-        email: `${user.name?.toLowerCase().replace(/\s+/g, '.')}@example.com`, // Placeholder email
-        roles: ['user'] // Default role
-      })) || [],
+      users,
       currentPage: page,
-      totalPages: Math.ceil((response.data?.length || 0) / limit),
-      totalUsers: response.data?.length || 0,
+      totalPages: Math.ceil(users.length / limit),
+      totalUsers: users.length,
       limit: limit
     };
   };
 
-  const { data, isLoading, isError, error, isPlaceholderData } = useQuery({
+  const { data, isLoading, isError, error, isPlaceholderData } = useQuery<UsersApiResponse, Error>({
     queryKey: ['adminUsers', currentPage, rowsPerPage, debouncedSearchQuery],
     queryFn: fetchUsers,
     placeholderData: (previousData) => previousData,
     staleTime: 5 * 60 * 1000,
   });
 
-  const editUserMutation = useMutation({
-    mutationFn: ({ userId, roles }: { userId: string, roles: string[] }) =>
-      adminApi.updateUser(userId, { roles }),
+  const updateUserRolesMutation = useMutation({
+    mutationFn: ({ userId, roles }: { userId: string, roles: AppRole[] }) =>
+      adminApi.updateUserRoles(userId, roles),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
       setShowEditRoleModal(false);
@@ -144,8 +116,7 @@ const AdminUserManager: React.FC = () => {
   });
 
   const deleteUserMutation = useMutation({
-    mutationFn: (userId: string) =>
-      adminApi.deleteUser(userId),
+    mutationFn: (userId: string) => adminApi.deleteUser(userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
       setShowDeleteConfirmModal(false);
@@ -157,44 +128,26 @@ const AdminUserManager: React.FC = () => {
     },
   });
 
-  /**
-   * Opens the modal to edit roles for a selected user.
-   * @param {User} user - The user to edit.
-   */
-  const openEditRoleModal = (user: User) => {
+  const openEditRoleModal = (user: AdminViewUser) => {
     setSelectedUser(user);
     setEditingRoles(user.roles || []);
     setShowEditRoleModal(true);
   };
 
-  /**
-   * Opens the confirmation modal for deleting a user.
-   * @param {User} user - The user to delete.
-   */
-  const openDeleteConfirmModal = (user: User) => {
+  const openDeleteConfirmModal = (user: AdminViewUser) => {
     setSelectedUser(user);
     setShowDeleteConfirmModal(true);
   };
 
-  /**
-   * Handles changes to a user's roles from the checkbox inputs.
-   * @param {string} role - The role that was changed.
-   * @param {boolean} checked - The new checked state of the role.
-   */
-  const handleRoleChange = (role: string, checked: boolean) => {
+  const handleRoleChange = (role: AppRole, checked: boolean) => {
     setEditingRoles(prev =>
       checked ? [...prev, role] : prev.filter(r => r !== role)
     );
   };
 
-  /**
-   * Saves the updated roles for the selected user, with security checks.
-   */
   const handleSaveRoles = () => {
-    if (selectedUser) {
-      // Security: Prevent privilege escalation attempts
-      const { user: currentUser } = useAuth();
-      const currentUserMaxRole = getCurrentUserMaxRole(currentUser?.roles || []);
+    if (selectedUser && currentUser) {
+      const currentUserMaxRole = getCurrentUserMaxRole(currentUser.roles as AppRole[] || []);
       const targetMaxRole = getCurrentUserMaxRole(editingRoles);
       
       if (targetMaxRole > currentUserMaxRole) {
@@ -202,7 +155,6 @@ const AdminUserManager: React.FC = () => {
         return;
       }
       
-      // Audit log the role change
       if (process.env.NODE_ENV === 'development') {
         console.log('[DEV] Role change attempt:', {
           targetUser: selectedUser.id,
@@ -212,24 +164,16 @@ const AdminUserManager: React.FC = () => {
         });
       }
       
-      editUserMutation.mutate({ userId: selectedUser.id, roles: editingRoles });
+      updateUserRolesMutation.mutate({ userId: selectedUser.id, roles: editingRoles });
     }
   };
 
-  /**
-   * Confirms and proceeds with deleting the selected user.
-   */
   const handleDeleteConfirmed = () => {
     if (selectedUser) {
       deleteUserMutation.mutate(selectedUser.id);
     }
   };
 
-  /**
-   * Formats a date string into a readable local date and time format.
-   * @param {string} dateString - The ISO date string to format.
-   * @returns {string} The formatted date string.
-   */
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
         year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
@@ -238,7 +182,6 @@ const AdminUserManager: React.FC = () => {
 
   return (
     <div className="p-4 md:p-6 space-y-6">
-      {/* Search and Title Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h2 className="text-2xl md:text-3xl font-bold flex items-center text-gray-800 dark:text-white">
           <Users className="mr-3 h-7 w-7 text-brand-red" />
@@ -248,7 +191,7 @@ const AdminUserManager: React.FC = () => {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
             type="text"
-            placeholder="Search by name or email..."
+            placeholder="Search by name..."
             value={searchUserQuery}
             onChange={(e) => setSearchUserQuery(e.target.value)}
             className="pl-10 pr-4 py-2 border rounded-lg w-full md:w-72 focus:outline-none focus:ring-2 focus:ring-brand-red text-sm"
@@ -256,7 +199,6 @@ const AdminUserManager: React.FC = () => {
         </div>
       </div>
 
-      {/* Users Table */}
       <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-x-auto">
         <Table>
           <TableHeader>
@@ -277,10 +219,10 @@ const AdminUserManager: React.FC = () => {
               ))
             ) : isError ? (
               <TableRow><TableCell colSpan={5} className="h-24 text-center text-red-500">Error: {error?.message || "Unknown error"}</TableCell></TableRow>
-            ) : data?.users?.length === 0 ? (
+            ) : !data || data.users.length === 0 ? (
               <TableRow><TableCell colSpan={5} className="h-24 text-center">No users found.</TableCell></TableRow>
             ) : (
-              data?.users?.map((user) => (
+              data.users.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell className="font-medium">{user.name || 'N/A'}</TableCell>
                   <TableCell>{user.email}</TableCell>
@@ -297,7 +239,6 @@ const AdminUserManager: React.FC = () => {
         </Table>
       </div>
 
-      {/* Pagination Controls */}
       {data && data.totalUsers > 0 && (
         <div className="flex items-center justify-between pt-2 text-sm text-muted-foreground">
           <p>Showing {Math.min((data.currentPage - 1) * data.limit + 1, data.totalUsers)} - {Math.min(data.currentPage * data.limit, data.totalUsers)} of {data.totalUsers} users</p>
@@ -309,7 +250,6 @@ const AdminUserManager: React.FC = () => {
         </div>
       )}
 
-      {/* Edit Role Modal */}
       <Dialog open={showEditRoleModal} onOpenChange={setShowEditRoleModal}>
         <DialogContent>
           <DialogHeader>
@@ -330,16 +270,15 @@ const AdminUserManager: React.FC = () => {
             ))}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEditRoleModal(false)} disabled={editUserMutation.isPending}>Cancel</Button>
-            <Button onClick={handleSaveRoles} disabled={editUserMutation.isPending}>
-              {editUserMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            <Button variant="outline" onClick={() => setShowEditRoleModal(false)} disabled={updateUserRolesMutation.isPending}>Cancel</Button>
+            <Button onClick={handleSaveRoles} disabled={updateUserRolesMutation.isPending}>
+              {updateUserRolesMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Save Roles
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Modal */}
       <Dialog open={showDeleteConfirmModal} onOpenChange={setShowDeleteConfirmModal}>
         <DialogContent>
           <DialogHeader>

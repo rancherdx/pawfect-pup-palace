@@ -40,7 +40,7 @@ const Layout = ({ children, fullWidth = false, centered = false }: LayoutProps) 
       setFontSize("large");
       localStorage.setItem("gds-font-size-initialized", "true");
     }
-  }, []);
+  }, [setFontSize]);
 
   return (
     <div className="flex flex-col min-h-screen bg-background paw-print-bg transition-colors duration-500">

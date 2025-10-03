@@ -1,5 +1,8 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { PawPrint } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,41 +16,21 @@ import HeroSection from "@/components/HeroSection";
 import Section from "@/components/Section";
 import { supabase } from "@/integrations/supabase/client";
 import { calculateAge } from "@/utils/dateUtils";
+import { useQuery } from "@tanstack/react-query";
+import { Puppy } from "@/types/api";
 
-/**
- * @component AdoptionProcess
- * @description A component that displays the step-by-step process for adopting a puppy.
- * This is a visual guide for users to understand the adoption journey.
- * @returns {JSX.Element} The rendered list of adoption steps.
- */
 const AdoptionProcess = () => {
   const steps = [
-    {
-      title: "Complete the Application",
-      description: "Fill out our comprehensive adoption application to help us understand your home environment and lifestyle.",
-    },
-    {
-      title: "Application Review",
-      description: "Our team will review your application and contact you within 24-48 hours to discuss next steps.",
-    },
-    {
-      title: "Meet the Puppy",
-      description: "Schedule a visit to meet your potential new family member in person or via video call.",
-    },
-    {
-      title: "Adoption Fee & Contract",
-      description: "Upon approval, you'll pay the adoption fee and sign our adoption contract, which includes our health guarantee.",
-    },
-    {
-      title: "Take Your Puppy Home",
-      description: "Once all steps are complete, you can welcome your new puppy to their forever home!",
-    },
+    { title: "Complete the Application", description: "Fill out our comprehensive adoption application to help us understand your home environment and lifestyle." },
+    { title: "Application Review", description: "Our team will review your application and contact you within 24-48 hours to discuss next steps." },
+    { title: "Meet the Puppy", description: "Schedule a visit to meet your potential new family member in person or via video call." },
+    { title: "Adoption Fee & Contract", description: "Upon approval, you'll pay the adoption fee and sign our adoption contract, which includes our health guarantee." },
+    { title: "Take Your Puppy Home", description: "Once all steps are complete, you can welcome your new puppy to their forever home!" },
   ];
 
   return (
     <div className="space-y-8">
       <h2 className="text-2xl font-semibold">The Adoption Process</h2>
-      
       <div className="space-y-6">
         {steps.map((step, index) => (
           <div key={index} className="flex items-start space-x-4">
@@ -65,103 +48,63 @@ const AdoptionProcess = () => {
   );
 };
 
-/**
- * @component Adopt
- * @description The main page for the adoption application process. It includes a hero section,
- * the adoption process steps, and a detailed application form. If a puppy ID is provided
- * in the URL search parameters, it prefills the application for that specific puppy.
- * On submission, it shows a confirmation and redirects the user to the checkout page.
- * @returns {JSX.Element} The rendered adoption page.
- */
+const adoptionFormSchema = z.object({
+  firstName: z.string().min(2, "First name is required."),
+  lastName: z.string().min(2, "Last name is required."),
+  email: z.string().email("Invalid email address."),
+  phone: z.string().min(10, "A valid phone number is required."),
+  address: z.string().min(5, "Address is required."),
+  city: z.string().min(2, "City is required."),
+  state: z.string().min(2, "State is required."),
+  zip: z.string().regex(/^\d{5}(-\d{4})?$/, "Invalid ZIP code."),
+  housingType: z.enum(["house", "apartment", "condo", "other"], { errorMap: () => ({ message: "Please select a housing type." }) }),
+  hasYard: z.boolean().default(false),
+  hasChildren: z.boolean().default(false),
+  hasPets: z.boolean().default(false),
+  existingPets: z.string().optional(),
+  experience: z.string().optional(),
+  referral: z.string().optional(),
+  additionalInfo: z.string().optional(),
+}).refine(data => !data.hasPets || (data.hasPets && data.existingPets && data.existingPets.length > 5), {
+  message: "Please describe your existing pets.",
+  path: ["existingPets"],
+});
+
+type AdoptionFormData = z.infer<typeof adoptionFormSchema>;
+
 const Adopt = () => {
   const [searchParams] = useSearchParams();
   const puppyId = searchParams.get("puppy");
-  const [selectedPuppy, setSelectedPuppy] = useState<any>(null);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (puppyId) {
-      const fetchPuppy = async () => {
-        const { data, error } = await supabase
-          .from('puppies')
-          .select('*')
-          .eq('id', puppyId)
-          .single();
-        
-        if (data && !error) {
-          setSelectedPuppy(data);
-        }
-      };
-      fetchPuppy();
-    }
-  }, [puppyId]);
-  
   const { toast } = useToast();
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    address: "",
-    city: "",
-    state: "",
-    zip: "",
-    housingType: "",
-    hasYard: false,
-    hasChildren: false,
-    hasPets: false,
-    existingPets: "",
-    experience: "",
-    referral: "",
-    additionalInfo: "",
+
+  const { data: selectedPuppy } = useQuery<Puppy, Error>({
+    queryKey: ['puppy', puppyId],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('puppies').select('*').eq('id', puppyId!).single();
+      if (error) throw new Error(error.message);
+      return data;
+    },
+    enabled: !!puppyId,
   });
 
-  /**
-   * @function handleChange
-   * @description Handles changes for standard input and textarea elements.
-   * @param {React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>} e - The event object.
-   */
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+  const { register, handleSubmit, control, watch, formState: { errors } } = useForm<AdoptionFormData>({
+    resolver: zodResolver(adoptionFormSchema),
+    defaultValues: {
+      hasYard: false,
+      hasChildren: false,
+      hasPets: false,
+    }
+  });
 
-  /**
-   * @function handleSelectChange
-   * @description Handles changes for Select components.
-   * @param {string} name - The name of the form field.
-   * @param {string} value - The new value.
-   */
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+  const hasPetsValue = watch("hasPets");
 
-  /**
-   * @function handleCheckboxChange
-   * @description Handles changes for Checkbox components.
-   * @param {string} name - The name of the form field.
-   * @param {boolean} checked - The new checked state.
-   */
-  const handleCheckboxChange = (name: string, checked: boolean) => {
-    setFormData(prev => ({ ...prev, [name]: checked }));
-  };
-
-  /**
-   * @function handleSubmit
-   * @description Handles the form submission, displays a toast notification, and navigates to the checkout page.
-   * @param {React.FormEvent} e - The form event object.
-   */
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Form submitted:", formData);
-    
-    // Show success toast
+  const onSubmit = (data: AdoptionFormData) => {
+    console.log("Form submitted:", data);
     toast({
       title: "Application Submitted!",
       description: "We've received your adoption application and will be in touch soon.",
     });
-
-    // When using the new checkout flow, redirect to checkout instead
     if (selectedPuppy) {
       navigate(`/checkout?puppy=${selectedPuppy.id}`);
     } else {
@@ -179,235 +122,69 @@ const Adopt = () => {
         ctaLink="/puppies"
       />
 
-      <Section withPawPrintBg>
-        <AdoptionProcess />
-      </Section>
+      <Section withPawPrintBg><AdoptionProcess /></Section>
 
       <Section title="Adoption Application" className="bg-secondary">
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
           {selectedPuppy && (
             <Card>
               <CardContent className="p-6 flex items-center space-x-4">
                 <div className="w-20 h-20 rounded-full overflow-hidden">
-                  <img 
-                    src={selectedPuppy.photo_url || "https://images.unsplash.com/photo-1591160690555-5debfba289f0?ixlib=rb-4.0.3"} 
-                    alt={selectedPuppy.name} 
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={selectedPuppy.image_urls?.[0] || selectedPuppy.photo_url || "https://images.unsplash.com/photo-1591160690555-5debfba289f0?ixlib=rb-4.0.3"} alt={selectedPuppy.name} className="w-full h-full object-cover" />
                 </div>
                 <div>
                   <h3 className="text-lg font-medium">You're applying to adopt {selectedPuppy.name}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedPuppy.breed} • {calculateAge(selectedPuppy.birth_date)} • {selectedPuppy.gender}
-                  </p>
+                  <p className="text-sm text-muted-foreground">{selectedPuppy.breed} • {calculateAge(selectedPuppy.birth_date || "")} • {selectedPuppy.gender}</p>
                 </div>
               </CardContent>
             </Card>
           )}
 
-          {/* Personal Information */}
           <div className="space-y-4">
             <h3 className="text-xl font-semibold">Personal Information</h3>
-            
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name *</Label>
-                <Input 
-                  id="firstName" 
-                  name="firstName" 
-                  value={formData.firstName} 
-                  onChange={handleChange} 
-                  required 
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name *</Label>
-                <Input 
-                  id="lastName" 
-                  name="lastName" 
-                  value={formData.lastName} 
-                  onChange={handleChange} 
-                  required 
-                />
-              </div>
+              <div><Label htmlFor="firstName">First Name *</Label><Input id="firstName" {...register("firstName")} />{errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName.message}</p>}</div>
+              <div><Label htmlFor="lastName">Last Name *</Label><Input id="lastName" {...register("lastName")} />{errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName.message}</p>}</div>
             </div>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
-                <Input 
-                  id="email" 
-                  name="email" 
-                  type="email" 
-                  value={formData.email} 
-                  onChange={handleChange} 
-                  required 
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number *</Label>
-                <Input 
-                  id="phone" 
-                  name="phone" 
-                  type="tel" 
-                  value={formData.phone} 
-                  onChange={handleChange} 
-                  required 
-                />
-              </div>
+              <div><Label htmlFor="email">Email *</Label><Input id="email" type="email" {...register("email")} />{errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}</div>
+              <div><Label htmlFor="phone">Phone Number *</Label><Input id="phone" type="tel" {...register("phone")} />{errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>}</div>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="address">Address *</Label>
-              <Input 
-                id="address" 
-                name="address" 
-                value={formData.address} 
-                onChange={handleChange} 
-                required 
-              />
-            </div>
-
+            <div><Label htmlFor="address">Address *</Label><Input id="address" {...register("address")} />{errors.address && <p className="text-red-500 text-sm mt-1">{errors.address.message}</p>}</div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="city">City *</Label>
-                <Input 
-                  id="city" 
-                  name="city" 
-                  value={formData.city} 
-                  onChange={handleChange} 
-                  required 
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="state">State *</Label>
-                <Input 
-                  id="state" 
-                  name="state" 
-                  value={formData.state} 
-                  onChange={handleChange} 
-                  required 
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="zip">ZIP Code *</Label>
-                <Input 
-                  id="zip" 
-                  name="zip" 
-                  value={formData.zip} 
-                  onChange={handleChange} 
-                  required 
-                />
-              </div>
+              <div><Label htmlFor="city">City *</Label><Input id="city" {...register("city")} />{errors.city && <p className="text-red-500 text-sm mt-1">{errors.city.message}</p>}</div>
+              <div><Label htmlFor="state">State *</Label><Input id="state" {...register("state")} />{errors.state && <p className="text-red-500 text-sm mt-1">{errors.state.message}</p>}</div>
+              <div><Label htmlFor="zip">ZIP Code *</Label><Input id="zip" {...register("zip")} />{errors.zip && <p className="text-red-500 text-sm mt-1">{errors.zip.message}</p>}</div>
             </div>
           </div>
 
-          {/* Home Environment */}
           <div className="space-y-4">
             <h3 className="text-xl font-semibold">Home Environment</h3>
-            
-            <div className="space-y-2">
+            <div>
               <Label htmlFor="housingType">Housing Type *</Label>
-              <Select 
-                value={formData.housingType} 
-                onValueChange={(value) => handleSelectChange("housingType", value)}
-              >
-                <SelectTrigger id="housingType">
-                  <SelectValue placeholder="Select housing type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="house">House</SelectItem>
-                  <SelectItem value="apartment">Apartment</SelectItem>
-                  <SelectItem value="condo">Condo</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
+              <Controller name="housingType" control={control} render={({ field }) => (
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <SelectTrigger id="housingType"><SelectValue placeholder="Select housing type" /></SelectTrigger>
+                  <SelectContent><SelectItem value="house">House</SelectItem><SelectItem value="apartment">Apartment</SelectItem><SelectItem value="condo">Condo</SelectItem><SelectItem value="other">Other</SelectItem></SelectContent>
+                </Select>
+              )} />
+              {errors.housingType && <p className="text-red-500 text-sm mt-1">{errors.housingType.message}</p>}
             </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="hasYard" 
-                  checked={formData.hasYard}
-                  onCheckedChange={(checked) => handleCheckboxChange("hasYard", checked === true)}
-                />
-                <Label htmlFor="hasYard">Do you have a fenced yard?</Label>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="hasChildren" 
-                  checked={formData.hasChildren}
-                  onCheckedChange={(checked) => handleCheckboxChange("hasChildren", checked === true)}
-                />
-                <Label htmlFor="hasChildren">Do you have children at home?</Label>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="hasPets" 
-                  checked={formData.hasPets}
-                  onCheckedChange={(checked) => handleCheckboxChange("hasPets", checked === true)}
-                />
-                <Label htmlFor="hasPets">Do you have other pets?</Label>
-              </div>
+            <div className="space-y-2">
+              <Controller name="hasYard" control={control} render={({ field }) => (<div className="flex items-center space-x-2"><Checkbox id="hasYard" checked={field.value} onCheckedChange={field.onChange} /><Label htmlFor="hasYard">Do you have a fenced yard?</Label></div>)} />
+              <Controller name="hasChildren" control={control} render={({ field }) => (<div className="flex items-center space-x-2"><Checkbox id="hasChildren" checked={field.value} onCheckedChange={field.onChange} /><Label htmlFor="hasChildren">Do you have children at home?</Label></div>)} />
+              <Controller name="hasPets" control={control} render={({ field }) => (<div className="flex items-center space-x-2"><Checkbox id="hasPets" checked={field.value} onCheckedChange={field.onChange} /><Label htmlFor="hasPets">Do you have other pets?</Label></div>)} />
             </div>
-
-            {formData.hasPets && (
-              <div className="space-y-2">
-                <Label htmlFor="existingPets">Please describe your existing pets</Label>
-                <Textarea 
-                  id="existingPets" 
-                  name="existingPets" 
-                  value={formData.existingPets} 
-                  onChange={handleChange} 
-                  rows={3}
-                />
-              </div>
+            {hasPetsValue && (
+              <div><Label htmlFor="existingPets">Please describe your existing pets</Label><Textarea id="existingPets" {...register("existingPets")} rows={3} />{errors.existingPets && <p className="text-red-500 text-sm mt-1">{errors.existingPets.message}</p>}</div>
             )}
           </div>
 
-          {/* Additional Information */}
           <div className="space-y-4">
             <h3 className="text-xl font-semibold">Additional Information</h3>
-            
-            <div className="space-y-2">
-              <Label htmlFor="experience">Previous experience with dogs</Label>
-              <Textarea 
-                id="experience" 
-                name="experience" 
-                value={formData.experience} 
-                onChange={handleChange} 
-                rows={3}
-                placeholder="Please describe your previous experience with dogs, if any."
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="referral">How did you hear about us?</Label>
-              <Input 
-                id="referral" 
-                name="referral" 
-                value={formData.referral} 
-                onChange={handleChange} 
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="additionalInfo">Anything else you'd like us to know?</Label>
-              <Textarea 
-                id="additionalInfo" 
-                name="additionalInfo" 
-                value={formData.additionalInfo} 
-                onChange={handleChange} 
-                rows={4}
-                placeholder="Share any additional information that might be relevant to your application."
-              />
-            </div>
+            <div><Label htmlFor="experience">Previous experience with dogs</Label><Textarea id="experience" {...register("experience")} rows={3} placeholder="Please describe your previous experience with dogs, if any." /></div>
+            <div><Label htmlFor="referral">How did you hear about us?</Label><Input id="referral" {...register("referral")} /></div>
+            <div><Label htmlFor="additionalInfo">Anything else you'd like us to know?</Label><Textarea id="additionalInfo" {...register("additionalInfo")} rows={4} placeholder="Share any additional information that might be relevant to your application." /></div>
           </div>
 
           <div className="flex justify-center">

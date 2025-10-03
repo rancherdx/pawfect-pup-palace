@@ -43,14 +43,10 @@ const SquareAPISetup = () => {
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
 
-  useEffect(() => {
-    loadSquareConfig();
-  }, []);
-
   /**
    * Loads the current Square configuration from the backend.
    */
-  const loadSquareConfig = async () => {
+  const loadSquareConfig = useCallback(async () => {
     try {
       setLoading(true);
       const response = await adminApi.getSquareEnvironment();
@@ -72,7 +68,11 @@ const SquareAPISetup = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    loadSquareConfig();
+  }, [loadSquareConfig]);
 
   /**
    * Saves the current configuration to the backend.

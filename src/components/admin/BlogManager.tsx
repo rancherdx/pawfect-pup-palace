@@ -5,7 +5,8 @@ import { Plus, Edit, Trash, Search, Loader2, FileText, CheckCircle, XCircle } fr
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '@/api';
 import { toast } from 'sonner';
-import { BlogPost, BlogPostStatus, BlogPostCreateData, BlogPostUpdateData } from "@/types";
+import { BlogPost, BlogPostStatus } from "@/types/api";
+import { BlogPostCreationData, BlogPostUpdateData } from '@/api/adminApi';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,11 +32,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
-/**
- * @constant initialFormData
- * @description Initial state for the blog post form data.
- */
-const initialFormData: BlogPostCreateData = {
+const initialFormData: BlogPostCreationData = {
   title: "",
   slug: "",
   content: "",
@@ -45,46 +42,34 @@ const initialFormData: BlogPostCreateData = {
   excerpt: "",
 };
 
-/**
- * @constant BLOG_POST_STATUS_VALUES
- * @description An array of possible statuses for a blog post.
- */
 const BLOG_POST_STATUS_VALUES: BlogPostStatus[] = ["draft", "published", "archived"];
 
 /**
  * @component BlogManager
- * @description A comprehensive component for managing blog posts. It allows for creating,
- * editing, deleting, filtering, and searching for blog posts.
+ * @description A comprehensive component for managing blog posts.
  * @returns {React.ReactElement} The rendered blog management interface.
  */
 const BlogManager = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [currentPost, setCurrentPost] = useState<BlogPost | null>(null);
-  const [formData, setFormData] = useState<BlogPostCreateData>(initialFormData);
+  const [formData, setFormData] = useState<BlogPostCreationData | BlogPostUpdateData>(initialFormData);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [postToDeleteId, setPostToDeleteId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | BlogPostStatus>("all");
 
   const queryClient = useQueryClient();
 
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError, error } = useQuery<{ posts: BlogPost[] }, Error>({
     queryKey: ['blogPosts', { filter }],
     queryFn: () => adminApi.getAllPosts({ status: filter === "all" ? undefined : filter }),
     staleTime: 5 * 60 * 1000,
   });
 
-  const posts = data?.posts?.map((post: any) => ({
-    ...post,
-    createdAt: post.created_at,
-    updatedAt: post.updated_at,
-    publishedAt: post.published_at,
-    featuredImageUrl: post.featured_image_url,
-    authorName: post.author_name
-  })) || [];
+  const posts = data?.posts || [];
 
   const addPostMutation = useMutation({
-    mutationFn: (newData: BlogPostCreateData) => adminApi.createPost(newData),
+    mutationFn: (newData: BlogPostCreationData) => adminApi.createPost(newData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['blogPosts'] });
       toast.success('Blog post added successfully!');
@@ -141,63 +126,37 @@ const BlogManager = () => {
     }
   }, [currentPost, showForm]);
 
-  /**
-   * Initiates the process of deleting a blog post by setting its ID and showing the confirmation dialog.
-   * @param {string} id - The ID of the post to delete.
-   */
   const handleDeletePost = (id: string) => {
     setPostToDeleteId(id);
     setShowDeleteDialog(true);
   };
 
-  /**
-   * Confirms and executes the deletion of the blog post.
-   */
   const confirmDeletePost = () => {
     if (postToDeleteId) {
       deletePostMutation.mutate(postToDeleteId);
     }
   };
 
-  /**
-   * Prepares the form for editing an existing blog post.
-   * @param {BlogPost} post - The post to be edited.
-   */
   const handleEditPost = (post: BlogPost) => {
     setCurrentPost(post);
     setShowForm(true);
   };
 
-  /**
-   * Prepares the form for adding a new blog post.
-   */
   const handleAddPost = () => {
     setCurrentPost(null);
     setFormData(initialFormData);
     setShowForm(true);
   };
 
-  /**
-   * Handles the submission of the blog post form, either for creation or update.
-   * @param {React.FormEvent} e - The form submission event.
-   */
   const handleSavePost = (e: React.FormEvent) => {
     e.preventDefault();
-    const payload: BlogPostCreateData | BlogPostUpdateData = {
-      ...formData,
-    };
-
     if (currentPost && currentPost.id) {
-      updatePostMutation.mutate({ id: currentPost.id, data: payload as BlogPostUpdateData });
+      updatePostMutation.mutate({ id: currentPost.id, data: formData as BlogPostUpdateData });
     } else {
-      addPostMutation.mutate(payload as BlogPostCreateData);
+      addPostMutation.mutate(formData as BlogPostCreationData);
     }
   };
 
-  /**
-   * Handles changes in form inputs and updates the form state.
-   * @param {React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>} e - The input change event.
-   */
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
@@ -208,7 +167,7 @@ const BlogManager = () => {
     }));
   };
 
-  const filteredPosts: BlogPost[] = posts.filter(post =>
+  const filteredPosts = posts.filter(post =>
     post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (post.category && post.category.toLowerCase().includes(searchQuery.toLowerCase()))
   );
@@ -222,11 +181,10 @@ const BlogManager = () => {
           <FileText className="mr-2 h-8 w-8 text-brand-red" />
           Blog Post Management
         </h2>
-
         <div className="flex flex-col md:flex-row gap-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
+            <Input
               type="text"
               placeholder="Search blog posts..."
               value={searchQuery}
@@ -234,7 +192,6 @@ const BlogManager = () => {
               className="pl-10 pr-4 py-2 border rounded-lg w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-brand-red"
             />
           </div>
-
           <Button
             onClick={handleAddPost}
             className="bg-brand-red hover:bg-red-700 text-white flex items-center gap-2"
@@ -248,134 +205,49 @@ const BlogManager = () => {
       <BlogFilter value={filter} onChange={(value) => setFilter(value)} />
 
       {showForm ? (
-
         <Card className="shadow-lg border-t-4 border-t-brand-red animate-fade-in">
           <CardHeader className="bg-gray-50 dark:bg-gray-900/20">
             <CardTitle className="text-2xl">
               {currentPost ? "Edit Blog Post" : "Add New Blog Post"}
             </CardTitle>
           </CardHeader>
-
           <CardContent className="p-6">
-            <ScrollArea className="h-[600px] w-full rounded-md border">
+            <ScrollArea className="h-[600px] w-full rounded-md border p-4">
               <form onSubmit={handleSavePost} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="block text-lg font-medium mb-1">
-                        Title
-                      </Label>
-                      <Input
-                        required
-                        type="text"
-                        name="title"
-                        value={formData.title}
-                        onChange={handleInputChange}
-                        placeholder="Enter blog post title"
-                        className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                      />
-                    </div>
-                    <div>
-                      <Label className="block text-lg font-medium mb-1">
-                        Slug
-                      </Label>
-                      <Input
-                        required
-                        type="text"
-                        name="slug"
-                        value={formData.slug}
-                        onChange={handleInputChange}
-                        placeholder="Enter slug"
-                        className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                      />
-                    </div>
-                    <div>
-                      <Label className="block text-lg font-medium mb-1">
-                        Category
-                      </Label>
-                      <Input
-                        type="text"
-                        name="category"
-                        value={formData.category}
-                        onChange={handleInputChange}
-                        placeholder="Enter category"
-                        className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                      />
-                    </div>
-                    <div>
-                      <Label className="block text-lg font-medium mb-1">
-                        Excerpt
-                      </Label>
-                      <Textarea
-                        name="excerpt"
-                        value={formData.excerpt}
-                        onChange={handleInputChange}
-                        placeholder="Enter excerpt"
-                        className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="block text-lg font-medium mb-1">
-                        Featured Image URL
-                      </Label>
-                      <Input
-                        type="text"
-                        name="featuredImageUrl"
-                        value={formData.featuredImageUrl}
-                        onChange={handleInputChange}
-                        placeholder="Enter featured image URL"
-                        className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                      />
-                    </div>
-
-                    <div>
-                      <Label className="block text-lg font-medium mb-1">
-                        Status
-                      </Label>
-                      <select
-                        name="status"
-                        value={formData.status}
-                        onChange={handleInputChange}
-                        className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red"
-                      >
-                        {BLOG_POST_STATUS_VALUES.map(statusValue => (
-                          <option key={statusValue} value={statusValue}>{statusValue}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="title" className="font-medium">Title</Label>
+                  <Input id="title" name="title" value={formData.title} onChange={handleInputChange} required />
                 </div>
-
-                <div className="space-y-4">
-                  <Label className="block text-lg font-medium mb-1">
-                    Content
-                  </Label>
-                  <Textarea
-                    name="content"
-                    value={formData.content}
-                    onChange={handleInputChange}
-                    placeholder="Enter blog post content"
-                    rows={10}
-                    className="w-full p-3 border rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-brand-red resize-none"
-                  />
+                <div className="space-y-2">
+                  <Label htmlFor="slug" className="font-medium">Slug</Label>
+                  <Input id="slug" name="slug" value={formData.slug} onChange={handleInputChange} required />
                 </div>
-
+                <div className="space-y-2">
+                  <Label htmlFor="category" className="font-medium">Category</Label>
+                  <Input id="category" name="category" value={formData.category || ''} onChange={handleInputChange} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="excerpt" className="font-medium">Excerpt</Label>
+                  <Textarea id="excerpt" name="excerpt" value={formData.excerpt || ''} onChange={handleInputChange} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="featuredImageUrl" className="font-medium">Featured Image URL</Label>
+                  <Input id="featuredImageUrl" name="featuredImageUrl" value={formData.featuredImageUrl || ''} onChange={handleInputChange} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="status" className="font-medium">Status</Label>
+                  <select id="status" name="status" value={formData.status} onChange={handleInputChange} className="w-full p-2 border rounded-md">
+                    {BLOG_POST_STATUS_VALUES.map(status => <option key={status} value={status}>{status}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="content" className="font-medium">Content</Label>
+                  <Textarea id="content" name="content" value={formData.content} onChange={handleInputChange} rows={15} />
+                </div>
                 <div className="flex justify-end gap-3 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowForm(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    className="bg-brand-red hover:bg-red-700 text-white min-w-32"
-                  >
-                    {currentPost ? "Update Post" : "Create Post"}
+                  <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
+                  <Button type="submit" className="bg-brand-red hover:bg-red-700 text-white min-w-32" disabled={isMutationLoading}>
+                    {isMutationLoading ? <Loader2 className="animate-spin" /> : (currentPost ? "Update Post" : "Create Post")}
                   </Button>
                 </div>
               </form>
@@ -383,13 +255,12 @@ const BlogManager = () => {
           </CardContent>
         </Card>
       ) : (
-
         <div className="w-full overflow-x-auto">
           <Table>
             <TableCaption>A list of your recent blog posts.</TableCaption>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[200px]">Title</TableHead>
+                <TableHead>Title</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Author</TableHead>
                 <TableHead>Published At</TableHead>
@@ -398,48 +269,26 @@ const BlogManager = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredPosts.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-4">No blog posts found.</TableCell>
-                </TableRow>
+              {isLoading ? (<TableRow><TableCell colSpan={6} className="text-center py-4"><Loader2 className="mx-auto animate-spin" /></TableCell></TableRow>)
+              : isError ? (<TableRow><TableCell colSpan={6} className="text-center py-4 text-red-500">Error: {error.message}</TableCell></TableRow>)
+              : filteredPosts.length === 0 ? (
+                <TableRow><TableCell colSpan={6} className="text-center py-4">No blog posts found.</TableCell></TableRow>
               ) : (
                 filteredPosts.map((post) => (
                   <TableRow key={post.id}>
                     <TableCell className="font-medium">{post.title}</TableCell>
                     <TableCell>{post.category}</TableCell>
-                    <TableCell>
-                      {typeof post.author === 'string' ? post.author : post.author?.name || 'Anonymous'}
-                    </TableCell>
+                    <TableCell>{post.authorName || 'Anonymous'}</TableCell>
                     <TableCell>{post.publishedAt ? format(new Date(post.publishedAt), 'MMM dd, yyyy') : 'Not published'}</TableCell>
                     <TableCell>
-                      {post.status === 'draft' && (
-                        <div className="flex items-center gap-1"><FileText className="w-4 h-4 text-gray-500" /> Draft</div>
-                      )}
-                      {post.status === 'published' && (
-                        <div className="flex items-center gap-1"><CheckCircle className="w-4 h-4 text-green-500" /> Published</div>
-                      )}
-                      {post.status === 'archived' && (
-                        <div className="flex items-center gap-1"><XCircle className="w-4 h-4 text-red-500" /> Archived</div>
-                      )}
+                      {post.status === 'draft' && <div className="flex items-center gap-1 text-gray-500"><FileText className="w-4 h-4" /> Draft</div>}
+                      {post.status === 'published' && <div className="flex items-center gap-1 text-green-600"><CheckCircle className="w-4 h-4" /> Published</div>}
+                      {post.status === 'archived' && <div className="flex items-center gap-1 text-red-600"><XCircle className="w-4 h-4" /> Archived</div>}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditPost(post)}
-                          className="h-8 w-8 p-0"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeletePost(post.id)}
-                          className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <Trash className="h-4 w-4" />
-                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleEditPost(post)}><Edit className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700" onClick={() => handleDeletePost(post.id)}><Trash className="h-4 w-4" /></Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -454,17 +303,13 @@ const BlogManager = () => {
         <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the blog post
-                and remove its data from our servers.
-              </AlertDialogDescription>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>This will permanently delete the blog post.</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => { setShowDeleteDialog(false); setPostToDeleteId(null); }}>Cancel</AlertDialogCancel>
+              <AlertDialogCancel onClick={() => setShowDeleteDialog(false)}>Cancel</AlertDialogCancel>
               <AlertDialogAction onClick={confirmDeletePost} disabled={deletePostMutation.isPending}>
-                {deletePostMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Yes, delete post
+                {deletePostMutation.isPending ? <Loader2 className="animate-spin" /> : "Delete"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -479,22 +324,19 @@ interface BlogFilterProps {
   onChange: (value: "all" | BlogPostStatus) => void;
 }
 
-const BlogFilter: React.FC<BlogFilterProps> = ({ value, onChange }) => {
-  return (
-    <div className="flex items-center space-x-4">
-      <Label>Filter by Status:</Label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value as "all" | BlogPostStatus)}
-        className="border rounded-md px-4 py-2"
-      >
-        <option value="all">All</option>
-        <option value="draft">Draft</option>
-        <option value="published">Published</option>
-        <option value="archived">Archived</option>
-      </select>
-    </div>
-  );
-};
+const BlogFilter: React.FC<BlogFilterProps> = ({ value, onChange }) => (
+  <div className="flex items-center space-x-2">
+    <Label htmlFor="status-filter">Filter by Status:</Label>
+    <select
+      id="status-filter"
+      value={value}
+      onChange={(e) => onChange(e.target.value as "all" | BlogPostStatus)}
+      className="border rounded-md px-3 py-1.5 text-sm"
+    >
+      <option value="all">All</option>
+      {BLOG_POST_STATUS_VALUES.map(status => <option key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>)}
+    </select>
+  </div>
+);
 
 export default BlogManager;

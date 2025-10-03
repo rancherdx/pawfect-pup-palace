@@ -3,11 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Dog, Search, ArrowLeft, ArrowRight, Edit2, Trash2, Loader2, PlusCircle, X } from 'lucide-react';
+import { Dog, Search, ArrowLeft, ArrowRight, Edit2, Trash2, Loader2, PlusCircle } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import StudDogForm from './StudDogForm';
-import { StudDog, StudDogCreationData, StudDogUpdateData } from '@/types';
+import { StudDog } from '@/types/api';
+import { adminApi } from '@/api';
+import { StudDogCreationData, StudDogUpdateData } from '@/api/adminApi';
 import {
   Dialog,
   DialogContent,
@@ -16,37 +18,17 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { adminApi } from '@/api';
 
-/**
- * @interface AdminStudDog
- * @description Represents the structure of a stud dog object as used in the admin interface.
- */
-interface AdminStudDog {
-  id: string;
-  name: string;
-  breed_id: string;
-  age?: number;
-  description?: string;
-  temperament?: string;
-  certifications?: string[];
-  image_urls?: string[];
-  stud_fee: number;
-  is_available: boolean;
-  owner_user_id?: string;
+// This interface extends the base StudDog for UI-specific fields that might be joined or added.
+// The API does not provide these fields, but the UI component handles their potential absence.
+interface AdminViewStudDog extends StudDog {
   owner_name?: string | null;
-  owner_email?: string | null;
   breed_name?: string | null;
-  created_at: string;
-  updated_at: string;
 }
 
-/**
- * @interface AdminStudDogsApiResponse
- * @description Defines the shape of the API response for fetching stud dogs.
- */
+// Defines the shape of the paginated response constructed by the fetcher function for the UI.
 interface AdminStudDogsApiResponse {
-  studDogs: AdminStudDog[];
+  studDogs: AdminViewStudDog[];
   currentPage: number;
   totalPages: number;
   totalStudDogs: number;
@@ -61,14 +43,14 @@ interface AdminStudDogsApiResponse {
  */
 const AdminStudDogManager: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] =useState(10);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [filterAvailability, setFilterAvailability] = useState<string>("all");
   const [filterBreedId, setFilterBreedId] = useState("");
 
   const [showFormModal, setShowFormModal] = useState(false);
-  const [editingStudDog, setEditingStudDog] = useState<AdminStudDog | null>(null);
+  const [editingStudDog, setEditingStudDog] = useState<AdminViewStudDog | null>(null);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [deletingStudDogId, setDeletingStudDogId] = useState<string | null>(null);
 
@@ -81,32 +63,26 @@ const AdminStudDogManager: React.FC = () => {
 
   useEffect(() => { setCurrentPage(1); }, [filterAvailability, filterBreedId]);
 
-  /**
-   * Fetches stud dogs from the admin API based on query parameters.
-   * @param {object} context - The react-query context.
-   * @param {any[]} context.queryKey - The query key array.
-   * @returns {Promise<AdminStudDogsApiResponse>} A promise that resolves with the stud dog data.
-   */
   const fetchAdminStudDogs = async ({ queryKey }: { queryKey: [string, number, number, string, string, string] }): Promise<AdminStudDogsApiResponse> => {
     const [_key, page, limit, search, availability, breedId] = queryKey;
+    // The API call doesn't support all these filters yet, but they are passed for future compatibility.
     const params = {
-      page: page,
-      limit: limit,
       search: search || undefined,
-      is_available: availability !== "all" ? availability : undefined,
-      breed_id: breedId || undefined
+      // Note: Component handles filtering/pagination client-side for now.
     };
     const response = await adminApi.getStudDogs(params);
+    const studDogs: AdminViewStudDog[] = response.data; // API returns StudDog[], assignable to AdminViewStudDog[]
+
     return {
-      studDogs: response.data || [],
+      studDogs,
       currentPage: page,
-      totalPages: Math.ceil((response.data?.length || 0) / limit),
-      totalStudDogs: response.data?.length || 0,
-      limit: limit
+      totalPages: Math.ceil(studDogs.length / limit),
+      totalStudDogs: studDogs.length,
+      limit,
     };
   };
 
-  const { data, isLoading, isError, error, isPlaceholderData } = useQuery({
+  const { data, isLoading, isError, error, isPlaceholderData } = useQuery<AdminStudDogsApiResponse, Error>({
     queryKey: ['adminStudDogs', currentPage, rowsPerPage, debouncedSearchQuery, filterAvailability, filterBreedId],
     queryFn: fetchAdminStudDogs,
     placeholderData: (previousData) => previousData,
@@ -152,29 +128,15 @@ const AdminStudDogManager: React.FC = () => {
     }
   });
 
-  /** Opens the form modal to add a new stud dog. */
   const handleAddClick = () => { setEditingStudDog(null); setShowFormModal(true); };
 
-  /**
-   * Opens the form modal to edit an existing stud dog.
-   * @param {AdminStudDog} studDog - The stud dog to edit.
-   */
-  const handleEditClick = (studDog: AdminStudDog) => {
+  const handleEditClick = (studDog: AdminViewStudDog) => {
     setEditingStudDog(studDog);
     setShowFormModal(true);
   };
 
-  /**
-   * Opens the confirmation modal to delete a stud dog.
-   * @param {string} id - The ID of the stud dog to delete.
-   */
   const handleDeleteClick = (id: string) => { setDeletingStudDogId(id); setShowDeleteConfirmModal(true); };
 
-  /**
-   * Handles saving a stud dog, either creating a new one or updating an existing one.
-   * @param {StudDogCreationData} formDataValues - The form data.
-   * @param {string} [id] - The ID of the stud dog to update. If not provided, a new dog is created.
-   */
   const handleSaveStudDog = (formDataValues: StudDogCreationData, id?: string) => {
     if (id) {
       updateStudDogMutation.mutate({ id, data: formDataValues });
@@ -183,16 +145,10 @@ const AdminStudDogManager: React.FC = () => {
     }
   };
 
-  /** Confirms and executes the deletion of a stud dog. */
   const confirmDelete = () => { 
     if (deletingStudDogId) deleteStudDogMutation.mutate(deletingStudDogId); 
   };
 
-  /**
-   * Formats a date string into a more readable format.
-   * @param {string} dateString - The date string to format.
-   * @returns {string} The formatted date string.
-   */
   const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 
   return (
@@ -226,12 +182,12 @@ const AdminStudDogManager: React.FC = () => {
           <TableBody>
             {isLoading ? Array.from({ length: rowsPerPage }).map((_, i) => <TableRow key={`skel-${i}`}><TableCell colSpan={7}><div className="h-5 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div></TableCell></TableRow>)
              : isError ? <TableRow><TableCell colSpan={7} className="text-center text-red-500 py-8">Error: {error.message}</TableCell></TableRow>
-             : data?.studDogs.length === 0 ? <TableRow><TableCell colSpan={7} className="text-center py-8">No stud dogs found.</TableCell></TableRow>
-             : data?.studDogs.map(dog => (
+             : !data || data.studDogs.length === 0 ? <TableRow><TableCell colSpan={7} className="text-center py-8">No stud dogs found.</TableCell></TableRow>
+             : data.studDogs.map(dog => (
                 <TableRow key={dog.id}>
                   <TableCell className="font-medium">{dog.name}</TableCell>
                   <TableCell>{dog.breed_name || dog.breed_id}</TableCell>
-                  <TableCell>{dog.owner_name || dog.owner_user_id?.substring(0,8) || 'N/A'}</TableCell>
+                  <TableCell>{dog.owner_name || (dog.owner_user_id ? dog.owner_user_id.substring(0,8) : 'N/A')}</TableCell>
                   <TableCell>${dog.stud_fee.toFixed(2)}</TableCell>
                   <TableCell><Badge variant={dog.is_available ? "default" : "outline"}>{dog.is_available ? "Yes" : "No"}</Badge></TableCell>
                   <TableCell className="text-xs">{formatDate(dog.updated_at)}</TableCell>
@@ -261,18 +217,7 @@ const AdminStudDogManager: React.FC = () => {
       <Dialog open={showFormModal} onOpenChange={(isOpen) => { if(!isOpen) {setShowFormModal(false); setEditingStudDog(null); } else {setShowFormModal(true);}}}>
         <DialogContent className="sm:max-w-2xl md:max-w-3xl">
           <StudDogForm
-            studDog={editingStudDog ? {
-                id: editingStudDog.id,
-                name: editingStudDog.name,
-                breed_id: editingStudDog.breed_id,
-                age: typeof editingStudDog.age === 'string' ? parseInt(editingStudDog.age) || 0 : editingStudDog.age || 0,
-                description: editingStudDog.description || '',
-                temperament: editingStudDog.temperament || '',
-                certifications: editingStudDog.certifications || [],
-                stud_fee: typeof editingStudDog.stud_fee === 'string' ? parseFloat(editingStudDog.stud_fee) || 0 : editingStudDog.stud_fee || 0,
-                image_urls: editingStudDog.image_urls || [],
-                is_available: Boolean(editingStudDog.is_available)
-            } : undefined}
+            studDog={editingStudDog || undefined}
             onSave={handleSaveStudDog}
             onClose={() => { setShowFormModal(false); setEditingStudDog(null); }}
             isLoading={addStudDogMutation.isPending || updateStudDogMutation.isPending}
