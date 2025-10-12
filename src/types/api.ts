@@ -33,8 +33,8 @@ export interface Puppy {
   is_featured?: boolean | null;
   banner_text?: string | null;
   banner_color?: string | null;
-  created_at: string; // timestamptz
-  updated_at: string; // timestamptz
+  created_at?: string; // timestamptz - optional for API responses
+  updated_at?: string; // timestamptz - optional for API responses
 }
 
 export interface Litter {
@@ -55,8 +55,8 @@ export interface Litter {
   cover_image_url?: string | null; // Legacy field
   image_urls?: string[] | null;
   video_urls?: string[] | null;
-  created_at: string; // timestamptz
-  updated_at: string; // timestamptz
+  created_at?: string; // timestamptz - optional for API responses
+  updated_at?: string; // timestamptz - optional for API responses
 }
 
 // Type aliases for form data
@@ -87,6 +87,21 @@ export interface BreedTemplate {
   gallery_urls?: string[] | null;
   created_at?: string | null; // timestamptz
   updated_at?: string | null; // timestamptz
+}
+
+export interface Parent {
+  id: string; // uuid
+  name: string;
+  breed: string;
+  gender: 'Male' | 'Female';
+  description?: string | null;
+  image_urls?: string[] | null;
+  certifications?: string[] | null;
+  bloodline_info?: string | null;
+  health_clearances?: string[] | null;
+  is_active: boolean;
+  created_at?: string; // timestamptz - optional for API responses
+  updated_at?: string; // timestamptz - optional for API responses
 }
 
 export interface StudDog {

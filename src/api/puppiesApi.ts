@@ -1,5 +1,17 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Puppy, PublicPuppyListResponse } from '@/types/puppy';
+import { Puppy } from '@/types/api';
+
+export type PuppyCreationData = Omit<Puppy, 'id' | 'created_at' | 'updated_at'>;
+export type PuppyUpdateData = Partial<PuppyCreationData>;
+
+export interface PublicPuppyListResponse {
+  puppies: Puppy[];
+  pagination?: {
+    total: number;
+    current_page: number;
+    total_pages: number;
+  };
+}
 
 /**
  * Fetches all available puppies from the database.

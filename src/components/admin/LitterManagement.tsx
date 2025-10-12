@@ -4,7 +4,7 @@ import { Plus, PawPrint, Search } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '@/api';
 import { toast } from 'sonner';
-import { Litter, LitterCreationData, LitterUpdateData, LitterListResponse, LitterStatus } from "@/types";
+import { Litter, LitterCreationData, LitterUpdateData, LitterStatus } from "@/types/api";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,17 +23,17 @@ import LitterCard from "./LitterCard";
  * @constant initialFormData
  * @description The initial state for the litter form data when creating a new litter.
  */
-const initialFormData = {
+const initialFormData: LitterCreationData = {
   name: "",
-  damName: "",
-  sireName: "",
+  dam_name: "",
+  sire_name: "",
   breed: "",
-  dateOfBirth: new Date().toISOString().split("T")[0],
-  expectedDate: undefined as string | undefined,
-  puppyCount: 0,
+  date_of_birth: new Date().toISOString().split("T")[0],
+  expected_date: undefined as string | undefined,
+  puppy_count: 0,
   status: "Active" as LitterStatus,
   description: "",
-  coverImageUrl: ""
+  cover_image_url: ""
 };
 
 /**
@@ -56,7 +56,7 @@ const LitterManagement = () => {
     queryKey: ['admin-litters'],
     queryFn: async () => {
       const result = await adminApi.getAllLitters({ limit: 100 });
-      return result as LitterListResponse;
+      return { litters: result.data, pagination: undefined };
     },
     staleTime: 5 * 60 * 1000,
   });

@@ -1,5 +1,19 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Parent, ParentListResponse, ParentCreationData, ParentUpdateData } from '@/types/parent';
+import { Parent } from '@/types/api';
+
+export type { Parent };
+
+export interface ParentListResponse {
+  parents: Parent[];
+  pagination?: {
+    total: number;
+    current_page: number;
+    total_pages: number;
+  };
+}
+
+export type ParentCreationData = Omit<Parent, 'id' | 'created_at' | 'updated_at'>;
+export type ParentUpdateData = Partial<ParentCreationData>;
 
 /**
  * Fetches all active parents from the database.

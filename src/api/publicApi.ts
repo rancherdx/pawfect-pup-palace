@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Puppy } from '@/types/puppy';
+import { Puppy } from '@/types/api';
 
 /**
  * @namespace publicApi

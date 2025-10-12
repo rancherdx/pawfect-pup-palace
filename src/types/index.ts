@@ -1,9 +1,7 @@
-// src/types/index.ts
+// Export all types from the consolidated api.ts file
+export * from './api';
 export * from './common';
-export * from './puppy';
-export * from './litter';
 export * from './auth';
 export * from './breedTemplate';
 export * from './blogPost';
 export * from './studDog';
-export * from './parent';

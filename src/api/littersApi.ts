@@ -1,5 +1,14 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Litter, LitterListResponse, LitterCreationData, LitterUpdateData } from '@/types/litter';
+import { Litter, LitterCreationData, LitterUpdateData } from '@/types/api';
+
+export interface LitterListResponse {
+  litters: Litter[];
+  pagination?: {
+    total: number;
+    current_page: number;
+    total_pages: number;
+  };
+}
 
 /**
  * Fetches all active litters from the database.
@@ -20,18 +29,23 @@ export const getAll = async (params?: Record<string, unknown>): Promise<LitterLi
   const transformedData: Litter[] = data?.map(item => ({
     id: item.id,
     name: item.name,
+    slug: item.slug,
     breed: item.breed,
-    damName: item.dam_name,
-    sireName: item.sire_name,
-    dateOfBirth: item.date_of_birth,
-    status: item.status as any,
+    dam_name: item.dam_name,
+    sire_name: item.sire_name,
+    dam_id: item.dam_id,
+    sire_id: item.sire_id,
+    date_of_birth: item.date_of_birth,
+    status: item.status,
     description: item.description,
-    coverImageUrl: item.cover_image_url,
+    cover_image_url: item.cover_image_url,
     image_urls: item.image_urls || [],
     video_urls: item.video_urls || [],
-    puppyCount: item.puppy_count,
-    expectedDate: item.expected_date,
-    puppies: []
+    puppy_count: item.puppy_count,
+    expected_date: item.expected_date,
+    breed_template_id: item.breed_template_id,
+    created_at: item.created_at,
+    updated_at: item.updated_at
   })) || [];
   
   return { 
@@ -68,18 +82,23 @@ export const getLitterById = async (id: string): Promise<Litter> => {
   return {
     id: data.id,
     name: data.name,
+    slug: data.slug,
     breed: data.breed,
-    damName: data.dam_name,
-    sireName: data.sire_name,
-    dateOfBirth: data.date_of_birth,
-    status: data.status as any,
+    dam_name: data.dam_name,
+    sire_name: data.sire_name,
+    dam_id: data.dam_id,
+    sire_id: data.sire_id,
+    date_of_birth: data.date_of_birth,
+    status: data.status,
     description: data.description,
-    coverImageUrl: data.cover_image_url,
+    cover_image_url: data.cover_image_url,
     image_urls: data.image_urls || [],
     video_urls: data.video_urls || [],
-    puppyCount: data.puppy_count,
-    expectedDate: data.expected_date,
-    puppies: []
+    puppy_count: data.puppy_count,
+    expected_date: data.expected_date,
+    breed_template_id: data.breed_template_id,
+    created_at: data.created_at,
+    updated_at: data.updated_at
   };
 };
 
@@ -95,16 +114,20 @@ export const createLitter = async (data: LitterCreationData): Promise<Litter> =>
     .insert({
       name: data.name,
       breed: data.breed,
-      dam_name: data.damName,
-      sire_name: data.sireName,
-      date_of_birth: data.dateOfBirth,
+      dam_name: data.dam_name,
+      sire_name: data.sire_name,
+      dam_id: data.dam_id,
+      sire_id: data.sire_id,
+      date_of_birth: data.date_of_birth,
       status: data.status,
       description: data.description,
-      cover_image_url: data.coverImageUrl,
+      cover_image_url: data.cover_image_url,
       image_urls: data.image_urls || [],
       video_urls: data.video_urls || [],
-      puppy_count: data.puppyCount,
-      expected_date: data.expectedDate
+      puppy_count: data.puppy_count,
+      expected_date: data.expected_date,
+      breed_template_id: data.breed_template_id,
+      slug: data.slug
     })
     .select('*')
     .single();
@@ -114,18 +137,23 @@ export const createLitter = async (data: LitterCreationData): Promise<Litter> =>
   return {
     id: newLitter.id,
     name: newLitter.name,
+    slug: newLitter.slug,
     breed: newLitter.breed,
-    damName: newLitter.dam_name,
-    sireName: newLitter.sire_name,
-    dateOfBirth: newLitter.date_of_birth,
-    status: newLitter.status as any,
+    dam_name: newLitter.dam_name,
+    sire_name: newLitter.sire_name,
+    dam_id: newLitter.dam_id,
+    sire_id: newLitter.sire_id,
+    date_of_birth: newLitter.date_of_birth,
+    status: newLitter.status,
     description: newLitter.description,
-    coverImageUrl: newLitter.cover_image_url,
+    cover_image_url: newLitter.cover_image_url,
     image_urls: newLitter.image_urls || [],
     video_urls: newLitter.video_urls || [],
-    puppyCount: newLitter.puppy_count,
-    expectedDate: newLitter.expected_date,
-    puppies: []
+    puppy_count: newLitter.puppy_count,
+    expected_date: newLitter.expected_date,
+    breed_template_id: newLitter.breed_template_id,
+    created_at: newLitter.created_at,
+    updated_at: newLitter.updated_at
   };
 };
 
@@ -137,22 +165,27 @@ export const createLitter = async (data: LitterCreationData): Promise<Litter> =>
  * @throws Will throw an error if the Supabase update operation fails.
  */
 export const updateLitter = async (id: string, data: LitterUpdateData): Promise<Litter> => {
+  const updateData: Record<string, any> = {};
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.breed !== undefined) updateData.breed = data.breed;
+  if (data.dam_name !== undefined) updateData.dam_name = data.dam_name;
+  if (data.sire_name !== undefined) updateData.sire_name = data.sire_name;
+  if (data.dam_id !== undefined) updateData.dam_id = data.dam_id;
+  if (data.sire_id !== undefined) updateData.sire_id = data.sire_id;
+  if (data.date_of_birth !== undefined) updateData.date_of_birth = data.date_of_birth;
+  if (data.status !== undefined) updateData.status = data.status;
+  if (data.description !== undefined) updateData.description = data.description;
+  if (data.cover_image_url !== undefined) updateData.cover_image_url = data.cover_image_url;
+  if (data.image_urls !== undefined) updateData.image_urls = data.image_urls;
+  if (data.video_urls !== undefined) updateData.video_urls = data.video_urls;
+  if (data.puppy_count !== undefined) updateData.puppy_count = data.puppy_count;
+  if (data.expected_date !== undefined) updateData.expected_date = data.expected_date;
+  if (data.breed_template_id !== undefined) updateData.breed_template_id = data.breed_template_id;
+  if (data.slug !== undefined) updateData.slug = data.slug;
+
   const { data: updatedLitter, error } = await supabase
     .from('litters')
-    .update({
-      name: data.name,
-      breed: data.breed,
-      dam_name: data.damName,
-      sire_name: data.sireName,
-      date_of_birth: data.dateOfBirth,
-      status: data.status,
-      description: data.description,
-      cover_image_url: data.coverImageUrl,
-      image_urls: data.image_urls || [],
-      video_urls: data.video_urls || [],
-      puppy_count: data.puppyCount,
-      expected_date: data.expectedDate
-    })
+    .update(updateData)
     .eq('id', id)
     .select('*')
     .single();
@@ -162,18 +195,23 @@ export const updateLitter = async (id: string, data: LitterUpdateData): Promise<
   return {
     id: updatedLitter.id,
     name: updatedLitter.name,
+    slug: updatedLitter.slug,
     breed: updatedLitter.breed,
-    damName: updatedLitter.dam_name,
-    sireName: updatedLitter.sire_name,
-    dateOfBirth: updatedLitter.date_of_birth,
-    status: updatedLitter.status as any,
+    dam_name: updatedLitter.dam_name,
+    sire_name: updatedLitter.sire_name,
+    dam_id: updatedLitter.dam_id,
+    sire_id: updatedLitter.sire_id,
+    date_of_birth: updatedLitter.date_of_birth,
+    status: updatedLitter.status,
     description: updatedLitter.description,
-    coverImageUrl: updatedLitter.cover_image_url,
+    cover_image_url: updatedLitter.cover_image_url,
     image_urls: updatedLitter.image_urls || [],
     video_urls: updatedLitter.video_urls || [],
-    puppyCount: updatedLitter.puppy_count,
-    expectedDate: updatedLitter.expected_date,
-    puppies: []
+    puppy_count: updatedLitter.puppy_count,
+    expected_date: updatedLitter.expected_date,
+    breed_template_id: updatedLitter.breed_template_id,
+    created_at: updatedLitter.created_at,
+    updated_at: updatedLitter.updated_at
   };
 };
 
