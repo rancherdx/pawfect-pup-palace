@@ -14,7 +14,7 @@ import { ParentCreationData, ParentUpdateData } from '@/api/adminApi';
 const parentFormSchema = z.object({
   name: z.string().min(2, "Name is required."),
   breed: z.string().min(2, "Breed is required."),
-  gender: z.enum(['Male', 'Female'], { errorMap: () => ({ message: "Please select a gender." }) }),
+  gender: z.enum(['Male', 'Female'] as const, { errorMap: () => ({ message: "Please select a gender." }) }),
   description: z.string().optional(),
   bloodline_info: z.string().optional(),
   image_urls: z.array(z.string()).optional(),

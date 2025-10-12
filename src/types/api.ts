@@ -60,8 +60,12 @@ export interface Litter {
 }
 
 // Type aliases for form data
+export type PuppyCreationData = Omit<Puppy, 'id' | 'created_at' | 'updated_at'>;
+export type PuppyUpdateData = Partial<PuppyCreationData>;
 export type LitterCreationData = Omit<Litter, 'id' | 'created_at' | 'updated_at'>;
 export type LitterUpdateData = Partial<LitterCreationData>;
+export type ParentCreationData = Omit<Parent, 'id' | 'created_at' | 'updated_at'>;
+export type ParentUpdateData = Partial<ParentCreationData>;
 
 export interface BreedTemplate {
   id: string; // uuid

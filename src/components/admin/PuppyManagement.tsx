@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '@/api';
 import { toast } from 'sonner';
-import { Puppy, PuppyCreationData, PuppyUpdateData } from "@/types";
+import { Puppy, PuppyCreationData, PuppyUpdateData } from "@/types/api";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import PuppyForm from "@/components/admin/PuppyForm";
 import PuppyTable from "./PuppyTable";

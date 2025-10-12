@@ -4,7 +4,7 @@ import { Plus, Heart, Search } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '@/api';
 import { toast } from 'sonner';
-import { Parent, ParentCreationData, ParentUpdateData, ParentListResponse } from "@/types/parent";
+import { Parent, ParentCreationData, ParentUpdateData } from '@/types/api';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -200,12 +200,16 @@ const ParentManagement = () => {
       
       {showForm ? (
         <ParentForm
-          formData={formData}
-          onInputChange={handleInputChange}
-          onSelectChange={handleSelectChange}
-          onSubmit={handleSaveParent}
+          parent={currentParent || undefined}
+          onSave={(data, id) => {
+            if (id) {
+              updateParentMutation.mutate({ id, data: data as ParentUpdateData });
+            } else {
+              addParentMutation.mutate(data as ParentCreationData);
+            }
+          }}
           onCancel={() => setShowForm(false)}
-          isEditing={!!currentParent}
+          isSaving={addParentMutation.isPending || updateParentMutation.isPending}
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

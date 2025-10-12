@@ -56,7 +56,7 @@ const LitterManagement = () => {
     queryKey: ['admin-litters'],
     queryFn: async () => {
       const result = await adminApi.getAllLitters({ limit: 100 });
-      return { litters: result.data, pagination: undefined };
+      return result;
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -240,14 +240,7 @@ const LitterManagement = () => {
       {showForm ? (
         <LitterForm
           litter={currentLitter || undefined}
-          onSave={(data) => {
-            if (currentLitter && currentLitter.id) {
-              updateLitterMutation.mutate({ id: currentLitter.id, data: data as LitterUpdateData });
-            } else {
-              addLitterMutation.mutate(data as LitterCreationData);
-            }
-          }}
-          onCancel={() => setShowForm(false)}
+          onClose={() => setShowForm(false)}
           isSaving={addLitterMutation.isPending || updateLitterMutation.isPending}
         />
       ) : (

@@ -29,7 +29,9 @@ const MaintenanceModeToggle = () => {
       
       if (error) throw error;
       
-      const settings = (data?.value as MaintenanceSettings | null) || { enabled: false, message: "" };
+      const settings: MaintenanceSettings = data?.value 
+        ? (data.value as unknown as MaintenanceSettings) 
+        : { enabled: false, message: "" };
       setLocalMessage(settings.message || "");
       return settings;
     },

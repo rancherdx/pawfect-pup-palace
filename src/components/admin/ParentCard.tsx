@@ -3,7 +3,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Trash2, Heart, User } from "lucide-react";
-import { Parent } from "@/types/parent";
+import { Parent } from '@/types/api';
 
 interface ParentCardProps {
   parent: Parent;
