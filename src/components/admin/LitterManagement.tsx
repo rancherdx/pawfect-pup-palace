@@ -107,14 +107,14 @@ const LitterManagement = () => {
   
   useEffect(() => {
     if (currentLitter && showForm) {
-      const { id, createdAt, updatedAt, ...editableData } = currentLitter;
+      const { id, created_at, updated_at, ...editableData } = currentLitter;
       setFormData({
         ...initialFormData,
         ...editableData,
-        dateOfBirth: editableData.dateOfBirth ? new Date(editableData.dateOfBirth).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
-        expectedDate: editableData.expectedDate ? new Date(editableData.expectedDate).toISOString().split("T")[0] : undefined,
+        date_of_birth: editableData.date_of_birth ? new Date(editableData.date_of_birth).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+        expected_date: editableData.expected_date ? new Date(editableData.expected_date).toISOString().split("T")[0] : undefined,
         status: (editableData.status || "Active") as LitterStatus,
-        puppyCount: editableData.puppyCount === undefined ? 0 : Number(editableData.puppyCount),
+        puppy_count: editableData.puppy_count === undefined ? 0 : Number(editableData.puppy_count),
       });
     } else {
       setFormData(initialFormData);
@@ -165,7 +165,7 @@ const LitterManagement = () => {
     e.preventDefault();
     const payload: LitterCreationData | LitterUpdateData = {
         ...formData,
-        puppyCount: Number(formData.puppyCount) || 0,
+        puppy_count: Number(formData.puppy_count) || 0,
     };
     
     if (currentLitter && currentLitter.id) {
@@ -239,11 +239,16 @@ const LitterManagement = () => {
       
       {showForm ? (
         <LitterForm
-          formData={formData}
-          onInputChange={handleInputChange}
-          onSubmit={handleSaveLitter}
+          litter={currentLitter || undefined}
+          onSave={(data) => {
+            if (currentLitter && currentLitter.id) {
+              updateLitterMutation.mutate({ id: currentLitter.id, data: data as LitterUpdateData });
+            } else {
+              addLitterMutation.mutate(data as LitterCreationData);
+            }
+          }}
           onCancel={() => setShowForm(false)}
-          isEditing={!!currentLitter}
+          isSaving={addLitterMutation.isPending || updateLitterMutation.isPending}
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

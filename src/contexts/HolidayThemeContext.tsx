@@ -31,6 +31,22 @@ interface HolidayThemeContextType {
  * @returns {HolidayThemeContextType} The theme object for the current holiday, or the default theme.
  */
 function getHolidayAndColors(): HolidayThemeContextType {
+  // Holiday themes disabled - always return default theme
+  // To re-enable, uncomment the date checks below and remove the early return
+  
+  // Default site theme - Holiday themes disabled
+  return {
+    holiday: "none",
+    colors: {
+      primary: "#DC2626", // Brand red
+      secondary: "#1A1A1A",
+      accent: "#FFD700",
+      text: "#FFF",
+      background: "#FFFFFF"
+    },
+  };
+  
+  /* HOLIDAY THEMES DISABLED - Uncomment to re-enable
   const today = new Date();
   const month = today.getMonth() + 1; // January = 0
   const date = today.getDate();
@@ -86,27 +102,28 @@ function getHolidayAndColors(): HolidayThemeContextType {
     }
   }
 
-  // Default site theme
+  // Default fallback
   return {
     holiday: "none",
     colors: {
-      primary: "#FF6B1A", // Halloween orange as default
+      primary: "#DC2626",
       secondary: "#1A1A1A",
       accent: "#FFD700",
       text: "#FFF",
-      background: "#FF6B1A"
+      background: "#FFFFFF"
     },
   };
+  */
 }
 
 const HolidayThemeContext = createContext<HolidayThemeContextType>({
   holiday: "none",
   colors: {
-    primary: "#FF6B1A", // Halloween orange as default
+    primary: "#DC2626", // Brand red
     secondary: "#1A1A1A",
     accent: "#FFD700",
     text: "#FFF",
-    background: "#FF6B1A",
+    background: "#FFFFFF",
   }
 });
 

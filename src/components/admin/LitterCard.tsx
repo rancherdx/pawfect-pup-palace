@@ -80,15 +80,17 @@ const LitterCard: React.FC<LitterCardProps> = ({ litter, onEdit, onDelete }) => 
           </div>
           <div className="flex justify-between">
             <span className="text-gray-500">Parents:</span>
-            <span className="font-medium">{litter.damName} & {litter.sireName}</span>
+            <span className="font-medium">{litter.dam_name || 'N/A'} & {litter.sire_name || 'N/A'}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-gray-500">Born:</span>
-            <span className="font-medium">{new Date(litter.dateOfBirth).toLocaleDateString()}</span>
-          </div>
+          {litter.date_of_birth && (
+            <div className="flex justify-between">
+              <span className="text-gray-500">Born:</span>
+              <span className="font-medium">{new Date(litter.date_of_birth).toLocaleDateString()}</span>
+            </div>
+          )}
           <div className="flex justify-between">
             <span className="text-gray-500">Puppies:</span>
-            <span className="font-medium">{litter.puppyCount}</span>
+            <span className="font-medium">{litter.puppy_count || 0}</span>
           </div>
           <div className="pt-3">
             <span className={`px-3 py-1 rounded-full text-xs ${getStatusColor(litter.status)}`}>

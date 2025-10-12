@@ -61,15 +61,15 @@ const LITTER_STATUS_VALUES: LitterStatus[] = [
 const LitterFormEnhanced: React.FC<LitterFormEnhancedProps> = ({ litter, onClose, isEditMode }) => {
   const [formData, setFormData] = useState<LitterFormData>({
     name: litter?.name || "",
-    damName: litter?.damName || "",
-    sireName: litter?.sireName || "",
+    dam_name: litter?.dam_name || "",
+    sire_name: litter?.sire_name || "",
     breed: litter?.breed || "",
-    dateOfBirth: litter?.dateOfBirth || "",
-    expectedDate: litter?.expectedDate || "",
-    puppyCount: litter?.puppyCount || 0,
+    date_of_birth: litter?.date_of_birth || "",
+    expected_date: litter?.expected_date || "",
+    puppy_count: litter?.puppy_count || 0,
     status: litter?.status || "Active",
     description: litter?.description || "",
-    coverImageUrl: litter?.coverImageUrl || "",
+    cover_image_url: litter?.cover_image_url || "",
     image_urls: litter?.image_urls || [],
     video_urls: litter?.video_urls || [],
   });
@@ -110,15 +110,15 @@ const LitterFormEnhanced: React.FC<LitterFormEnhancedProps> = ({ litter, onClose
     if (litter) {
       setFormData({
         name: litter.name || "",
-        damName: litter.damName || "",
-        sireName: litter.sireName || "",
+        dam_name: litter.dam_name || "",
+        sire_name: litter.sire_name || "",
         breed: litter.breed || "",
-        dateOfBirth: litter.dateOfBirth || "",
-        expectedDate: litter.expectedDate || "",
-        puppyCount: litter.puppyCount || 0,
+        date_of_birth: litter.date_of_birth || "",
+        expected_date: litter.expected_date || "",
+        puppy_count: litter.puppy_count || 0,
         status: litter.status || "Active",
         description: litter.description || "",
-        coverImageUrl: litter.coverImageUrl || "",
+        cover_image_url: litter.cover_image_url || "",
         image_urls: litter.image_urls || [],
         video_urls: litter.video_urls || [],
       });
@@ -148,7 +148,7 @@ const LitterFormEnhanced: React.FC<LitterFormEnhancedProps> = ({ litter, onClose
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "puppyCount" ? parseInt(value) || 0 : value,
+      [name]: name === "puppy_count" ? parseInt(value) || 0 : value,
     }));
   };
 
@@ -216,32 +216,32 @@ const LitterFormEnhanced: React.FC<LitterFormEnhancedProps> = ({ litter, onClose
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                  <Label htmlFor="date_of_birth">Date of Birth</Label>
                   <Input
                     type="date"
-                    id="dateOfBirth"
-                    name="dateOfBirth"
-                    value={formData.dateOfBirth}
+                    id="date_of_birth"
+                    name="date_of_birth"
+                    value={formData.date_of_birth}
                     onChange={handleChange}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="expectedDate">Expected Date (if not born yet)</Label>
+                  <Label htmlFor="expected_date">Expected Date (if not born yet)</Label>
                   <Input
                     type="date"
-                    id="expectedDate"
-                    name="expectedDate"
-                    value={formData.expectedDate}
+                    id="expected_date"
+                    name="expected_date"
+                    value={formData.expected_date}
                     onChange={handleChange}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="puppyCount">Number of Puppies</Label>
+                  <Label htmlFor="puppy_count">Number of Puppies</Label>
                   <Input
                     type="number"
-                    id="puppyCount"
-                    name="puppyCount"
-                    value={formData.puppyCount}
+                    id="puppy_count"
+                    name="puppy_count"
+                    value={formData.puppy_count}
                     onChange={handleChange}
                     min="0"
                   />
@@ -308,11 +308,11 @@ const LitterFormEnhanced: React.FC<LitterFormEnhancedProps> = ({ litter, onClose
 
             <TabsContent value="details" className="space-y-4 mt-6">
               <div>
-                <Label htmlFor="coverImageUrl">Legacy Cover Image URL</Label>
+                <Label htmlFor="cover_image_url">Legacy Cover Image URL</Label>
                 <Input
-                  id="coverImageUrl"
-                  name="coverImageUrl"
-                  value={formData.coverImageUrl}
+                  id="cover_image_url"
+                  name="cover_image_url"
+                  value={formData.cover_image_url}
                   onChange={handleChange}
                   placeholder="https://example.com/image.jpg"
                 />
