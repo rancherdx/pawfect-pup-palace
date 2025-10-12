@@ -43,6 +43,8 @@ export interface Litter {
   slug?: string | null;
   dam_name?: string | null;
   sire_name?: string | null;
+  dam_id?: string | null; // uuid - FK to parents table
+  sire_id?: string | null; // uuid - FK to parents table
   breed: string;
   breed_template_id?: string | null; // uuid
   date_of_birth?: string | null; // date
@@ -56,6 +58,10 @@ export interface Litter {
   created_at: string; // timestamptz
   updated_at: string; // timestamptz
 }
+
+// Type aliases for form data
+export type LitterCreationData = Omit<Litter, 'id' | 'created_at' | 'updated_at'>;
+export type LitterUpdateData = Partial<LitterCreationData>;
 
 export interface BreedTemplate {
   id: string; // uuid

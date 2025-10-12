@@ -14,7 +14,7 @@ import { adminApi } from '@/api';
 import { Litter, LitterStatus, LitterCreationData, LitterUpdateData } from "@/types/api";
 import { Loader2 } from 'lucide-react';
 
-const LITTER_STATUS_VALUES: LitterStatus[] = ["Active", "Available Soon", "All Reserved", "All Sold", "Archived", "Upcoming", "Past"];
+const LITTER_STATUS_VALUES: LitterStatus[] = ["Active", "Available Soon", "All Reserved", "All Sold", "Archived"];
 
 const litterFormSchema = z.object({
   name: z.string().min(2, "Litter name is required."),

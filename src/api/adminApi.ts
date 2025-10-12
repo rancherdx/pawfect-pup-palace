@@ -60,7 +60,7 @@ export interface EmailTemplate {
   is_system_template: boolean;
 }
 
-// Interfaces for function arguments
+// Interfaces for function arguments - re-export from api.ts for backward compatibility
 export type PuppyCreationData = Omit<Puppy, 'id' | 'created_at' | 'updated_at'>;
 export type PuppyUpdateData = Partial<PuppyCreationData>;
 export type LitterCreationData = Omit<Litter, 'id' | 'created_at' | 'updated_at'>;
@@ -71,7 +71,7 @@ export type StudDogCreationData = Omit<StudDog, 'id' | 'created_at' | 'updated_a
 export type StudDogUpdateData = Partial<StudDogCreationData>;
 export type BlogPostCreationData = Omit<BlogPost, 'id' | 'created_at' | 'updated_at'>;
 export type BlogPostUpdateData = Partial<BlogPostCreationData>;
-export type TestimonialCreationData = Omit<Testimonial, 'id' | 'created_at'>;
+export type TestimonialCreationData = Omit<Testimonial, 'id' | 'created_at' | 'updated_at'>;
 export type TestimonialUpdateData = Partial<TestimonialCreationData>;
 export type SeoMetaCreationData = Omit<SeoMeta, 'id' | 'created_at' | 'updated_at'>;
 export type SeoMetaDataUpdate = Partial<SeoMetaCreationData>;
