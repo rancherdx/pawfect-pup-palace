@@ -2,6 +2,3 @@
 export * from './api';
 export * from './common';
 export * from './auth';
-export * from './breedTemplate';
-export * from './blogPost';
-export * from './studDog';

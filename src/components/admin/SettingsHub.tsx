@@ -17,7 +17,6 @@ import AdminUserManager from "./AdminUserManager";
 import AdvancedSecurityFeatures from "./AdvancedSecurityFeatures";
 import DataDeletionRequestsManager from "./DataDeletionRequestsManager";
 import BrandAssetManager from "./BrandAssetManager";
-import SecurityMonitoring from "./SecurityMonitoring";
 
 /**
  * @component SettingsHub
@@ -69,12 +68,6 @@ const SettingsHub = () => {
       label: "Security", 
       icon: Shield, 
       component: <AdvancedSecurityFeatures /> 
-    },
-    { 
-      value: "security_monitoring", 
-      label: "Security Monitor", 
-      icon: Eye, 
-      component: <SecurityMonitoring /> 
     },
     { 
       value: "data_deletion", 

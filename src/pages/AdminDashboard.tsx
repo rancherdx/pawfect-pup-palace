@@ -13,15 +13,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button"; // For the DropdownMenuTrigger
 import Section from "@/components/Section";
-import UnifiedManagementHub from "@/components/admin/UnifiedManagementHub";
-import TransactionHistory from "@/components/admin/TransactionHistory";
-import SquareIntegration from "@/components/admin/SquareIntegration";
+import PuppyManagement from "@/components/admin/PuppyManagement";
+import LitterManagement from "@/components/admin/LitterManagement";
 import SettingsPanel from "@/components/admin/SettingsPanel";
 import BreedTemplateManager from "@/components/admin/BreedTemplateManager";
 import BlogManager from "@/components/admin/BlogManager";
 import AffiliateManager from "@/components/admin/AffiliateManager";
 import SEOManager from "@/components/admin/SEOManager";
-import ThirdPartyIntegrationsManager from "@/components/admin/ThirdPartyIntegrationsManager";
+import IntegrationsHub from "@/components/admin/IntegrationsHub";
 import EmailTemplatesManager from "@/components/admin/EmailTemplatesManager";
 import AdminUserManager from "@/components/admin/AdminUserManager";
 import AdminStudDogManager from "@/components/admin/AdminStudDogManager";

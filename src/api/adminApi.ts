@@ -39,12 +39,12 @@ export interface Parent {
     id: string;
     name: string;
     breed: string;
-    gender: string; // Database uses string, not enum
+    gender: 'Male' | 'Female'; // Match types/api.ts
     description?: string | null;
-    image_urls: string[];
-    certifications: string[];
+    image_urls?: string[] | null; // Match types/api.ts - optional
+    certifications?: string[] | null;
     bloodline_info?: string | null;
-    health_clearances: string[];
+    health_clearances?: string[] | null;
     is_active: boolean;
     created_at: string;
     updated_at: string;
@@ -227,21 +227,21 @@ export const adminApi = {
     await requireAdmin();
     const { data, error } = await supabase.from('parents').select('*').order('created_at', { ascending: false });
     if (error) throw error;
-    return { parents: data || [] };
+    return { parents: (data || []) as Parent[] };
   },
 
   createParent: async (parentData: ParentCreationData): Promise<Parent> => {
     await requireAdmin();
     const { data, error } = await supabase.from('parents').insert(parentData).select().single();
     if (error) throw error;
-    return data;
+    return data as Parent;
   },
 
   updateParent: async (id: string, parentData: ParentUpdateData): Promise<Parent> => {
     await requireAdmin();
     const { data, error } = await supabase.from('parents').update(parentData).eq('id', id).select().single();
     if (error) throw error;
-    return data;
+    return data as Parent;
   },
 
   deleteParent: async (id: string): Promise<{ success: boolean }> => {

@@ -178,7 +178,6 @@ const PuppyManagement = () => {
                 setIsModalOpen(false);
                 setSelectedPuppy(null);
               }}
-              isEditMode={!!selectedPuppy}
             />
           </DialogContent>
         </Dialog>

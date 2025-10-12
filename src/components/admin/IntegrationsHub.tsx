@@ -4,8 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Shield, CreditCard, Mail, Zap, Key, Settings } from "lucide-react";
-import ThirdPartyIntegrationsManager from './ThirdPartyIntegrationsManager';
-import SquareIntegration from './SquareIntegration';
 import ApplePaySetup from './ApplePaySetup';
 import MailChannelsSetup from './MailChannelsSetup';
 
@@ -131,31 +129,17 @@ const IntegrationsHub = () => {
         </TabsContent>
 
         <TabsContent value="payments" className="mt-6">
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="h-5 w-5" />
-                  Square Integration
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <SquareIntegration />
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="h-5 w-5" />
-                  Apple Pay Setup
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ApplePaySetup />
-              </CardContent>
-            </Card>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5" />
+                Payment Integrations - Coming Soon
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Square and Apple Pay integrations will be configured here in Phase 2.</p>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="email" className="mt-6">
@@ -177,11 +161,11 @@ const IntegrationsHub = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Zap className="h-5 w-5" />
-                Third Party Integrations
+                Third Party Integrations - Coming Soon
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ThirdPartyIntegrationsManager />
+              <p className="text-muted-foreground">Additional third-party integrations will be managed here in Phase 2.</p>
             </CardContent>
           </Card>
         </TabsContent>

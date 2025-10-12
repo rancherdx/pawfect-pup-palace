@@ -59,13 +59,9 @@ export interface Litter {
   updated_at?: string; // timestamptz - optional for API responses
 }
 
-// Type aliases for form data
-export type PuppyCreationData = Omit<Puppy, 'id' | 'created_at' | 'updated_at'>;
-export type PuppyUpdateData = Partial<PuppyCreationData>;
-export type LitterCreationData = Omit<Litter, 'id' | 'created_at' | 'updated_at'>;
-export type LitterUpdateData = Partial<LitterCreationData>;
-export type ParentCreationData = Omit<Parent, 'id' | 'created_at' | 'updated_at'>;
-export type ParentUpdateData = Partial<ParentCreationData>;
+// Export types for backward compatibility
+export type StudDogCreationData = Omit<StudDog, 'id' | 'created_at' | 'updated_at'>;
+export type StudDogUpdateData = Partial<StudDogCreationData>;
 
 export interface BreedTemplate {
   id: string; // uuid

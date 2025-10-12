@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { publicApi } from "@/api/publicApi";
 import { adminApi } from "@/api/adminApi";
 import { toast } from "sonner";
-import { Puppy } from "@/types/puppy";
+import { Puppy } from "@/types/api";
 
 /**
  * @hook usePuppies
