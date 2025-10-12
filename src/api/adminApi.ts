@@ -26,19 +26,20 @@ import {
 export interface Testimonial {
   id: string;
   name: string;
-  text: string;
+  content: string; // Database uses 'content', not 'text'
   rating?: number | null;
-  source?: 'local' | 'facebook' | 'google';
+  source?: string | null; // Database uses string, not enum
   admin_approved?: boolean;
   is_featured?: boolean;
   created_at: string;
+  updated_at: string;
 }
 
 export interface Parent {
     id: string;
     name: string;
     breed: string;
-    gender: 'Male' | 'Female';
+    gender: string; // Database uses string, not enum
     description?: string | null;
     image_urls: string[];
     certifications: string[];
@@ -53,8 +54,10 @@ export interface EmailTemplate {
   id: string;
   name: string;
   subject: string;
-  body: string;
+  html_body: string; // Database uses 'html_body', not 'body'
   created_at: string;
+  updated_at: string;
+  is_system_template: boolean;
 }
 
 // Interfaces for function arguments
@@ -378,9 +381,10 @@ export const adminApi = {
     };
   },
 
-  updateDataDeletionRequestStatus: async (id: string, status: DataDeletionRequestStatus): Promise<DataDeletionRequest> => {
+  updateDataDeletionRequestStatus: async (id: string, status: DataDeletionRequestStatus, updates?: Partial<DataDeletionRequest>): Promise<DataDeletionRequest> => {
     await requireAdmin();
-    const { data, error } = await supabase.from('data_deletion_requests').update({ status, processed_at: new Date().toISOString() }).eq('id', id).select().single();
+    const updateData: any = { status, processed_at: new Date().toISOString(), ...updates };
+    const { data, error } = await supabase.from('data_deletion_requests').update(updateData).eq('id', id).select().single();
     if (error) throw error;
     return data;
   },

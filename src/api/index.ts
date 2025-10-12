@@ -4,6 +4,8 @@
  * It also defines and exports specialized API objects that compose functionality from other API modules.
  */
 
+import { BlogPostStatus } from '@/types/api';
+
 // Main API exports - all using Supabase directly
 export { authApi } from './unifiedApi';
 export { adminApi } from './adminApi';
@@ -106,7 +108,7 @@ export const blogApi = {
    * @param {string} [params.status] - The status to filter by (e.g., 'published').
    * @returns {Promise<{posts: any[]}>} A promise that resolves to an object containing the list of transformed posts.
    */
-  getPosts: async (params: { page?: number; limit?: number; category?: string; status?: string } = {}) => {
+  getPosts: async (params: { page?: number; limit?: number; category?: string; status?: BlogPostStatus } = {}) => {
     const { adminApi } = await import('./adminApi');
     try {
       const result = await adminApi.getAllPosts(params);
@@ -118,13 +120,13 @@ export const blogApi = {
         content: post.content,
         excerpt: post.excerpt,
         status: post.status,
-        createdAt: post.created_at,
-        updatedAt: post.updated_at,
-        publishedAt: post.published_at,
-        authorName: post.author_name,
+        created_at: post.created_at,
+        updated_at: post.updated_at,
+        published_at: post.published_at,
+        author_name: post.author_name,
         category: post.category,
         tags: post.tags || [],
-        featuredImageUrl: post.featured_image_url
+        featured_image_url: post.featured_image_url
       })) || [];
       
       return { posts: transformedPosts };
@@ -158,13 +160,13 @@ export const blogApi = {
         content: foundPost.content,
         excerpt: foundPost.excerpt,
         status: foundPost.status,
-        createdAt: foundPost.created_at,
-        updatedAt: foundPost.updated_at,
-        publishedAt: foundPost.published_at,
-        author: foundPost.author_name,
+        created_at: foundPost.created_at,
+        updated_at: foundPost.updated_at,
+        published_at: foundPost.published_at,
+        author_name: foundPost.author_name,
         category: foundPost.category,
         tags: foundPost.tags || [],
-        featuredImageUrl: foundPost.featured_image_url
+        featured_image_url: foundPost.featured_image_url
       };
     } catch (error) {
       console.error('Error fetching blog post:', error);

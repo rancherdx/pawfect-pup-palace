@@ -1,8 +1,8 @@
 // This file will contain all the TypeScript interfaces for the API data models.
 // Defined based on the database schema in /docs/JULES_BACKEND_GUIDE.md
 
-export type PuppyStatus = 'Available' | 'Reserved' | 'Sold' | 'Not For Sale' | 'Pending';
-export type LitterStatus = 'Active' | 'Available Soon' | 'All Reserved' | 'All Sold' | 'Archived' | 'Upcoming' | 'Past';
+export type PuppyStatus = 'Available' | 'Reserved' | 'Sold' | 'Not For Sale';
+export type LitterStatus = 'Active' | 'Available Soon' | 'All Reserved' | 'All Sold' | 'Archived';
 export type AppRole = 'user' | 'admin' | 'super-admin';
 export type RelatedEntityType = 'puppy' | 'litter' | 'general';
 export type SenderType = 'user' | 'admin' | 'system';
@@ -117,7 +117,7 @@ export interface SeoMeta {
   twitter_image?: string | null;
   canonical_url?: string | null;
   robots?: string | null;
-  schema_markup?: Record<string, any> | null; // jsonb
+  schema_markup?: any | null; // jsonb - can be any JSON value
   created_at?: string | null; // timestamptz
   updated_at?: string | null; // timestamptz
 }
@@ -141,9 +141,9 @@ export interface Transaction {
   puppy_id?: string | null; // uuid
   amount: number; // in cents
   currency: string;
-  status: TransactionStatus;
+  status: string; // Database uses string, not enum
   square_payment_id?: string | null;
-  payment_method_details?: Record<string, any> | null; // jsonb
+  payment_method_details?: any | null; // jsonb - can be any JSON value
   created_at: string; // timestamptz
 }
 
@@ -184,7 +184,7 @@ export interface ThirdPartyIntegration {
 
 export interface SiteSettings {
   key: string;
-  value: Record<string, any>; // jsonb
+  value: any; // jsonb - can be string, number, boolean, null, object, or array
   updated_at: string; // timestamptz
 }
 
@@ -206,11 +206,11 @@ export interface BlogPost {
   content: string;
   category?: string | null;
   status: BlogPostStatus;
-  featuredImageUrl?: string | null;
+  featured_image_url?: string | null; // Database uses snake_case
   excerpt?: string | null;
-  author_id?: string | null;
-  authorName?: string | null; // This could be a joined field for display
-  publishedAt?: string | null;
+  author_name?: string | null; // Database uses snake_case
+  published_at?: string | null; // Database uses snake_case
+  tags?: string[] | null; // Database field
   created_at: string;
   updated_at: string;
 }

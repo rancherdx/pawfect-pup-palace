@@ -38,7 +38,7 @@ const initialFormData: BlogPostCreationData = {
   content: "",
   category: "",
   status: "draft",
-  featuredImageUrl: "",
+  featured_image_url: "",
   excerpt: "",
 };
 
@@ -118,7 +118,7 @@ const BlogManager = () => {
         content: currentPost.content,
         category: currentPost.category || "",
         status: currentPost.status,
-        featuredImageUrl: currentPost.featuredImageUrl || "",
+        featured_image_url: currentPost.featured_image_url || "",
         excerpt: currentPost.excerpt || "",
       });
     } else {
@@ -231,8 +231,8 @@ const BlogManager = () => {
                   <Textarea id="excerpt" name="excerpt" value={formData.excerpt || ''} onChange={handleInputChange} />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="featuredImageUrl" className="font-medium">Featured Image URL</Label>
-                  <Input id="featuredImageUrl" name="featuredImageUrl" value={formData.featuredImageUrl || ''} onChange={handleInputChange} />
+                  <Label htmlFor="featured_image_url" className="font-medium">Featured Image URL</Label>
+                  <Input id="featured_image_url" name="featured_image_url" value={formData.featured_image_url || ''} onChange={handleInputChange} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="status" className="font-medium">Status</Label>
@@ -278,8 +278,8 @@ const BlogManager = () => {
                   <TableRow key={post.id}>
                     <TableCell className="font-medium">{post.title}</TableCell>
                     <TableCell>{post.category}</TableCell>
-                    <TableCell>{post.authorName || 'Anonymous'}</TableCell>
-                    <TableCell>{post.publishedAt ? format(new Date(post.publishedAt), 'MMM dd, yyyy') : 'Not published'}</TableCell>
+                    <TableCell>{post.author_name || 'Anonymous'}</TableCell>
+                    <TableCell>{post.published_at ? format(new Date(post.published_at), 'MMM dd, yyyy') : 'Not published'}</TableCell>
                     <TableCell>
                       {post.status === 'draft' && <div className="flex items-center gap-1 text-gray-500"><FileText className="w-4 h-4" /> Draft</div>}
                       {post.status === 'published' && <div className="flex items-center gap-1 text-green-600"><CheckCircle className="w-4 h-4" /> Published</div>}
