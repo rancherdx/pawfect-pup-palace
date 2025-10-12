@@ -129,9 +129,7 @@ const NotificationDropdown = () => {
                     !notification.read ? 'bg-primary/5 border-l-2 border-l-primary' : ''
                   }`}
                   onClick={() => {
-                    if (!notification.read) {
-                      markAsRead(notification.id);
-                    }
+                    // Notifications disabled - no action needed
                     if (notification.action_url) {
                       window.open(notification.action_url, '_blank');
                     }

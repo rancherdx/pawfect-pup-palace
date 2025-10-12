@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { FileText, Search, Tag, Loader2, AlertTriangle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { blogApi } from "@/api";
-import { BlogPost, BlogPostsResponse } from "@/types";
+import { BlogPost, BlogPostsResponse } from "@/types/api";
 
 /**
  * @component Blog
@@ -140,7 +140,7 @@ const Blog = () => {
                 <Card className="h-full overflow-hidden hover:shadow-md transition-shadow">
                   <div className="aspect-video w-full overflow-hidden">
                     <img 
-                      src={post.featuredImageUrl || "https://via.placeholder.com/400x300?text=Blog+Post"}
+                      src={post.featured_image_url || "https://via.placeholder.com/400x300?text=Blog+Post"}
                       alt={post.title} 
                       className="w-full h-full object-cover transition-transform hover:scale-105" 
                     />
@@ -161,7 +161,7 @@ const Blog = () => {
                       {post.excerpt || post.content.substring(0, 150) + "..."}
                     </p>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">{formatDate(post.publishedAt)}</span>
+                      <span className="text-sm text-muted-foreground">{formatDate(post.published_at)}</span>
                       <span className="text-primary font-medium text-sm">Read more &rarr;</span>
                     </div>
                   </CardContent>

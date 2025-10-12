@@ -7,15 +7,13 @@ import {
 } from "lucide-react";
 import { AnimatedCard, AnimatedCardContent, AnimatedCardHeader, AnimatedCardTitle } from "@/components/ui/animated-card";
 import { Button } from "@/components/ui/button";
-import UnifiedManagementHub from "@/components/admin/UnifiedManagementHub";
-import TransactionHistory from "@/components/admin/TransactionHistory";
-import SquareIntegration from "@/components/admin/SquareIntegration";
+import PuppyManagement from "@/components/admin/PuppyManagement";
+import LitterManagement from "@/components/admin/LitterManagement";
 import SettingsPanel from "@/components/admin/SettingsPanel";
 import BreedTemplateManager from "@/components/admin/BreedTemplateManager";
 import BlogManager from "@/components/admin/BlogManager";
 import AffiliateManager from "@/components/admin/AffiliateManager";
 import SEOManager from "@/components/admin/SEOManager";
-import ThirdPartyIntegrationsManager from "@/components/admin/ThirdPartyIntegrationsManager";
 import EmailTemplatesManager from "@/components/admin/EmailTemplatesManager";
 import AdminUserManager from "@/components/admin/AdminUserManager";
 import AdminStudDogManager from "@/components/admin/AdminStudDogManager";
@@ -33,7 +31,8 @@ const adminSections = [
   {
     title: "Core Management",
     items: [
-      { value: "hub", label: "Management Hub", icon: PawPrint, component: <UnifiedManagementHub />, gradient: "from-purple-500 to-pink-600" },
+      { value: "puppies", label: "Puppies", icon: Dog, component: <PuppyManagement />, gradient: "from-purple-500 to-pink-600" },
+      { value: "litters", label: "Litters", icon: Layers, component: <LitterManagement />, gradient: "from-blue-500 to-purple-600" },
       { value: "parents", label: "Parents", icon: Heart, component: <ParentManagement />, gradient: "from-red-500 to-pink-600" },
     ]
   },
@@ -47,16 +46,8 @@ const adminSections = [
     ]
   },
   {
-    title: "Business Operations",
-    items: [
-      { value: "transactions", label: "Transactions", icon: Receipt, component: <TransactionHistory />, gradient: "from-emerald-500 to-teal-600" },
-      { value: "square", label: "Square", icon: CreditCard, component: <SquareIntegration />, gradient: "from-blue-600 to-indigo-600" },
-    ]
-  },
-  {
     title: "System & Settings",
     items: [
-      { value: "notifications", label: "Notifications", icon: Bell, component: <NotificationCenter />, gradient: "from-orange-500 to-red-600" },
       { value: "settings", label: "Settings", icon: Settings, component: <SettingsHub />, gradient: "from-gray-600 to-gray-800" },
     ]
   },
@@ -98,7 +89,7 @@ const itemVariants = {
  */
 const RedesignedAdminDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialTab = searchParams.get("tab") || "hub";
+  const initialTab = searchParams.get("tab") || "puppies";
   const [activeTab, setActiveTab] = useState(initialTab);
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
 

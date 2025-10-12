@@ -57,7 +57,7 @@ const adoptionFormSchema = z.object({
   city: z.string().min(2, "City is required."),
   state: z.string().min(2, "State is required."),
   zip: z.string().regex(/^\d{5}(-\d{4})?$/, "Invalid ZIP code."),
-  housingType: z.enum(["house", "apartment", "condo", "other"], { errorMap: () => ({ message: "Please select a housing type." }) }),
+  housingType: z.string().min(1, "Please select a housing type."),
   hasYard: z.boolean().default(false),
   hasChildren: z.boolean().default(false),
   hasPets: z.boolean().default(false),

@@ -42,7 +42,8 @@ import { Code } from "lucide-react";
  */
 const allAdminTabs = [
   // Core Management
-  { value: "hub", label: "Management Hub", icon: PawPrint, component: <UnifiedManagementHub /> },
+  { value: "puppies", label: "Puppies", icon: Dog, component: <PuppyManagement /> },
+  { value: "litters", label: "Litters", icon: Layers, component: <LitterManagement /> },
   { value: "parents", label: "Parents", icon: Heart, component: <ParentManagement /> },
   
   // Content & Marketing
@@ -50,13 +51,6 @@ const allAdminTabs = [
   { value: "seo", label: "SEO", icon: Globe, component: <SEOManagement /> },
   { value: "testimonials", label: "Testimonials", icon: MessageSquare, component: <EnhancedTestimonialManagement /> },
   { value: "marketing", label: "Marketing", icon: Users, component: <AffiliateManager /> },
-  
-  // Business Operations
-  { value: "transactions", label: "Transactions", icon: Receipt, component: <TransactionHistory /> },
-  { value: "square", label: "Square", icon: CreditCard, component: <SquareIntegration /> },
-  
-  // System & Communication  
-  { value: "notifications", label: "Notifications", icon: Bell, component: <NotificationCenter /> },
   
   // Settings Hub (Consolidated)
   { value: "settings", label: "Settings", icon: Settings, component: <SettingsHub /> },
@@ -78,7 +72,7 @@ const allAdminTabs = [
  */
 const AdminDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialTab = searchParams.get("tab") || "hub";
+  const initialTab = searchParams.get("tab") || "puppies";
   const [activeTabValue, setActiveTabValue] = useState(initialTab);
   const [visibleTabs, setVisibleTabs] = useState<typeof allAdminTabs>([]);
   const [dropdownTabs, setDropdownTabs] = useState<typeof allAdminTabs>([]);

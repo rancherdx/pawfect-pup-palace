@@ -7,21 +7,8 @@ import { ArrowLeft, Calendar, User, Tag, Share2, Link as LinkIcon, Loader2, Aler
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { blogApi } from "@/api";
-import { BlogPost as BlogPostType, BlogPostAuthor } from "@/types";
+import { BlogPost as BlogPostType } from "@/types/api";
 import DOMPurify from 'dompurify';
-
-/**
- * @function getAuthorDisplay
- * @description A helper function to safely get the author's name for display.
- * It can handle an author object, a string, or an undefined value.
- * @param {BlogPostAuthor | string | undefined} author - The author data.
- * @returns {string} The name of the author or "Anonymous".
- */
-const getAuthorDisplay = (author?: BlogPostAuthor | string): string => {
-  if (!author) return "Anonymous";
-  if (typeof author === 'string') return author;
-  return author.name;
-};
 
 /**
  * @component BlogPostPage
@@ -107,7 +94,7 @@ const BlogPostPage = () => {
       {/* Hero Image */}
       <div 
         className="w-full h-[50vh] md:h-[60vh] bg-cover bg-center flex items-end relative"
-        style={{ backgroundImage: `url(${post.featuredImageUrl || 'https://via.placeholder.com/1200x600?text=Blog+Image'})` }}
+        style={{ backgroundImage: `url(${post.featured_image_url || 'https://via.placeholder.com/1200x600?text=Blog+Image'})` }}
       >
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
         <div className="container mx-auto px-4 py-8 md:py-12 relative z-10">
@@ -126,11 +113,11 @@ const BlogPostPage = () => {
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-muted-foreground mb-8 text-sm">
           <div className="flex items-center">
             <User className="h-4 w-4 mr-2" />
-            {getAuthorDisplay(post.author)}
+            {post.author_name || "Anonymous"}
           </div>
           <div className="flex items-center">
             <Calendar className="h-4 w-4 mr-2" />
-            {formatDate(post.publishedAt || post.createdAt)}
+            {formatDate(post.published_at || post.created_at)}
           </div>
           {post.category && (
             <div className="flex items-center">

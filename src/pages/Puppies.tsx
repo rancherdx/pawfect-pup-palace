@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Helmet } from "react-helmet-async";
 import { EnhancedSearch, SearchFilters } from "@/components/search/EnhancedSearch";
 import { LazyImage } from "@/components/LazyImage";
-import { Puppy } from "@/types/puppy";
+import { Puppy } from "@/types/api";
 import HeroSection from "@/components/HeroSection";
 import Section from "@/components/Section";
 import PuppyCard from "@/components/PuppyCard";

@@ -63,6 +63,20 @@ export interface Litter {
 export type StudDogCreationData = Omit<StudDog, 'id' | 'created_at' | 'updated_at'>;
 export type StudDogUpdateData = Partial<StudDogCreationData>;
 
+export type PuppyCreationData = Omit<Puppy, 'id' | 'created_at' | 'updated_at'>;
+export type PuppyUpdateData = Partial<PuppyCreationData>;
+
+export type LitterCreationData = Omit<Litter, 'id' | 'created_at' | 'updated_at'>;
+export type LitterUpdateData = Partial<LitterCreationData>;
+
+export type ParentCreationData = Omit<Parent, 'id' | 'created_at' | 'updated_at'>;
+export type ParentUpdateData = Partial<ParentCreationData>;
+
+export interface BlogPostsResponse {
+  posts: BlogPost[];
+  total: number;
+}
+
 export interface BreedTemplate {
   id: string; // uuid
   breed_name: string;

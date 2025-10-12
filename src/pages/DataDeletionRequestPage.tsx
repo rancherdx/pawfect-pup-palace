@@ -129,7 +129,7 @@ const DataDeletionRequestPage = () => {
     } catch (validationError) {
       if (validationError instanceof z.ZodError) {
         const errors: Record<string, string> = {};
-        validationError.errors.forEach((err) => {
+        validationError.issues.forEach((err) => {
           if (err.path[0]) {
             errors[err.path[0] as string] = err.message;
           }
