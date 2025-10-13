@@ -54,13 +54,13 @@ const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <ParallaxProvider>
-        <ThemeProvider>
-          <Toaster />
-          <Sonner />
-          <CorsConfig />
-          <ErrorBoundary>
-            <BrowserRouter>
-              <AuthProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <ThemeProvider>
+              <Toaster />
+              <Sonner />
+              <CorsConfig />
+              <ErrorBoundary>
             <div className="min-h-screen flex flex-col">
               <Routes>
                 {/* Setup route (no layout) */}
@@ -138,10 +138,10 @@ const App: React.FC = () => {
                 />
               </Routes>
             </div>
-            </AuthProvider>
-          </BrowserRouter>
-        </ErrorBoundary>
-      </ThemeProvider>
+              </ErrorBoundary>
+            </ThemeProvider>
+          </AuthProvider>
+        </BrowserRouter>
       </ParallaxProvider>
     </QueryClientProvider>
   );
