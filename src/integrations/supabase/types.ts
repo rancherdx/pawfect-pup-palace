@@ -50,6 +50,51 @@ export type Database = {
         }
         Relationships: []
       }
+      adoption_preferences: {
+        Row: {
+          created_at: string | null
+          has_fenced_yard: boolean | null
+          has_kids: boolean | null
+          has_other_pets: boolean | null
+          health_guarantee_acknowledged: boolean | null
+          health_guarantee_acknowledged_at: string | null
+          home_type: string | null
+          id: string
+          kids_ages: Json | null
+          other_pets: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          has_fenced_yard?: boolean | null
+          has_kids?: boolean | null
+          has_other_pets?: boolean | null
+          health_guarantee_acknowledged?: boolean | null
+          health_guarantee_acknowledged_at?: string | null
+          home_type?: string | null
+          id?: string
+          kids_ages?: Json | null
+          other_pets?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          has_fenced_yard?: boolean | null
+          has_kids?: boolean | null
+          has_other_pets?: boolean | null
+          health_guarantee_acknowledged?: boolean | null
+          health_guarantee_acknowledged_at?: string | null
+          home_type?: string | null
+          id?: string
+          kids_ages?: Json | null
+          other_pets?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       auth_rate_limits: {
         Row: {
           attempt_type: string
@@ -654,6 +699,45 @@ export type Database = {
           },
         ]
       }
+      login_attempts: {
+        Row: {
+          attempted_at: string | null
+          browser: string | null
+          device: string | null
+          id: string
+          ip_address: unknown | null
+          location: Json | null
+          os: string | null
+          success: boolean
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          attempted_at?: string | null
+          browser?: string | null
+          device?: string | null
+          id?: string
+          ip_address?: unknown | null
+          location?: Json | null
+          os?: string | null
+          success: boolean
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          attempted_at?: string | null
+          browser?: string | null
+          device?: string | null
+          id?: string
+          ip_address?: unknown | null
+          location?: Json | null
+          os?: string | null
+          success?: boolean
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           attachments: string | null
@@ -786,18 +870,33 @@ export type Database = {
           created_at: string
           id: string
           name: string | null
+          phone: string | null
+          preferred_contact: string | null
+          preferred_name: string | null
+          profile_photo_url: string | null
+          secondary_email: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           id: string
           name?: string | null
+          phone?: string | null
+          preferred_contact?: string | null
+          preferred_name?: string | null
+          profile_photo_url?: string | null
+          secondary_email?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           id?: string
           name?: string | null
+          phone?: string | null
+          preferred_contact?: string | null
+          preferred_name?: string | null
+          profile_photo_url?: string | null
+          secondary_email?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -1257,6 +1356,87 @@ export type Database = {
         }
         Relationships: []
       }
+      user_2fa: {
+        Row: {
+          backup_codes: string[] | null
+          created_at: string | null
+          enabled: boolean | null
+          id: string
+          secret: string
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          backup_codes?: string[] | null
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          secret: string
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          backup_codes?: string[] | null
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          secret?: string
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
+      user_addresses: {
+        Row: {
+          address_type: string | null
+          city: string
+          country: string | null
+          created_at: string | null
+          id: string
+          is_default: boolean | null
+          state: string
+          street_address: string
+          street_address_2: string | null
+          updated_at: string | null
+          user_id: string
+          validated_by_usps: boolean | null
+          validation_timestamp: string | null
+          zip_code: string
+        }
+        Insert: {
+          address_type?: string | null
+          city: string
+          country?: string | null
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          state: string
+          street_address: string
+          street_address_2?: string | null
+          updated_at?: string | null
+          user_id: string
+          validated_by_usps?: boolean | null
+          validation_timestamp?: string | null
+          zip_code: string
+        }
+        Update: {
+          address_type?: string | null
+          city?: string
+          country?: string | null
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          state?: string
+          street_address?: string
+          street_address_2?: string | null
+          updated_at?: string | null
+          user_id?: string
+          validated_by_usps?: boolean | null
+          validation_timestamp?: string | null
+          zip_code?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -1271,6 +1451,57 @@ export type Database = {
         Update: {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_sessions: {
+        Row: {
+          browser: string | null
+          created_at: string | null
+          device: string | null
+          expires_at: string
+          id: string
+          ip_address: unknown | null
+          last_activity: string | null
+          os: string | null
+          refresh_token: string | null
+          revoked: boolean | null
+          revoked_at: string | null
+          session_token: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          browser?: string | null
+          created_at?: string | null
+          device?: string | null
+          expires_at: string
+          id?: string
+          ip_address?: unknown | null
+          last_activity?: string | null
+          os?: string | null
+          refresh_token?: string | null
+          revoked?: boolean | null
+          revoked_at?: string | null
+          session_token: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          browser?: string | null
+          created_at?: string | null
+          device?: string | null
+          expires_at?: string
+          id?: string
+          ip_address?: unknown | null
+          last_activity?: string | null
+          os?: string | null
+          refresh_token?: string | null
+          revoked?: boolean | null
+          revoked_at?: string | null
+          session_token?: string
+          user_agent?: string | null
           user_id?: string
         }
         Relationships: []
