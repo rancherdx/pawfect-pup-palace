@@ -467,6 +467,42 @@ export type Database = {
         }
         Relationships: []
       }
+      image_metadata: {
+        Row: {
+          alt_text: string
+          created_at: string | null
+          display_order: number | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          image_url: string
+          updated_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          alt_text: string
+          created_at?: string | null
+          display_order?: number | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          image_url: string
+          updated_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          alt_text?: string
+          created_at?: string | null
+          display_order?: number | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          image_url?: string
+          updated_at?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
       litters: {
         Row: {
           breed: string

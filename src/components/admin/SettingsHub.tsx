@@ -17,6 +17,7 @@ import AdminUserManager from "./AdminUserManager";
 import AdvancedSecurityFeatures from "./AdvancedSecurityFeatures";
 import DataDeletionRequestsManager from "./DataDeletionRequestsManager";
 import BrandAssetManager from "./BrandAssetManager";
+import { WatermarkManager } from "./WatermarkManager";
 
 /**
  * @component SettingsHub
@@ -46,7 +47,13 @@ const SettingsHub = () => {
       component: <BrandAssetManager /> 
     },
     { 
-      value: "users", 
+      value: "watermark", 
+      label: "Watermark", 
+      icon: Eye, 
+      component: <WatermarkManager /> 
+    },
+    { 
+      value: "users",
       label: "Users", 
       icon: Users, 
       component: <AdminUserManager /> 
