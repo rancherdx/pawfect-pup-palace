@@ -23,11 +23,13 @@ import SEOManager from "@/components/admin/SEOManager";
 import IntegrationsHub from "@/components/admin/IntegrationsHub";
 import EmailTemplatesManager from "@/components/admin/EmailTemplatesManager";
 import AdminUserManager from "@/components/admin/AdminUserManager";
+import AdminUserManagementEnhanced from "@/components/admin/AdminUserManagementEnhanced";
 import AdminStudDogManager from "@/components/admin/AdminStudDogManager";
 import AdvancedSecurityFeatures from "@/components/admin/AdvancedSecurityFeatures";
-import DataDeletionRequestsManager from "@/components/admin/DataDeletionRequestsManager"; // Import the new component
-import EnhancedTestimonialManagement from '@/components/admin/EnhancedTestimonialManagement'; // Import Enhanced TestimonialManagement
-import SEOManagement from '@/components/admin/SEOManagement'; // Import SEO Management
+import DataDeletionRequestsManager from "@/components/admin/DataDeletionRequestsManager";
+import { FormSubmissionsManager } from "@/components/admin/FormSubmissionsManager";
+import EnhancedTestimonialManagement from '@/components/admin/EnhancedTestimonialManagement';
+import SEOManagement from '@/components/admin/SEOManagement';
 import NotificationCenter from '@/components/admin/NotificationCenter';
 import SettingsHub from '@/components/admin/SettingsHub';
 import SwaggerDoc from "@/components/admin/SwaggerUI";
@@ -45,6 +47,10 @@ const allAdminTabs = [
   { value: "puppies", label: "Puppies", icon: Dog, component: <PuppyManagement /> },
   { value: "litters", label: "Litters", icon: Layers, component: <LitterManagement /> },
   { value: "parents", label: "Parents", icon: Heart, component: <ParentManagement /> },
+  
+  // User Management
+  { value: "users", label: "Users", icon: Users, component: <AdminUserManagementEnhanced /> },
+  { value: "forms", label: "Form Submissions", icon: FileText, component: <FormSubmissionsManager /> },
   
   // Content & Marketing
   { value: "blog", label: "Blog", icon: FileText, component: <BlogManager /> },

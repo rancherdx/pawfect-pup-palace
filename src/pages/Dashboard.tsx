@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserCircle, Receipt, MessageSquare, Dog, PawPrint, Cat, Bell } from "lucide-react";
+import { UserCircle, Receipt, MessageSquare, Dog, PawPrint, Cat, Bell, Shield } from "lucide-react";
 import Section from "@/components/Section";
 import UserProfile from "@/components/dashboard/UserProfile";
 import PuppyProfile from "@/components/dashboard/PuppyProfile";
@@ -9,6 +9,7 @@ import Receipts from "@/components/dashboard/Receipts";
 import ChatHistory from "@/components/dashboard/ChatHistory";
 import CreatureProfiles from "@/components/dashboard/CreatureProfiles";
 import NotificationCenter from "@/components/admin/NotificationCenter";
+import SecuritySettings from "@/components/dashboard/SecuritySettings";
 
 /**
  * @component Dashboard
@@ -24,10 +25,14 @@ const Dashboard = () => {
   return (
     <Section title="Dashboard" subtitle="Manage your profile, puppies, and more.">
       <Tabs defaultValue={activeTab} className="w-full">
-        <TabsList className="bg-secondary/50 p-2 rounded-lg shadow-sm">
+        <TabsList className="bg-secondary/50 p-2 rounded-lg shadow-sm flex-wrap">
           <TabsTrigger value="profile" onClick={() => setActiveTab("profile")}>
             <UserCircle className="h-4 w-4 mr-2" />
             Profile
+          </TabsTrigger>
+          <TabsTrigger value="security" onClick={() => setActiveTab("security")}>
+            <Shield className="h-4 w-4 mr-2" />
+            Security
           </TabsTrigger>
           <TabsTrigger value="puppy-profiles" onClick={() => setActiveTab("puppy-profiles")}>
             <Dog className="h-4 w-4 mr-2" />
@@ -52,6 +57,9 @@ const Dashboard = () => {
         </TabsList>
         <TabsContent value="profile" className="mt-6">
           <UserProfile />
+        </TabsContent>
+        <TabsContent value="security" className="mt-6">
+          <SecuritySettings />
         </TabsContent>
         <TabsContent value="puppy-profiles" className="mt-6">
           <PuppyProfile />

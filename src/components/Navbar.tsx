@@ -1,16 +1,27 @@
 
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Search, Bell, Moon, Sun, PawPrint } from "lucide-react";
+import { Menu, Search, Bell, Moon, Sun, PawPrint, User, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/contexts/ThemeContext";
 import GlobalSearch from "@/components/search/GlobalSearch";
 import NotificationDropdown from "@/components/NotificationDropdown";
+import UserProfileDropdown from "@/components/UserProfileDropdown";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { theme, setTheme } = useTheme();
+  const { isAuthenticated } = useAuth();
   const location = useLocation();
 
   const toggleTheme = () => {
@@ -19,9 +30,22 @@ const Navbar = () => {
 
   const navLinks = [
     { path: "/", label: "Home" },
-    { path: "/puppies", label: "Puppies" },
-    { path: "/litters", label: "Litters" },
+    { 
+      label: "Our Puppies",
+      subLinks: [
+        { path: "/puppies", label: "Available Puppies" },
+        { path: "/litters", label: "Litters" },
+      ]
+    },
+    { 
+      label: "Services",
+      subLinks: [
+        { path: "/stud-service", label: "Stud Services" },
+        { path: "/financing", label: "Financing Options" },
+      ]
+    },
     { path: "/about", label: "About" },
+    { path: "/reviews", label: "Reviews" },
     { path: "/contact", label: "Contact" },
   ];
 
@@ -43,21 +67,54 @@ const Navbar = () => {
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-1">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                    isActive(link.path)
-                      ? "bg-primary text-primary-foreground"
-                      : "text-foreground hover:bg-muted"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
+            <NavigationMenu className="hidden md:flex">
+              <NavigationMenuList>
+                {navLinks.map((link) => {
+                  if ('subLinks' in link) {
+                    return (
+                      <NavigationMenuItem key={link.label}>
+                        <NavigationMenuTrigger className="text-foreground hover:bg-muted">
+                          {link.label}
+                        </NavigationMenuTrigger>
+                        <NavigationMenuContent>
+                          <ul className="grid w-[200px] gap-2 p-3">
+                            {link.subLinks.map((subLink) => (
+                              <li key={subLink.path}>
+                                <NavigationMenuLink asChild>
+                                  <Link
+                                    to={subLink.path}
+                                    className={`block select-none rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground ${
+                                      isActive(subLink.path) ? "bg-primary text-primary-foreground" : ""
+                                    }`}
+                                  >
+                                    <div className="text-sm font-medium">{subLink.label}</div>
+                                  </Link>
+                                </NavigationMenuLink>
+                              </li>
+                            ))}
+                          </ul>
+                        </NavigationMenuContent>
+                      </NavigationMenuItem>
+                    );
+                  }
+                  return (
+                    <NavigationMenuItem key={link.path}>
+                      <Link to={link.path}>
+                        <NavigationMenuLink
+                          className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                            isActive(link.path)
+                              ? "bg-primary text-primary-foreground"
+                              : "text-foreground hover:bg-muted"
+                          }`}
+                        >
+                          {link.label}
+                        </NavigationMenuLink>
+                      </Link>
+                    </NavigationMenuItem>
+                  );
+                })}
+              </NavigationMenuList>
+            </NavigationMenu>
 
             {/* Actions */}
             <div className="flex items-center gap-2">
@@ -87,6 +144,14 @@ const Navbar = () => {
                 )}
               </Button>
 
+              {isAuthenticated ? (
+                <UserProfileDropdown />
+              ) : (
+                <Button asChild variant="default" className="hidden md:flex">
+                  <Link to="/login">Sign In</Link>
+                </Button>
+              )}
+
               {/* Mobile Menu */}
               <Sheet>
                 <SheetTrigger asChild>
@@ -96,19 +161,48 @@ const Navbar = () => {
                 </SheetTrigger>
                 <SheetContent side="right" className="w-[280px] sm:w-[350px]">
                   <nav className="flex flex-col gap-4 mt-8">
-                    {navLinks.map((link) => (
-                      <Link
-                        key={link.path}
-                        to={link.path}
-                        className={`px-4 py-3 rounded-md font-medium text-lg transition-colors ${
-                          isActive(link.path)
-                            ? "bg-primary text-primary-foreground"
-                            : "text-foreground hover:bg-muted"
-                        }`}
-                      >
-                        {link.label}
-                      </Link>
-                    ))}
+                    {navLinks.map((link) => {
+                      if ('subLinks' in link) {
+                        return (
+                          <div key={link.label} className="space-y-2">
+                            <div className="px-4 py-2 font-semibold text-muted-foreground">
+                              {link.label}
+                            </div>
+                            {link.subLinks.map((subLink) => (
+                              <Link
+                                key={subLink.path}
+                                to={subLink.path}
+                                className={`pl-8 pr-4 py-2 rounded-md font-medium transition-colors block ${
+                                  isActive(subLink.path)
+                                    ? "bg-primary text-primary-foreground"
+                                    : "text-foreground hover:bg-muted"
+                                }`}
+                              >
+                                {subLink.label}
+                              </Link>
+                            ))}
+                          </div>
+                        );
+                      }
+                      return (
+                        <Link
+                          key={link.path}
+                          to={link.path}
+                          className={`px-4 py-3 rounded-md font-medium text-lg transition-colors ${
+                            isActive(link.path)
+                              ? "bg-primary text-primary-foreground"
+                              : "text-foreground hover:bg-muted"
+                          }`}
+                        >
+                          {link.label}
+                        </Link>
+                      );
+                    })}
+                    {!isAuthenticated && (
+                      <Button asChild variant="default" className="mx-4 mt-4">
+                        <Link to="/login">Sign In</Link>
+                      </Button>
+                    )}
                   </nav>
                 </SheetContent>
               </Sheet>
