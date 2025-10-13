@@ -18,6 +18,25 @@ export default {
 				'2xl': '1400px'
 			}
 		},
+		// Custom screens for iOS/iPadOS specific breakpoints (mobile-first)
+		screens: {
+			// Mobile first - iPhone sizes
+			'xs': '375px',        // iPhone SE, 12 mini, 13 mini
+			'sm': '390px',        // iPhone 14, 15, 16 base
+			'md': '430px',        // iPhone 14 Plus, 15 Plus, 16 Plus, Pro Max models
+			
+			// iPad sizes
+			'ipad': '768px',      // iPad Mini, iPad
+			'ipad-air': '820px',  // iPad Air
+			'ipad-pro': '1024px', // iPad Pro 11"
+			'ipad-pro-lg': '1366px', // iPad Pro 12.9"
+			
+			// Generic breakpoints for other devices
+			'tablet': '768px',
+			'laptop': '1024px',
+			'desktop': '1280px',
+			'wide': '1536px',
+		},
 		extend: {
 			fontFamily: {
 				'fredoka': ['Fredoka One', 'cursive'],

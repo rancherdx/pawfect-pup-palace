@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
-export type Theme = 'light' | 'dark' | 'system';
+export type Theme = 'light' | 'dark' | 'dimmed' | 'system';
 export type Holiday = 'halloween' | 'christmas' | 'valentine' | 'none';
 
 interface ThemeContextType {
@@ -10,32 +12,79 @@ interface ThemeContextType {
   setHoliday: (holiday: Holiday) => void;
   holidayEnabled: boolean;
   setHolidayEnabled: (enabled: boolean) => void;
-  resolvedTheme: 'light' | 'dark';
+  resolvedTheme: 'light' | 'dark' | 'dimmed';
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('system');
-  const [holiday, setHoliday] = useState<Holiday>('halloween');
-  const [holidayEnabled, setHolidayEnabled] = useState(true);
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
+  const { user } = useAuth();
+  const [theme, setTheme] = useState<Theme>('dimmed'); // Default to dimmed
+  const [holiday, setHoliday] = useState<Holiday>('none');
+  const [holidayEnabled, setHolidayEnabled] = useState(false);
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark' | 'dimmed'>('dimmed');
+
+  // Load user theme preference from database
+  useEffect(() => {
+    const loadUserTheme = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('user_theme_preferences')
+          .select('theme_mode, custom_tokens')
+          .eq('user_id', user.id)
+          .single();
+
+        if (!error && data) {
+          setTheme(data.theme_mode as Theme);
+        }
+      } catch (err) {
+        console.error('Failed to load user theme:', err);
+      }
+    };
+
+    loadUserTheme();
+  }, [user]);
+
+  // Save user theme preference to database
+  useEffect(() => {
+    const saveUserTheme = async () => {
+      if (!user || theme === 'system') return;
+      
+      try {
+        await supabase
+          .from('user_theme_preferences')
+          .upsert({
+            user_id: user.id,
+            theme_mode: theme,
+            custom_tokens: {}
+          });
+      } catch (err) {
+        console.error('Failed to save user theme:', err);
+      }
+    };
+
+    saveUserTheme();
+  }, [user, theme]);
 
   useEffect(() => {
     const root = window.document.documentElement;
     
     // Determine actual theme
-    let actualTheme: 'light' | 'dark' = 'light';
+    let actualTheme: 'light' | 'dark' | 'dimmed' = 'dimmed';
+    
     if (theme === 'system') {
-      actualTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      actualTheme = prefersDark ? 'dark' : 'light';
     } else {
-      actualTheme = theme === 'dark' ? 'dark' : 'light';
+      actualTheme = theme;
     }
     
     setResolvedTheme(actualTheme);
     
     // Apply theme classes
-    root.classList.remove('light', 'dark', 'halloween', 'christmas', 'valentine');
+    root.classList.remove('light', 'dark', 'dimmed', 'halloween', 'christmas', 'valentine');
     root.classList.add(actualTheme);
     
     // Apply holiday theme if enabled

@@ -413,6 +413,42 @@ export type Database = {
         }
         Relationships: []
       }
+      design_tokens: {
+        Row: {
+          created_at: string
+          dark_value: string | null
+          description: string | null
+          dimmed_value: string | null
+          id: string
+          light_value: string | null
+          token_category: string
+          token_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dark_value?: string | null
+          description?: string | null
+          dimmed_value?: string | null
+          id?: string
+          light_value?: string | null
+          token_category: string
+          token_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dark_value?: string | null
+          description?: string | null
+          dimmed_value?: string | null
+          id?: string
+          light_value?: string | null
+          token_category?: string
+          token_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_providers: {
         Row: {
           api_key_encrypted: string | null
@@ -1541,6 +1577,36 @@ export type Database = {
         }
         Relationships: []
       }
+      theme_presets: {
+        Row: {
+          created_at: string
+          id: string
+          is_default: boolean | null
+          preset_name: string
+          theme_mode: string
+          tokens: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          preset_name: string
+          theme_mode: string
+          tokens?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          preset_name?: string
+          theme_mode?: string
+          tokens?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       third_party_integrations: {
         Row: {
           created_at: string
@@ -1756,6 +1822,33 @@ export type Database = {
           revoked_at?: string | null
           session_token?: string
           user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_theme_preferences: {
+        Row: {
+          created_at: string
+          custom_tokens: Json | null
+          id: string
+          theme_mode: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          custom_tokens?: Json | null
+          id?: string
+          theme_mode?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          custom_tokens?: Json | null
+          id?: string
+          theme_mode?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
