@@ -17,7 +17,7 @@ import { useSmoothScroll } from "@/hooks/useSmoothScroll";
 
 // Lazy load components for better performance
 const Index = lazy(() => import("./pages/Index"));
-const Puppies = lazy(() => import("./pages/Puppies"));
+const Puppies = lazy(() => import("./pages/PuppiesRedesigned"));
 const PuppyDetails = lazy(() => import("./pages/PuppyDetails"));
 const Litters = lazy(() => import("./pages/Litters"));
 const LitterDetails = lazy(() => import("./pages/LitterDetails"));

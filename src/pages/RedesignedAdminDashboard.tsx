@@ -26,6 +26,9 @@ import SettingsHub from '@/components/admin/SettingsHub';
 import SwaggerDoc from "@/components/admin/SwaggerUI";
 import ReDocDoc from "@/components/admin/ReDocUI";
 import ParentManagement from '@/components/admin/ParentManagement';
+import { SplashScreen } from "@/components/SplashScreen";
+import { useSplashScreen } from "@/hooks/useSplashScreen";
+import { PawIcon, BoneIcon } from "@/components/PuppyIcons";
 
 const adminSections = [
   {
@@ -88,6 +91,7 @@ const itemVariants = {
  * @description A modern, animated admin dashboard with organized sections and smooth transitions
  */
 const RedesignedAdminDashboard = () => {
+  const { showSplash, handleComplete } = useSplashScreen('admin', { showOnce: false });
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") || "puppies";
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -112,22 +116,34 @@ const RedesignedAdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/50 to-primary/5">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-12"
-        >
-          <h1 className="text-5xl font-heading bg-gradient-to-r from-primary via-primary/80 to-accent bg-clip-text text-transparent mb-4">
-            Admin Dashboard
-          </h1>
-          <p className="text-xl text-muted-foreground font-body max-w-2xl mx-auto">
-            Manage your business operations, content, and system settings
-          </p>
-        </motion.div>
+    <>
+      {showSplash && <SplashScreen type="admin" onComplete={handleComplete} duration={1500} />}
+      
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/50 to-primary/5 bone-pattern-bg">
+        <div className="container mx-auto px-4 py-8">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: "spring", stiffness: 200 }}
+              className="flex justify-center mb-6"
+            >
+              <PawIcon className="w-16 h-16 text-accent animate-float" />
+            </motion.div>
+
+            <h1 className="text-4xl md:text-5xl font-heading bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent mb-4 bg-[length:200%_200%] animate-gradient-shift">
+              Admin Dashboard
+            </h1>
+            <p className="text-xl text-muted-foreground font-body max-w-2xl mx-auto">
+              Manage your business operations, content, and system settings
+            </p>
+          </motion.div>
 
         {/* Dashboard Sections */}
         <motion.div
@@ -293,6 +309,7 @@ const RedesignedAdminDashboard = () => {
         </motion.div>
       </div>
     </div>
+    </>
   );
 };
 
