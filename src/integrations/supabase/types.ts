@@ -413,6 +413,63 @@ export type Database = {
         }
         Relationships: []
       }
+      email_providers: {
+        Row: {
+          api_key_encrypted: string | null
+          created_at: string | null
+          dkim_private_key_vault_id: string | null
+          dkim_public_key: string | null
+          dkim_verified: boolean | null
+          id: string
+          is_active: boolean | null
+          last_test_at: string | null
+          provider_name: string
+          smtp_host: string | null
+          smtp_password_encrypted: string | null
+          smtp_port: number | null
+          smtp_username: string | null
+          test_error_message: string | null
+          test_status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          api_key_encrypted?: string | null
+          created_at?: string | null
+          dkim_private_key_vault_id?: string | null
+          dkim_public_key?: string | null
+          dkim_verified?: boolean | null
+          id?: string
+          is_active?: boolean | null
+          last_test_at?: string | null
+          provider_name: string
+          smtp_host?: string | null
+          smtp_password_encrypted?: string | null
+          smtp_port?: number | null
+          smtp_username?: string | null
+          test_error_message?: string | null
+          test_status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          api_key_encrypted?: string | null
+          created_at?: string | null
+          dkim_private_key_vault_id?: string | null
+          dkim_public_key?: string | null
+          dkim_verified?: boolean | null
+          id?: string
+          is_active?: boolean | null
+          last_test_at?: string | null
+          provider_name?: string
+          smtp_host?: string | null
+          smtp_password_encrypted?: string | null
+          smtp_port?: number | null
+          smtp_username?: string | null
+          test_error_message?: string | null
+          test_status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       email_templates: {
         Row: {
           created_at: string
@@ -824,6 +881,54 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_method_configs: {
+        Row: {
+          api_key_encrypted: string | null
+          api_secret_encrypted: string | null
+          created_at: string | null
+          custom_instructions: string | null
+          environment: string | null
+          id: string
+          is_enabled: boolean | null
+          last_tested_at: string | null
+          method_name: string
+          payment_link: string | null
+          qr_code_url: string | null
+          test_status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          api_key_encrypted?: string | null
+          api_secret_encrypted?: string | null
+          created_at?: string | null
+          custom_instructions?: string | null
+          environment?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          last_tested_at?: string | null
+          method_name: string
+          payment_link?: string | null
+          qr_code_url?: string | null
+          test_status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          api_key_encrypted?: string | null
+          api_secret_encrypted?: string | null
+          created_at?: string | null
+          custom_instructions?: string | null
+          environment?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          last_tested_at?: string | null
+          method_name?: string
+          payment_link?: string | null
+          qr_code_url?: string | null
+          test_status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
@@ -864,6 +969,72 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      pos_transactions: {
+        Row: {
+          created_at: string | null
+          customer_email: string | null
+          customer_id: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          id: string
+          invoice_url: string | null
+          items: Json
+          notes: string | null
+          payment_method: string
+          payment_status: string | null
+          processed_by: string | null
+          receipt_html: string | null
+          receipt_url: string | null
+          square_transaction_id: string | null
+          subtotal: number
+          tax_amount: number
+          total_amount: number
+          transaction_number: string
+        }
+        Insert: {
+          created_at?: string | null
+          customer_email?: string | null
+          customer_id?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          invoice_url?: string | null
+          items: Json
+          notes?: string | null
+          payment_method: string
+          payment_status?: string | null
+          processed_by?: string | null
+          receipt_html?: string | null
+          receipt_url?: string | null
+          square_transaction_id?: string | null
+          subtotal: number
+          tax_amount: number
+          total_amount: number
+          transaction_number: string
+        }
+        Update: {
+          created_at?: string | null
+          customer_email?: string | null
+          customer_id?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          invoice_url?: string | null
+          items?: Json
+          notes?: string | null
+          payment_method?: string
+          payment_status?: string | null
+          processed_by?: string | null
+          receipt_html?: string | null
+          receipt_url?: string | null
+          square_transaction_id?: string | null
+          subtotal?: number
+          tax_amount?: number
+          total_amount?: number
+          transaction_number?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -996,6 +1167,7 @@ export type Database = {
       }
       puppy_purchases: {
         Row: {
+          admin_notes: string | null
           created_at: string | null
           customer_email: string
           customer_id: string | null
@@ -1006,6 +1178,8 @@ export type Database = {
           id: string
           notes: string | null
           puppy_id: string | null
+          refund_amount: number | null
+          refund_reason: string | null
           remaining_amount: number
           square_invoice_id: string | null
           status: string | null
@@ -1013,6 +1187,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          admin_notes?: string | null
           created_at?: string | null
           customer_email: string
           customer_id?: string | null
@@ -1023,6 +1198,8 @@ export type Database = {
           id?: string
           notes?: string | null
           puppy_id?: string | null
+          refund_amount?: number | null
+          refund_reason?: string | null
           remaining_amount: number
           square_invoice_id?: string | null
           status?: string | null
@@ -1030,6 +1207,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          admin_notes?: string | null
           created_at?: string | null
           customer_email?: string
           customer_id?: string | null
@@ -1040,6 +1218,8 @@ export type Database = {
           id?: string
           notes?: string | null
           puppy_id?: string | null
+          refund_amount?: number | null
+          refund_reason?: string | null
           remaining_amount?: number
           square_invoice_id?: string | null
           status?: string | null
@@ -1085,6 +1265,50 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      sent_emails_log: {
+        Row: {
+          error_message: string | null
+          id: string
+          message_id: string | null
+          provider_id: string | null
+          recipient_email: string
+          sent_at: string | null
+          status: string | null
+          subject: string
+          template_name: string | null
+        }
+        Insert: {
+          error_message?: string | null
+          id?: string
+          message_id?: string | null
+          provider_id?: string | null
+          recipient_email: string
+          sent_at?: string | null
+          status?: string | null
+          subject: string
+          template_name?: string | null
+        }
+        Update: {
+          error_message?: string | null
+          id?: string
+          message_id?: string | null
+          provider_id?: string | null
+          recipient_email?: string
+          sent_at?: string | null
+          status?: string | null
+          subject?: string
+          template_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sent_emails_log_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "email_providers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       seo_meta: {
         Row: {
@@ -1152,6 +1376,36 @@ export type Database = {
           twitter_image?: string | null
           twitter_title?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          price: number
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          price: number
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          price?: number
         }
         Relationships: []
       }
