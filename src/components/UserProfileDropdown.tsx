@@ -23,9 +23,10 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function UserProfileDropdown() {
-  const { user, logout, userRoles, isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const userRoles = user?.roles || [];
 
   useEffect(() => {
     if (user?.id) {

@@ -45,7 +45,7 @@ interface LoginAttempt {
   id: string;
   success: boolean;
   attempted_at: string;
-  ip_address: string;
+  ip_address: string | null;
   browser: string;
   os: string;
   location: any;
@@ -56,7 +56,7 @@ interface Session {
   browser: string;
   os: string;
   device: string;
-  ip_address: string;
+  ip_address: string | null;
   last_activity: string;
 }
 
@@ -91,7 +91,10 @@ export default function SecuritySettings() {
       .limit(5);
 
     if (!error && data) {
-      setLoginHistory(data);
+      setLoginHistory(data.map(item => ({
+        ...item,
+        ip_address: item.ip_address ? String(item.ip_address) : null
+      })));
     }
   };
 
@@ -104,7 +107,10 @@ export default function SecuritySettings() {
       .order("last_activity", { ascending: false });
 
     if (!error && data) {
-      setSessions(data);
+      setSessions(data.map(item => ({
+        ...item,
+        ip_address: item.ip_address ? String(item.ip_address) : null
+      })));
     }
   };
 
