@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { useHolidayTheme } from "@/contexts/HolidayThemeContext";
 import HalloweenDecorations from "@/components/HalloweenDecorations";
-import Navbar from "@/components/Navbar";
+import { NavbarRedesigned } from "@/components/NavbarRedesigned";
 import Footer from "@/components/Footer";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 
@@ -23,7 +23,7 @@ const SpookyLayout = ({ children, fullWidth = false, centered = false }: SpookyL
       {/* Halloween decorations overlay */}
       <HalloweenDecorations />
       
-      <Navbar />
+      <NavbarRedesigned />
       <main className={`flex-grow ${!fullWidth && "container mx-auto px-4"} ${centered && "flex items-center justify-center"} relative z-10`}>
         {children}
       </main>

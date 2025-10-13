@@ -1,6 +1,6 @@
 
 import { ReactNode, useEffect } from "react";
-import Navbar from "@/components/Navbar";
+import { NavbarRedesigned } from "@/components/NavbarRedesigned";
 import Footer from "@/components/Footer";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 
@@ -44,7 +44,7 @@ const Layout = ({ children, fullWidth = false, centered = false }: LayoutProps) 
 
   return (
     <div className="flex flex-col min-h-screen bg-background paw-print-bg transition-colors duration-500">
-      <Navbar />
+      <NavbarRedesigned />
       <main className={`flex-grow ${!fullWidth && "container mx-auto px-4"} ${centered && "flex items-center justify-center"}`}>
         {children}
       </main>

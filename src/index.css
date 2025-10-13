@@ -180,7 +180,17 @@ h1, h2, h3 {
 
 /* Puppy-themed components */
 .paw-print-bg {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 24 24' fill='%23FF6B1A' stroke='none' opacity='0.05'%3E%3Ccircle cx='12' cy='6' r='2'/%3E%3Ccircle cx='8' cy='8' r='1.5'/%3E%3Ccircle cx='16' cy='8' r='1.5'/%3E%3Cpath d='M12 14c-2 0-4-1-4-3s2-3 4-3 4 1 4 3-2 3-4 3z'/%3E%3Cpath d='M8 18c0-2 2-3 4-3s4 1 4 3'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 24 24' fill='hsl(var(--accent))' stroke='none' opacity='0.03'%3E%3Ccircle cx='12' cy='13' r='8' opacity='0.2'/%3E%3Ccircle cx='13' cy='11' r='2'/%3E%3Ccircle cx='9' cy='9' r='2'/%3E%3Ccircle cx='15' cy='9' r='2'/%3E%3Ccircle cx='18' cy='13' r='2'/%3E%3Ccircle cx='6' cy='13' r='2'/%3E%3C/svg%3E");
+  background-attachment: fixed;
+}
+
+.bone-pattern-bg {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 24 24' fill='hsl(var(--primary))' opacity='0.02'%3E%3Cpath d='M6 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z'/%3E%3Cpath d='M18 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4z'/%3E%3Cpath d='M6 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4z'/%3E%3Cpath d='M18 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4z'/%3E%3Crect x='7' y='9' width='10' height='6' rx='2'/%3E%3C/svg%3E");
+  background-attachment: fixed;
+}
+
+.heart-paw-bg {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 24 24' fill='hsl(var(--accent))' opacity='0.025'%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' opacity='0.2'/%3E%3Ccircle cx='12' cy='10' r='1.5'/%3E%3Ccircle cx='9.5' cy='8' r='1'/%3E%3Ccircle cx='14.5' cy='8' r='1'/%3E%3C/svg%3E");
   background-attachment: fixed;
 }
 
