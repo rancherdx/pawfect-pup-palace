@@ -15,6 +15,9 @@ import PuppyProfile from "@/components/dashboard/PuppyProfile";
 import Receipts from "@/components/dashboard/Receipts";
 import ChatHistory from "@/components/dashboard/ChatHistory";
 import { Card, CardContent } from "@/components/ui/card";
+import { SplashScreen } from "@/components/SplashScreen";
+import { useSplashScreen } from "@/hooks/useSplashScreen";
+import { PawIcon, HeartPawIcon } from "@/components/PuppyIcons";
 
 const dashboardTabs = [
   {
@@ -69,6 +72,13 @@ const itemVariants = {
 const RedesignedDashboard = () => {
   const [activeTab, setActiveTab] = useState("profile");
   const ActiveComponent = dashboardTabs.find(tab => tab.value === activeTab)?.component;
+  const { showSplash, handleComplete } = useSplashScreen('dashboard', { 
+    showOnce: true 
+  });
+
+  if (showSplash) {
+    return <SplashScreen type="dashboard" onComplete={handleComplete} duration={2000} />;
+  }
 
   return (
     <Layout>
@@ -76,12 +86,21 @@ const RedesignedDashboard = () => {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-8 relative"
         >
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-2">
-            Welcome Back! 🐾
+          <div className="absolute -top-4 -left-4 opacity-20">
+            <PawIcon className="w-24 h-24 text-primary" />
+          </div>
+          <div className="absolute -top-6 -right-6 opacity-10">
+            <HeartPawIcon className="w-32 h-32 text-accent" />
+          </div>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-2 relative z-10">
+            <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+              Welcome Back! 
+            </span>
+            <PawPrint className="inline-block ml-2 h-8 w-8 text-primary animate-bounce" />
           </h1>
-          <p className="text-base sm:text-lg text-muted-foreground">
+          <p className="text-base sm:text-lg text-muted-foreground relative z-10">
             Manage your profile, puppies, and more
           </p>
         </motion.div>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { PawPrint, Check, Gift, ArrowRight, ArrowLeft } from "lucide-react";
@@ -16,6 +15,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { calculateAge } from "@/utils/dateUtils";
+import { SplashScreen } from "@/components/SplashScreen";
+import { useSplashScreen } from "@/hooks/useSplashScreen";
+import { PawIcon, BoneIcon } from "@/components/PuppyIcons";
 
 /**
  * @component Checkout
@@ -30,6 +32,9 @@ import { calculateAge } from "@/utils/dateUtils";
 const Checkout = () => {
   const [searchParams] = useSearchParams();
   const puppyId = searchParams.get("puppy");
+  const { showSplash, handleComplete } = useSplashScreen('checkout', { 
+    showOnce: false 
+  });
   
   // Fetch puppy data from Supabase
   const { data: puppyData, isLoading } = useQuery({
@@ -257,6 +262,10 @@ const Checkout = () => {
     );
   };
 
+  if (showSplash) {
+    return <SplashScreen type="checkout" onComplete={handleComplete} duration={2000} />;
+  }
+
   if (isLoading) {
     return (
       <Section className="py-12">
@@ -293,22 +302,31 @@ const Checkout = () => {
   }
 
   return (
-    <div className="bg-gradient-to-b from-white to-gray-50">
-      <Section className="py-8">
+    <div className="bg-gradient-to-b from-background to-muted/30 relative overflow-hidden">
+      <div className="absolute top-10 left-10 opacity-10">
+        <PawIcon className="w-32 h-32 text-primary" />
+      </div>
+      <div className="absolute bottom-10 right-10 opacity-5">
+        <BoneIcon className="w-40 h-40 text-accent" />
+      </div>
+      <Section className="py-8 relative z-10">
         <div className="max-w-5xl mx-auto">
           <motion.div 
-            className="mb-8"
+            className="mb-8 relative"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <h1 className="text-3xl font-bold mb-2 flex items-center">
-              <PawPrint className="mr-2 h-6 w-6 text-brand-red" />
-              <span className="bg-gradient-to-r from-brand-red to-red-700 bg-clip-text text-transparent">
+            <div className="absolute -top-2 -left-2 opacity-20">
+              <PawIcon className="w-16 h-16 text-primary" />
+            </div>
+            <h1 className="text-3xl font-bold mb-2 flex items-center relative z-10">
+              <PawPrint className="mr-2 h-6 w-6 text-primary animate-pulse" />
+              <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
                 Puppy Adoption Process
               </span>
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground relative z-10">
               Complete these steps to bring your new family member home.
             </p>
           </motion.div>
