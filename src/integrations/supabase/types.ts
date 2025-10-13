@@ -740,6 +740,47 @@ export type Database = {
         }
         Relationships: []
       }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string | null
+          id: string
+          notes: string | null
+          payment_date: string | null
+          payment_method: string
+          purchase_id: string | null
+          square_transaction_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          payment_date?: string | null
+          payment_method: string
+          purchase_id?: string | null
+          square_transaction_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          payment_date?: string | null
+          payment_method?: string
+          purchase_id?: string | null
+          square_transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "puppy_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -850,6 +891,68 @@ export type Database = {
             columns: ["litter_id"]
             isOneToOne: false
             referencedRelation: "litters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      puppy_purchases: {
+        Row: {
+          created_at: string | null
+          customer_email: string
+          customer_id: string | null
+          customer_name: string
+          customer_phone: string | null
+          deposit_amount: number | null
+          due_date: string
+          id: string
+          notes: string | null
+          puppy_id: string | null
+          remaining_amount: number
+          square_invoice_id: string | null
+          status: string | null
+          total_price: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_email: string
+          customer_id?: string | null
+          customer_name: string
+          customer_phone?: string | null
+          deposit_amount?: number | null
+          due_date: string
+          id?: string
+          notes?: string | null
+          puppy_id?: string | null
+          remaining_amount: number
+          square_invoice_id?: string | null
+          status?: string | null
+          total_price: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_email?: string
+          customer_id?: string | null
+          customer_name?: string
+          customer_phone?: string | null
+          deposit_amount?: number | null
+          due_date?: string
+          id?: string
+          notes?: string | null
+          puppy_id?: string | null
+          remaining_amount?: number
+          square_invoice_id?: string | null
+          status?: string | null
+          total_price?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "puppy_purchases_puppy_id_fkey"
+            columns: ["puppy_id"]
+            isOneToOne: false
+            referencedRelation: "puppies"
             referencedColumns: ["id"]
           },
         ]

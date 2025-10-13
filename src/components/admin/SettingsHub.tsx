@@ -21,6 +21,8 @@ import { WatermarkManager } from "./WatermarkManager";
 import { BreedTemplateManager } from "./BreedTemplateManager";
 import { ColorTemplateManager } from "./ColorTemplateManager";
 import { FormSubmissionsManager } from "./FormSubmissionsManager";
+import AuthEmailTemplateGuide from "./AuthEmailTemplateGuide";
+import PurchaseManager from "./PurchaseManager";
 
 /**
  * @component SettingsHub
@@ -102,6 +104,18 @@ const SettingsHub = () => {
       label: "Form Submissions",
       icon: Mail,
       component: <FormSubmissionsManager />
+    },
+    {
+      value: "auth_templates",
+      label: "Auth Email",
+      icon: Mail,
+      component: <AuthEmailTemplateGuide />
+    },
+    {
+      value: "purchases",
+      label: "Purchases",
+      icon: Settings,
+      component: <PurchaseManager />
     },
   ];
 
