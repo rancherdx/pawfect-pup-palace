@@ -135,6 +135,18 @@ export default {
 					'50%': { opacity: '1' },
 					'100%': { opacity: '0', transform: 'scale(1.5) rotate(0deg)' }
 				},
+				'float': {
+					'0%, 100%': { transform: 'translateY(0)' },
+					'50%': { transform: 'translateY(-10px)' }
+				},
+				'shimmer': {
+					'0%': { backgroundPosition: '-200% center' },
+					'100%': { backgroundPosition: '200% center' }
+				},
+				'gradient-shift': {
+					'0%, 100%': { backgroundPosition: '0% 50%' },
+					'50%': { backgroundPosition: '100% 50%' }
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
@@ -150,6 +162,9 @@ export default {
 				'bounce-gentle': 'bounce 1s ease-in-out infinite',
 				'tail-wag': 'tail-wag 0.6s ease-in-out infinite',
 				'paw-print': 'paw-print 1s ease-out forwards',
+				'float': 'float 3s ease-in-out infinite',
+				'shimmer': 'shimmer 2s linear infinite',
+				'gradient-shift': 'gradient-shift 3s ease infinite',
 			},
 			backgroundImage: {
 				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
@@ -159,6 +174,13 @@ export default {
 				'puppy': '0 10px 25px -5px rgba(229, 62, 62, 0.1), 0 5px 10px -5px rgba(229, 62, 62, 0.05)',
 				'halloween': '0 10px 25px -5px rgba(255, 107, 26, 0.3), 0 5px 10px -5px rgba(45, 27, 105, 0.2)',
 				'spooky': '0 0 20px rgba(57, 255, 20, 0.5), inset 0 0 20px rgba(45, 27, 105, 0.3)',
+				'glow': '0 0 30px -5px hsl(var(--primary) / 0.4)',
+				'elegant': '0 10px 30px -10px hsl(var(--primary) / 0.3)',
+				'soft': '0 2px 10px 0 rgba(0, 0, 0, 0.05)',
+			},
+			transitionTimingFunction: {
+				'smooth': 'cubic-bezier(0.4, 0, 0.2, 1)',
+				'bounce-in': 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
 			},
 			textShadow: {
 				'sm': '0 1px 2px rgba(0, 0, 0, 0.1)',

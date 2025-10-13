@@ -52,9 +52,18 @@ const allAdminTabs = [
   { value: "litters", label: "Litters", icon: Layers, component: <LitterManagement /> },
   { value: "parents", label: "Parents", icon: Heart, component: <ParentManagement /> },
   
+  // Sales & Orders (Phase 8)
+  { value: "adoptions", label: "Adoptions", icon: Receipt, component: <AdoptionsOverview /> },
+  { value: "pos", label: "Point of Sale", icon: CreditCard, component: <POS /> },
+  { value: "transaction-settings", label: "Transaction Settings", icon: Settings, component: <TransactionSettings /> },
+  { value: "payment-methods", label: "Payment Methods", icon: CreditCard, component: <PaymentMethodsManager /> },
+  
   // User Management
   { value: "users", label: "Users", icon: Users, component: <AdminUserManagementEnhanced /> },
   { value: "forms", label: "Form Submissions", icon: FileText, component: <FormSubmissionsManager /> },
+  
+  // Communications (Phase 7)
+  { value: "email-suite", label: "Email Suite", icon: Mail, component: <EmailSuite /> },
   
   // Content & Marketing
   { value: "blog", label: "Blog", icon: FileText, component: <BlogManager /> },

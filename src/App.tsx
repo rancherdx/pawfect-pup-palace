@@ -12,6 +12,8 @@ import AnimatedLayout from "@/components/AnimatedLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Setup from "./pages/Setup";
 import CorsConfig from "@/components/CorsConfig";
+import { ParallaxProvider } from "@/components/ParallaxProvider";
+import { useSmoothScroll } from "@/hooks/useSmoothScroll";
 
 // Lazy load components for better performance
 const Index = lazy(() => import("./pages/Index"));
@@ -47,15 +49,18 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const queryClient = new QueryClient();
 
 const App: React.FC = () => {
+  useSmoothScroll();
+  
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <Toaster />
-        <Sonner />
-        <CorsConfig />
-        <ErrorBoundary>
-          <BrowserRouter>
-            <AuthProvider>
+      <ParallaxProvider>
+        <ThemeProvider>
+          <Toaster />
+          <Sonner />
+          <CorsConfig />
+          <ErrorBoundary>
+            <BrowserRouter>
+              <AuthProvider>
             <div className="min-h-screen flex flex-col">
               <Routes>
                 {/* Setup route (no layout) */}
@@ -137,6 +142,7 @@ const App: React.FC = () => {
           </BrowserRouter>
         </ErrorBoundary>
       </ThemeProvider>
+      </ParallaxProvider>
     </QueryClientProvider>
   );
 };
