@@ -164,7 +164,9 @@ export type Database = {
           average_weight_max: number | null
           average_weight_min: number | null
           breed_name: string
+          breed_specific_faqs: Json | null
           care_instructions: string | null
+          common_faqs: Json | null
           common_traits: string[] | null
           created_at: string | null
           description: string | null
@@ -189,7 +191,9 @@ export type Database = {
           average_weight_max?: number | null
           average_weight_min?: number | null
           breed_name: string
+          breed_specific_faqs?: Json | null
           care_instructions?: string | null
+          common_faqs?: Json | null
           common_traits?: string[] | null
           created_at?: string | null
           description?: string | null
@@ -214,7 +218,9 @@ export type Database = {
           average_weight_max?: number | null
           average_weight_min?: number | null
           breed_name?: string
+          breed_specific_faqs?: Json | null
           care_instructions?: string | null
+          common_faqs?: Json | null
           common_traits?: string[] | null
           created_at?: string | null
           description?: string | null
@@ -260,6 +266,27 @@ export type Database = {
           details?: Json | null
           id?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      color_templates: {
+        Row: {
+          color_name: string
+          created_at: string | null
+          id: string
+          layman_description: string | null
+        }
+        Insert: {
+          color_name: string
+          created_at?: string | null
+          id?: string
+          layman_description?: string | null
+        }
+        Update: {
+          color_name?: string
+          created_at?: string | null
+          id?: string
+          layman_description?: string | null
         }
         Relationships: []
       }
@@ -368,6 +395,42 @@ export type Database = {
           name?: string
           subject?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      form_submissions: {
+        Row: {
+          created_at: string | null
+          form_data: Json
+          form_name: string
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          form_data: Json
+          form_name: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          form_data?: Json
+          form_name?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          user_email?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }

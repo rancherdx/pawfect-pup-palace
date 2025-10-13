@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/card";
 import { Mail, Phone, MapPin, Clock, PawPrint } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import Section from "@/components/Section";
+import { supabase } from "@/integrations/supabase/client";
 
 const ContactCard = ({ icon: Icon, title, details }: { icon: React.ElementType, title: string, details: string | string[] }) => (
   <Card className="p-6 flex flex-col items-center text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
@@ -51,15 +52,36 @@ const Contact = () => {
     resolver: zodResolver(contactFormSchema),
   });
 
-  const onSubmit = (data: ContactFormData) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log("[DEV] Contact form submitted:", data);
+  const onSubmit = async (data: ContactFormData) => {
+    try {
+      // Log form submission to database
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      await supabase.from('form_submissions').insert([{
+        form_name: 'contact',
+        form_data: data,
+        user_email: data.email,
+        user_id: user?.id || null,
+        status: 'pending',
+      }]);
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log("[DEV] Contact form submitted:", data);
+      }
+      
+      toast({
+        title: "Message Sent!",
+        description: "We'll get back to you as soon as possible.",
+      });
+      reset();
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
     }
-    toast({
-      title: "Message Sent!",
-      description: "We'll get back to you as soon as possible.",
-    });
-    reset();
   };
 
   const structuredData = {

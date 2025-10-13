@@ -18,6 +18,9 @@ import AdvancedSecurityFeatures from "./AdvancedSecurityFeatures";
 import DataDeletionRequestsManager from "./DataDeletionRequestsManager";
 import BrandAssetManager from "./BrandAssetManager";
 import { WatermarkManager } from "./WatermarkManager";
+import { BreedTemplateManager } from "./BreedTemplateManager";
+import { ColorTemplateManager } from "./ColorTemplateManager";
+import { FormSubmissionsManager } from "./FormSubmissionsManager";
 
 /**
  * @component SettingsHub
@@ -52,6 +55,18 @@ const SettingsHub = () => {
       icon: Eye, 
       component: <WatermarkManager /> 
     },
+    {
+      value: "breeds",
+      label: "Breed Templates",
+      icon: Users,
+      component: <BreedTemplateManager />
+    },
+    {
+      value: "colors",
+      label: "Color Templates",
+      icon: Eye,
+      component: <ColorTemplateManager />
+    },
     { 
       value: "users",
       label: "Users", 
@@ -81,6 +96,12 @@ const SettingsHub = () => {
       label: "Data Deletion", 
       icon: Trash2, 
       component: <DataDeletionRequestsManager /> 
+    },
+    {
+      value: "form_submissions",
+      label: "Form Submissions",
+      icon: Mail,
+      component: <FormSubmissionsManager />
     },
   ];
 

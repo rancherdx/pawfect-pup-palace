@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import PuppyManagement from "@/components/admin/PuppyManagement";
 import LitterManagement from "@/components/admin/LitterManagement";
 import SettingsPanel from "@/components/admin/SettingsPanel";
-import BreedTemplateManager from "@/components/admin/BreedTemplateManager";
+import { BreedTemplateManager } from "@/components/admin/BreedTemplateManager";
 import BlogManager from "@/components/admin/BlogManager";
 import AffiliateManager from "@/components/admin/AffiliateManager";
 import SEOManager from "@/components/admin/SEOManager";

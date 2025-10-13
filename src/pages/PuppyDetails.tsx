@@ -10,6 +10,8 @@ import PuppyInfoSection from "@/components/puppy-details/PuppyInfoSection";
 import TemperamentTraitsCard from "@/components/puppy-details/TemperamentTraitsCard";
 import DetailsTabs from "@/components/puppy-details/DetailsTabs";
 import { Helmet } from "react-helmet-async";
+import { SocialShareButtons } from "@/components/SocialShareButtons";
+import { useNavigate } from "react-router-dom";
 
 /**
  * @component PuppyDetails
@@ -22,10 +24,33 @@ import { Helmet } from "react-helmet-async";
  */
 const PuppyDetails = () => {
   const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
 
   const { data: puppy, isLoading, isError } = useQuery({
     queryKey: ['puppy', slug],
-    queryFn: () => slug ? publicApi.getPuppyBySlug(slug) : null,
+    queryFn: async () => {
+      if (!slug) return null;
+      
+      // Try fetching by slug first
+      try {
+        const puppyData = await publicApi.getPuppyBySlug(slug);
+        return puppyData;
+      } catch (error) {
+        // If slug fetch fails, try by ID (backward compatibility)
+        try {
+          const puppyById = await publicApi.getPuppyById(slug);
+          if (puppyById && puppyById.slug) {
+            // Redirect to correct slug URL
+            navigate(`/puppy/${puppyById.slug}`, { replace: true });
+            return puppyById;
+          }
+        } catch (idError) {
+          // Both failed
+          return null;
+        }
+      }
+      return null;
+    },
     enabled: !!slug
   });
 
@@ -165,7 +190,15 @@ const PuppyDetails = () => {
                   }}
                   puppyAge={age || "Unknown"}
                 />
+              {/* Social Share Buttons */}
+              <div className="mt-6">
+                <SocialShareButtons
+                  title={`${puppy.name} - ${puppy.breed} Puppy`}
+                  description={puppy.description || `Meet ${puppy.name}, a beautiful ${puppy.breed} puppy`}
+                  imageUrl={imageUrls[0]}
+                />
               </div>
+            </div>
             </div>
 
             {/* Temperament & Traits Card */}
