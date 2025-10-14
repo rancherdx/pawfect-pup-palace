@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Mail, PlugZap, Settings, Bell } from "lucide-react";
+import { FileText, Mail, PlugZap, Settings, Bell, Phone } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function SettingsOverview() {
@@ -15,7 +15,7 @@ export default function SettingsOverview() {
     {
       title: "Site Contact",
       description: "Update phone, email, address, and hours",
-      icon: Mail,
+      icon: Phone,
       link: "/admin/settings/contact",
       color: "text-green-500"
     },

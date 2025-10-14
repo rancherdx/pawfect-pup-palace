@@ -61,6 +61,7 @@ const HolidayThemeManager = lazy(() => import("./components/admin/HolidayThemeMa
 const MaintenanceModeToggle = lazy(() => import("./components/admin/MaintenanceModeToggle"));
 const PWAConfiguration = lazy(() => import("./components/admin/PWAConfiguration").then(m => ({ default: m.PWAConfiguration })));
 const NotificationSettings = lazy(() => import("./components/admin/NotificationSettings").then(m => ({ default: m.NotificationSettings })));
+const ContactInfoManager = lazy(() => import("./components/admin/ContactInfoManager").then(m => ({ default: m.ContactInfoManager })));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
 const Health = lazy(() => import("./pages/Health"));
@@ -198,6 +199,7 @@ const App: React.FC = () => {
                             {/* General Settings */}
                             <Route path="settings" element={<SettingsOverview />} />
                             <Route path="settings/branding" element={<BrandAssetManager />} />
+                            <Route path="settings/contact" element={<ContactInfoManager />} />
                             <Route path="settings/holiday-themes" element={<HolidayThemeManager />} />
                             <Route path="settings/pwa" element={<PWAConfiguration />} />
                             <Route path="settings/notifications" element={<NotificationSettings />} />

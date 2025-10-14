@@ -9,10 +9,11 @@ import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
-import { Mail, Phone, MapPin, Clock, PawPrint } from "lucide-react";
+import { Mail, Phone, MapPin, PawPrint } from "lucide-react";
 import HeroSection from "@/components/HeroSection";
 import Section from "@/components/Section";
 import { supabase } from "@/integrations/supabase/client";
+import { useContactInfo } from "@/hooks/useContactInfo";
 
 const ContactCard = ({ icon: Icon, title, details }: { icon: React.ElementType, title: string, details: string | string[] }) => (
   <Card className="p-6 flex flex-col items-center text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
@@ -42,6 +43,7 @@ type ContactFormData = z.infer<typeof contactFormSchema>;
 
 const Contact = () => {
   const { toast } = useToast();
+  const { contactInfo } = useContactInfo();
   const {
     register,
     handleSubmit,
@@ -136,9 +138,30 @@ const Contact = () => {
 
       <Section className="bg-secondary/20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <ContactCard icon={Phone} title="Phone" details={["(555) 123-4567", "Monday - Friday, 9am - 5pm"]} />
-          <ContactCard icon={Mail} title="Email" details={["woof@gdspuppies.com", "We respond within 24 hours"]} />
-          <ContactCard icon={MapPin} title="Location" details={["Detroit, Michigan", "Home-based breeder"]} />
+          <ContactCard 
+            icon={Phone} 
+            title="Phone" 
+            details={[
+              contactInfo?.phone || "(555) 123-4567", 
+              "Monday - Friday, 9am - 5pm"
+            ]} 
+          />
+          <ContactCard 
+            icon={Mail} 
+            title="Email" 
+            details={[
+              contactInfo?.email || "contact@gdspuppies.com", 
+              "We respond within 24 hours"
+            ]} 
+          />
+          <ContactCard 
+            icon={MapPin} 
+            title="Location" 
+            details={[
+              `${contactInfo?.address_city || 'Detroit'}, ${contactInfo?.address_state || 'Michigan'}`, 
+              "Home-based breeder"
+            ]} 
+          />
         </div>
       </Section>
 

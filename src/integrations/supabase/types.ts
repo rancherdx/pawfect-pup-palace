@@ -1615,6 +1615,42 @@ export type Database = {
         }
         Relationships: []
       }
+      site_contact_info: {
+        Row: {
+          address_city: string | null
+          address_state: string | null
+          created_at: string | null
+          email: string | null
+          holiday_hours: Json | null
+          hours_of_operation: Json | null
+          id: string
+          phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          address_city?: string | null
+          address_state?: string | null
+          created_at?: string | null
+          email?: string | null
+          holiday_hours?: Json | null
+          hours_of_operation?: Json | null
+          id?: string
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          address_city?: string | null
+          address_state?: string | null
+          created_at?: string | null
+          email?: string | null
+          holiday_hours?: Json | null
+          hours_of_operation?: Json | null
+          id?: string
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           key: string

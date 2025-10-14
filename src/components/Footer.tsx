@@ -1,8 +1,11 @@
 
 import { Link } from "react-router-dom";
 import { PawPrint, Mail, Phone, MapPin, Instagram, Facebook, Twitter } from "lucide-react";
+import { useContactInfo } from "@/hooks/useContactInfo";
 
 const Footer = () => {
+  const { contactInfo } = useContactInfo();
+
   return (
     <footer className="bg-secondary pt-12 pb-6 mt-12">
       <div className="container mx-auto px-4">
@@ -10,7 +13,7 @@ const Footer = () => {
           {/* Logo and About */}
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
-              <PawPrint className="h-6 w-6 text-brand-red" />
+              <PawPrint className="h-6 w-6 text-primary" />
               <span className="text-lg font-bold">GDS Puppies</span>
             </div>
             <p className="text-sm text-muted-foreground">
@@ -59,7 +62,7 @@ const Footer = () => {
                 <Link to="/health" className="text-sm text-muted-foreground hover:text-primary transition-colors">Health Guarantee</Link>
               </li>
               <li>
-                <Link to="/faq" className="text-sm text-muted-foreground hover:text-primary transition-colors">FAQ</Link> {/* Changed from /faqs to /faq and text to FAQ */}
+                <Link to="/faq" className="text-sm text-muted-foreground hover:text-primary transition-colors">FAQ</Link>
               </li>
               <li>
                 <Link to="/contact" className="text-sm text-muted-foreground hover:text-primary transition-colors">Contact Us</Link>
@@ -73,15 +76,21 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-start space-x-2">
                 <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <span className="text-sm text-muted-foreground">123 Puppy Lane, Dogtown, CA 90210</span>
+                <span className="text-sm text-muted-foreground">
+                  {contactInfo ? `${contactInfo.address_city}, ${contactInfo.address_state}` : 'Detroit, Michigan'}
+                </span>
               </li>
               <li className="flex items-center space-x-2">
                 <Phone className="h-5 w-5 text-primary shrink-0" />
-                <span className="text-sm text-muted-foreground">(555) 123-4567</span>
+                <span className="text-sm text-muted-foreground">
+                  {contactInfo?.phone || '(555) 123-4567'}
+                </span>
               </li>
               <li className="flex items-center space-x-2">
                 <Mail className="h-5 w-5 text-primary shrink-0" />
-                <span className="text-sm text-muted-foreground">woof@gdspuppies.com</span>
+                <span className="text-sm text-muted-foreground">
+                  {contactInfo?.email || 'contact@gdspuppies.com'}
+                </span>
               </li>
             </ul>
           </div>
