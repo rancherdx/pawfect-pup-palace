@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "react-router-dom";
 import { useTheme } from "@/contexts/ThemeContext";
 import HalloweenDecorations from "@/components/HalloweenDecorations";
-import Navbar from "@/components/Navbar";
+import { NavbarRedesigned } from "@/components/NavbarRedesigned";
 import Footer from "@/components/Footer";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 
@@ -46,10 +46,10 @@ const AnimatedLayout = ({ children, fullWidth = false, centered = false }: Anima
     >
       {/* Halloween decorations overlay */}
       <AnimatePresence>
-        {showHalloweenDecorations && <HalloweenDecorations />}
+      {showHalloweenDecorations && <HalloweenDecorations />}
       </AnimatePresence>
       
-      <Navbar />
+      <NavbarRedesigned />
       
       <AnimatePresence mode="wait">
         <motion.main 
