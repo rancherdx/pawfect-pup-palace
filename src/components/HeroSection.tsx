@@ -60,18 +60,18 @@ const HeroSection = ({
       {/* Content */}
       <div className="container mx-auto px-4 relative z-10 h-full flex flex-col justify-center items-center text-center py-24">
         <motion.h1 
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 1, y: 0 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.3 }}
           className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 [text-shadow:_0_2px_10px_rgb(0_0_0_/_40%)]"
         >
           {title}
         </motion.h1>
         
         <motion.p 
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0.9, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
           className="text-lg md:text-xl text-white/90 max-w-2xl mb-8 [text-shadow:_0_1px_5px_rgb(0_0_0_/_40%)]"
         >
           {subtitle}
