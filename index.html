@@ -21,16 +21,21 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="dns-prefetch" href="https://dpmyursjpbscrfbljtha.supabase.co" />
     
-    <!-- Preload critical font for faster FCP -->
+    <!-- Preload critical fonts for faster LCP -->
     <link rel="preload" as="font" type="font/woff2" href="https://fonts.gstatic.com/s/nunito/v32/XRXV3I6Li01BKofINeaBTMnFcQ.woff2" crossorigin="anonymous" />
+    <link rel="preload" as="font" type="font/woff2" href="https://fonts.gstatic.com/s/fredokaone/v15/k3kUo8kEI-tA1RRcTZGmTlHGCaen8wf-.woff2" crossorigin="anonymous" />
     
     <link rel="manifest" href="/manifest.json" />
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%23E53E3E' stroke='%23E53E3E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='13' r='8'/%3E%3Ccircle cx='13' cy='11' r='2'/%3E%3Ccircle cx='9' cy='9' r='2'/%3E%3Ccircle cx='15' cy='9' r='2'/%3E%3Ccircle cx='18' cy='13' r='2'/%3E%3Ccircle cx='6' cy='13' r='2'/%3E%3C/svg%3E" />
     
-    <!-- Critical CSS for immediate rendering -->
+    <!-- Critical CSS for immediate rendering and LCP optimization -->
     <style>
       *{box-sizing:border-box}html,body,#root{margin:0;padding:0;height:100%;width:100%}body{font-family:system-ui,-apple-system,sans-serif;background:hsl(0,0%,98%);color:hsl(0,0%,10%);overflow-x:hidden}.dimmed{background:hsl(0,0%,9%);color:hsl(0,0%,95%)}#root{display:flex;flex-direction:column}h1,h2,h3,h4,h5,h6{margin:0;font-weight:600}img{max-width:100%;height:auto}
+      /* Critical hero/LCP styles */
+      h1.text-4xl{font-size:2.25rem;line-height:2.5rem;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.1)}@media(min-width:768px){h1.text-4xl{font-size:3rem;line-height:1}}
+      /* Prevent layout shift during font load */
+      .font-heading{font-family:'Fredoka One',system-ui,sans-serif;font-display:swap}
     </style>
   </head>
 
