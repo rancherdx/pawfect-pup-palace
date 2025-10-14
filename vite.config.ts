@@ -62,6 +62,7 @@ export default defineConfig(({ mode }) => ({
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: false,
+    cssCodeSplit: true, // Enable CSS code splitting to reduce unused CSS per page
     chunkSizeWarningLimit: 1000, // Increase warning limit to 1MB
     rollupOptions: {
       output: {
