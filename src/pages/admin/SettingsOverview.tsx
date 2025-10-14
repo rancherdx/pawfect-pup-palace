@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Mail, PlugZap, Settings } from "lucide-react";
+import { FileText, Mail, PlugZap, Settings, Bell } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function SettingsOverview() {
@@ -25,6 +25,13 @@ export default function SettingsOverview() {
       icon: PlugZap,
       link: "/admin/settings/pwa",
       color: "text-purple-500"
+    },
+    {
+      title: "Push Notifications",
+      description: "Configure notification preferences and alerts",
+      icon: Bell,
+      link: "/admin/settings/notifications",
+      color: "text-yellow-500"
     },
     {
       title: "System Settings",

@@ -925,6 +925,39 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          chat_messages: boolean | null
+          created_at: string | null
+          form_submissions: boolean | null
+          id: string
+          new_orders: boolean | null
+          site_visits: boolean | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          chat_messages?: boolean | null
+          created_at?: string | null
+          form_submissions?: boolean | null
+          id?: string
+          new_orders?: boolean | null
+          site_visits?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          chat_messages?: boolean | null
+          created_at?: string | null
+          form_submissions?: boolean | null
+          id?: string
+          new_orders?: boolean | null
+          site_visits?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       parents: {
         Row: {
           bloodline_info: string | null
@@ -1324,6 +1357,90 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string | null
+          endpoint: string
+          id: string
+          p256dh: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          auth: string
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          p256dh: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          auth?: string
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      pwa_settings: {
+        Row: {
+          app_name: string
+          background_color: string
+          created_at: string | null
+          description: string
+          display: string
+          icon_192_url: string | null
+          icon_512_url: string | null
+          id: string
+          orientation: string
+          push_notifications_enabled: boolean | null
+          scope: string
+          short_name: string
+          start_url: string
+          theme_color: string
+          updated_at: string | null
+        }
+        Insert: {
+          app_name?: string
+          background_color?: string
+          created_at?: string | null
+          description?: string
+          display?: string
+          icon_192_url?: string | null
+          icon_512_url?: string | null
+          id?: string
+          orientation?: string
+          push_notifications_enabled?: boolean | null
+          scope?: string
+          short_name?: string
+          start_url?: string
+          theme_color?: string
+          updated_at?: string | null
+        }
+        Update: {
+          app_name?: string
+          background_color?: string
+          created_at?: string | null
+          description?: string
+          display?: string
+          icon_192_url?: string | null
+          icon_512_url?: string | null
+          id?: string
+          orientation?: string
+          push_notifications_enabled?: boolean | null
+          scope?: string
+          short_name?: string
+          start_url?: string
+          theme_color?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       security_audit_log: {
         Row: {

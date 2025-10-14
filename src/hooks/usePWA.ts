@@ -1,29 +1,14 @@
+import { useEffect, useState } from 'react';
 
-import { useState, useEffect } from 'react';
-
-/**
- * @interface BeforeInstallPromptEvent
- * @description Extends the base Event interface to include properties specific to the 'beforeinstallprompt' event for PWAs.
- */
 interface BeforeInstallPromptEvent extends Event {
-  readonly platforms: string[];
-  readonly userChoice: Promise<{
-    outcome: 'accepted' | 'dismissed';
-    platform: string;
-  }>;
-  prompt(): Promise<void>;
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
-/**
- * @hook usePWA
- * @description A custom hook for managing the Progressive Web App (PWA) installation lifecycle.
- * It detects if the app can be installed, if it's already installed, and provides a function to trigger the installation prompt.
- * @returns {{ isInstallable: boolean, isInstalled: boolean, installApp: () => Promise<boolean> }} An object containing the PWA status and the installation function.
- */
 export const usePWA = () => {
-  const [isInstallable, setIsInstallable] = useState(false);
+  const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {
     // Check if app is already installed
@@ -31,57 +16,55 @@ export const usePWA = () => {
       setIsInstalled(true);
     }
 
-    // Listen for beforeinstallprompt event
+    // Listen for install prompt
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      const beforeInstallPromptEvent = e as BeforeInstallPromptEvent;
-      setDeferredPrompt(beforeInstallPromptEvent);
-      setIsInstallable(true);
+      setInstallPromptEvent(e as BeforeInstallPromptEvent);
     };
 
-    // Listen for app installed event
+    // Listen for successful installation
     const handleAppInstalled = () => {
       setIsInstalled(true);
-      setIsInstallable(false);
-      setDeferredPrompt(null);
+      setInstallPromptEvent(null);
     };
+
+    // Listen for online/offline status
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
     };
   }, []);
 
-  /**
-   * Triggers the PWA installation prompt.
-   * @returns {Promise<boolean>} A promise that resolves to true if the installation was accepted, otherwise false.
-   */
-  const installApp = async () => {
-    if (!deferredPrompt) return false;
-
-    try {
-      await deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      
-      if (outcome === 'accepted') {
-        setIsInstalled(true);
-        setIsInstallable(false);
-        setDeferredPrompt(null);
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error('Error installing PWA:', error);
+  const promptInstall = async () => {
+    if (!installPromptEvent) {
       return false;
     }
+
+    installPromptEvent.prompt();
+    const { outcome } = await installPromptEvent.userChoice;
+
+    if (outcome === 'accepted') {
+      setInstallPromptEvent(null);
+      return true;
+    }
+
+    return false;
   };
 
   return {
-    isInstallable,
+    canInstall: !!installPromptEvent,
     isInstalled,
-    installApp
+    isOnline,
+    promptInstall,
   };
 };
