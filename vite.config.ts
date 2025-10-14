@@ -63,6 +63,14 @@ export default defineConfig(({ mode }) => ({
     assetsDir: 'assets',
     sourcemap: false,
     cssCodeSplit: true, // Enable CSS code splitting to reduce unused CSS per page
+    minify: 'terser', // Use terser for better minification
+    terserOptions: {
+      compress: {
+        drop_console: true, // Remove console.logs in production
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info'], // Remove specific console methods
+      },
+    },
     chunkSizeWarningLimit: 1000, // Increase warning limit to 1MB
     rollupOptions: {
       output: {
@@ -76,8 +84,8 @@ export default defineConfig(({ mode }) => ({
           forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
           dates: ['date-fns', 'react-day-picker'],
           icons: ['lucide-react'],
-        }
-      }
-    }
+        },
+      },
+    },
   }
 }));
