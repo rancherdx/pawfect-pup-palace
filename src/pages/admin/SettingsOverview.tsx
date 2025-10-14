@@ -41,6 +41,13 @@ export default function SettingsOverview() {
       color: "text-pink-500"
     },
     {
+      title: "Site Settings",
+      description: "Global site configuration and feature flags",
+      icon: Settings,
+      link: "/admin/settings/site-settings",
+      color: "text-indigo-500"
+    },
+    {
       title: "System Settings",
       description: "Maintenance mode and system configuration",
       icon: Settings,

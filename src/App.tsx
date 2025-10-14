@@ -64,6 +64,8 @@ const PWAConfiguration = lazy(() => import("./components/admin/PWAConfiguration"
 const NotificationSettings = lazy(() => import("./components/admin/NotificationSettings").then(m => ({ default: m.NotificationSettings })));
 const ContactInfoManager = lazy(() => import("./components/admin/ContactInfoManager").then(m => ({ default: m.ContactInfoManager })));
 const AnalyticsManager = lazy(() => import("./components/admin/AnalyticsManager").then(m => ({ default: m.AnalyticsManager })));
+const ComprehensiveSEOManager = lazy(() => import("./components/admin/ComprehensiveSEOManager").then(m => ({ default: m.ComprehensiveSEOManager })));
+const SiteSettingsManager = lazy(() => import("./components/admin/SiteSettingsManager").then(m => ({ default: m.SiteSettingsManager })));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
 const Health = lazy(() => import("./pages/Health"));
@@ -177,7 +179,7 @@ const App: React.FC = () => {
                             {/* Marketing & SEO */}
                             <Route path="marketing" element={<MarketingOverview />} />
                             <Route path="marketing/analytics" element={<div>Analytics Coming Soon</div>} />
-                            <Route path="marketing/seo" element={<SEOManagement />} />
+                            <Route path="marketing/seo" element={<ComprehensiveSEOManager />} />
                             <Route path="marketing/blog" element={<BlogManager />} />
                             <Route path="marketing/testimonials" element={<EnhancedTestimonialManagement />} />
                             
@@ -208,6 +210,8 @@ const App: React.FC = () => {
                             <Route path="settings/notifications" element={<NotificationSettings />} />
                             <Route path="settings/analytics" element={<AnalyticsManager />} />
                             <Route path="settings/system" element={<MaintenanceModeToggle />} />
+                            <Route path="settings/site-settings" element={<SiteSettingsManager />} />
+                    <Route path="settings/site-settings" element={<SiteSettingsManager />} />
                             
                             {/* Security */}
                             <Route path="security" element={<SecurityOverview />} />
