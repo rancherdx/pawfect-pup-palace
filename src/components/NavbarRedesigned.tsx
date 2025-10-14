@@ -146,16 +146,30 @@ export const NavbarRedesigned = () => {
               {/* Mobile Menu */}
               <Sheet open={isOpen} onOpenChange={setIsOpen}>
                 <SheetTrigger asChild className="laptop:hidden">
-                  <Button variant="ghost" size="icon">
-                    {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                  <Button variant="ghost" size="icon" aria-label="Open menu">
+                    <Menu className="w-5 h-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                <SheetContent side="right" className="w-[300px] sm:w-[400px] bg-background">
                   <SheetTitle className="flex items-center gap-2 mb-6">
                     <PawIcon className="w-6 h-6 text-primary" />
                     <span className="font-heading">Menu</span>
                   </SheetTitle>
                   <div className="flex flex-col gap-2">
+                    {/* Search on mobile */}
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setIsOpen(false);
+                        setIsSearchOpen(true);
+                      }}
+                      className="w-full justify-start gap-3 mb-4"
+                    >
+                      <Search className="w-5 h-5" />
+                      <span>Search</span>
+                    </Button>
+                    
+                    {/* Navigation Links */}
                     {navLinks.map((link) => {
                       const Icon = link.icon;
                       return (
@@ -170,20 +184,50 @@ export const NavbarRedesigned = () => {
                         </Link>
                       );
                     })}
-                    {!user && (
+                    
+                    <div className="my-4 border-t border-border" />
+                    
+                    {/* User Actions */}
+                    {user ? (
                       <>
-                        <div className="my-4 border-t border-border" />
+                        <Link
+                          to="/dashboard"
+                          onClick={() => setIsOpen(false)}
+                          className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-accent/10 transition-colors"
+                        >
+                          <User className="w-5 h-5 text-muted-foreground" />
+                          <span className="font-medium">Dashboard</span>
+                        </Link>
+                        <Link
+                          to="/admin"
+                          onClick={() => setIsOpen(false)}
+                          className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-accent/10 transition-colors"
+                        >
+                          <Bell className="w-5 h-5 text-muted-foreground" />
+                          <span className="font-medium">Admin Panel</span>
+                        </Link>
                         <Button
                           onClick={() => {
                             setIsOpen(false);
-                            navigate('/login');
+                            handleSignOut();
                           }}
-                          className="w-full gap-2"
+                          variant="outline"
+                          className="w-full justify-start gap-3 mt-2"
                         >
-                          <User className="w-4 h-4" />
-                          Sign In
+                          Sign Out
                         </Button>
                       </>
+                    ) : (
+                      <Button
+                        onClick={() => {
+                          setIsOpen(false);
+                          navigate('/login');
+                        }}
+                        className="w-full gap-2"
+                      >
+                        <User className="w-4 h-4" />
+                        Sign In
+                      </Button>
                     )}
                   </div>
                 </SheetContent>

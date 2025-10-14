@@ -120,8 +120,8 @@ const Home = () => {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <Card className="text-center">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <Card className="text-center hover:shadow-lg transition-shadow">
             <CardHeader>
               <Heart className="h-12 w-12 text-brand-red mx-auto mb-4" />
               <CardTitle>Health Guaranteed</CardTitle>
@@ -133,7 +133,7 @@ const Home = () => {
             </CardContent>
           </Card>
           
-          <Card className="text-center">
+          <Card className="text-center hover:shadow-lg transition-shadow">
             <CardHeader>
               <Star className="h-12 w-12 text-brand-red mx-auto mb-4" />
               <CardTitle>Champion Bloodlines</CardTitle>
@@ -145,7 +145,7 @@ const Home = () => {
             </CardContent>
           </Card>
           
-          <Card className="text-center">
+          <Card className="text-center hover:shadow-lg transition-shadow">
             <CardHeader>
               <Users className="h-12 w-12 text-brand-red mx-auto mb-4" />
               <CardTitle>Lifetime Support</CardTitle>
