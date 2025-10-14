@@ -150,8 +150,8 @@ const PuppyDetails = () => {
         </script>
       </Helmet>
 
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-        {/* Hero Section with Background Pattern */}
+      <div className="min-h-screen bg-background">
+        {/* Hero Section */}
         <div 
           className="relative bg-cover bg-center bg-no-repeat"
           style={{
@@ -159,7 +159,7 @@ const PuppyDetails = () => {
             backgroundAttachment: 'fixed'
           }}
         >
-          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm"></div>
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm"></div>
           <div className="relative container mx-auto px-4 py-12">
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">

@@ -3,6 +3,23 @@
 @tailwind utilities;
 
 @layer base {
+  /* Ensure text doesn't overflow containers */
+  * {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  /* Prevent horizontal scroll from content overflow */
+  html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
+  /* Box sizing for better layout control */
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
   html {
     scroll-behavior: smooth;
     font-size: 100%;

@@ -94,7 +94,7 @@ const Puppies = () => {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Available Puppies",
-    "description": "Browse our available puppies from Golden Dreams Kennels. Healthy, well-socialized puppies with champion bloodlines.",
+    "description": "Browse our available puppies from GDS Puppies. Healthy, well-socialized puppies with champion bloodlines.",
     "mainEntity": {
       "@type": "ItemList",
       "numberOfItems": puppies.length,
@@ -120,9 +120,9 @@ const Puppies = () => {
   return (
     <div>
       <Helmet>
-        <title>Available Puppies for Sale - Browse by Breed | Golden Dreams Kennels</title>
+        <title>Available Puppies for Sale - Browse by Breed | GDS Puppies</title>
         <meta name="description" content="Browse our available puppies for sale. Healthy, well-socialized puppies from champion bloodlines. Filter by breed, search by name, and find your perfect companion." />
-        <meta name="keywords" content="puppies for sale, available puppies, puppy adoption, dog breeds, Golden Dreams Kennels puppies, healthy puppies, champion bloodlines" />
+        <meta name="keywords" content="puppies for sale, available puppies, puppy adoption, dog breeds, GDS Puppies, healthy puppies, champion bloodlines" />
         <link rel="canonical" href="https://gdspuppies.com/puppies" />
         
         {/* Open Graph */}

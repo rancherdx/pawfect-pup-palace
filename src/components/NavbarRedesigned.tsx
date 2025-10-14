@@ -42,7 +42,7 @@ export const NavbarRedesigned = () => {
 
   const cycleTheme = () => {
     const themes: ('light' | 'dimmed' | 'dark')[] = ['light', 'dimmed', 'dark'];
-    const currentIndex = themes.indexOf(theme as any);
+    const currentIndex = themes.indexOf(resolvedTheme);
     const nextTheme = themes[(currentIndex + 1) % themes.length];
     setTheme(nextTheme);
   };

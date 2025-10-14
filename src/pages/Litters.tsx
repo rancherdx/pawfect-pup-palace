@@ -93,8 +93,8 @@ const Litters = () => {
     return (
       <>
         <Helmet>
-          <title>Puppy Litters - Current & Upcoming | Golden Dreams Kennels</title>
-          <meta name="description" content="View our current and upcoming puppy litters from Golden Dreams Kennels. Quality breeding with champion bloodlines and health guarantees." />
+          <title>Puppy Litters - Current & Upcoming | GDS Puppies</title>
+          <meta name="description" content="View our current and upcoming puppy litters from GDS Puppies. Quality breeding with champion bloodlines and health guarantees." />
           <link rel="canonical" href="https://gdspuppies.com/litters" />
         </Helmet>
         <HeroSection
