@@ -73,7 +73,7 @@ const About = () => {
             the loving environment we provide for all our dogs.
           </p>
           <div className="flex justify-center my-8">
-            <PawPrint className="h-20 w-20 text-brand-red animate-bounce" />
+            <PawPrint className="h-20 w-20 text-accent animate-bounce" />
           </div>
           <p>
             Each puppy at GDS is raised with love and attention, ensuring they are well-adjusted and ready 

@@ -27,7 +27,7 @@ const Health = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
-                <Shield className="mr-2 h-5 w-5 text-green-600" />
+                <Shield className="mr-2 h-5 w-5 text-accent" />
                 Health Screening
               </CardTitle>
             </CardHeader>
@@ -38,7 +38,7 @@ const Health = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
-                <Stethoscope className="mr-2 h-5 w-5 text-blue-600" />
+                <Stethoscope className="mr-2 h-5 w-5 text-primary" />
                 Vaccination Schedule
               </CardTitle>
             </CardHeader>
@@ -49,7 +49,7 @@ const Health = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
-                <Heart className="mr-2 h-5 w-5 text-red-600" />
+                <Heart className="mr-2 h-5 w-5 text-accent" />
                 Health Guarantee
               </CardTitle>
             </CardHeader>

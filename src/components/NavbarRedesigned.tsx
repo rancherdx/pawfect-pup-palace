@@ -16,6 +16,7 @@ import {
 import GlobalSearch from '@/components/search/GlobalSearch';
 import NotificationDropdown from '@/components/NotificationDropdown';
 import { PawIcon, BoneIcon, HeartPawIcon } from '@/components/PuppyIcons';
+import { BrandLogo } from '@/components/BrandLogo';
 import { cn } from '@/lib/utils';
 
 const navLinks = [
@@ -55,14 +56,8 @@ export const NavbarRedesigned = () => {
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2 group">
-              <div className="relative">
-                <PawIcon className="w-8 h-8 text-primary group-hover:text-accent transition-colors" />
-                <div className="absolute inset-0 bg-primary/20 rounded-full blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-              <span className="text-xl font-bold font-heading bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                GDS Puppies
-              </span>
+            <Link to="/" className="flex items-center group">
+              <BrandLogo variant="auto" className="h-10" />
             </Link>
 
             {/* Desktop Navigation */}

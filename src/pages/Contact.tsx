@@ -134,78 +134,65 @@ const Contact = () => {
         ctaLink="/puppies"
       />
 
-      <Section className="bg-secondary">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <Section className="bg-secondary/20">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <ContactCard icon={Phone} title="Phone" details={["(555) 123-4567", "Monday - Friday, 9am - 5pm"]} />
           <ContactCard icon={Mail} title="Email" details={["woof@gdspuppies.com", "We respond within 24 hours"]} />
-          <ContactCard icon={MapPin} title="Location" details={["123 Puppy Lane", "Dogtown, CA 90210"]} />
-          <ContactCard icon={Clock} title="Visiting Hours" details={["Monday - Saturday", "10am - 4pm (By appointment only)"]} />
+          <ContactCard icon={MapPin} title="Location" details={["Detroit, Michigan", "Home-based breeder"]} />
         </div>
       </Section>
 
       <Section title="Send Us a Message" withPawPrintBg>
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-          <div className="lg:col-span-3">
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Your Name</Label>
-                  <Input id="name" {...register("name")} />
-                  {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" {...register("email")} />
-                  {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone (Optional)</Label>
-                  <Input id="phone" type="tel" {...register("phone")} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="subject">Subject</Label>
-                  <Controller
-                    name="subject"
-                    control={control}
-                    render={({ field }) => (
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <SelectTrigger id="subject"><SelectValue placeholder="Select subject" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="general">General Inquiry</SelectItem>
-                          <SelectItem value="adoption">Adoption Process</SelectItem>
-                          <SelectItem value="puppy">Specific Puppy</SelectItem>
-                          <SelectItem value="visit">Schedule a Visit</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  {errors.subject && <p className="text-red-500 text-sm mt-1">{errors.subject.message}</p>}
-                </div>
+        <div className="max-w-2xl mx-auto">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Your Name</Label>
+                <Input id="name" {...register("name")} />
+                {errors.name && <p className="text-destructive text-sm mt-1">{errors.name.message}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="message">Message</Label>
-                <Textarea id="message" rows={6} placeholder="Let us know how we can help you..." {...register("message")} />
-                {errors.message && <p className="text-red-500 text-sm mt-1">{errors.message.message}</p>}
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" {...register("email")} />
+                {errors.email && <p className="text-destructive text-sm mt-1">{errors.email.message}</p>}
               </div>
-              <Button type="submit" className="bg-brand-red hover:bg-red-700">
-                <PawPrint className="mr-2 h-5 w-5" />
-                Send Message
-              </Button>
-            </form>
-          </div>
-          <div className="lg:col-span-2">
-            <div className="h-full rounded-lg overflow-hidden">
-              <iframe 
-                title="GDS Puppies Location"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d423286.27405770525!2d-118.69192047471653!3d34.02016130653294!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x80c2c75ddc27da13%3A0xe22fdf6f254608f4!2sLos%20Angeles%2C%20CA%2C%20USA!5e0!3m2!1sen!2sca!4v1626987705059!5m2!1sen!2sca" 
-                width="100%" height="100%" style={{ border: 0, minHeight: "400px" }}
-                allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade"
-              />
             </div>
-          </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone (Optional)</Label>
+                <Input id="phone" type="tel" {...register("phone")} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="subject">Subject</Label>
+                <Controller
+                  name="subject"
+                  control={control}
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <SelectTrigger id="subject"><SelectValue placeholder="Select subject" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="general">General Inquiry</SelectItem>
+                        <SelectItem value="adoption">Adoption Process</SelectItem>
+                        <SelectItem value="puppy">Specific Puppy</SelectItem>
+                        <SelectItem value="visit">Schedule a Visit</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.subject && <p className="text-destructive text-sm mt-1">{errors.subject.message}</p>}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="message">Message</Label>
+              <Textarea id="message" rows={6} placeholder="Let us know how we can help you..." {...register("message")} />
+              {errors.message && <p className="text-destructive text-sm mt-1">{errors.message.message}</p>}
+            </div>
+            <Button type="submit">
+              <PawPrint className="mr-2 h-5 w-5" />
+              Send Message
+            </Button>
+          </form>
         </div>
       </Section>
     </div>

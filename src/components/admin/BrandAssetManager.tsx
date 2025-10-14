@@ -15,7 +15,7 @@ import ImageUploadWithCrop from '@/components/media/ImageUploadWithCrop';
  */
 interface BrandAsset {
   id: string;
-  asset_type: 'favicon' | 'logo_light' | 'logo_dark' | 'logo_mobile' | 'watermark';
+  asset_type: 'favicon' | 'logo_light' | 'logo_dark' | 'logo_mobile' | 'watermark' | 'pwa_icon_192' | 'pwa_icon_512';
   asset_url: string;
   is_active: boolean;
   created_at: string;
@@ -158,6 +158,18 @@ const BrandAssetManager: React.FC = () => {
       type: 'logo_mobile',
       title: 'Mobile Logo',
       description: 'Compact logo version for mobile navigation',
+      icon: <Smartphone className="h-4 w-4" />,
+    },
+    {
+      type: 'pwa_icon_192',
+      title: 'PWA Icon (192x192)',
+      description: 'Progressive Web App icon - 192x192px',
+      icon: <Smartphone className="h-4 w-4" />,
+    },
+    {
+      type: 'pwa_icon_512',
+      title: 'PWA Icon (512x512)',
+      description: 'Progressive Web App icon - 512x512px',
       icon: <Smartphone className="h-4 w-4" />,
     },
     {

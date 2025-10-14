@@ -180,7 +180,7 @@ const Reviews = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Star className="h-5 w-5 text-yellow-500" />
+                <Star className="h-5 w-5 text-accent" />
                 Write a Review
               </CardTitle>
             </CardHeader>
@@ -242,8 +242,8 @@ const Reviews = () => {
                         type="button"
                         onClick={() => handleRatingChange(star)}
                         className={`text-2xl ${
-                          star <= formData.rating ? "text-yellow-400" : "text-gray-300"
-                        } hover:text-yellow-400 transition-colors`}
+                          star <= formData.rating ? "text-accent" : "text-muted"
+                        } hover:text-accent transition-colors`}
                       >
                         ★
                       </button>
