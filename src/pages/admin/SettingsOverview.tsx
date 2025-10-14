@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Mail, PlugZap, Settings, Bell, Phone } from "lucide-react";
+import { FileText, Mail, PlugZap, Settings, Bell, Phone, BarChart } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function SettingsOverview() {
@@ -32,6 +32,13 @@ export default function SettingsOverview() {
       icon: Bell,
       link: "/admin/settings/notifications",
       color: "text-yellow-500"
+    },
+    {
+      title: "Analytics Integration",
+      description: "Connect Google Analytics, Facebook Pixel, and more",
+      icon: BarChart,
+      link: "/admin/settings/analytics",
+      color: "text-pink-500"
     },
     {
       title: "System Settings",

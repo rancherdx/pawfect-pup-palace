@@ -14,6 +14,7 @@ import Setup from "./pages/Setup";
 import CorsConfig from "@/components/CorsConfig";
 import { ParallaxProvider } from "@/components/ParallaxProvider";
 import { useSmoothScroll } from "@/hooks/useSmoothScroll";
+import { AnalyticsScripts } from "@/components/AnalyticsScripts";
 
 // Lazy load components for better performance
 const Index = lazy(() => import("./pages/Index"));
@@ -62,6 +63,7 @@ const MaintenanceModeToggle = lazy(() => import("./components/admin/MaintenanceM
 const PWAConfiguration = lazy(() => import("./components/admin/PWAConfiguration").then(m => ({ default: m.PWAConfiguration })));
 const NotificationSettings = lazy(() => import("./components/admin/NotificationSettings").then(m => ({ default: m.NotificationSettings })));
 const ContactInfoManager = lazy(() => import("./components/admin/ContactInfoManager").then(m => ({ default: m.ContactInfoManager })));
+const AnalyticsManager = lazy(() => import("./components/admin/AnalyticsManager").then(m => ({ default: m.AnalyticsManager })));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
 const Health = lazy(() => import("./pages/Health"));
@@ -93,6 +95,7 @@ const App: React.FC = () => {
               <Toaster />
               <Sonner />
               <CorsConfig />
+              <AnalyticsScripts />
               <ErrorBoundary>
             <div className="min-h-screen flex flex-col">
               <Routes>
@@ -203,6 +206,7 @@ const App: React.FC = () => {
                             <Route path="settings/holiday-themes" element={<HolidayThemeManager />} />
                             <Route path="settings/pwa" element={<PWAConfiguration />} />
                             <Route path="settings/notifications" element={<NotificationSettings />} />
+                            <Route path="settings/analytics" element={<AnalyticsManager />} />
                             <Route path="settings/system" element={<MaintenanceModeToggle />} />
                             
                             {/* Security */}

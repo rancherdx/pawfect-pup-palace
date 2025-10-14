@@ -95,6 +95,54 @@ export type Database = {
         }
         Relationships: []
       }
+      analytics_settings: {
+        Row: {
+          created_at: string | null
+          facebook_pixel_enabled: boolean | null
+          facebook_pixel_id: string | null
+          google_analytics_enabled: boolean | null
+          google_analytics_id: string | null
+          google_tag_manager_enabled: boolean | null
+          google_tag_manager_id: string | null
+          hotjar_enabled: boolean | null
+          hotjar_site_id: string | null
+          id: string
+          microsoft_clarity_enabled: boolean | null
+          microsoft_clarity_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          facebook_pixel_enabled?: boolean | null
+          facebook_pixel_id?: string | null
+          google_analytics_enabled?: boolean | null
+          google_analytics_id?: string | null
+          google_tag_manager_enabled?: boolean | null
+          google_tag_manager_id?: string | null
+          hotjar_enabled?: boolean | null
+          hotjar_site_id?: string | null
+          id?: string
+          microsoft_clarity_enabled?: boolean | null
+          microsoft_clarity_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          facebook_pixel_enabled?: boolean | null
+          facebook_pixel_id?: string | null
+          google_analytics_enabled?: boolean | null
+          google_analytics_id?: string | null
+          google_tag_manager_enabled?: boolean | null
+          google_tag_manager_id?: string | null
+          hotjar_enabled?: boolean | null
+          hotjar_site_id?: string | null
+          id?: string
+          microsoft_clarity_enabled?: boolean | null
+          microsoft_clarity_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       auth_rate_limits: {
         Row: {
           attempt_type: string
