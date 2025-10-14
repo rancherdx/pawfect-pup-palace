@@ -2,6 +2,7 @@
 import { ReactNode, useEffect } from "react";
 import { NavbarRedesigned } from "@/components/NavbarRedesigned";
 import Footer from "@/components/Footer";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 
 interface LayoutProps {
@@ -49,6 +50,7 @@ const Layout = ({ children, fullWidth = false, centered = false }: LayoutProps) 
         {children}
       </main>
       <Footer />
+      <ChatWidget />
     </div>
   );
 };

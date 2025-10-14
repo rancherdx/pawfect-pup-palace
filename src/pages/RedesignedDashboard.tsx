@@ -2,10 +2,8 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import Layout from "@/components/Layout";
 import { 
-  Home, 
   Users, 
   FileText, 
-  MessageSquare, 
   PawPrint,
   Heart,
   TrendingUp
@@ -13,7 +11,6 @@ import {
 import UserProfile from "@/components/dashboard/UserProfile";
 import PuppyProfile from "@/components/dashboard/PuppyProfile";
 import Receipts from "@/components/dashboard/Receipts";
-import ChatHistory from "@/components/dashboard/ChatHistory";
 import { Card, CardContent } from "@/components/ui/card";
 import { SplashScreen } from "@/components/SplashScreen";
 import { useSplashScreen } from "@/hooks/useSplashScreen";
@@ -37,12 +34,6 @@ const dashboardTabs = [
     label: "Receipts",
     icon: FileText,
     component: Receipts,
-  },
-  {
-    value: "messages",
-    label: "Messages",
-    icon: MessageSquare,
-    component: ChatHistory,
   },
 ];
 

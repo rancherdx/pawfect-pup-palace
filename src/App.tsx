@@ -55,6 +55,7 @@ const AdminUserManagementEnhanced = lazy(() => import("./components/admin/AdminU
 const DataDeletionRequestsManager = lazy(() => import("./components/admin/DataDeletionRequestsManager"));
 const SwaggerDoc = lazy(() => import("./components/admin/SwaggerUI"));
 const ReDocDoc = lazy(() => import("./components/admin/ReDocUI"));
+const LiveChatManager = lazy(() => import("./components/admin/LiveChatManager"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
 const Health = lazy(() => import("./pages/Health"));
@@ -184,7 +185,7 @@ const App: React.FC = () => {
                             
                             {/* Messages/Email */}
                             <Route path="messages" element={<MessagesOverview />} />
-                            <Route path="messages/chat" element={<div>Live Chat Coming Soon</div>} />
+                            <Route path="messages/chat" element={<LiveChatManager />} />
                             <Route path="messages/notifications" element={<NotificationCenter />} />
                             <Route path="messages/templates" element={<EmailTemplatesManager />} />
                             <Route path="messages/integration" element={<EmailIntegrationsPanel />} />

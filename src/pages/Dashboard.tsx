@@ -1,12 +1,11 @@
 
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserCircle, Receipt, MessageSquare, Dog, PawPrint, Cat, Bell, Shield } from "lucide-react";
+import { UserCircle, Receipt, Dog, PawPrint, Cat, Bell, Shield } from "lucide-react";
 import Section from "@/components/Section";
 import UserProfile from "@/components/dashboard/UserProfile";
 import PuppyProfile from "@/components/dashboard/PuppyProfile";
 import Receipts from "@/components/dashboard/Receipts";
-import ChatHistory from "@/components/dashboard/ChatHistory";
 import CreatureProfiles from "@/components/dashboard/CreatureProfiles";
 import NotificationCenter from "@/components/admin/NotificationCenter";
 import SecuritySettings from "@/components/dashboard/SecuritySettings";
@@ -46,10 +45,6 @@ const Dashboard = () => {
             <Receipt className="h-4 w-4 mr-2" />
             Receipts
           </TabsTrigger>
-          <TabsTrigger value="messages" onClick={() => setActiveTab("messages")}>
-            <MessageSquare className="h-4 w-4 mr-2" />
-            Messages
-          </TabsTrigger>
           <TabsTrigger value="notifications" onClick={() => setActiveTab("notifications")}>
             <Bell className="h-4 w-4 mr-2" />
             Notifications
@@ -69,9 +64,6 @@ const Dashboard = () => {
         </TabsContent>
         <TabsContent value="receipts" className="mt-6">
           <Receipts />
-        </TabsContent>
-        <TabsContent value="messages" className="mt-6">
-          <ChatHistory />
         </TabsContent>
         <TabsContent value="notifications" className="mt-6">
           <NotificationCenter />

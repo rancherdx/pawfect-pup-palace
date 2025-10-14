@@ -314,6 +314,50 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_presence: {
+        Row: {
+          conversation_id: string
+          current_page: string | null
+          id: string
+          is_online: boolean | null
+          is_typing: boolean | null
+          last_seen: string | null
+          session_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          conversation_id: string
+          current_page?: string | null
+          id?: string
+          is_online?: boolean | null
+          is_typing?: boolean | null
+          last_seen?: string | null
+          session_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          conversation_id?: string
+          current_page?: string | null
+          id?: string
+          is_online?: boolean | null
+          is_typing?: boolean | null
+          last_seen?: string | null
+          session_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_presence_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       color_templates: {
         Row: {
           color_name: string
@@ -337,40 +381,52 @@ export type Database = {
       }
       conversations: {
         Row: {
-          created_at: string
+          assigned_to: string | null
+          created_at: string | null
+          current_page: string | null
           id: string
-          is_archived: boolean
           last_message_at: string | null
-          last_message_preview: string | null
-          related_entity_id: string | null
-          related_entity_type: string | null
-          title: string
-          updated_at: string
-          user_id: string
+          session_id: string | null
+          status: string | null
+          time_on_site: number | null
+          updated_at: string | null
+          user_id: string | null
+          visitor_city: string | null
+          visitor_email: string | null
+          visitor_name: string | null
+          visitor_state: string | null
         }
         Insert: {
-          created_at?: string
+          assigned_to?: string | null
+          created_at?: string | null
+          current_page?: string | null
           id?: string
-          is_archived?: boolean
           last_message_at?: string | null
-          last_message_preview?: string | null
-          related_entity_id?: string | null
-          related_entity_type?: string | null
-          title: string
-          updated_at?: string
-          user_id: string
+          session_id?: string | null
+          status?: string | null
+          time_on_site?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          visitor_city?: string | null
+          visitor_email?: string | null
+          visitor_name?: string | null
+          visitor_state?: string | null
         }
         Update: {
-          created_at?: string
+          assigned_to?: string | null
+          created_at?: string | null
+          current_page?: string | null
           id?: string
-          is_archived?: boolean
           last_message_at?: string | null
-          last_message_preview?: string | null
-          related_entity_id?: string | null
-          related_entity_type?: string | null
-          title?: string
-          updated_at?: string
-          user_id?: string
+          session_id?: string | null
+          status?: string | null
+          time_on_site?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          visitor_city?: string | null
+          visitor_email?: string | null
+          visitor_name?: string | null
+          visitor_state?: string | null
         }
         Relationships: []
       }
@@ -833,34 +889,31 @@ export type Database = {
       }
       messages: {
         Row: {
-          attachments: string | null
-          content: string
           conversation_id: string
+          created_at: string | null
           id: string
+          message: string
           read_at: string | null
-          sender_id: string
+          sender_id: string | null
           sender_type: string
-          sent_at: string
         }
         Insert: {
-          attachments?: string | null
-          content: string
           conversation_id: string
+          created_at?: string | null
           id?: string
+          message: string
           read_at?: string | null
-          sender_id: string
-          sender_type?: string
-          sent_at?: string
+          sender_id?: string | null
+          sender_type: string
         }
         Update: {
-          attachments?: string | null
-          content?: string
           conversation_id?: string
+          created_at?: string | null
           id?: string
+          message?: string
           read_at?: string | null
-          sender_id?: string
+          sender_id?: string | null
           sender_type?: string
-          sent_at?: string
         }
         Relationships: [
           {
