@@ -4,10 +4,12 @@ import App from './App.tsx'
 import './index.css'
 import { HelmetProvider } from 'react-helmet-async'
 
-// Add playful puppy-themed fonts
+// Add playful puppy-themed fonts with optimized loading
 const fontLink = document.createElement('link');
 fontLink.rel = 'stylesheet';
 fontLink.href = 'https://fonts.googleapis.com/css2?family=Fredoka+One:wght@400&family=Nunito:wght@300;400;500;600;700;800&family=Comfortaa:wght@300;400;500;600;700&family=Quicksand:wght@400;500;600;700&display=swap';
+fontLink.media = 'print';
+fontLink.onload = function(this: HTMLLinkElement) { this.media = 'all'; };
 document.head.appendChild(fontLink);
 
 // Add favicon
