@@ -55,7 +55,7 @@ export default defineConfig(({ mode }) => ({
     })
   ].filter(Boolean),
   resolve: {
-    dedupe: ['react', 'react-dom'], // Fix: Ensure only one React instance
+    dedupe: ['react', 'react-dom', 'react/jsx-runtime'], // Dedupe all React modules
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
