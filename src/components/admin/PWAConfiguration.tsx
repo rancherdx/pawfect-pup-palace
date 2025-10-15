@@ -315,6 +315,33 @@ export function PWAConfiguration() {
 
       <Card>
         <CardHeader>
+          <CardTitle>Installation Page</CardTitle>
+          <CardDescription>
+            Share this link with users to help them install your PWA
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Direct users to the installation page for step-by-step instructions on adding your app to their home screen.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <code className="flex-1 px-3 py-2 bg-muted rounded text-sm">
+              {window.location.origin}/install
+            </code>
+            <Button 
+              variant="outline" 
+              onClick={() => window.open('/install', '_blank')}
+              className="min-h-11"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Preview Page
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>PWA Icons</CardTitle>
           <CardDescription>
             Upload 192x192 and 512x512 icons through the Brand Assets Manager

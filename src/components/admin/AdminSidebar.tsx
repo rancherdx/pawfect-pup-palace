@@ -64,6 +64,7 @@ const adminNavigation = [
     icon: DollarSign,
     items: [
       { title: "Overview", url: "/admin/financial" },
+      { title: "Point of Sale", url: "/admin/financial/pos", icon: ShoppingCart },
       { title: "Transactions", url: "/admin/financial/transactions", icon: DollarSign },
       { title: "Payment Methods", url: "/admin/financial/payment-methods", icon: CreditCard },
     ],

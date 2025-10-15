@@ -25,14 +25,14 @@ const quickActions = [
 
 export default function DashboardOverview() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard Overview</h2>
-        <p className="text-muted-foreground">Welcome back! Here's what's happening with your business.</p>
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Dashboard Overview</h2>
+        <p className="text-sm sm:text-base text-muted-foreground">Welcome back! Here's what's happening with your business.</p>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {quickStats.map((stat, index) => (
           <motion.div
             key={stat.label}
@@ -40,14 +40,14 @@ export default function DashboardOverview() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
           >
-            <Link to={stat.link}>
-              <Card className={`hover:shadow-lg transition-all cursor-pointer bg-gradient-to-br ${stat.gradient} text-white border-0`}>
+            <Link to={stat.link} className="block">
+              <Card className={`hover:shadow-lg transition-all cursor-pointer bg-gradient-to-br ${stat.gradient} text-white border-0 min-h-[120px]`}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{stat.label}</CardTitle>
-                  <stat.icon className="h-4 w-4" />
+                  <CardTitle className="text-xs sm:text-sm font-medium">{stat.label}</CardTitle>
+                  <stat.icon className="h-5 w-5 sm:h-4 sm:w-4" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stat.value}</div>
+                  <div className="text-xl sm:text-2xl font-bold">{stat.value}</div>
                 </CardContent>
               </Card>
             </Link>
@@ -57,8 +57,8 @@ export default function DashboardOverview() {
 
       {/* Quick Actions */}
       <div>
-        <h3 className="text-2xl font-semibold mb-4">Quick Actions</h3>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <h3 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4">Quick Actions</h3>
+        <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {quickActions.map((action, index) => (
             <motion.div
               key={action.title}
@@ -66,16 +66,16 @@ export default function DashboardOverview() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.4 + index * 0.1 }}
             >
-              <Link to={action.link}>
-                <Card className="hover:shadow-lg transition-all cursor-pointer hover:border-primary">
-                  <CardHeader>
-                    <div className="flex items-center gap-4">
-                      <div className={`p-3 bg-muted rounded-lg ${action.color}`}>
-                        <action.icon className="h-6 w-6" />
+              <Link to={action.link} className="block">
+                <Card className="hover:shadow-lg transition-all cursor-pointer hover:border-primary min-h-[100px]">
+                  <CardHeader className="p-4 sm:p-6">
+                    <div className="flex items-start sm:items-center gap-3 sm:gap-4">
+                      <div className={`p-2 sm:p-3 bg-muted rounded-lg ${action.color} flex-shrink-0`}>
+                        <action.icon className="h-5 w-5 sm:h-6 sm:w-6" />
                       </div>
-                      <div>
-                        <CardTitle className="text-lg">{action.title}</CardTitle>
-                        <p className="text-sm text-muted-foreground">{action.description}</p>
+                      <div className="min-w-0 flex-1">
+                        <CardTitle className="text-base sm:text-lg">{action.title}</CardTitle>
+                        <p className="text-xs sm:text-sm text-muted-foreground">{action.description}</p>
                       </div>
                     </div>
                   </CardHeader>
@@ -89,22 +89,22 @@ export default function DashboardOverview() {
       {/* Recent Activity */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
+          <CardTitle className="text-lg sm:text-xl">Recent Activity</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {[
               { action: "New puppy added", detail: "Max - Golden Retriever", time: "2 hours ago" },
               { action: "Adoption completed", detail: "Bella adopted by John Smith", time: "5 hours ago" },
               { action: "New message received", detail: "From: sarah@example.com", time: "1 day ago" },
               { action: "Payment processed", detail: "$2,500 - Invoice #1234", time: "2 days ago" },
             ].map((activity, index) => (
-              <div key={index} className="flex items-center justify-between py-2 border-b last:border-0">
-                <div>
-                  <p className="font-medium">{activity.action}</p>
-                  <p className="text-sm text-muted-foreground">{activity.detail}</p>
+              <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-2 border-b last:border-0">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-sm sm:text-base">{activity.action}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">{activity.detail}</p>
                 </div>
-                <span className="text-sm text-muted-foreground">{activity.time}</span>
+                <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">{activity.time}</span>
               </div>
             ))}
           </div>

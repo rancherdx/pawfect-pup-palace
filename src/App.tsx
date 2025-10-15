@@ -81,6 +81,8 @@ const SystemStatus = lazy(() => import("./pages/SystemStatus"));
 const ApiDocs = lazy(() => import("./pages/ApiDocs"));
 const TestPage = lazy(() => import("./pages/TestPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Install = lazy(() => import("./pages/Install"));
+const POS = lazy(() => import("./pages/POS"));
 
 // Create QueryClient outside component to prevent recreation
 const queryClient = new QueryClient();
@@ -150,6 +152,7 @@ const App: React.FC = () => {
                           <Route path="/system-status" element={<SystemStatus />} />
                           <Route path="/api-docs" element={<ApiDocs />} />
                           <Route path="/test" element={<TestPage />} />
+                          <Route path="/install" element={<Install />} />
                           <Route 
                             path="/dashboard" 
                             element={
@@ -191,6 +194,7 @@ const App: React.FC = () => {
                             
                             {/* Financial */}
                             <Route path="financial" element={<FinancialOverview />} />
+                            <Route path="financial/pos" element={<POS />} />
                             <Route path="financial/transactions" element={<TransactionSettings />} />
                             <Route path="financial/payment-methods" element={<PaymentMethodsManager />} />
                             

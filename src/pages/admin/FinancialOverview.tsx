@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, CreditCard, TrendingUp, AlertCircle } from "lucide-react";
+import { DollarSign, CreditCard, TrendingUp, AlertCircle, ShoppingCart } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function FinancialOverview() {
@@ -39,9 +39,23 @@ export default function FinancialOverview() {
         ))}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        <Link to="/admin/financial/pos">
+          <Card className="hover:shadow-lg transition-all cursor-pointer hover:border-primary min-h-[140px]">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ShoppingCart className="h-5 w-5 text-purple-500" />
+                Point of Sale
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">Process in-person sales for puppies, products, and services</p>
+            </CardContent>
+          </Card>
+        </Link>
+
         <Link to="/admin/financial/transactions">
-          <Card className="hover:shadow-lg transition-all cursor-pointer hover:border-primary">
+          <Card className="hover:shadow-lg transition-all cursor-pointer hover:border-primary min-h-[140px]">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5 text-green-500" />
@@ -55,7 +69,7 @@ export default function FinancialOverview() {
         </Link>
 
         <Link to="/admin/financial/payment-methods">
-          <Card className="hover:shadow-lg transition-all cursor-pointer hover:border-primary">
+          <Card className="hover:shadow-lg transition-all cursor-pointer hover:border-primary min-h-[140px]">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CreditCard className="h-5 w-5 text-blue-500" />
