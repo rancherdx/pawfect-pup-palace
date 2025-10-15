@@ -17,6 +17,7 @@ interface ThemeContextType {
 
 const ThemeContext = React.createContext<ThemeContextType | undefined>(undefined);
 
+// Provider component for theme management
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const [theme, setTheme] = React.useState<Theme>('dimmed'); // Default to dimmed
