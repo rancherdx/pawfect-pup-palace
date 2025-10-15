@@ -13,7 +13,6 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Setup from "./pages/Setup";
 import CorsConfig from "@/components/CorsConfig";
 import { ParallaxProvider } from "@/components/ParallaxProvider";
-import { useSmoothScroll } from "@/hooks/useSmoothScroll";
 import { AnalyticsScripts } from "@/components/AnalyticsScripts";
 
 // Lazy load components for better performance
@@ -88,8 +87,6 @@ const POS = lazy(() => import("./pages/POS"));
 const queryClient = new QueryClient();
 
 const App: React.FC = () => {
-  useSmoothScroll();
-  
   return (
     <QueryClientProvider client={queryClient}>
       <ParallaxProvider>
