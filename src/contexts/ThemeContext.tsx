@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -15,17 +15,17 @@ interface ThemeContextType {
   resolvedTheme: 'light' | 'dark' | 'dimmed';
 }
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+const ThemeContext = React.createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const [theme, setTheme] = useState<Theme>('dimmed'); // Default to dimmed
-  const [holiday, setHoliday] = useState<Holiday>('none');
-  const [holidayEnabled, setHolidayEnabled] = useState(false);
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark' | 'dimmed'>('dimmed');
+  const [theme, setTheme] = React.useState<Theme>('dimmed'); // Default to dimmed
+  const [holiday, setHoliday] = React.useState<Holiday>('none');
+  const [holidayEnabled, setHolidayEnabled] = React.useState(false);
+  const [resolvedTheme, setResolvedTheme] = React.useState<'light' | 'dark' | 'dimmed'>('dimmed');
 
   // Load user theme preference from database
-  useEffect(() => {
+  React.useEffect(() => {
     const loadUserTheme = async () => {
       if (!user) return;
       
@@ -48,7 +48,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   // Save user theme preference to database
-  useEffect(() => {
+  React.useEffect(() => {
     const saveUserTheme = async () => {
       if (!user || theme === 'system') return;
       
@@ -68,7 +68,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     saveUserTheme();
   }, [user, theme]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const root = window.document.documentElement;
     
     // Determine actual theme
@@ -109,7 +109,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useTheme() {
-  const context = useContext(ThemeContext);
+  const context = React.useContext(ThemeContext);
   if (context === undefined) {
     throw new Error('useTheme must be used within a ThemeProvider');
   }
