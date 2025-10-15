@@ -853,4 +853,107 @@ INSERT INTO public.seo_meta (
   'https://gdspuppies.com/puppies'
 );
 
+-- ============================================
+-- 11. SITEMAP ENTRIES (static pages + dynamic content)
+-- ============================================
+INSERT INTO public.sitemap_entries (
+  url,
+  priority,
+  change_frequency,
+  is_auto_generated
+) VALUES
+  ('https://gdspuppies.com/', 1.0, 'daily', false),
+  ('https://gdspuppies.com/puppies', 0.9, 'daily', false),
+  ('https://gdspuppies.com/litters', 0.8, 'weekly', false),
+  ('https://gdspuppies.com/about', 0.7, 'monthly', false),
+  ('https://gdspuppies.com/contact', 0.7, 'monthly', false),
+  ('https://gdspuppies.com/health', 0.6, 'monthly', false),
+  ('https://gdspuppies.com/reviews', 0.6, 'weekly', false),
+  ('https://gdspuppies.com/blog', 0.7, 'weekly', false),
+  ('https://gdspuppies.com/stud-service', 0.6, 'monthly', false),
+  ('https://gdspuppies.com/financing', 0.5, 'monthly', false),
+  ('https://gdspuppies.com/faq', 0.6, 'monthly', false),
+  -- Auto-generated puppy pages
+  ('https://gdspuppies.com/puppy/sunny', 0.9, 'daily', true),
+  ('https://gdspuppies.com/puppy/daisy', 0.9, 'daily', true),
+  ('https://gdspuppies.com/puppy/max', 0.9, 'daily', true),
+  ('https://gdspuppies.com/puppy/charlie', 0.9, 'daily', true),
+  ('https://gdspuppies.com/puppy/luna', 0.9, 'daily', true),
+  ('https://gdspuppies.com/puppy/cooper', 0.9, 'daily', true),
+  ('https://gdspuppies.com/puppy/zeus', 0.9, 'daily', true),
+  ('https://gdspuppies.com/puppy/athena', 0.9, 'daily', true),
+  ('https://gdspuppies.com/puppy/thor', 0.9, 'daily', true),
+  -- Litter pages
+  ('https://gdspuppies.com/litter/summer-2024-golden-litter', 0.8, 'weekly', true),
+  ('https://gdspuppies.com/litter/spring-2024-lab-litter', 0.8, 'weekly', true),
+  ('https://gdspuppies.com/litter/fall-2024-gsd-litter', 0.8, 'weekly', true);
+
+-- ============================================
+-- 12. ROBOTS TXT CONFIG
+-- ============================================
+INSERT INTO public.robots_txt_config (
+  content,
+  is_active
+) VALUES
+('User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /setup
+
+Sitemap: https://gdspuppies.com/sitemap.xml
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1
+
+# Allow common search engines
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /', true);
+
+-- ============================================
+-- 13. ADDON ITEMS (POS Products)
+-- ============================================
+INSERT INTO public.addon_items (
+  name,
+  description,
+  price,
+  category,
+  sku,
+  stock_quantity
+) VALUES
+  ('Puppy Starter Kit', 'Complete starter kit including collar, leash, food/water bowls, toys, and grooming supplies', 79.99, 'Supplies', 'PSK-001', 25),
+  ('Premium Puppy Food (30 lbs)', 'High-quality puppy food specially formulated for large breeds', 89.99, 'Food', 'FOOD-001', 50),
+  ('Crate Training Bundle', 'Large crate with comfort mat, training pads, and chew toys', 149.99, 'Supplies', 'CRATE-001', 15),
+  ('Health & Wellness Kit', 'First aid kit, grooming tools, nail clippers, and health tracking journal', 59.99, 'Health', 'HEALTH-001', 30),
+  ('Training Treat Pack', 'Assorted training treats perfect for positive reinforcement', 24.99, 'Training', 'TREAT-001', 100),
+  ('Comfort Bedding Set', 'Orthopedic dog bed with washable cover and extra blanket', 119.99, 'Supplies', 'BED-001', 20),
+  ('Puppy Toy Bundle', 'Collection of safe, durable toys for teething and play', 39.99, 'Toys', 'TOY-001', 40),
+  ('Travel Kit', 'Portable water bottle, collapsible bowls, and travel carrier', 69.99, 'Travel', 'TRAVEL-001', 18);
+
+-- ============================================
+-- 14. SERVICES (POS Services)
+-- ============================================
+INSERT INTO public.services (
+  name,
+  description,
+  price,
+  category,
+  duration_minutes
+) VALUES
+  ('Basic Training Session', 'One-on-one training session covering basic commands', 100.00, 'Training', 60),
+  ('Advanced Training Package', 'Five-session package for advanced obedience training', 450.00, 'Training', 300),
+  ('Grooming Service', 'Full grooming including bath, nail trim, and ear cleaning', 75.00, 'Grooming', 90),
+  ('Puppy Socialization Class', 'Group class for puppies 8-16 weeks old', 150.00, 'Training', 60),
+  ('Behavior Consultation', 'One-hour consultation with certified behaviorist', 125.00, 'Consultation', 60),
+  ('Home Visit Setup', 'In-home consultation for puppy-proofing and setup', 200.00, 'Consultation', 120),
+  ('Microchip Registration', 'Professional microchip registration service', 35.00, 'Services', 15),
+  ('Photo Session', 'Professional puppy photo shoot with digital files', 150.00, 'Photography', 90);
+
 COMMIT;

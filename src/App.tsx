@@ -13,6 +13,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Setup from "./pages/Setup";
 import CorsConfig from "@/components/CorsConfig";
 import { AnalyticsScripts } from "@/components/AnalyticsScripts";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 
 // Lazy load components for better performance
 const Index = lazy(() => import("./pages/Index"));
@@ -82,8 +83,19 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const Install = lazy(() => import("./pages/Install"));
 const POS = lazy(() => import("./pages/POS"));
 
-// Create QueryClient outside component to prevent recreation
-const queryClient = new QueryClient();
+// Create QueryClient outside component with better defaults
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes
+      refetchOnWindowFocus: true,
+      refetchOnReconnect: true,
+      retry: 3,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    },
+  },
+});
 
 const App: React.FC = () => {
   return (
@@ -210,7 +222,6 @@ const App: React.FC = () => {
                             <Route path="settings/analytics" element={<AnalyticsManager />} />
                             <Route path="settings/system" element={<MaintenanceModeToggle />} />
                             <Route path="settings/site-settings" element={<SiteSettingsManager />} />
-                    <Route path="settings/site-settings" element={<SiteSettingsManager />} />
                             
                             {/* Security */}
                             <Route path="security" element={<SecurityOverview />} />
@@ -232,6 +243,7 @@ const App: React.FC = () => {
               </Routes>
             </div>
               </ErrorBoundary>
+              <ChatWidget />
             </ThemeProvider>
           </AuthProvider>
         </BrowserRouter>

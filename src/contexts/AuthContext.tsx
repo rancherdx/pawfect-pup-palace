@@ -84,16 +84,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   React.useEffect(() => {
     let isMounted = true;
     
-    // Set safety timeout (10 seconds)
+    // Set safety timeout (30 seconds for slow connections)
     const timeoutId = setTimeout(() => {
       if (isMounted) {
         if (process.env.NODE_ENV === 'development') {
-          console.warn('[DEV] Auth initialization timed out');
+          console.warn('[DEV] Auth initialization timed out after 30 seconds');
         }
         setAuthStatus('timeout');
         setIsLoading(false);
       }
-    }, 10000);
+    }, 30000);
 
     const loadSession = async () => {
       try {

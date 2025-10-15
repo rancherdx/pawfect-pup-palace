@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useSEOMeta, useUpdateSEOMeta, useCreateSEOMeta } from "@/hooks/useSEO";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -45,7 +45,8 @@ export const SEOMetaEditor = () => {
     robots: "index,follow",
   });
 
-  useState(() => {
+  // Fix: Use useEffect instead of useState to populate form when data loads
+  React.useEffect(() => {
     if (currentMeta) {
       setFormData({
         meta_title: currentMeta.meta_title || "",
@@ -63,7 +64,7 @@ export const SEOMetaEditor = () => {
         robots: currentMeta.robots || "index,follow",
       });
     }
-  });
+  }, [currentMeta]);
 
   const handleSave = () => {
     const keywords = formData.meta_keywords

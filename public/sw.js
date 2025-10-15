@@ -1,4 +1,6 @@
-const CACHE_NAME = 'GDS_PUPPIES_CACHE_V1';
+// Version-based cache with timestamp for aggressive cache busting
+const CACHE_VERSION = Date.now();
+const CACHE_NAME = `GDS_PUPPIES_CACHE_V${CACHE_VERSION}`;
 
 // Define the assets to cache
 // IMPORTANT: Placeholder asset names are used for JS/CSS.
@@ -110,6 +112,76 @@ self.addEventListener('fetch', (event) => {
           // }
           // For other assets, just let the error propagate or return a generic error response.
         });
+    })
+  );
+});
+
+// ============================================
+// PUSH NOTIFICATIONS SUPPORT
+// ============================================
+
+// Push event: Display push notifications
+self.addEventListener('push', (event) => {
+  console.log('[ServiceWorker] Push event received');
+  
+  let notificationData = {
+    title: 'GDS Puppies',
+    body: 'You have a new notification',
+    icon: '/pwa-192x192.png',
+    badge: '/favicon.ico',
+    data: { url: '/' }
+  };
+
+  // Parse notification data if available
+  if (event.data) {
+    try {
+      const data = event.data.json();
+      notificationData = {
+        title: data.title || notificationData.title,
+        body: data.body || notificationData.body,
+        icon: data.icon || notificationData.icon,
+        badge: data.badge || notificationData.badge,
+        data: { url: data.url || '/' },
+        tag: data.tag,
+        requireInteraction: data.requireInteraction || false,
+      };
+    } catch (error) {
+      console.error('[ServiceWorker] Error parsing push notification data:', error);
+    }
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(notificationData.title, {
+      body: notificationData.body,
+      icon: notificationData.icon,
+      badge: notificationData.badge,
+      data: notificationData.data,
+      tag: notificationData.tag,
+      requireInteraction: notificationData.requireInteraction,
+    })
+  );
+});
+
+// Notification click event: Handle notification clicks
+self.addEventListener('notificationclick', (event) => {
+  console.log('[ServiceWorker] Notification clicked');
+  event.notification.close();
+
+  const urlToOpen = event.notification.data?.url || '/';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clientList) => {
+        // Check if there's already a window open
+        for (const client of clientList) {
+          if (client.url === urlToOpen && 'focus' in client) {
+            return client.focus();
+          }
+        }
+        // If no window is open, open a new one
+        if (clients.openWindow) {
+          return clients.openWindow(urlToOpen);
+        }
       })
   );
 });

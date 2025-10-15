@@ -1,8 +1,23 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
+import { QueryClient } from '@tanstack/react-query'
 import App from './App.tsx'
 import './index.css'
 import { HelmetProvider } from 'react-helmet-async'
+
+// Configure React Query with better defaults
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+      refetchOnWindowFocus: true,
+      refetchOnReconnect: true,
+      retry: 3,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    },
+  },
+});
 
 // Add playful puppy-themed fonts with optimized loading and font-display swap
 const fontLink = document.createElement('link');
@@ -53,6 +68,12 @@ function registerSW() {
   navigator.serviceWorker.register('/sw.js')
     .then(registration => {
       console.log('ServiceWorker registration successful with scope: ', registration.scope);
+      
+      // Request notification permission for push notifications
+      if ('Notification' in window && 'PushManager' in window) {
+        // Don't request permission immediately - let user opt-in via UI
+        console.log('Push notifications are supported');
+      }
     })
     .catch(error => {
       console.log('ServiceWorker registration failed: ', error);

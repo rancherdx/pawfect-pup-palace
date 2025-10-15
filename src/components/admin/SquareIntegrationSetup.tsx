@@ -64,11 +64,15 @@ const SquareIntegrationSetup: React.FC<SquareIntegrationSetupProps> = ({
 
   const currentDomain = window.location.hostname;
   const isProduction = config.environment === 'production';
+  const SUPABASE_PROJECT_ID = 'dpmyursjpbscrfbljtha';
 
+  // Fixed URLs - webhook and checkout must point to Supabase edge functions
   const requiredUrls = {
-    webhookUrl: `https://${currentDomain}/api/webhooks/square/payment`,
-    checkoutUrl: `https://${currentDomain}/api/checkout`,
+    webhookUrl: `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/square-webhook`,
+    checkoutUrl: `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/square-checkout`,
     applePayVerificationUrl: `https://${currentDomain}/.well-known/apple-developer-merchantid-domain-association`,
+    successUrl: `https://${currentDomain}/checkout/success`,
+    cancelUrl: `https://${currentDomain}/checkout/cancel`,
   };
 
   /**
@@ -117,6 +121,7 @@ const SquareIntegrationSetup: React.FC<SquareIntegrationSetupProps> = ({
     const requiredFields = [
       `${envPrefix}_application_id`,
       `${envPrefix}_access_token`,
+      `${envPrefix}_location_id`, // Now required
     ];
 
     const missingFields = requiredFields.filter(field => !config[field as keyof SquareConfig]);
@@ -212,13 +217,17 @@ const SquareIntegrationSetup: React.FC<SquareIntegrationSetupProps> = ({
               </div>
               
               <div>
-                <Label htmlFor="location-id">Location ID (Optional)</Label>
+                <Label htmlFor="location-id">Location ID *</Label>
                 <Input
                   id="location-id"
                   value={config[`${config.environment}_location_id` as keyof SquareConfig] as string || ''}
                   onChange={(e) => handleInputChange(`${config.environment}_location_id` as keyof SquareConfig, e.target.value)}
                   placeholder="L123..."
+                  required
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Required for payment processing. Find this in your Square Dashboard.
+                </p>
               </div>
               
               <div>

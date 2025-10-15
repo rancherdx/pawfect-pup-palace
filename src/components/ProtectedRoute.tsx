@@ -2,8 +2,9 @@
 import { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2, AlertCircle, Clock } from "lucide-react";
+import { Loader2, AlertCircle, Clock, RefreshCw } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -30,7 +31,10 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
             <>
               <Clock className="h-8 w-8 text-yellow-500 mb-4" />
               <p className="text-muted-foreground">Authentication is taking longer than expected...</p>
-              <p className="text-sm text-muted-foreground mt-2">Please wait or refresh the page</p>
+              <Button onClick={() => window.location.reload()} className="mt-4 gap-2">
+                <RefreshCw className="h-4 w-4" />
+                Retry
+              </Button>
             </>
           );
         case 'error':
@@ -38,7 +42,10 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
             <>
               <AlertCircle className="h-8 w-8 text-destructive mb-4" />
               <p className="text-muted-foreground">There was an error loading your profile</p>
-              <p className="text-sm text-muted-foreground mt-2">Please try refreshing the page</p>
+              <Button onClick={() => window.location.reload()} className="mt-4 gap-2">
+                <RefreshCw className="h-4 w-4" />
+                Retry
+              </Button>
             </>
           );
         default:
