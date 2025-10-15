@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
+import React from 'react';
 import Lenis from '@studio-freight/lenis';
 
 export const useSmoothScroll = () => {
-  useEffect(() => {
+  React.useEffect(() => {
     // Defer smooth scroll initialization until after LCP to improve performance
     const initSmoothScroll = () => {
       const lenis = new Lenis({
