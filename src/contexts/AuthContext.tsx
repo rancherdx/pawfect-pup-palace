@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, AuthResponse, UserRegistrationData, UserLoginData } from '@/types';
 
@@ -22,7 +22,7 @@ interface AuthContextType {
   getDefaultRoute: () => string; // Helper to get appropriate dashboard route
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
 
 /**
  * @hook useAuth
@@ -31,7 +31,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
  * @returns {AuthContextType} The authentication context.
  */
 export const useAuth = () => {
-  const context = useContext(AuthContext);
+  const context = React.useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
@@ -46,11 +46,11 @@ export const useAuth = () => {
  * @returns {React.ReactElement} The rendered provider component.
  */
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [refreshToken, setRefreshToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [authStatus, setAuthStatus] = useState<'idle' | 'loading' | 'loaded' | 'error' | 'timeout'>('idle');
+  const [user, setUser] = React.useState<User | null>(null);
+  const [token, setToken] = React.useState<string | null>(null);
+  const [refreshToken, setRefreshToken] = React.useState<string | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [authStatus, setAuthStatus] = React.useState<'idle' | 'loading' | 'loaded' | 'error' | 'timeout'>('idle');
   const authTimeoutRef = React.useRef<NodeJS.Timeout>();
 
   /**
@@ -81,7 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  useEffect(() => {
+  React.useEffect(() => {
     let isMounted = true;
     
     // Set safety timeout (10 seconds)
