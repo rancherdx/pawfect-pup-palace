@@ -12,7 +12,6 @@ import AnimatedLayout from "@/components/AnimatedLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Setup from "./pages/Setup";
 import CorsConfig from "@/components/CorsConfig";
-import { ParallaxProvider } from "@/components/ParallaxProvider";
 import { AnalyticsScripts } from "@/components/AnalyticsScripts";
 
 // Lazy load components for better performance
@@ -89,10 +88,9 @@ const queryClient = new QueryClient();
 const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <ParallaxProvider>
-        <BrowserRouter>
-          <AuthProvider>
-            <ThemeProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <ThemeProvider>
               <Toaster />
               <Sonner />
               <CorsConfig />
@@ -237,7 +235,6 @@ const App: React.FC = () => {
             </ThemeProvider>
           </AuthProvider>
         </BrowserRouter>
-      </ParallaxProvider>
     </QueryClientProvider>
   );
 };
