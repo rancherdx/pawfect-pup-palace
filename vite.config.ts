@@ -55,6 +55,7 @@ export default defineConfig(({ mode }) => ({
     })
   ].filter(Boolean),
   resolve: {
+    dedupe: ['react', 'react-dom'], // Fix: Ensure only one React instance
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
