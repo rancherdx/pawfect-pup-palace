@@ -221,7 +221,7 @@ INSERT INTO public.litters (
 ) VALUES
 -- Current Golden Retriever Litter
 (
-  'l1111111-1111-1111-1111-111111111111',
+  '11111111-1111-1111-1111-111111111111',
   'Sunshine Golden Litter - Spring 2024',
   'Golden Retriever',
   '11111111-1111-1111-1111-111111111111',
@@ -244,7 +244,7 @@ INSERT INTO public.litters (
 ),
 -- Upcoming Golden Retriever Litter
 (
-  'l1111112-1111-1111-1111-111111111111',
+  '11111112-1111-1111-1111-111111111111',
   'Sunshine Golden Litter - Summer 2024',
   'Golden Retriever',
   '11111111-1111-1111-1111-111111111111',
@@ -263,7 +263,7 @@ INSERT INTO public.litters (
 ),
 -- Current Lab Litter
 (
-  'l2222221-2222-2222-2222-222222222222',
+  '12222221-2222-2222-2222-222222222222',
   'Yorkshire Lab Litter - Spring 2024',
   'Labrador Retriever',
   '22222222-2222-2222-2222-222222222222',
@@ -285,7 +285,7 @@ INSERT INTO public.litters (
 ),
 -- Current German Shepherd Litter
 (
-  'l3333331-3333-3333-3333-333333333333',
+  '13333331-3333-3333-3333-333333333333',
   'Schwarzwald Shepherd Litter - Winter 2024',
   'German Shepherd',
   '33333333-3333-3333-3333-333333333333',
@@ -336,7 +336,7 @@ INSERT INTO public.puppies (
   'Sunny',
   'Golden Retriever',
   '11111111-1111-1111-1111-111111111111',
-  'l1111111-1111-1111-1111-111111111111',
+  '11111111-1111-1111-1111-111111111111',
   'Male',
   '2024-03-15',
   'Golden',
@@ -361,7 +361,7 @@ INSERT INTO public.puppies (
   'Daisy',
   'Golden Retriever',
   '11111111-1111-1111-1111-111111111111',
-  'l1111111-1111-1111-1111-111111111111',
+  '11111111-1111-1111-1111-111111111111',
   'Female',
   '2024-03-15',
   'Golden',
@@ -385,7 +385,7 @@ INSERT INTO public.puppies (
   'Max',
   'Golden Retriever',
   '11111111-1111-1111-1111-111111111111',
-  'l1111111-1111-1111-1111-111111111111',
+  '11111112-1111-1111-1111-111111111111',
   'Male',
   '2024-03-15',
   'Golden',
@@ -407,7 +407,7 @@ INSERT INTO public.puppies (
   'Charlie',
   'Labrador Retriever',
   '22222222-2222-2222-2222-222222222222',
-  'l2222221-2222-2222-2222-222222222222',
+  '11111112-1111-1111-1111-111111111111',
   'Male',
   '2024-03-01',
   'Yellow',
@@ -431,7 +431,7 @@ INSERT INTO public.puppies (
   'Luna',
   'Labrador Retriever',
   '22222222-2222-2222-2222-222222222222',
-  'l2222221-2222-2222-2222-222222222222',
+  '12222221-2222-2222-2222-222222222222',
   'Female',
   '2024-03-01',
   'Chocolate',
@@ -452,7 +452,7 @@ INSERT INTO public.puppies (
   'Cooper',
   'Labrador Retriever',
   '22222222-2222-2222-2222-222222222222',
-  'l2222221-2222-2222-2222-222222222222',
+  '12222221-2222-2222-2222-222222222222',
   'Male',
   '2024-03-01',
   'Chocolate',
@@ -474,7 +474,7 @@ INSERT INTO public.puppies (
   'Rex',
   'German Shepherd',
   '33333333-3333-3333-3333-333333333333',
-  'l3333331-3333-3333-3333-333333333333',
+  '13333331-3333-3333-3333-333333333333',
   'Male',
   '2024-01-20',
   'Black and Tan',
@@ -498,7 +498,7 @@ INSERT INTO public.puppies (
   'Sasha',
   'German Shepherd',
   '33333333-3333-3333-3333-333333333333',
-  'l3333331-3333-3333-3333-333333333333',
+  '13333331-3333-3333-3333-333333333333',
   'Female',
   '2024-01-20',
   'Black and Red',
