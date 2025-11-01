@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Dog, ShoppingCart, DollarSign, MessageSquare,
   Settings, ShieldCheck, Code, ChevronDown, ChevronRight,
@@ -21,6 +21,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const adminNavigation = [
   {
@@ -113,9 +114,23 @@ const adminNavigation = [
 ];
 
 export function AdminSidebar() {
-  const { state } = useSidebar();
+  const { state, setOpenMobile } = useSidebar();
   const isCollapsed = state === "collapsed";
-  const [openSections, setOpenSections] = useState<string[]>(["Puppy Manager"]);
+  const isMobile = useIsMobile();
+  const location = useLocation();
+  const [openSections, setOpenSections] = useState<string[]>(isMobile ? [] : ["Puppy Manager"]);
+
+  useEffect(() => {
+    if (isMobile) {
+      setOpenSections([]);
+    }
+  }, [isMobile]);
+
+  useEffect(() => {
+    if (isMobile && setOpenMobile) {
+      setOpenMobile(false);
+    }
+  }, [location.pathname, isMobile, setOpenMobile]);
 
   const toggleSection = (title: string) => {
     setOpenSections(prev =>
@@ -132,10 +147,9 @@ export function AdminSidebar() {
             <SidebarMenu>
               {adminNavigation.map((item) => {
                 if (!item.items) {
-                  // Single item without submenu
                   return (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild>
+                      <SidebarMenuButton asChild className={isMobile ? "min-h-[44px]" : ""}>
                         <NavLink
                           to={item.url!}
                           end
@@ -145,7 +159,7 @@ export function AdminSidebar() {
                               : "hover:bg-muted/50"
                           }
                         >
-                          <item.icon className="h-4 w-4" />
+                          <item.icon className={isMobile ? "h-5 w-5" : "h-4 w-4"} />
                           {!isCollapsed && <span>{item.title}</span>}
                         </NavLink>
                       </SidebarMenuButton>
@@ -153,7 +167,6 @@ export function AdminSidebar() {
                   );
                 }
 
-                // Item with submenu
                 const isOpen = openSections.includes(item.title);
                 return (
                   <Collapsible
@@ -163,8 +176,8 @@ export function AdminSidebar() {
                   >
                     <SidebarMenuItem>
                       <CollapsibleTrigger asChild>
-                        <SidebarMenuButton className="hover:bg-muted/50">
-                          <item.icon className="h-4 w-4" />
+                        <SidebarMenuButton className={isMobile ? "hover:bg-muted/50 min-h-[44px]" : "hover:bg-muted/50"}>
+                          <item.icon className={isMobile ? "h-5 w-5" : "h-4 w-4"} />
                           {!isCollapsed && (
                             <>
                               <span>{item.title}</span>
@@ -181,7 +194,7 @@ export function AdminSidebar() {
                         <SidebarMenuSub>
                           {item.items.map((subItem) => (
                             <SidebarMenuSubItem key={subItem.title}>
-                              <SidebarMenuSubButton asChild>
+                              <SidebarMenuSubButton asChild className={isMobile ? "min-h-[44px]" : ""}>
                                 <NavLink
                                   to={subItem.url}
                                   end
@@ -191,7 +204,7 @@ export function AdminSidebar() {
                                       : "hover:bg-muted/50"
                                   }
                                 >
-                                  {subItem.icon && <subItem.icon className="h-4 w-4" />}
+                                  {subItem.icon && <subItem.icon className={isMobile ? "h-5 w-5" : "h-4 w-4"} />}
                                   {!isCollapsed && <span>{subItem.title}</span>}
                                 </NavLink>
                               </SidebarMenuSubButton>

@@ -144,7 +144,7 @@ const PuppyManagement = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <>
       <PuppySearchBar
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -182,7 +182,7 @@ const PuppyManagement = () => {
           </DialogContent>
         </Dialog>
       )}
-    </div>
+    </>
   );
 };
 

@@ -10,7 +10,6 @@ import { AdminErrorBoundary } from "@/components/ErrorBoundary/AdminErrorBoundar
 import { CheckoutErrorBoundary } from "@/components/ErrorBoundary/CheckoutErrorBoundary";
 import AnimatedLayout from "@/components/AnimatedLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import Setup from "./pages/Setup";
 import CorsConfig from "@/components/CorsConfig";
 import { AnalyticsScripts } from "@/components/AnalyticsScripts";
 import { ChatWidget } from "@/components/chat/ChatWidget";
@@ -110,14 +109,8 @@ const App: React.FC = () => {
               <ErrorBoundary>
             <div className="min-h-screen flex flex-col">
               <Routes>
-                {/* Setup route (no layout) */}
-                <Route 
-                  path="/setup" 
-                  element={<Setup />} 
-                />
-                
-                {/* All other routes with animated layout */}
-                <Route 
+                {/* All routes with animated layout */}
+                <Route
                   path="/*" 
                   element={
                     <AnimatedLayout>

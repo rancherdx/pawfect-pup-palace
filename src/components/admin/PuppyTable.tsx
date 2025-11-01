@@ -1,8 +1,11 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Edit, Trash } from "lucide-react";
+import { Edit, Trash, ChevronRight } from "lucide-react";
 import { Puppy } from "@/types";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Table,
   TableBody,
@@ -13,26 +16,58 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-/**
- * @interface PuppyTableProps
- * @description Defines the props for the PuppyTable component.
- */
 interface PuppyTableProps {
-  /** An array of puppy objects to display in the table. */
   puppies: Puppy[];
-  /** Callback function to be invoked when the edit button for a puppy is clicked. */
   onEditPuppy: (puppy: Puppy) => void;
-  /** Callback function to be invoked when the delete button for a puppy is clicked. */
   onDeletePuppy: (id: string) => void;
 }
 
-/**
- * @component PuppyTable
- * @description A component that renders a table of puppies with actions to edit or delete them.
- * @param {PuppyTableProps} props - The props for the component.
- * @returns {React.ReactElement} The rendered table of puppies.
- */
 const PuppyTable: React.FC<PuppyTableProps> = ({ puppies, onEditPuppy, onDeletePuppy }) => {
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    return (
+      <div className="space-y-3">
+        {puppies.length === 0 ? (
+          <Card>
+            <CardContent className="py-8 text-center text-muted-foreground">
+              No puppies found.
+            </CardContent>
+          </Card>
+        ) : (
+          puppies.map((puppy) => (
+            <Card
+              key={puppy.id}
+              className="hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => onEditPuppy(puppy)}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-12 w-12 flex-shrink-0">
+                    <AvatarImage src={puppy.photo_url || ''} />
+                    <AvatarFallback>{puppy.name.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold truncate">{puppy.name}</h3>
+                    <p className="text-sm text-muted-foreground truncate">{puppy.breed}</p>
+                    <div className="flex gap-2 mt-1 flex-wrap">
+                      <Badge variant="outline" className="text-xs">{puppy.gender}</Badge>
+                      <Badge variant="secondary" className="text-xs">{puppy.status}</Badge>
+                      {puppy.price && (
+                        <Badge variant="default" className="text-xs">${puppy.price}</Badge>
+                      )}
+                    </div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="w-full overflow-x-auto">
       <Table>
@@ -54,27 +89,37 @@ const PuppyTable: React.FC<PuppyTableProps> = ({ puppies, onEditPuppy, onDeleteP
             </TableRow>
           ) : (
             puppies.map((puppy) => (
-              <TableRow key={puppy.id}>
+              <TableRow 
+                key={puppy.id}
+                className="cursor-pointer hover:bg-muted/50"
+                onClick={() => onEditPuppy(puppy)}
+              >
                 <TableCell className="font-medium">{puppy.name}</TableCell>
                 <TableCell>{puppy.breed}</TableCell>
                 <TableCell>{puppy.gender}</TableCell>
                 <TableCell>{puppy.price}</TableCell>
                 <TableCell>{puppy.status}</TableCell>
                 <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
+                  <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => onEditPuppy(puppy)}
-                      className="h-8 w-8 p-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEditPuppy(puppy);
+                      }}
+                      className="h-9 w-9 p-0"
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => onDeletePuppy(puppy.id)}
-                      className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeletePuppy(puppy.id);
+                      }}
+                      className="h-9 w-9 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
                     >
                       <Trash className="h-4 w-4" />
                     </Button>

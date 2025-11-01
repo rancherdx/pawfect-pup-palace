@@ -902,7 +902,7 @@ export type Database = {
           browser: string | null
           device: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           location: Json | null
           os: string | null
           success: boolean
@@ -914,7 +914,7 @@ export type Database = {
           browser?: string | null
           device?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           location?: Json | null
           os?: string | null
           success: boolean
@@ -926,7 +926,7 @@ export type Database = {
           browser?: string | null
           device?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           location?: Json | null
           os?: string | null
           success?: boolean
@@ -1209,8 +1209,10 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          force_password_change: boolean | null
           id: string
           name: string | null
+          password_changed_at: string | null
           phone: string | null
           preferred_contact: string | null
           preferred_name: string | null
@@ -1220,8 +1222,10 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          force_password_change?: boolean | null
           id: string
           name?: string | null
+          password_changed_at?: string | null
           phone?: string | null
           preferred_contact?: string | null
           preferred_name?: string | null
@@ -1231,8 +1235,10 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          force_password_change?: boolean | null
           id?: string
           name?: string | null
+          password_changed_at?: string | null
           phone?: string | null
           preferred_contact?: string | null
           preferred_name?: string | null
@@ -1496,7 +1502,7 @@ export type Database = {
           event_data: Json | null
           event_type: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           user_agent: string | null
           user_id: string | null
         }
@@ -1505,7 +1511,7 @@ export type Database = {
           event_data?: Json | null
           event_type: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           user_agent?: string | null
           user_id?: string | null
         }
@@ -1514,7 +1520,7 @@ export type Database = {
           event_data?: Json | null
           event_type?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           user_agent?: string | null
           user_id?: string | null
         }
@@ -2036,7 +2042,7 @@ export type Database = {
           device: string | null
           expires_at: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           last_activity: string | null
           os: string | null
           refresh_token: string | null
@@ -2052,7 +2058,7 @@ export type Database = {
           device?: string | null
           expires_at: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           last_activity?: string | null
           os?: string | null
           refresh_token?: string | null
@@ -2068,7 +2074,7 @@ export type Database = {
           device?: string | null
           expires_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           last_activity?: string | null
           os?: string | null
           refresh_token?: string | null
@@ -2112,22 +2118,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      check_admin_exists: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      create_first_admin: {
-        Args: { user_email: string; user_name: string; user_password: string }
-        Returns: Json
-      }
       encrypt_payment_details: {
         Args: { details: Json; user_id: string }
         Returns: string
       }
-      generate_slug: {
-        Args: { input_text: string }
-        Returns: string
-      }
+      generate_slug: { Args: { input_text: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -2145,14 +2140,7 @@ export type Database = {
         }
         Returns: string
       }
-      mask_payment_method: {
-        Args: { details: Json }
-        Returns: Json
-      }
-      promote_user_to_admin: {
-        Args: { target_user_id: string }
-        Returns: boolean
-      }
+      mask_payment_method: { Args: { details: Json }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user" | "super-admin"
