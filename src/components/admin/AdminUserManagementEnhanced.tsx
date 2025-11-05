@@ -13,6 +13,7 @@ import {
   Link as LinkIcon, Edit2, Upload, X
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -350,7 +351,7 @@ export default function AdminUserManagementEnhanced() {
         .from('user_roles')
         .delete()
         .eq('user_id', selectedUser.id)
-        .eq('role', roleToRemove);
+        .eq('role', roleToRemove as any);
 
       if (error) throw error;
 
