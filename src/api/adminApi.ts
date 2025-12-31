@@ -14,21 +14,18 @@ import {
   IntegrationEnvironment,
   BlogPost,
   BlogPostStatus,
-  ApplePayConfig,
   AppRole,
   DashboardStats,
   DataDeletionRequest,
   DataDeletionRequestStatus
 } from "@/types/api";
 
-// Placeholder interfaces for types not defined in the backend guide
-
 export interface Testimonial {
   id: string;
   name: string;
-  content: string; // Database uses 'content', not 'text'
+  content: string;
   rating?: number | null;
-  source?: string | null; // Database uses string, not enum
+  source?: string | null;
   admin_approved?: boolean;
   is_featured?: boolean;
   created_at: string;
@@ -39,9 +36,9 @@ export interface Parent {
     id: string;
     name: string;
     breed: string;
-    gender: 'Male' | 'Female'; // Match types/api.ts
+    gender: 'Male' | 'Female';
     description?: string | null;
-    image_urls?: string[] | null; // Match types/api.ts - optional
+    image_urls?: string[] | null;
     certifications?: string[] | null;
     bloodline_info?: string | null;
     health_clearances?: string[] | null;
@@ -54,13 +51,12 @@ export interface EmailTemplate {
   id: string;
   name: string;
   subject: string;
-  html_body: string; // Database uses 'html_body', not 'body'
+  html_body: string;
   created_at: string;
   updated_at: string;
   is_system_template: boolean;
 }
 
-// Interfaces for function arguments - re-export from api.ts for backward compatibility
 export type PuppyCreationData = Omit<Puppy, 'id' | 'created_at' | 'updated_at'>;
 export type PuppyUpdateData = Partial<PuppyCreationData>;
 export type LitterCreationData = Omit<Litter, 'id' | 'created_at' | 'updated_at'>;
@@ -91,10 +87,6 @@ interface SupabaseFile {
   publicUrl?: string;
 }
 
-/**
- * @namespace adminApi
- * @description A collection of API functions for administrative tasks. All functions in this namespace require admin privileges.
- */
 export const adminApi = {
   // Users
   getAllUsers: async (params: { page?: number; limit?: number; search?: string } = {}): Promise<{ data: Profile[] }> => {
@@ -124,10 +116,7 @@ export const adminApi = {
 
   updateUserRoles: async (userId: string, roles: AppRole[]): Promise<{ success: boolean }> => {
     await requireAdmin();
-    // This is a placeholder. A real implementation would require a Supabase Edge Function
-    // to atomically update roles in the 'user_roles' table.
     console.warn('[adminApi.updateUserRoles] This function is a placeholder and does not persist role changes.');
-    // For now, we simulate a successful response to allow UI development.
     return { success: true };
   },
 
@@ -468,45 +457,6 @@ export const adminApi = {
     const { error } = await supabase.from('seo_meta').delete().eq('id', id);
     if (error) throw error;
     return { success: true };
-  },
-
-  // Apple Pay Configuration
-  getApplePayConfig: async (): Promise<ApplePayConfig> => {
-    await requireAdmin();
-    // Placeholder implementation
-    return {
-      merchant_id: 'merchant.com.example.gdspuppies',
-      domain_verified: false,
-      certificate_uploaded: false,
-      last_verified: null,
-      domains: [window.location.hostname],
-    };
-  },
-
-  updateApplePayConfig: async (config: Partial<ApplePayConfig>): Promise<ApplePayConfig> => {
-    await requireAdmin();
-    // Placeholder implementation
-    console.warn('[adminApi.updateApplePayConfig] This function is a placeholder.');
-    return {
-      merchant_id: config.merchant_id || 'merchant.com.example.gdspuppies',
-      domain_verified: false,
-      certificate_uploaded: false,
-      ...config,
-    };
-  },
-
-  uploadApplePayCertificate: async (formData: FormData): Promise<{ success: boolean }> => {
-    await requireAdmin();
-    // Placeholder implementation
-    console.warn('[adminApi.uploadApplePayCertificate] This function is a placeholder.');
-    return { success: true };
-  },
-
-  verifyApplePayDomain: async (domain: string): Promise<{ success: boolean; message: string }> => {
-    await requireAdmin();
-    // Placeholder implementation
-    console.warn('[adminApi.verifyApplePayDomain] This function is a placeholder.');
-    return { success: true, message: `Domain ${domain} verification simulation successful.` };
   },
 
   // Transactions

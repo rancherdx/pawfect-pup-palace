@@ -2,15 +2,9 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Shield, CreditCard, Mail, Zap, Key, Settings } from "lucide-react";
-import ApplePaySetup from './ApplePaySetup';
+import { Shield, CreditCard, Mail, Zap, Settings } from "lucide-react";
 import MailChannelsSetup from './MailChannelsSetup';
 
-/**
- * @interface IntegrationStatus
- * @description Defines the structure for displaying the status of an integration in the overview tab.
- */
 interface IntegrationStatus {
   name: string;
   status: 'active' | 'inactive' | 'error';
@@ -18,26 +12,14 @@ interface IntegrationStatus {
   icon: React.ElementType;
 }
 
-/**
- * @component IntegrationsHub
- * @description A central dashboard for managing all third-party integrations. It uses a tabbed layout
- * to separate different categories of integrations like payments, email, and others.
- * @returns {React.ReactElement} The rendered integrations hub component.
- */
 const IntegrationsHub = () => {
   const [activeTab, setActiveTab] = useState("overview");
 
   const integrations: IntegrationStatus[] = [
     {
-      name: "Square Payments",
-      status: "active",
-      description: "Process payments securely",
-      icon: CreditCard
-    },
-    {
-      name: "Apple Pay",
-      status: "inactive", 
-      description: "Accept Apple Pay payments",
+      name: "Stripe Payments",
+      status: "inactive",
+      description: "Process payments securely with Stripe",
       icon: CreditCard
     },
     {
@@ -54,11 +36,6 @@ const IntegrationsHub = () => {
     }
   ];
 
-  /**
-   * Returns a Tailwind CSS background color class based on the integration status.
-   * @param {string} status - The status of the integration.
-   * @returns {string} The corresponding CSS class for the status color.
-   */
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'bg-green-500';
@@ -76,7 +53,7 @@ const IntegrationsHub = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             Overview
@@ -92,10 +69,6 @@ const IntegrationsHub = () => {
           <TabsTrigger value="third-party" className="flex items-center gap-2">
             <Zap className="h-4 w-4" />
             Third Party
-          </TabsTrigger>
-          <TabsTrigger value="vault" className="flex items-center gap-2">
-            <Key className="h-4 w-4" />
-            Vault
           </TabsTrigger>
         </TabsList>
 
@@ -133,11 +106,13 @@ const IntegrationsHub = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CreditCard className="h-5 w-5" />
-                Payment Integrations - Coming Soon
+                Stripe Integration
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">Square and Apple Pay integrations will be configured here in Phase 2.</p>
+              <p className="text-muted-foreground">
+                Enable Stripe integration to process payments securely. Use the Stripe integration tool to configure your payment processing.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -161,46 +136,11 @@ const IntegrationsHub = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Zap className="h-5 w-5" />
-                Third Party Integrations - Coming Soon
+                Third Party Integrations
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">Additional third-party integrations will be managed here in Phase 2.</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="vault" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Key className="h-5 w-5" />
-                Vault Management
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  Securely manage API keys and sensitive configuration data using Supabase Vault.
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="border rounded-lg p-4">
-                    <h4 className="font-medium">Environment Secrets</h4>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      API keys are managed through Supabase secrets and available in edge functions.
-                    </p>
-                  </div>
-                  <div className="border rounded-lg p-4">
-                    <h4 className="font-medium">Encrypted Storage</h4>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Integration credentials are encrypted and stored securely.
-                    </p>
-                  </div>
-                </div>
-                <Button variant="outline" className="w-full">
-                  View Vault Status
-                </Button>
-              </div>
+              <p className="text-muted-foreground">Additional third-party integrations will be managed here.</p>
             </CardContent>
           </Card>
         </TabsContent>
