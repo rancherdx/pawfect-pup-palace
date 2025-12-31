@@ -35,16 +35,22 @@ jwt_expiry = 3600
 refresh_token_rotation_enabled = true
 security_update_user_attributes = false
 
-[functions.setup-status]
-verify_jwt = false
-
-[functions.setup-admin]
-verify_jwt = false
-
 [functions.admin-security-api]
 verify_jwt = false
 
-[functions.applepay-upload]
+[functions.admin-create-user]
+verify_jwt = false
+
+[functions.admin-update-user]
+verify_jwt = false
+
+[functions.admin-delete-user]
+verify_jwt = false
+
+[functions.admin-reset-password]
+verify_jwt = false
+
+[functions.admin-send-magic-link]
 verify_jwt = false
 
 [functions.google-reviews-sync]
@@ -56,17 +62,32 @@ verify_jwt = false
 [functions.integrations-list]
 verify_jwt = false
 
+[functions.integrations-delete]
+verify_jwt = false
+
 [functions.secure-data-deletion-request]
 verify_jwt = false
 
 [functions.send-email]
 verify_jwt = false
 
-[functions.square-checkout]
+[functions.test-email-connection]
 verify_jwt = false
 
-[functions.square-webhook]
+[functions.test-payment-method]
 verify_jwt = false
 
-[functions.vault-management]
+[functions.push-send]
+verify_jwt = false
+
+[functions.push-subscribe]
+verify_jwt = false
+
+[functions.generate-dkim-keys]
+verify_jwt = false
+
+[functions.mailchannels-dkim-gen]
+verify_jwt = false
+
+[functions.mailchannels-test]
 verify_jwt = false

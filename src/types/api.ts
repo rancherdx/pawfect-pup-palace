@@ -1,5 +1,4 @@
 // This file will contain all the TypeScript interfaces for the API data models.
-// Defined based on the database schema in /docs/JULES_BACKEND_GUIDE.md
 
 export type PuppyStatus = 'Available' | 'Reserved' | 'Sold' | 'Not For Sale';
 export type LitterStatus = 'Active' | 'Available Soon' | 'All Reserved' | 'All Sold' | 'Archived';
@@ -8,20 +7,20 @@ export type RelatedEntityType = 'puppy' | 'litter' | 'general';
 export type SenderType = 'user' | 'admin' | 'system';
 export type PageType = 'puppy' | 'litter' | 'home' | 'about' | string; // Allow for custom pages
 export type TransactionStatus = 'pending' | 'completed' | 'failed' | 'cancelled';
-export type IntegrationService = 'square' | 'google-business' | 'apple-pay';
+export type IntegrationService = 'stripe' | 'google-business';
 export type IntegrationEnvironment = 'sandbox' | 'production';
 
 export interface Puppy {
-  id: string; // uuid
+  id: string;
   name: string;
   slug?: string | null;
   breed: string;
-  breed_template_id?: string | null; // uuid
-  litter_id?: string | null; // uuid
-  owner_user_id?: string | null; // uuid
-  birth_date?: string | null; // date
-  price?: number | null; // numeric
-  weight?: number | null; // numeric
+  breed_template_id?: string | null;
+  litter_id?: string | null;
+  owner_user_id?: string | null;
+  birth_date?: string | null;
+  price?: number | null;
+  weight?: number | null;
   color?: string | null;
   gender?: string | null;
   description?: string | null;
@@ -29,37 +28,36 @@ export interface Puppy {
   temperament?: string[] | null;
   image_urls?: string[] | null;
   video_urls?: string[] | null;
-  photo_url?: string | null; // Legacy field
+  photo_url?: string | null;
   is_featured?: boolean | null;
   banner_text?: string | null;
   banner_color?: string | null;
-  created_at?: string; // timestamptz - optional for API responses
-  updated_at?: string; // timestamptz - optional for API responses
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Litter {
-  id: string; // uuid
+  id: string;
   name: string;
   slug?: string | null;
   dam_name?: string | null;
   sire_name?: string | null;
-  dam_id?: string | null; // uuid - FK to parents table
-  sire_id?: string | null; // uuid - FK to parents table
+  dam_id?: string | null;
+  sire_id?: string | null;
   breed: string;
-  breed_template_id?: string | null; // uuid
-  date_of_birth?: string | null; // date
-  expected_date?: string | null; // date
+  breed_template_id?: string | null;
+  date_of_birth?: string | null;
+  expected_date?: string | null;
   puppy_count?: number | null;
   status: LitterStatus;
   description?: string | null;
-  cover_image_url?: string | null; // Legacy field
+  cover_image_url?: string | null;
   image_urls?: string[] | null;
   video_urls?: string[] | null;
-  created_at?: string; // timestamptz - optional for API responses
-  updated_at?: string; // timestamptz - optional for API responses
+  created_at?: string;
+  updated_at?: string;
 }
 
-// Export types for backward compatibility
 export type StudDogCreationData = Omit<StudDog, 'id' | 'created_at' | 'updated_at'>;
 export type StudDogUpdateData = Partial<StudDogCreationData>;
 
@@ -78,7 +76,7 @@ export interface BlogPostsResponse {
 }
 
 export interface BreedTemplate {
-  id: string; // uuid
+  id: string;
   breed_name: string;
   description?: string | null;
   size?: string | null;
@@ -99,12 +97,12 @@ export interface BreedTemplate {
   hypoallergenic?: boolean | null;
   photo_url?: string | null;
   gallery_urls?: string[] | null;
-  created_at?: string | null; // timestamptz
-  updated_at?: string | null; // timestamptz
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
 export interface Parent {
-  id: string; // uuid
+  id: string;
   name: string;
   breed: string;
   gender: 'Male' | 'Female';
@@ -114,12 +112,12 @@ export interface Parent {
   bloodline_info?: string | null;
   health_clearances?: string[] | null;
   is_active: boolean;
-  created_at?: string; // timestamptz - optional for API responses
-  updated_at?: string; // timestamptz - optional for API responses
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface StudDog {
-  id: string; // uuid
+  id: string;
   name: string;
   breed_id: string;
   age?: number | null;
@@ -129,13 +127,13 @@ export interface StudDog {
   image_urls?: string[] | null;
   stud_fee: number;
   is_available: boolean;
-  owner_user_id?: string | null; // uuid
-  created_at: string; // timestamptz
-  updated_at: string; // timestamptz
+  owner_user_id?: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface SeoMeta {
-  id: string; // uuid
+  id: string;
   page_type: PageType;
   page_id?: string | null;
   page_slug?: string | null;
@@ -152,84 +150,75 @@ export interface SeoMeta {
   twitter_image?: string | null;
   canonical_url?: string | null;
   robots?: string | null;
-  schema_markup?: any | null; // jsonb - can be any JSON value
-  created_at?: string | null; // timestamptz
-  updated_at?: string | null; // timestamptz
+  schema_markup?: any | null;
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
 export interface Profile {
-  id: string; // uuid, references auth.users(id)
+  id: string;
   name?: string | null;
-  created_at: string; // timestamptz
-  updated_at: string; // timestamptz
+  created_at: string;
+  updated_at: string;
 }
 
 export interface UserRole {
-  id: string; // uuid
-  user_id: string; // uuid, references auth.users(id)
+  id: string;
+  user_id: string;
   role: AppRole;
 }
 
 export interface Transaction {
-  id: string; // uuid
-  user_id?: string | null; // uuid
-  puppy_id?: string | null; // uuid
-  amount: number; // in cents
+  id: string;
+  user_id?: string | null;
+  puppy_id?: string | null;
+  amount: number;
   currency: string;
-  status: string; // Database uses string, not enum
-  square_payment_id?: string | null;
-  payment_method_details?: any | null; // jsonb - can be any JSON value
-  created_at: string; // timestamptz
+  status: string;
+  external_payment_id?: string | null;
+  payment_method_details?: any | null;
+  created_at: string;
 }
 
 export interface Conversation {
-  id: string; // uuid
-  user_id: string; // uuid
+  id: string;
+  user_id: string;
   title: string;
   related_entity_type?: RelatedEntityType | null;
-  related_entity_id?: string | null; // uuid
+  related_entity_id?: string | null;
   is_archived: boolean;
-  last_message_at?: string | null; // timestamptz
+  last_message_at?: string | null;
   last_message_preview?: string | null;
-  created_at: string; // timestamptz
-  updated_at: string; // timestamptz
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Message {
-  id: string; // uuid
-  conversation_id: string; // uuid
-  sender_id: string; // uuid
+  id: string;
+  conversation_id: string;
+  sender_id: string;
   sender_type: SenderType;
   content: string;
   attachments?: string | null;
-  read_at?: string | null; // timestamptz
-  sent_at: string; // timestamptz
+  read_at?: string | null;
+  sent_at: string;
 }
 
 export interface ThirdPartyIntegration {
   service: IntegrationService;
   environment: IntegrationEnvironment;
   data_ciphertext: string;
-  other_config: Record<string, any>; // jsonb
+  other_config: Record<string, any>;
   is_active: boolean;
-  created_by?: string | null; // uuid
-  created_at: string; // timestamptz
-  updated_at: string; // timestamptz
+  created_by?: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface SiteSettings {
   key: string;
-  value: any; // jsonb - can be string, number, boolean, null, object, or array
-  updated_at: string; // timestamptz
-}
-
-export interface ApplePayConfig {
-  merchant_id: string;
-  domain_verified: boolean;
-  certificate_uploaded: boolean;
-  processing_certificate_id?: string | null;
-  last_verified?: string | null; // timestamptz
-  domains?: string[];
+  value: any;
+  updated_at: string;
 }
 
 export type BlogPostStatus = 'draft' | 'published' | 'archived';
@@ -241,11 +230,11 @@ export interface BlogPost {
   content: string;
   category?: string | null;
   status: BlogPostStatus;
-  featured_image_url?: string | null; // Database uses snake_case
+  featured_image_url?: string | null;
   excerpt?: string | null;
-  author_name?: string | null; // Database uses snake_case
-  published_at?: string | null; // Database uses snake_case
-  tags?: string[] | null; // Database field
+  author_name?: string | null;
+  published_at?: string | null;
+  tags?: string[] | null;
   created_at: string;
   updated_at: string;
 }

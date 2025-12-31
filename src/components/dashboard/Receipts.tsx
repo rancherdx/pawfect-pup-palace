@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Receipt, Download, Eye, Search, ArrowLeft, ArrowRight, Loader2, AlertTriangle } from "lucide-react";
@@ -9,12 +9,6 @@ import { toast } from 'sonner';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
-/**
- * Fetches a paginated list of transactions for the currently authenticated user from Supabase.
- * @param {number} page - The page number to fetch.
- * @param {number} limit - The number of transactions per page.
- * @returns {Promise<TransactionsApiResponse>} A promise that resolves to an object containing the transactions and pagination info.
- */
 const fetchMyTransactionsFromSupabase = async (page: number, limit: number) => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
@@ -36,6 +30,7 @@ const fetchMyTransactionsFromSupabase = async (page: number, limit: number) => {
   return {
     transactions: (data || []).map(transaction => ({
       ...transaction,
+      external_payment_id: (transaction as any).square_payment_id || null,
       payment_method_details: transaction.payment_method_details as { brand?: string; last4?: string; type?: string } | null
     })),
     currentPage: page,
@@ -45,23 +40,15 @@ const fetchMyTransactionsFromSupabase = async (page: number, limit: number) => {
   };
 };
 
-/**
- * @interface TransactionItem
- * @description Defines the structure for an item within a transaction.
- */
 interface TransactionItem {
   name: string;
   price: number;
   quantity?: number;
 }
 
-/**
- * @interface Transaction
- * @description Defines the structure of a transaction object.
- */
 interface Transaction {
   id: string;
-  square_payment_id: string | null;
+  external_payment_id: string | null;
   amount: number;
   currency: string;
   status: string;
@@ -72,10 +59,6 @@ interface Transaction {
   description?: string;
 }
 
-/**
- * @interface TransactionsApiResponse
- * @description Defines the shape of the API response for fetching transactions.
- */
 interface TransactionsApiResponse {
   transactions: Transaction[];
   currentPage: number;
@@ -84,11 +67,6 @@ interface TransactionsApiResponse {
   limit: number;
 }
 
-/**
- * Returns a Tailwind CSS class string for a status badge based on the transaction status.
- * @param {string} status - The status of the transaction.
- * @returns {string} The corresponding CSS classes for the badge.
- */
 const getStatusBadgeClass = (status: string) => {
   switch (status?.toUpperCase()) {
       case 'COMPLETED': return 'bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-300';
@@ -101,12 +79,6 @@ const getStatusBadgeClass = (status: string) => {
   }
 };
 
-/**
- * @component ReceiptDetail
- * @description A modal component that displays the detailed view of a single transaction receipt.
- * @param {{ transaction: Transaction, onClose: () => void }} props - The props for the component.
- * @returns {React.ReactElement} The rendered receipt detail modal.
- */
 const ReceiptDetail = ({ transaction, onClose }: { transaction: Transaction, onClose: () => void }) => {
   const items = transaction.items || [
     {
@@ -117,15 +89,8 @@ const ReceiptDetail = ({ transaction, onClose }: { transaction: Transaction, onC
   ];
   const description = transaction.description || `Transaction ID: ${transaction.id}`;
 
-  /**
-   * Placeholder function to handle the download PDF action.
-   * @param {Transaction} currentTransaction - The transaction for which to download the PDF.
-   */
   const handleDownloadPdf = (currentTransaction: Transaction) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log("[DEV] Download PDF requested for receipt:", currentTransaction.id);
-    }
-    toast.info(`PDF generation for receipt ${currentTransaction.square_payment_id || currentTransaction.id} is not yet implemented. This feature is coming soon!`);
+    toast.info(`PDF generation for receipt ${currentTransaction.external_payment_id || currentTransaction.id} is not yet implemented.`);
   };
 
   return (
@@ -134,7 +99,7 @@ const ReceiptDetail = ({ transaction, onClose }: { transaction: Transaction, onC
         <CardHeader className="border-b">
           <div className="flex justify-between items-start">
             <div>
-              <CardTitle className="text-2xl">Receipt #{transaction.square_payment_id || transaction.id}</CardTitle>
+              <CardTitle className="text-2xl">Receipt #{transaction.external_payment_id || transaction.id}</CardTitle>
               <p className="text-muted-foreground text-sm">
                 Date: {new Date(transaction.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
               </p>
@@ -196,12 +161,6 @@ const ReceiptDetail = ({ transaction, onClose }: { transaction: Transaction, onC
   );
 };
 
-/**
- * @component Receipts
- * @description A component that displays a list of the user's past transactions and receipts.
- * It allows users to search, view details, and paginate through their transaction history.
- * @returns {React.ReactElement} The rendered receipts and transactions list.
- */
 const Receipts = () => {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
@@ -218,7 +177,7 @@ const Receipts = () => {
     queryKey: ['myTransactions', currentPage, rowsPerPage],
     queryFn: fetchMyTransactions,
     staleTime: 5 * 60 * 1000,
-    enabled: !!user, // Only run query if user is authenticated
+    enabled: !!user,
   });
 
   const filteredReceipts = useMemo(() => {
@@ -228,20 +187,16 @@ const Receipts = () => {
     const searchLower = searchQuery.toLowerCase();
     return data.transactions.filter(receipt =>
       (receipt.id.toLowerCase().includes(searchLower)) ||
-      (receipt.square_payment_id && receipt.square_payment_id.toLowerCase().includes(searchLower)) ||
+      (receipt.external_payment_id && receipt.external_payment_id.toLowerCase().includes(searchLower)) ||
       (receipt.puppy_id && `puppy id ${receipt.puppy_id}`.toLowerCase().includes(searchLower)) ||
       (receipt.status.toLowerCase().includes(searchLower))
     );
   }, [data?.transactions, searchQuery]);
 
-  /**
-   * Sets the selected receipt and opens the detail modal.
-   * @param {Transaction} receipt - The receipt to view.
-   */
   const handleViewReceipt = (receipt: Transaction) => {
     const displayItems = receipt.items || [
         {
-          name: `Payment for ${receipt.puppy_id ? `Puppy ID: ${receipt.puppy_id}` : (receipt.square_payment_id || receipt.id)}`,
+          name: `Payment for ${receipt.puppy_id ? `Puppy ID: ${receipt.puppy_id}` : (receipt.external_payment_id || receipt.id)}`,
           price: receipt.amount / 100,
           quantity: 1
         }
@@ -308,7 +263,7 @@ const Receipts = () => {
               <CardHeader className="pb-3 pt-4">
                 <div className="flex justify-between items-start">
                   <CardTitle className="text-lg font-semibold">
-                    Order ID: {receipt.square_payment_id || receipt.id.substring(0,8)}
+                    Order ID: {receipt.external_payment_id || receipt.id.substring(0,8)}
                   </CardTitle>
                   <Badge className={getStatusBadgeClass(receipt.status)}>
                     {receipt.status.toUpperCase()}

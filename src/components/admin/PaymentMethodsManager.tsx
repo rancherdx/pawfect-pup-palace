@@ -12,7 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import { Loader2, Check, X } from "lucide-react";
 
 const PAYMENT_METHODS = [
-  { id: "square", name: "Square", hasEnvironments: true, hasApiKey: true },
+  { id: "stripe", name: "Stripe", hasEnvironments: true, hasApiKey: true },
   { id: "paypal", name: "PayPal", hasEnvironments: true, hasApiKey: true },
   { id: "afterpay", name: "Afterpay", hasEnvironments: true, hasApiKey: true },
   { id: "affirm", name: "Affirm", hasEnvironments: true, hasApiKey: true },

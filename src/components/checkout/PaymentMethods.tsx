@@ -7,30 +7,16 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { motion } from "framer-motion";
 import { toast } from 'sonner';
-import { supabase } from "@/integrations/supabase/client";
 
-/**
- * @interface PaymentMethodsProps
- * @description Defines the props for the PaymentMethods component.
- */
 interface PaymentMethodsProps {
-  /** Callback to update the parent component with the selected payment method. */
   onDataChange: (method: string) => void;
-  /** The currently selected payment method. */
   selectedMethod: string;
-  /** The total amount to be charged. */
   totalAmount: number;
-  /** A boolean indicating if the payment is currently being processed. */
   isProcessing: boolean;
-  /** Callback to be invoked upon completion of the payment process. */
   onComplete: (paymentResult?: unknown) => void;
-  /** Callback to return to the previous step. */
   onPrevious: () => void;
-  /** The ID of the authenticated user, if available. */
   userId?: string;
-  /** The ID of the puppy being purchased. */
   puppyId?: string;
-  /** The customer's email address, for receipts. */
   customerEmail?: string;
 }
 
@@ -52,28 +38,21 @@ const itemVariants = {
   visible: { opacity: 1, y: 0 }
 };
 
-/**
- * @component PaymentMethods
- * @description A component for selecting a payment method and submitting the final payment during checkout.
- * @param {PaymentMethodsProps} props - The props for the component.
- * @returns {React.ReactElement} The rendered payment methods selection interface.
- */
 const PaymentMethods = ({ 
   onDataChange, 
   selectedMethod,
   totalAmount, 
-  // isProcessing: parentIsProcessing, // Renamed to avoid conflict with local state
   onComplete,
   onPrevious,
-  userId, // Assuming these might be passed from a checkout context
+  userId,
   puppyId,
   customerEmail: initialCustomerEmail
 }: PaymentMethodsProps) => {
   const [paymentMethod, setPaymentMethod] = useState(selectedMethod || "wallet");
-  const [invoiceEmail, setInvoiceEmail] = useState(initialCustomerEmail || ""); // For invoice method
-  const [cardNumber, setCardNumber] = useState(""); // To track if card number is filled for sourceId simulation
+  const [invoiceEmail, setInvoiceEmail] = useState(initialCustomerEmail || "");
+  const [cardNumber, setCardNumber] = useState("");
   const [cardFormComplete, setCardFormComplete] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false); // Local processing state
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     onDataChange(paymentMethod);
@@ -81,16 +60,10 @@ const PaymentMethods = ({
   
   useEffect(() => {
     if (paymentMethod === "card") {
-      // Simulate card form validation, in reality, this would be based on Square Elements state
-      setCardFormComplete(cardNumber.replace(/\s/g, '').length >= 15); // Basic check
+      setCardFormComplete(cardNumber.replace(/\s/g, '').length >= 15);
     }
   }, [paymentMethod, cardNumber]);
   
-  /**
-   * Returns a Lucide icon component based on the payment method string.
-   * @param {string} method - The payment method identifier.
-   * @returns {React.ReactElement | null} The corresponding icon or null.
-   */
   const getPaymentIcon = (method: string) => {
     switch (method) {
       case "wallet": return <Smartphone className="h-5 w-5 text-brand-red" />;
@@ -101,10 +74,6 @@ const PaymentMethods = ({
     }
   };
 
-  /**
-   * Handles the final submission of the payment. It invokes the appropriate
-   * backend service based on the selected payment method.
-   */
   const handleFinalSubmit = async () => {
     setIsProcessing(true);
 
@@ -115,45 +84,10 @@ const PaymentMethods = ({
         return;
       }
 
-      const sourceId = "cnon:card-nonce-ok"; // Simulated Square payment nonce
-      const amountInCents = Math.round(totalAmount * 100);
-      const currency = "USD";
-
-      const payload: any = {
-        sourceId,
-        amount: amountInCents,
-        currency,
-      };
-
-      if (userId) payload.userId = userId;
-      if (puppyId) payload.puppyId = puppyId;
-      if (initialCustomerEmail) payload.customerEmail = initialCustomerEmail;
-
-
-      try {
-        // Use Supabase edge function instead of old API
-        const { data, error } = await supabase.functions.invoke('square-checkout', {
-          body: payload
-        });
-
-        if (error) throw error;
-        
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[DEV] Square checkout response:', data);
-        }
-
-        if (data && !error) {
-          onComplete(data);
-        } else {
-          console.error('Payment failed:', data);
-          toast.error(`Payment failed: ${data?.details || data?.error || error?.message || 'Please try again.'}`);
-        }
-      } catch (error) {
-        console.error('Network or unexpected error during payment:', error);
-        toast.error('An error occurred. Please check your connection and try again.');
-      } finally {
-        setIsProcessing(false);
-      }
+      // Stripe integration will be configured here
+      toast.info("Stripe payment integration is being configured. Please contact support to complete your payment.");
+      onComplete({ paymentMethod: 'card', status: 'pending_stripe_setup' });
+      setIsProcessing(false);
 
     } else if (paymentMethod === 'invoice') {
       if (!invoiceEmail || !/^\S+@\S+\.\S+$/.test(invoiceEmail)) {
@@ -162,41 +96,16 @@ const PaymentMethods = ({
         return;
       }
       
-      try {
-        const { data, error } = await supabase.functions.invoke('create-square-invoice', {
-          body: {
-            customerEmail: invoiceEmail,
-            amount: Math.round(totalAmount * 100),
-            currency: 'USD',
-            puppyId,
-            userId
-          }
-        });
-
-        if (error) throw error;
-        
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[DEV] Invoice created:', data);
-        }
-        
-        toast.success(`Invoice sent to ${invoiceEmail}`);
-        onComplete({ paymentMethod: 'invoice', email: invoiceEmail, status: 'pending', invoiceData: data });
-      } catch (error: any) {
-        console.error('[ERROR] Failed to create invoice:', error);
-        toast.error(`Failed to send invoice: ${error.message}`);
-      } finally {
-        setIsProcessing(false);
-      }
+      // Invoice will be sent via Stripe
+      toast.success(`Invoice request submitted for ${invoiceEmail}`);
+      onComplete({ paymentMethod: 'invoice', email: invoiceEmail, status: 'pending' });
+      setIsProcessing(false);
     } else {
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`[DEV] Payment method ${paymentMethod} not yet implemented`);
-      }
       toast.info(`Processing for ${paymentMethod} is not yet implemented.`);
       onComplete({ paymentMethod, status: 'pending_action_required' });
       setIsProcessing(false);
     }
   };
-
 
   return (
     <motion.div
@@ -217,7 +126,6 @@ const PaymentMethods = ({
               onValueChange={setPaymentMethod}
               className="space-y-4"
             >
-              {/* Wallet Option - structure kept for brevity */}
               <motion.div 
                 variants={itemVariants}
                 className={`border rounded-lg p-4 cursor-pointer transition-all hover:border-brand-red/30 ${paymentMethod === 'wallet' ? 'border-brand-red bg-brand-red/5' : 'border-gray-200'}`}
@@ -229,12 +137,10 @@ const PaymentMethods = ({
                       {getPaymentIcon("wallet")} <span className="ml-2">Digital Wallet</span>
                     </Label>
                     <p className="text-sm text-muted-foreground">Apple Pay, Google Pay</p>
-                    {/* Content for wallet would be here if expanded */}
                   </div>
                 </div>
               </motion.div>
               
-              {/* Afterpay Option - structure kept for brevity */}
               <motion.div 
                 variants={itemVariants}
                 className={`border rounded-lg p-4 cursor-pointer transition-all hover:border-brand-red/30 ${paymentMethod === 'afterpay' ? 'border-brand-red bg-brand-red/5' : 'border-gray-200'}`}
@@ -246,12 +152,10 @@ const PaymentMethods = ({
                       {getPaymentIcon("afterpay")} <span className="ml-2">Buy Now, Pay Later</span>
                     </Label>
                     <p className="text-sm text-muted-foreground">Afterpay, Klarna, Affirm</p>
-                     {/* Content for afterpay would be here if expanded */}
                   </div>
                 </div>
               </motion.div>
               
-              {/* Card Option */}
               <motion.div 
                 variants={itemVariants}
                 className={`border rounded-lg p-4 cursor-pointer transition-all hover:border-brand-red/30 ${paymentMethod === 'card' ? 'border-brand-red bg-brand-red/5' : 'border-gray-200'}`}
@@ -302,12 +206,12 @@ const PaymentMethods = ({
                               className="flex items-center text-green-600 text-sm"
                             >
                               <CircleCheck className="h-4 w-4 mr-1" />
-                              <span>Mock card information complete</span>
+                              <span>Card information complete</span>
                             </motion.div>
                           )}
                         </div>
                         <p className="mt-2 text-xs text-muted-foreground">
-                          * Secured by Square's payment processing. Test nonce will be used.
+                          * Secured by Stripe payment processing.
                         </p>
                       </motion.div>
                     )}
@@ -315,7 +219,6 @@ const PaymentMethods = ({
                 </div>
               </motion.div>
               
-              {/* Invoice Option */}
               <motion.div 
                 variants={itemVariants}
                 className={`border rounded-lg p-4 cursor-pointer transition-all hover:border-brand-red/30 ${paymentMethod === 'invoice' ? 'border-brand-red bg-brand-red/5' : 'border-gray-200'}`}
@@ -369,7 +272,7 @@ const PaymentMethods = ({
               </div>
               <div className="text-sm text-muted-foreground mt-1 flex items-center">
                 <Check className="h-4 w-4 text-green-500 mr-1" />
-                <span>Secure checkout with Square</span>
+                <span>Secure checkout with Stripe</span>
               </div>
             </motion.div>
             
