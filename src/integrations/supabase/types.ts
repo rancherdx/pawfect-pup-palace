@@ -1108,7 +1108,7 @@ export type Database = {
           payment_date: string | null
           payment_method: string
           purchase_id: string | null
-          square_transaction_id: string | null
+          stripe_payment_intent_id: string | null
         }
         Insert: {
           amount: number
@@ -1118,7 +1118,7 @@ export type Database = {
           payment_date?: string | null
           payment_method: string
           purchase_id?: string | null
-          square_transaction_id?: string | null
+          stripe_payment_intent_id?: string | null
         }
         Update: {
           amount?: number
@@ -1128,7 +1128,7 @@ export type Database = {
           payment_date?: string | null
           payment_method?: string
           purchase_id?: string | null
-          square_transaction_id?: string | null
+          stripe_payment_intent_id?: string | null
         }
         Relationships: [
           {
@@ -1156,7 +1156,7 @@ export type Database = {
           processed_by: string | null
           receipt_html: string | null
           receipt_url: string | null
-          square_transaction_id: string | null
+          stripe_payment_intent_id: string | null
           subtotal: number
           tax_amount: number
           total_amount: number
@@ -1177,7 +1177,7 @@ export type Database = {
           processed_by?: string | null
           receipt_html?: string | null
           receipt_url?: string | null
-          square_transaction_id?: string | null
+          stripe_payment_intent_id?: string | null
           subtotal: number
           tax_amount: number
           total_amount: number
@@ -1198,7 +1198,7 @@ export type Database = {
           processed_by?: string | null
           receipt_html?: string | null
           receipt_url?: string | null
-          square_transaction_id?: string | null
+          stripe_payment_intent_id?: string | null
           subtotal?: number
           tax_amount?: number
           total_amount?: number
@@ -1218,6 +1218,7 @@ export type Database = {
           preferred_name: string | null
           profile_photo_url: string | null
           secondary_email: string | null
+          stripe_customer_id: string | null
           updated_at: string
         }
         Insert: {
@@ -1231,6 +1232,7 @@ export type Database = {
           preferred_name?: string | null
           profile_photo_url?: string | null
           secondary_email?: string | null
+          stripe_customer_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -1244,6 +1246,7 @@ export type Database = {
           preferred_name?: string | null
           profile_photo_url?: string | null
           secondary_email?: string | null
+          stripe_customer_id?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -1357,8 +1360,9 @@ export type Database = {
           refund_amount: number | null
           refund_reason: string | null
           remaining_amount: number
-          square_invoice_id: string | null
           status: string | null
+          stripe_customer_id: string | null
+          stripe_payment_intent_id: string | null
           total_price: number
           updated_at: string | null
         }
@@ -1377,8 +1381,9 @@ export type Database = {
           refund_amount?: number | null
           refund_reason?: string | null
           remaining_amount: number
-          square_invoice_id?: string | null
           status?: string | null
+          stripe_customer_id?: string | null
+          stripe_payment_intent_id?: string | null
           total_price: number
           updated_at?: string | null
         }
@@ -1397,8 +1402,9 @@ export type Database = {
           refund_amount?: number | null
           refund_reason?: string | null
           remaining_amount?: number
-          square_invoice_id?: string | null
           status?: string | null
+          stripe_customer_id?: string | null
+          stripe_payment_intent_id?: string | null
           total_price?: number
           updated_at?: string | null
         }
