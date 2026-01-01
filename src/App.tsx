@@ -81,7 +81,8 @@ const TestPage = lazy(() => import("./pages/TestPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Install = lazy(() => import("./pages/Install"));
 const POS = lazy(() => import("./pages/POS"));
-
+const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
+const BalancePayment = lazy(() => import("./pages/BalancePayment"));
 // Create QueryClient outside component with better defaults
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -153,6 +154,8 @@ const App: React.FC = () => {
                           <Route path="/api-docs" element={<ApiDocs />} />
                           <Route path="/test" element={<TestPage />} />
                           <Route path="/install" element={<Install />} />
+                          <Route path="/payment-success" element={<PaymentSuccess />} />
+                          <Route path="/balance-payment/:purchaseId" element={<BalancePayment />} />
                           <Route 
                             path="/dashboard" 
                             element={

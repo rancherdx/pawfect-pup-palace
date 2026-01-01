@@ -91,3 +91,12 @@ verify_jwt = false
 
 [functions.mailchannels-test]
 verify_jwt = false
+
+[functions.stripe-create-payment-intent]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.stripe-get-customer]
+verify_jwt = false
